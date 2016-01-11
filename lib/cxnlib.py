@@ -9,9 +9,12 @@
 import socket
 import cPickle as pickle
 import logging
+import threading
 
 DEFAULT_PORT = 15505
 
+class AWConnectionError(Exception):
+    pass
 
 
 class AWConnection(object):
@@ -27,7 +30,13 @@ class AWConnection(object):
         self.sockfile = None
         if self.sock != None:
             self.sockfile = self.sock.makefile()
+
+        self.recv_cb = None
+        self.recv_thread = None
         
+    def __del__(self):
+        # Destructor
+        self.close()
 
 
 
@@ -67,6 +76,11 @@ class AWConnection(object):
 
     def close(self):
         # Close out the connection.
+
+        # Stop an active receive thread.
+        if self.recv_thread != None:
+            self.stop_receive_thread()
+            
         try:
             self.sock.close()
         except:
@@ -84,3 +98,37 @@ class AWConnection(object):
         # Sends an item.
         try:
             pickle.dump(data, self.sockfile)
+
+    def register_recieve_callback(self, callback):
+        # Registers a callback. Need to call start_receive_thread() in order to
+        # receiver anything thorugh the callback.
+        self.recv_cb = callback
+
+    def _receive_thread(self):
+        # Inner workings of receive work.
+        try:
+            while True:
+                data = pickle.load(self.sockfile)
+                self.recv_cb(data):
+        except:
+            # Likely connection going down.
+            pass
+        
+        finally:
+            # Clean up connectiong
+            self.close()
+            
+        
+        
+        
+    def start_receive_thread(self):
+        # Spawn a new thread to listen for receives.
+        if self.recv_cb = None
+            raise AWConnectionError("recv_cb not filled in")
+        self.recv_thread = threading.Thread(target=self._receive_thread)
+        self.recv_thread.daemon = True
+        self.recv_thread.start()
+
+        
+
+        
