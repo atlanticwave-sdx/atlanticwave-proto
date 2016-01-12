@@ -3,7 +3,7 @@
 # Test file for the cxnlib.py server-side code
 
 
-from lib.cxnlib import *
+from common.cxnlib import *
 from time import sleep
 
 def printer_cb(obj):
