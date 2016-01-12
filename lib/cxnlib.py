@@ -10,6 +10,8 @@ import socket
 import cPickle as pickle
 import logging
 import threading
+import sys
+import struct
 
 DEFAULT_PORT = 15505
 
@@ -27,9 +29,6 @@ class AWConnection(object):
         self.address = address
         self.port = port
         self.sock = sock
-        self.sockfile = None
-        if self.sock != None:
-            self.sockfile = self.sock.makefile('rwb')
 
         self.recv_cb = None
         self.recv_thread = None
@@ -48,7 +47,6 @@ class AWConnection(object):
 
         try:
             self.sock.connect((self.address, self.port))
-            self.sockfile = self.sock.makefile('rwb')
         except:
             raise
 
@@ -84,23 +82,43 @@ class AWConnection(object):
     def recv(self):
         # Receives an item. This is a blocking call
         try:
-            print self.sockfile
-            print " before load"
-            data = pickle.load(self.sockfile)
-            print " after load"
+            # Based on https://code.activestate.com/recipes/408859-socketrecv-three-ways-to-turn-it-into-recvall/
+            total_len = 0
+            total_data = []
+            size = sys.maxint
+            size_data = ''
+            sock_data = ''
+            recv_size = 8192
+            while total_len < size:
+                sock_data = self.sock.recv(recv_size)
+                if not total_data:
+                    if len(sock_data) > 4:
+                        size_data += sock_data
+                        size = struct.unpack('>i', size_data[:4])[0]
+                        recv_size=size
+                        if recv_size>524288 :
+                            recv_size = 524288
+                        total_data.append(size_data[4:])
+                    else:
+                        size_data += sock_data
+                else:
+                    total_data.append(sock_data)
+                total_len = sum([len(i) for i in total_data])
+            data_raw = ''.join(total_data)
+
+            # Unpickle!
+            data = pickle.loads(data_raw)
             return data
+
         except:
             raise
 
     def send(self, data):
         # Sends an item.
         try:
-            print " sending: " + str(data)
-            print self.sockfile
-            print " before dump"
-            pickle.dump(data, self.sockfile)
-            print self.sockfile
-            print " after dump"
+            # Based on https://code.activestate.com/recipes/408859-socketrecv-three-ways-to-turn-it-into-recvall/
+            data_raw = pickle.dumps(data)
+            self.sock.sendall(struct.pack('>i', len(data_raw))+data_raw)
         except:
             raise
 
@@ -113,14 +131,11 @@ class AWConnection(object):
         # Inner workings of receive work.
         try:
             while True:
-                print "Waiting in thread"
-                data = pickle.load(self.sockfile)
-                print "received something!"
-                print "    " + str(data)
+                data = self.recv()
                 self.recv_cb(data)
         except Error as e:
             # Likely connection going down.
-            print e
+            pass
         
         finally:
             # Clean up connectiong
@@ -133,9 +148,7 @@ class AWConnection(object):
             raise AWConnectionError("recv_cb not filled in")
         self.recv_thread = threading.Thread(target=self._receive_thread)
         self.recv_thread.daemon = True
-        print " starting thread"
         self.recv_thread.start()
-        print " after starting thread"
 
         
 
