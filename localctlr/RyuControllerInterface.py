@@ -1,13 +1,21 @@
 # Copyright 2016 - Sean Donovan
-#
-# This is the RyuControllerInterface class for the AtlanticWave/SDX. It is
-# used to interface between the local controller and Ryu. It's meant to make
-# it easier to change controllers in the future
+# AtlanticWave/SDX Project
+
 
 from ControllerInterface import ControllerInterface
 
 class RyuControllerInterface(ControllerInterface):
+    ''' This is a particular implementation of the ControllerInterface class
+        that connects using Ryu. It inherits its interface from its parent 
+        class. '''
 
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(RyuControllerInterface, self).__init__(*args, **kwargs)
+        pass
+
+    def add_rule(self, rule):
+        pass
+
+    def remove_rule(self, rule):
         pass
