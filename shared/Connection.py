@@ -3,7 +3,7 @@
 
 
 import socket
-import cPickle as Pickle
+import cPickle as pickle
 import logging
 import threading
 import sys
@@ -14,14 +14,19 @@ class ConnectionError(Exception):
 
 
 class Connection(object):
-    ''' Handed out by the ConnectionManager. It’s basically the same as a 
+    ''' Handed out by the ConnectionManager. It's basically the same as a 
         traditional socket, but can be very different under the hood. Initially,
-        it’ll be a socket, but in the future, this can be changed to be a TLS 
+        it'll be a socket, but in the future, this can be changed to be a TLS 
         socket, for instance. '''
 
     def __init__(self, address, port, sock):
         # Setup logging
 
+        # Validate incoming variables
+        # Skipping address and port for now.
+        if type(sock) is not socket.socket:
+            raise TypeError("sock is not a socket: " + str(type(sock)))
+        
         # Allocate resources/init variables
         self.address = address
         self.port = port
@@ -32,8 +37,19 @@ class Connection(object):
         
     def __del__(self):
         # Destructor
-        self.close()
+        try:
+            self.close()
+        except:
+            pass
 
+    def get_address(self):
+        return self.address
+    def get_port(self):
+        return self.port
+    def get_socket(self):
+        return self.sock
+
+    
     def recv(self):
         ''' Receives an item. This is a blocking call. '''
         try:
@@ -54,6 +70,8 @@ class Connection(object):
                         if recv_size>524288 :
                             recv_size = 524288
                         total_data.append(size_data[4:])
+                        total_len = sum([len(i) for i in total_data])
+                        data_raw = ''.join(total_data)
                     else:
                         size_data += sock_data
                 else:

@@ -12,7 +12,7 @@ from threading import Thread
 
 class ConnectionManager(object):
     ''' This is a parent class for handling connections, dispatching the new 
-        connection to handling functions, and otherwise tracking what’s going 
+        connection to handling functions, and otherwise tracking what's going 
         on. One per incoming connection. One for outbound connections. Needs to
         be subclassed, even though much will be in common. Singleton. '''
     __metaclass__ = Singleton
@@ -27,7 +27,8 @@ class ConnectionManager(object):
         self.listening_callback = handling_function
     
     def open_listening_port(self, ip, port):
-        ''' Opens a listening port. This is a blocking call.'''
+        ''' Opens a listening port. This is a blocking call. Should be run as
+            its own thread. '''
         self.listening_address = ip
         self.listening_port = port
         self.listening_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -62,7 +63,7 @@ class ConnectionManager(object):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         try:
-            self.sock.connect((self.address, self.port))
+            sock.connect((ip, port))
         except:
             raise
         return Connection(ip, port, sock)
