@@ -1,6 +1,10 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
+from ofconstants import *
+from match import *
+
+VALID_MATCH_CONDITIONS = { header
 
 class OpenFlowRule(object):
     ''' This is passed between the Local Controller and the SDX controller. It
@@ -9,6 +13,14 @@ class OpenFlowRule(object):
         when being created/added. '''
 
     def __init__(self, matches=[], actions=[], table=0, priority=100, cookie=0):
+        pass
+
+    def _is_valid_match(self, match):
+        ''' Verifies if a match value passed in is valid. '''
+        pass
+
+    def _is_valid_action(self, action):
+        ''' Verifies if an action value passed in is valid. '''
         pass
 
     def addMatch(match):
