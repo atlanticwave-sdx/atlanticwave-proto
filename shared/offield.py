@@ -13,7 +13,7 @@ class Field(object):
         OpenFlowActions (defined below). It provides common structure and defines
         descriptors for each child class. '''
     
-    def __init__(self, name, value=None, prereq=None):
+    def __init__(self, name, value=None, prereq=None, mask=False):
         ''' name is the name of the field, and is used for prerequisite
             checking.
             value is the value that this particular field is initialized with
@@ -93,7 +93,24 @@ class number_field(field):
                      str(self.others) + ")")        
 
 
-class tlv_field(field):
-    ''' Used for the TLV field required by action_SET_FIELD. '''
+class bitmask_field(number_field):
+    ''' Used for fields that need bitmasks. Same as a number_field right 
+        now, but could change in the future. '''
+    pass
+
+class ipv4_field(field):
+    ''' Used for IPv4 addresses. '''
     
-# More Field types will need to be written.
+    def check_validity(self):
+        # TODO: This needs to be written.
+        pass
+
+class ipv6_field(field):
+    ''' Used for IPv6 addresses. '''
+    
+    def check_validity(self):
+        # TODO: This needs to be written.
+        pass
+
+
+
