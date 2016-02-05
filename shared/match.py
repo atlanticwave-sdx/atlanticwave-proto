@@ -122,3 +122,11 @@ class UDP_DST(number_field):
                                       prereq=[IP_PROTO(6)])
 
 
+
+
+
+# This needs to be updated whenever there are new valid fields that we will
+# accept.
+VALID_MATCH_FIELDS = [ IN_PORT, ETH_DST, ETH_SRC, ETH_TYPE, IP_PROTO, IPV4_SRC,
+                       IPV4_DST, IPV6_SRC, IPV6_DST, TCP_SRC, TCP_DST, UDP_SRC,
+                       UDP_DST ]
