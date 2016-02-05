@@ -1,6 +1,7 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
+import sys
 
 class FieldTypeError(TypeError):
     pass
@@ -26,16 +27,17 @@ class Field(object):
         self.value = value
         self.prereq = prereq
 
-    def __get__(self, obj, objtype):
+    #TODO - Can these be represented as a property/discriptor? I don't think so.
+    def get(self):
         return self.value
 
-    def __set__(self, obj, value):
+    def set(self, value):
         self.value = value
 
     def __eq__(self, other):
         if type(self) != type(other):
             return False
-        if ((self._name == other._name) &&
+        if ((self._name == other._name) and
             (self.value == other.value)):
             return True
         return False
@@ -48,7 +50,7 @@ class Field(object):
             this is an optional field. If it is optional, returns True, if it is
             required, return False. '''
             
-        if self.prereqs == None:
+        if self.prereq == None:
             return False
         # Loop through all the fields
         for field in allfields:
@@ -60,7 +62,7 @@ class Field(object):
         return True
         
 
-class number_field(field):
+class number_field(Field):
     ''' Used for fields that need to be numbers. Has additional required init
         fields:
             min    - Minimum value that is allowed.
@@ -68,12 +70,16 @@ class number_field(field):
             others - Optional field that is a list of other values that are
                      valid.
     '''
-     def __init__(self, name, value=None, prereq=None, min, max, others=None):
-         super(number_field, self).__init__(name, value, prereq)
+    def __init__(self, name, min, max, value=None, prereq=None, others=[]):
+        if value is not None:
+            if type(value) is not int:
+                raise FieldTypeError("value is not a number")
+        
+        super(number_field, self).__init__(name, value, prereq)
 
-         self.min = min
-         self.max = max
-         self.others = others
+        self.min = min
+        self.max = max
+        self.others = others
 
     def check_validity(self):
         # Check if self.value is a number
@@ -81,12 +87,12 @@ class number_field(field):
             raise FieldTypeError("self.value is not of type int")
 
         # Check if self.value is between self.min and self.max a
-         if self.value < min or self.value > max:
-             if self.other is not None:
+        if self.value < min or self.value > max:
+             if len(self.others) == 0 :
                  raise FieldValueError(
                      "self.value is not between " + str(self.min) +
                      " and " + str(self.max))
-             elif self.value not in self.other:
+             elif self.value not in self.others:
                  raise FieldValueError(
                      "self.value is not between " + str(self.min) +
                      " and " + str(self.max) + " and not in (" +
@@ -98,14 +104,14 @@ class bitmask_field(number_field):
         now, but could change in the future. '''
     pass
 
-class ipv4_field(field):
+class ipv4_field(Field):
     ''' Used for IPv4 addresses. '''
     
     def check_validity(self):
         # TODO: This needs to be written.
         pass
 
-class ipv6_field(field):
+class ipv6_field(Field):
     ''' Used for IPv6 addresses. '''
     
     def check_validity(self):
