@@ -75,6 +75,35 @@ class BasicFieldTest(unittest.TestCase):
         self.failUnlessEqual(False, optional_field.is_optional([notrequired_field,
                                                                 required_field]))
         
+    def check_prerequisites(self):
+        required_field = Field('required', 1)
+        notrequired_field = Field('required', 0)
+        optional_field = Field('opt', 1, prereq=Field('required', 1))
+
+        required_field.check_prerequisites([])
+        required_field.check_prerequisites([notrequired_field])
+        required_field.check_prerequisites([required_field,
+                                            notrequired_field])
+        required_field.check_prerequisites([required_field,
+                                            notrequired_field,
+                                            optional_field])
+        notrequired_field.check_prerequisites([])
+        notrequired_field.check_prerequisites([notrequired_field])
+        notrequired_field.check_prerequisites([required_field,
+                                               notrequired_field])
+        notrequired_field.check_prerequisites([required_field,
+                                               notrequired_field,
+                                               optional_field])
+        self.failUnlessRaises(ValueError, optional_field.check_prerequisites)
+        self.failUnlessRaises(ValueError, optional_field.check_prerequisites,
+                              [notrequired_field])
+        optional_field.check_prerequisites([required_field,
+                                            notrequired_field])
+        optional_field.check_prerequisites([required_field,
+                                            notrequired_field,
+                                            optional_field])
+
+        
         
 class NumberFieldTest(unittest.TestCase):
     def test_basic_init(self):

@@ -9,6 +9,9 @@ class FieldTypeError(TypeError):
 class FieldValueError(ValueError):
     pass
 
+class FieldPrereqError(ValueError):
+    pass
+
 class Field(object):
     ''' This is the parent class for different kinds of fields that are used in
         OpenFlowActions (defined below). It provides common structure and defines
@@ -19,9 +22,13 @@ class Field(object):
             checking.
             value is the value that this particular field is initialized with
             and can be changed by setting the value.
-            prereq is an optional prerequisite. If the prereq condition is 
-            satisfied, than this is a non-optional field. If None, this is a
-            non-optional field. '''
+            prereq is an optional prerequisite. There are two uses, which are
+            defined by which call one uses.
+               - is_optional() - If the prereq condition is satisfied, than this
+                 is a non-optional field. If None, this is a non-optional field. 
+               - check_prerequisites() - If there is a prerequisite, and one of 
+                 the prerequisites is not present in the allfields parameter, 
+                 then this check fails. '''
         
         self._name = name
         self.value = value
@@ -60,6 +67,18 @@ class Field(object):
                 return False
         # Seems it is optional.
         return True
+
+    def check_prerequisites(self, allfields):
+        ''' This checks to see if any of the prereqs exist in allfields that
+            is passed in. If at least one of the prereqs are satisfied, the
+            check passes. Otherwise, raises an error. '''
+        if self.prereq == None:
+            return
+        for field in allfields:
+            if field in self.prereq:
+                return
+        raise FieldPrereqError("Prerequisites are not met")
+        
         
 
 class number_field(Field):

@@ -37,18 +37,8 @@ class OpenFlowMatch(object):
             field.check_validity()
 
     def check_prerequisites(self):
-        # TODO
-        raise NotImplementedError("Need to define checking prerequisites")
-        # Good starting point    https://github.com/sdonovan1985/atlanticwave-proto/blob/master/shared/match.py#L132
-
-
-
-
-
-
-
-
-
+        for field in self.fields:
+            field.check_prerequisites(self.fields)
 
 
 ###### Below are OpenFlow Header Fields, for matching and modifying. #####
