@@ -7,12 +7,6 @@
 import unittest
 from shared.offield import *
 
-class DescriptorTest(object):
-    a_field = Field('a_field')
-    def __init__(self, val):
-        self.a_field = val
-        
-
 
 class BasicFieldTest(unittest.TestCase):
     def test_basic_init(self):
@@ -128,7 +122,18 @@ class NumberFieldTest(unittest.TestCase):
             pass
         else:
             self.fail("did not see error")
-            
+
+    def test_validity_pass(self):
+        num_field1 = number_field('field', 1, 100, value=50)
+        num_field2 = number_field('field', 1, 100, value=1)
+        num_field3 = number_field('field', 1, 100, value=100)
+        num_field4 = number_field('field', 1, 100, others=[105], value=105)
+
+        num_field1.check_validity()
+        num_field2.check_validity()
+        num_field3.check_validity()
+        num_field4.check_validity()
+
     def test_validity(self):
         num_field = number_field('field', 1, 100, value=103)
         num_field2 = number_field('field', 1, 100, others=[102], value=103)

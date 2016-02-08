@@ -21,12 +21,17 @@ class OpenFlowAction(object):
 
     def __init__(self, fields):
         ''' fields is a list of Fields. '''
+        if type(fields) != type([]):
+            raise OpenFlowActionTypeError("fields must be a list")
+        for entry in fields:
+            if not isinstance(entry, Field):
+                raise OpenFlowActionTypeError("fields must be a list of Field objects")
         self.fields = fields
 
     def check_validity(self):
         for field in self.fields:
             field.check_validity()
-            if not field.is_optional():
+            if not field.check_prerequisites(self.fields):
                 if field.value == None:
                     raise FieldValueError("Required field has no value")
                     
@@ -41,7 +46,7 @@ class action_OUTPUT(OpenFlowAction):
                                          OFPP_NORMAL, OFPP_FLOOD, OFPP_ALL,
                                          OFPP_CONTROLLER, OFPP_LOCAL,OFPP_ANY])
         self.max_len = number_field('max_len', min=0, max=OFPCML_MAX,
-                                    value=max_len
+                                    value=max_len,
                                     others=[OFPCML_NO_BUFFER],
                                     prereq=number_field('port',
                                                         value=OFPP_CONTROLLER))

@@ -2,6 +2,7 @@
 # AtlanticWave/SDX Project
 
 from shared.ofconstants import *
+from shared.offield import *
 
 OFM_NUMBER      = 1
 OFM_BITMASK     = 2

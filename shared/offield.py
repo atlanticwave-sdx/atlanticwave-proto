@@ -28,7 +28,8 @@ class Field(object):
                  is a non-optional field. If None, this is a non-optional field. 
                - check_prerequisites() - If there is a prerequisite, and one of 
                  the prerequisites is not present in the allfields parameter, 
-                 then this check fails. '''
+                 then this check fails. If using check_prerequistes, prereq must
+                 be a list of prerequisites.'''
         
         self._name = name
         self.value = value
@@ -84,20 +85,20 @@ class Field(object):
 class number_field(Field):
     ''' Used for fields that need to be numbers. Has additional required init
         fields:
-            min    - Minimum value that is allowed.
-            max    - Maximum value that is allowed.
+            minval - Minimum value that is allowed.
+            maxval - Maximum value that is allowed.
             others - Optional field that is a list of other values that are
                      valid.
     '''
-    def __init__(self, name, min, max, value=None, prereq=None, others=[]):
+    def __init__(self, name, minval, maxval, value=None, prereq=None, others=[]):
         if value is not None:
             if type(value) is not int:
                 raise FieldTypeError("value is not a number")
         
         super(number_field, self).__init__(name, value, prereq)
 
-        self.min = min
-        self.max = max
+        self.minval = minval
+        self.maxval = maxval
         self.others = others
 
     def check_validity(self):
@@ -105,16 +106,16 @@ class number_field(Field):
         if not isinstance(self.value, int):
             raise FieldTypeError("self.value is not of type int")
 
-        # Check if self.value is between self.min and self.max a
-        if self.value < min or self.value > max:
+        # Check if self.value is between self.minval and self.maxval
+        if (self.value < self.minval) or (self.value > self.maxval):
              if len(self.others) == 0 :
                  raise FieldValueError(
-                     "self.value is not between " + str(self.min) +
-                     " and " + str(self.max))
+                     "self.value (" + str(self.value) + ") is not between " + str(self.minval) +
+                     " and " + str(self.maxval))
              elif self.value not in self.others:
                  raise FieldValueError(
-                     "self.value is not between " + str(self.min) +
-                     " and " + str(self.max) + " and not in (" +
+                     "self.value is not between " + str(self.minval) +
+                     " and " + str(self.maxval) + " and not in (" +
                      str(self.others) + ")")        
 
 
