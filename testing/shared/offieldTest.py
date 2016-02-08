@@ -61,7 +61,7 @@ class BasicFieldTest(unittest.TestCase):
     def test_is_optional(self):
         required_field = Field('required', 1)
         notrequired_field = Field('required', 0)
-        optional_field = Field('opt', 1, prereq=Field('required', 1))
+        optional_field = Field('opt', 1, optional_without=Field('required', 1))
 
         self.failUnlessEqual(True, optional_field.is_optional([]))
         self.failUnlessEqual(True, optional_field.is_optional([notrequired_field]))

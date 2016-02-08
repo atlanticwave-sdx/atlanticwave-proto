@@ -1,6 +1,7 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
+
 import sys
 
 class FieldTypeError(TypeError):
@@ -17,22 +18,20 @@ class Field(object):
         OpenFlowActions (defined below). It provides common structure and defines
         descriptors for each child class. '''
     
-    def __init__(self, name, value=None, prereq=None, mask=False):
-        ''' name is the name of the field, and is used for prerequisite
-            checking.
-            value is the value that this particular field is initialized with
-            and can be changed by setting the value.
-            prereq is an optional prerequisite. There are two uses, which are
-            defined by which call one uses.
-               - is_optional() - If the prereq condition is satisfied, than this
-                 is a non-optional field. If None, this is a non-optional field. 
-               - check_prerequisites() - If there is a prerequisite, and one of 
-                 the prerequisites is not present in the allfields parameter, 
-                 then this check fails. If using check_prerequistes, prereq must
-                 be a list of prerequisites.'''
+    def __init__(self, name, value=None, prereq=None, optional_without=None, mask=False):
+        ''' - name is the name of the field, and is used for prerequisite
+              checking.
+            - value is the value that this particular field is initialized with
+              and can be changed by setting the value.
+            - prereq is a list of prerequisite conditions. If at least one of 
+              them is satisfied, then prerequisites are met. 
+            - optional_without is a condition that, if satisfied, this Field is
+              not optional. If it is None, then it is also not optional. '''
+        
         
         self._name = name
         self.value = value
+        self.optional_wo = optional_without
         self.prereq = prereq
 
     #TODO - Can these be represented as a property/discriptor? I don't think so.
@@ -58,13 +57,13 @@ class Field(object):
             this is an optional field. If it is optional, returns True, if it is
             required, return False. '''
             
-        if self.prereq == None:
+        if self.optional_wo == None:
             return False
         # Loop through all the fields
         for field in allfields:
             # If the field matches the prerequisites, then this is not an
             # optional field, return False.
-            if self.prereq == field:
+            if self.optional_wo == field:
                 return False
         # Seems it is optional.
         return True
@@ -90,12 +89,13 @@ class number_field(Field):
             others - Optional field that is a list of other values that are
                      valid.
     '''
-    def __init__(self, name, minval, maxval, value=None, prereq=None, others=[]):
+    def __init__(self, name, minval, maxval, value=None, prereq=None,
+                 optional_without=None, others=[]):
         if value is not None:
             if type(value) is not int:
                 raise FieldTypeError("value is not a number")
         
-        super(number_field, self).__init__(name, value, prereq)
+        super(number_field, self).__init__(name, value, prereq, optional_without)
 
         self.minval = minval
         self.maxval = maxval
@@ -104,7 +104,7 @@ class number_field(Field):
     def check_validity(self):
         # Check if self.value is a number
         if not isinstance(self.value, int):
-            raise FieldTypeError("self.value is not of type int")
+            raise FieldTypeError("self.value of " + self._name + " is not of type int: " + str(type(self.value)))
 
         # Check if self.value is between self.minval and self.maxval
         if (self.value < self.minval) or (self.value > self.maxval):

@@ -30,26 +30,27 @@ class OpenFlowAction(object):
 
     def check_validity(self):
         for field in self.fields:
-            field.check_validity()
-            if not field.check_prerequisites(self.fields):
-                if field.value == None:
-                    raise FieldValueError("Required field has no value")
+            if not field.is_optional(self.fields):
+                field.check_validity()
+            field.check_prerequisites(self.fields)
                     
 
 class action_OUTPUT(OpenFlowAction):
     ''' This action outputs packets to a specified port. '''
 
-    def __init__(self, port, max_len=0):
-        self.port = number_field('port', min=1, max=OFPP_MAX,
+    def __init__(self, port, max_len=None):
+        self.port = number_field('port', minval=1, maxval=OFPP_MAX,
                                  value=port,
                                  others=[OFPP_MAX, OFPP_IN_PORT, OFPP_TABLE,
                                          OFPP_NORMAL, OFPP_FLOOD, OFPP_ALL,
                                          OFPP_CONTROLLER, OFPP_LOCAL,OFPP_ANY])
-        self.max_len = number_field('max_len', min=0, max=OFPCML_MAX,
+        self.max_len = number_field('max_len', minval=0, maxval=OFPCML_MAX,
                                     value=max_len,
                                     others=[OFPCML_NO_BUFFER],
-                                    prereq=number_field('port',
-                                                        value=OFPP_CONTROLLER))
+                                    optional_without=number_field('port',
+                                                                  minval=1,
+                                                                  maxval=OFPP_MAX,
+                                                                  value=OFPP_CONTROLLER))
         super(action_OUTPUT, self).__init__([self.port, self.max_len])
         
         

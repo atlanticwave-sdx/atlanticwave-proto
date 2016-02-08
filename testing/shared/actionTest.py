@@ -6,6 +6,8 @@
 
 import unittest
 from shared.action import *
+from shared.ofconstants import *
+
 
 # This should be run after offieldTest.py
 
@@ -99,11 +101,41 @@ class BasicActionTest(unittest.TestCase):
 
 
 class action_OUTPUTTest(unittest.TestCase):
-    pass
+    def test_valid_init(self):
+        output = action_OUTPUT(1)
+
+    def test_empty_init(self):
+        try:
+            output = action_OUTPUT()
+        except TypeError:
+            pass
+        else:
+            self.fail("did not see error")
+
+    def test_verify_valid(self):
+        output1 = action_OUTPUT(1)
+        output1.check_validity()
+        output2 = action_OUTPUT(OFPP_CONTROLLER, 1)
+        output2.check_validity()
+
+    def test_verify_invalid(self):
+        try:
+            output2 = action_OUTPUT(OFPP_CONTROLLER)
+            output2.check_validity()
+        except TypeError:
+            pass
+        else:
+            self.fail("did not see error")
+
+        
+    
 
 class action_SET_FIELDTest(unittest.TestCase):
-    pass
+    def test_valid_init(self):
+        pass
 
+    def test_empty_init(self):
+        pass
 
 
 
