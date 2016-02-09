@@ -132,12 +132,19 @@ class action_OUTPUTTest(unittest.TestCase):
 
 class action_SET_FIELDTest(unittest.TestCase):
     def test_valid_init(self):
-        pass
+        action = action_SET_FIELD(IN_PORT(1))
 
     def test_empty_init(self):
-        pass
+        try:
+            action = action_SET_FIELD()
+        except TypeError:
+            pass
+        else:
+            self.fail("did not see error")
 
-
+    def test_verify_valid(self):
+        action = action_SET_FIELD(IN_PORT(1))
+        action.check_validity()
 
 
 

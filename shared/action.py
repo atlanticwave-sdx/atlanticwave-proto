@@ -57,7 +57,7 @@ class action_OUTPUT(OpenFlowAction):
 class action_SET_FIELD(OpenFlowAction):
     ''' This action sets a field in matched flow's packets. '''
 
-    def __init__(self, field, value):
+    def __init__(self, field):
         if type(field) not in VALID_MATCH_FIELDS:
             raise OpenFlowActionTypeError(str(type(field)) + " is not a VALID_MATCH_FIELDS")
         if field.value == None:

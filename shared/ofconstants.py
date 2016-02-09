@@ -17,3 +17,11 @@ OFPCML_MAX       = 0xffe5
 OFPCML_NO_BUFFER = 0xffff
 
 
+# These may be deletable. I think I wrote them.
+OFM_NUMBER      = 1
+OFM_BITMASK     = 2
+OFM_IPV4        = 3
+OFM_IPV6        = 4
+OFM_PREFIX_V4   = 5
+OFM_PREFIX_V6   = 6
+
