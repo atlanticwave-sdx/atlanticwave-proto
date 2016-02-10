@@ -1,60 +1,131 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
-from ofconstants import *
-from match import *
+from shared.ofconstants import *
+from shared.match import *
+from shared.instruction import *
 
-VALID_MATCH_CONDITIONS = { header
+class OpenFlowRuleTypeError(TypeError):
+    pass
 
+class OpenFlowRuleValueError(ValueError):
+    pass
+
+    
 class OpenFlowRule(object):
     ''' This is passed between the Local Controller and the SDX controller. It
         is, effectively, a structure. It has a list of valid fields that it will
         accept for matches and actions and will reject anything that’s invalid
         when being created/added. '''
 
-    def __init__(self, matches=[], actions=[], table=0, priority=100, cookie=0):
-        pass
+    def __init__(self, matches=[], instruction=None, table=0, priority=100, cookie=0):
+        ''' matches is a list of OpenFlowMatch objects.
+            instruction is an OpenFlowInstruction.
+            table is a table number.
+            priority is a priority number.
+            cookie is an arbitrary cookie number. '''
 
-    def _is_valid_match(self, match):
-        ''' Verifies if a match value passed in is valid. '''
-        pass
+        if type(matches) != type([]):
+            raise OpenFlowRuleTypeError("matches must be in a list")
+        for entry in matches:
+            if not isinstance(entry, OpenFlowMatch):
+                raise OpenFlowRuleTypeError("matches must be a list of OpenFlowMatch objects")
+        self.matches = matches
 
-    def _is_valid_action(self, action):
-        ''' Verifies if an action value passed in is valid. '''
-        pass
+        if (instruction != None or
+            not isinstance(instruction, OpenFlowInstruction)):
+            raise OpenFlowRuleTypeError("matches must be an OpenFlowInstruction object")
+        self.instruction = instruction
 
-    def addMatch(match):
+        if table < OF_TABLE_MIN or table > OF_TABLE_MAX:
+            raise OpenFlowRuleValueError("table is outside of valid range: " +
+                                         str(OF_TABLE_MIN) + "-" +
+                                         str(OF_TABLE_MAX))
+        self.table = table
+
+        if priority < OF_PRIORITY_MIN or table > OF_PRIORITY_MAX:
+            raise OpenFlowRuleValueError("priority is outside of valid range: " +
+                                         str(OF_PRIORITY_MIN) + "-" +
+                                         str(OF_PRIORITY_MAX))
+        self.priority = priority
+
+        if cookie < OF_COOKIE_MIN or cookie > OF_COOKIE_MAX:
+            raise OpenFlowRuleValueError("cookie is outside of valid range: " +
+                                         str(OF_COOKIE_MIN) + "-" +
+                                         str(OF_COOKIE_MAX))
+        self.cookie = cookie
+
+    def addMatch(match, check_validity=True):
         ''' Adds match field(s) to the match string. 
+            match can be either a single Match, or a list of Matches.
             Can match on multiple fields simultaneously. '''
-        pass
+        single = True
+        if type(match) == type([]):
+            single = False
+            for entry in match:
+                if not isinstance(match, OpenFlowMatch):
+                    raise OpenFlowTypeError("match must be an OpenFlowMatch or list of OpenFlowMatch objects")
+        if not isinstance(match, OpenFlowMatch):
+            raise OpenFlowTypeError("match must be an OpenFlowMatch or list of OpenFlowMatch objects")
 
-    def addAction(action):
-        ''' Add action(s) to be taken on matched packets. '''
-        pass
+        if check_validity:
+            if single:
+                match.check_validity()
+            else:
+                for entry in match:
+                    entry.check_validity()
+                    
+        self.match.append(match)
 
-    def addCookie(cookie):
+    def setInstruction(instruction, check_validity=True):):
+        ''' Add instruction to be taken on matched packets. '''
+        if not isinstance(instruction, OpenFlowInstruction):
+            raise OpenFlowTypeError("instruction must be an OpenFlowInstruction")
+
+        if check_validity:
+            instruction.check_validity()
+
+        self.instruction = instruction
+
+
+    def setCookie(cookie):
         ''' Set the unique ID for the rule. '''
-        pass
+        if not isinstance(cookie, int):
+            raise OpenFlowTypeError("cookie must be an int")
 
-    def addTable(table):
+        if cookie < OF_COOKIE_MIN or cookie > OF_COOKIE_MAX:
+            raise OpenFlowRuleValueError("cookie is outside of valid range: " +
+                                         str(OF_COOKIE_MIN) + "-" +
+                                         str(OF_COOKIE_MAX))
+        self.cookie = cookie
+
+    def setTable(table):
         ''' Set the table to be used for this match-action. '''
-        pass
+        if table < OF_TABLE_MIN or table > OF_TABLE_MAX:
+            raise OpenFlowRuleValueError("table is outside of valid range: " +
+                                         str(OF_TABLE_MIN) + "-" +
+                                         str(OF_TABLE_MAX))
+        self.table = table
 
-    def addPriority(priority):
+    def setPriority(priority):
         ''' Sets the OpenFlow priority field for htis match-action. '''
-        pass
-
+        if priority < OF_PRIORITY_MIN or table > OF_PRIORITY_MAX:
+            raise OpenFlowRuleValueError("priority is outside of valid range: " +
+                                         str(OF_PRIORITY_MIN) + "-" +
+                                         str(OF_PRIORITY_MAX))
+        self.priority = priority
+        
     def getMatch():
-        pass
+        return self.match
 
-    def getAction():
-        pass
+    def getInstruction():
+        return self.instruction
 
     def getCookie():
-        pass
+        return self.cookie
     
     def getTable():
-        pass
+        return self.table
 
     def getPriority():
-        pass
+        return self.priority

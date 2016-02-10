@@ -35,8 +35,8 @@ class instruction_GOTO_TABLE(OpenFlowInstruction):
     ''' This instruction pushes matching flows to a specified table. '''
 
     def __init__(self, tableid=None):
-        self.table_id = number_field('table_id', minval=0,
-                                     maxval=2**8-1, value=tableid)
+        self.table_id = number_field('table_id', minval=OF_TABLE_MIN,
+                                     maxval=OF_TABLE_MAX, value=tableid)
         super(instruction_GOTO_TABLE, self).__init__([self.table_id])        
 
 
