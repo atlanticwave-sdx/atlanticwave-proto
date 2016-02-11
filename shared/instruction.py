@@ -12,7 +12,7 @@ class OpenFlowInstructionTypeError(TypeError):
 class OpenFlowInstructionValueError(ValueError):
     pass
 
-class OpenFlowInstruction(OpenFlowAction):
+class OpenFlowInstruction(object):
     ''' This is the parent class for all OpenFlow Instructions. It will include
         much of the functionality built-in that is necessary to validate most
         instructions.
@@ -29,6 +29,13 @@ class OpenFlowInstruction(OpenFlowAction):
             if not isinstance(entry, Field) and not isinstance(entry, OpenFlowAction):
                 raise OpenFlowInstructionTypeError(
                     "actions must be a list of Field or OpenFlowAction objects")
+        self.actions = actions
+
+    def check_validity(self):
+        for action in self.actions:
+            if not action.is_optional(self.actions):
+                action.check_validity()
+            action.check_prerequisites(self.actions)
 
             
 class instruction_GOTO_TABLE(OpenFlowInstruction):
