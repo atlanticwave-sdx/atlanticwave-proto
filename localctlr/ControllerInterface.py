@@ -16,11 +16,11 @@ class ControllerInterface(object):
     def __init__(self):
         pass
     
-    def add_rule(self, rule):
+    def send_command(self, rule):
         ''' Takes an OpenFlowRule and pushes it to the switch. '''
-        pass
+        raise NotImplementedError("Subclasses must implement this.")
 
     def remove_rule(self, cookie):
         ''' Removes a rule based on cookie number. '''
-        pass
+        raise NotImplementedError("Subclasses must implement this.")
 

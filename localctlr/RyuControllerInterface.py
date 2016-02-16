@@ -14,7 +14,7 @@ class RyuControllerInterface(ControllerInterface):
         super(RyuControllerInterface, self).__init__(*args, **kwargs)
         pass
 
-    def add_rule(self, rule):
+    def send_command(self, rule):
         pass
 
     def remove_rule(self, rule):
