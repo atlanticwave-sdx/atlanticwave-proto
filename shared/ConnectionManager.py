@@ -8,7 +8,13 @@ from shared.Connection import Connection
 import socket
 import logging
 from threading import Thread
+from select import select
 
+class ConnectionManagerTypeError(TypeError):
+    pass
+
+class ConnectionManagerValueError(ValueError):
+    pass
 
 class ConnectionManager(object):
     ''' This is a parent class for handling connections, dispatching the new 
@@ -67,3 +73,52 @@ class ConnectionManager(object):
         except:
             raise
         return Connection(ip, port, sock)
+
+    def select(self, rlist, wlist, xlist, timeout=0):
+        ''' The equivalent of select.select(), but tailored for Connection and
+            ConnectionManager. '''
+        # Sanity check inputs.
+        if (rlist != None):
+            for entry in rlist:
+                if not isinstance(entry, Connection):
+                    raise ConnectionManagerTypeError("rlist must be a list of Connection objects.")
+        if (wlist != None):
+            for entry in wlist:
+                if not isinstance(entry, Connection):
+                    raise ConnectionManagerTypeError("wlist must be a list of Connection objects.")
+        if (xlist != None):
+            for entry in xlist:
+                if not isinstance(entry, Connection):
+                    raise ConnectionManagerTypeError("xlist must be a list of Connection objects.")
+        if not isinstance(timeout, int):
+            raise ConnectionManagerTypeError("timeout must be an int")
+
+        rlistsocket = list(map((lambda x: x.sock), rlist))
+        wlistsocket = list(map((lambda x: x.sock), wlist))
+        xlistsocket = list(map((lambda x: x.sock), xlist))
+        
+        readable, writable, exceptional = select(rlistsocket,
+                                                 wlistsocket,
+                                                 xlistsocket,
+                                                 timeout)
+
+        # Now, map the sockets back to the Connection
+        rcxn = []
+        for s_entry in readable:
+            for c_entry in rlist:
+                if s_entry == c_entry.sock:
+                    rcxn.append(c_entry)
+
+        wcxn = []
+        for s_entry in writeable:
+            for c_entry in wlist:
+                if s_entry == c_entry.sock:
+                    wcxn.append(c_entry)
+
+        xcxn = []
+        for s_entry in exceptional:
+            for c_entry in xlist:
+                if s_entry == c_entry.sock:
+                    xcxn.append(c_entry)
+
+        return (rcxn, wcxn, xcxn)
