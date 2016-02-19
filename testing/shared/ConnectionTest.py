@@ -154,7 +154,7 @@ class RecvBlockingTest(unittest.TestCase):
 class RecvNonBlockingTest(unittest.TestCase):
     def setUp(self):
         self.ip = "127.0.0.1"
-        self.port = 5556
+        self.port = 5557
         self.object_to_send = {'a':1, 'b':2, 'c':{'x':7, 'y':8, 'z':9}}
         self.object_received = None
 
@@ -190,7 +190,84 @@ class RecvNonBlockingTest(unittest.TestCase):
 
     def receiving_callback(self, data):
         self.object_received = data
+
+
+class ValidSelectTest(unittest.TestCase):
+    def setUp(self):
+        self.ip = "127.0.0.1"
+        self.port = 5558
+        self.object_to_send = {'a':1, 'b':2, 'c':{'x':7, 'y':8, 'z':9}}
+        self.object_received = None
+
+        self.ReceivingSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.ReceivingSocket.bind((self.ip, self.port))
+        self.ReceivingSocket.listen(1)
+
+        self.SendThread = threading.Thread(target=self.sending_thread)
+        self.SendThread.daemon = True
+        self.SendThread.start()
+
+        connection, client_address = self.ReceivingSocket.accept()
+        client_ip, client_port = client_address
         
+        self.ReceivingConnection = Connection(client_ip, client_port, connection)
         
+    def tearDown(self):
+        self.ReceivingSocket.close()
+
+    def sending_thread(self):
+        self.SendingSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.SendingSock.connect((self.ip, self.port))
+
+        sleep(0.1)
+        
+        data_raw = pickle.dumps(self.object_to_send)
+        self.SendingSock.sendall(struct.pack('>i', len(data_raw))+data_raw)
+        self.SendingSock.close()
+
+    def test_basic_select(self):
+        cxn = self.ReceivingConnection
+        rlist = [cxn]
+        wlist = []
+        xlist = rlist
+
+        readable, writable, exceptional = select(rlist, wlist, xlist, 2)
+
+        self.failIf(readable == [])
+
+        self.object_received=cxn.recv()
+        self.failUnlessEqual(self.object_received, self.object_to_send)
+
+class invalidSelectTest(unittest.TestCase):
+    def test_invalid_select_init1(self):
+        ip = "127.0.0.1"
+        port = 5560
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        cxn = Connection(ip, port, sock)
+        goodlist = [cxn]
+        badlist = [ip]
+        emptylist = []
+
+        try:
+            r, w, x = select(badlist, goodlist, goodlist)
+        except TypeError:
+            pass
+        else:
+            self.fail('Did not see error')
+
+        try:
+            r, w, x = select(goodlist, badlist, goodlist)
+        except TypeError:
+            pass
+        else:
+            self.fail('Did not see error')
+
+        try:
+            r, w, x = select(goodlist, goodlist, badlist)
+        except TypeError:
+            pass
+        else:
+            self.fail('Did not see error')
+
 if __name__ == '__main__':
     unittest.main()

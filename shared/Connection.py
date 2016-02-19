@@ -3,13 +3,17 @@
 
 
 import socket
+import select as pyselect
 import cPickle as pickle
 import logging
 import threading
 import sys
 import struct
 
-class ConnectionError(Exception):
+class ConnectionTypeError(TypeError):
+    pass
+
+class ConnectionValueError(ValueError):
     pass
 
 
@@ -135,33 +139,33 @@ class Connection(object):
 
     
 
-def select(self, rlist, wlist, xlist, timeout=0):
+def select(rlist, wlist, xlist, timeout=0):
     ''' The equivalent of select.select(), but tailored for Connection and
         ConnectionManager. '''
     # Sanity check inputs.
     if (rlist != None):
         for entry in rlist:
             if not isinstance(entry, Connection):
-                raise ConnectionManagerTypeError("rlist must be a list of Connection objects.")
+                raise ConnectionTypeError("rlist must be a list of Connection objects.")
     if (wlist != None):
         for entry in wlist:
             if not isinstance(entry, Connection):
-                raise ConnectionManagerTypeError("wlist must be a list of Connection objects.")
+                raise ConnectionTypeError("wlist must be a list of Connection objects.")
     if (xlist != None):
         for entry in xlist:
             if not isinstance(entry, Connection):
-                raise ConnectionManagerTypeError("xlist must be a list of Connection objects.")
+                raise ConnectionTypeError("xlist must be a list of Connection objects.")
     if not isinstance(timeout, int):
-        raise ConnectionManagerTypeError("timeout must be an int")
+        raise ConnectionTypeError("timeout must be an int")
 
     rlistsocket = list(map((lambda x: x.sock), rlist))
     wlistsocket = list(map((lambda x: x.sock), wlist))
     xlistsocket = list(map((lambda x: x.sock), xlist))
         
-    readable, writable, exceptional = select(rlistsocket,
-                                             wlistsocket,
-                                             xlistsocket,
-                                             timeout)
+    readable, writable, exceptional = pyselect.select(rlistsocket,
+                                                      wlistsocket,
+                                                      xlistsocket,
+                                                      timeout)
 
         # Now, map the sockets back to the Connection
     rcxn = []
@@ -171,7 +175,7 @@ def select(self, rlist, wlist, xlist, timeout=0):
                 rcxn.append(c_entry)
 
     wcxn = []
-    for s_entry in writeable:
+    for s_entry in writable:
         for c_entry in wlist:
             if s_entry == c_entry.sock:
                 wcxn.append(c_entry)
