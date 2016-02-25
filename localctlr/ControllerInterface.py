@@ -4,6 +4,12 @@
 
 from shared.Singleton import Singleton
 
+class ControllerInterfaceTypeError(TypeError):
+    pass
+
+class ControllerInterfaceValueError(ValueError):
+    pass
+
 class ControllerInterface(object):
     ''' This parent class is meant to act as a standard interface between a 
         particular OpenFlow speaker and the LocalController class. It isolates
