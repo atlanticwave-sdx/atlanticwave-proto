@@ -18,13 +18,16 @@ class OpenFlowRule(object):
         accept for matches and actions and will reject anything that's invalid
         when being created/added. '''
 
-    def __init__(self, match=None, instruction=None, table=0, priority=100, cookie=0):
+    def __init__(self, match=None, instruction=None, table=0, priority=100, cookie=0, switch_id=1):
         ''' match is an OpenFlowMatch object.
             instruction is an OpenFlowInstruction object.
             table is a table number.
             priority is a priority number.
             cookie is an arbitrary cookie number. '''
 
+        if not isinstance(switch_id, int):
+            raise OpenFlowRuleTypeError("switch_id must be an int")
+            
         if (instruction != None and
             not isinstance(match, OpenFlowMatch)):
             raise OpenFlowRuleTypeError("match must be an OpenFlowMatch object")

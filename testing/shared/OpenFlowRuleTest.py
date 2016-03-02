@@ -98,6 +98,22 @@ class OpenFlowRuleTest(unittest.TestCase):
             pass
         else:
             self.fail("did not see error")
+
+    def test_invalid_init6(self):
+        fields = [Field("field"), Field("field")]
+        match = OpenFlowMatch(fields)
+        instruction = instruction_GOTO_TABLE(3)
+        table = 1
+        priority = 100 
+        cookie = 1234
+        switch_id = "a"
+        
+        try:
+            OpenFlowRule(match, instruction, table, priority, cookie, switch_id)
+        except TypeError:
+            pass
+        else:
+            self.fail("did not see error")            
             
     def test_setMatch_valid(self):
         fields = [number_field("field",3,100,7), number_field("field",3,100,8)]        
