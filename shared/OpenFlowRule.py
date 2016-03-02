@@ -27,6 +27,7 @@ class OpenFlowRule(object):
 
         if not isinstance(switch_id, int):
             raise OpenFlowRuleTypeError("switch_id must be an int")
+        self.switch_id = switch_id
             
         if (instruction != None and
             not isinstance(match, OpenFlowMatch)):
