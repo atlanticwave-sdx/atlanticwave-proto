@@ -26,7 +26,7 @@ class ControllerInterface(object):
         ''' Takes an OpenFlowRule and pushes it to the switch. '''
         raise NotImplementedError("Subclasses must implement this.")
 
-    def remove_rule(self, cookie):
+    def remove_rule(self, rule):
         ''' Removes a rule based on cookie number. '''
         raise NotImplementedError("Subclasses must implement this.")
 

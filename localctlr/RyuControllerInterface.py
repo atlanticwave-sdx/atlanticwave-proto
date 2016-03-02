@@ -4,9 +4,14 @@
 
 from ControllerInterface import ControllerInterface
 from ryu.ofproto import ofproto_v1_3
-import Queue
 from shared.Singleton import Singleton
 from shared.OpenFlowRule import OpenFlowRule
+from RyuTranslateInterface import RyuQueue
+from ryu.cmd.manager import main
+
+import Queue
+from threading import Thread
+
 
 class RyuControllerInterface(ControllerInterface):
     ''' This is a particular implementation of the ControllerInterface class
@@ -27,24 +32,29 @@ class RyuControllerInterface(ControllerInterface):
         super(RyuControllerInterface, self).__init__(*args, **kwargs)
 
         self.queue = RyuQueue()
-        
+
+        # Start up Ryu
+        # FIXME: need a way to get the path to RyuTranslateInterface better than this
+        self.ryu_thread = Thread(target=main,
+                                 args=(),
+                                 kwargs={'args':["~/atlanticwave-proto/localctlr/RyuTranslateInterface.py"]})
+        self.ryu_thread.daemon = True
+        self.ryu_thread.start()
+
+        # FIXME: What else?
         pass
 
     def send_command(self, rule):
         if not isinstance(rule, OpenFlowRule):
             raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + type(rule))
 
-        # Add command to queue 
-        self.queue.put(rule)
+        self.queue.add_rule(rule)
 
-    def remove_rule(self, cookie):
-        self.queue.put(cookie)
+    def remove_rule(self, rule):
+        if not isinstance(rule, OpenFlowRule):
+            raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + type(rule))
+
+        # FIXME: How to make this cleaner?
+        self.queue.remove_rule(rule)
 
 
-class RyuQueue(Queue.Queue):
-    ''' This is a singleton queue that allows both RyuControllerInterface and
-        RyuTranslateInterface to communicate. '''
-    __metaclass__ = Singleton
-
-    def __init__(self, maxsize=0):
-        super(RyuQueue, self).__init__(maxsize)

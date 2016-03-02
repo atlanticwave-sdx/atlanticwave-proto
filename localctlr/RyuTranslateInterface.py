@@ -2,7 +2,6 @@
 # AtlanticWave/SDX Project
 
 
-from RyuControllerInterface import RyuQueue
 from shared.OpenFlowRule import OpenFlowRule
 from ryu.base import app_manager
 from ryu.controller import ofp_event
@@ -21,8 +20,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.loop_thread = threading.Thread(target=self.main_loop)
         self.loop_thread.daemon = True
         self.loop_thread.start()
-        
-        
+
+        # Start up the connection to switch?
+
+
+        # TODO: Reestablish connection? Do I have to do anything?
         
         pass
 
@@ -34,16 +36,22 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
 
         while True:
-            event = self.queue.get(block=True)
-
-            if isinstance(event, int):
-                # Remove an event. This is a cookie number to remove.
-                pass
-            elif isinstance(event, OpenFlowRule):
+            event_type, event = self.queue.get(block=True)
+            
+            if event_type == RyuQueue.ADD:
                 # Add a new rule.
                 pass
-                
 
+            elif event_type == RyuQueue.REMOVE:
+                # Remove a rule.
+                pass
+
+    # Handles switch connect event
+    @set_ev_cls(ofp_event.EventOFPSwitchEFeattures, CONFIG_DISPATCHER)
+    def switch_features_handler(self, ev):
+        self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
+        
+        
 
 
     # Boilerplate functions
@@ -84,3 +92,22 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 out_group=out_group, out_port=out_port,
                                 match=match)
         datapath.send_msg(mod)
+
+
+class RyuQueue(Queue.Queue):
+    ''' This is a singleton queue that allows both RyuControllerInterface and
+        RyuTranslateInterface to communicate. '''
+    __metaclass__ = Singleton
+
+    self.REMOVE = "REMOVE"
+    self.ADD = "ADD"
+
+    def __init__(self, maxsize=0):
+        super(RyuQueue, self).__init__(maxsize)
+
+    # Use these for adding and removing, rather than put.
+    def add_rule(self, rule):
+        self.put((self.ADD, rule))
+
+    def remove_rule(self, rule):
+        self.put((self.REMOVE, rule))
