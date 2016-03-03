@@ -3,14 +3,17 @@
 
 
 from shared.OpenFlowRule import OpenFlowRule
+from shared.Singleton import Singleton
 from shared.match import *
 from shared.offield import *
 from shared.action import *
 from shared.instruction import *
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.ofprotop import ofproto_v1_3
+from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
+from ryu.ofproto import ofproto_v1_3
 import threading
+import Queue
 
 class RyuTranslateInterface(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -70,7 +73,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # FIXME - There may need to be more options here. This is just a start.
 
     # Handles switch connect event
-    @set_ev_cls(ofp_event.EventOFPSwitchEFeattures, CONFIG_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
         
@@ -167,20 +170,25 @@ class RyuTranslateInterface(app_manager.RyuApp):
         datapath.send_msg(mod)
 
 
-class RyuQueue(Queue.Queue):
+class RyuQueue(object):
     ''' This is a singleton queue that allows both RyuControllerInterface and
         RyuTranslateInterface to communicate. '''
     __metaclass__ = Singleton
 
-    self.REMOVE = "REMOVE"
-    self.ADD = "ADD"
+    REMOVE = "REMOVE"
+    ADD = "ADD"
 
     def __init__(self, maxsize=0):
-        super(RyuQueue, self).__init__(maxsize)
+        self.queue = Queue.Queue(maxsize)
 
     # Use these for adding and removing, rather than put.
-    def add_rule(self, rule):
-        self.put((self.ADD, rule))
+    def add_rule(self, rule, block=True, timeout=None):
+        self.queue.put((self.ADD, rule), block, timeout)
 
-    def remove_rule(self, rule):
-        self.put((self.REMOVE, rule))
+    def remove_rule(self, rule, block=True, timeout=None):
+        self.queue.put((self.REMOVE, rule), block, timeout)
+
+    def get(self):
+        ''' This returns the tuple (event_type, event).
+            event_type is either ADD or REMOVE. '''
+        return self.queue.get()
