@@ -2,17 +2,12 @@
 # AtlanticWave/SDX Project
 
 
-# Unit tests for LocalController class
+# Unit tests for RyuTranslateInterface class
 
 import unittest
 import mock
-from localctlr.LocalController import *
-
-
-
-
-
-
+from time import sleep
+from localctlr.RyuTranslateInterface import RyuTranslateInterface
 
 
 

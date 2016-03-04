@@ -3,10 +3,13 @@
 
 
 import logging
+import threading
+from select import select
 from shared.Singleton import Singleton
 from SDXControllerConnectionManager import *
 from RyuControllerInterface import *
 from shared.Connection import *
+
 
 # FIXME: this needs to be figured out.
 IPADDR = '127.0.0.1'
@@ -32,12 +35,20 @@ class LocalController(object):
         # Start connections:
         self.start_switch_connection()
         self.start_sdx_controller_connection()
+
+    def start_main_loop(self):
+        self.main_loop_thread = threading.Thread(target=self._main_loop)
+        self.main_loop_thread.daemon = True
+        self.main_loop_thread.start()
+        
+    def _main_loop(self):
+        ''' This is the main loop for the Local Controller. User should call 
+            start_main_loop() to start it. ''' 
         
         rlist = [self.sdx_connection]
         wlist = []
         xlist = rlist
 
-        # Main loop
         while(True):
             # Based, in part, on https://pymotw.com/2/select/
             readable, writable, exceptional = select(rlist,
@@ -52,7 +63,9 @@ class LocalController(object):
                 #elif?
 
             # Loop through writable
-            # Nothing to do here!
+            for entry in exceptional:
+                # Handle connection failures
+                pass
 
             # Loop through exceptional
             for entry in exceptional:
