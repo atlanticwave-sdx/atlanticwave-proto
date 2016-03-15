@@ -75,6 +75,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
     # Handles switch connect event
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
+        print "Connection from: " + str(ev.msg.datapath.id)
         self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
         
         
@@ -123,7 +124,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             actions = []
             for action in instruction.actions:
                 actions.append(self.translate_action(datapath, action))
-                
+                 
             return parser.OFPInstructionActions(ofproto.OFPIT_WRITE_ACTIONS,
                                                 actions)
 
@@ -188,7 +189,7 @@ class RyuQueue(object):
     def remove_rule(self, rule, block=True, timeout=None):
         self.queue.put((self.REMOVE, rule), block, timeout)
 
-    def get(self):
+    def get(self, block=False):
         ''' This returns the tuple (event_type, event).
             event_type is either ADD or REMOVE. '''
-        return self.queue.get()
+        return self.queue.get(block)
