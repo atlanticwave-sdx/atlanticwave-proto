@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-# Unit tests for LocalController class
+# Unit tests for RyuQueue class
 
 import unittest
 #import mock

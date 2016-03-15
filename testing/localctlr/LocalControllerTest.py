@@ -9,8 +9,6 @@ import mock
 from localctlr.LocalController import *
 
 class InitController(unittest.TestCase):
-#    @mock.patch('localctlr.LocalController.shared.Connection.select', autospec=True)
-#    @mock.patch('shared.Connection.select', autospec=True)
     @mock.patch('localctlr.LocalController.SDXControllerConnectionManager', autospec=True)
     @mock.patch('localctlr.LocalController.RyuControllerInterface', autospec=True)
     def test_basic_init(self, ryuctlr, sdxcxn):
@@ -32,6 +30,7 @@ class StartController(unittest.TestCase):
     def test_start(self, ryuctlr, sdxcxn, selectmock):
         ctlr = LocalController()
         ctlr.start()
+
 
 
 
