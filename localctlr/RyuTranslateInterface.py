@@ -12,8 +12,9 @@ from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
 from ryu.ofproto import ofproto_v1_3
+from RyuQueue import *
+from RyuControllerInterface import RyuControllerInterface
 import threading
-import Queue
 
 class RyuTranslateInterface(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -23,6 +24,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         self.queue = RyuQueue()
         self.datapaths = {}
+
+        # Cross pollinate with RyuControllerInterface
+        cp = RyuCrossPollinate()
+        cp.TranslateInterface = self
 
         # Spawn main_loop thread
         self.loop_thread = threading.Thread(target=self.main_loop)
@@ -75,11 +80,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
     # Handles switch connect event
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
-        print "Connection from: " + str(ev.msg.datapath.id)
+        #print "Connection from: " + str(ev.msg.datapath.id) + " for " + str(self)
         self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
-        
-        
-
 
     # Boilerplate functions
     def translate_match(self, datapath, match):
@@ -89,7 +91,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         for m in match.fields:
             args[m.get_name()] = m.get()
 
-        return datapath.ofproto_parser.OFPMatch(args)
+        return datapath.ofproto_parser.OFPMatch(**args)
 
     def translate_action(self, datapath, action):
         ''' Translates shared.action.OpenFlowAction to OFPAction*. '''
@@ -170,26 +172,3 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 match=match)
         datapath.send_msg(mod)
 
-
-class RyuQueue(object):
-    ''' This is a singleton queue that allows both RyuControllerInterface and
-        RyuTranslateInterface to communicate. '''
-    __metaclass__ = Singleton
-
-    REMOVE = "REMOVE"
-    ADD = "ADD"
-
-    def __init__(self, maxsize=0):
-        self.queue = Queue.Queue(maxsize)
-
-    # Use these for adding and removing, rather than put.
-    def add_rule(self, rule, block=True, timeout=None):
-        self.queue.put((self.ADD, rule), block, timeout)
-
-    def remove_rule(self, rule, block=True, timeout=None):
-        self.queue.put((self.REMOVE, rule), block, timeout)
-
-    def get(self, block=False):
-        ''' This returns the tuple (event_type, event).
-            event_type is either ADD or REMOVE. '''
-        return self.queue.get(block)

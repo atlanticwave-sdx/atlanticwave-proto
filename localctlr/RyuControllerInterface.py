@@ -6,10 +6,9 @@ from ControllerInterface import ControllerInterface
 from ryu.ofproto import ofproto_v1_3
 from shared.Singleton import Singleton
 from shared.OpenFlowRule import OpenFlowRule
-from RyuTranslateInterface import RyuQueue
+from RyuQueue import *
 from ryu.cmd.manager import main
 
-import Queue
 from threading import Thread
 
 
@@ -22,7 +21,7 @@ class RyuControllerInterface(ControllerInterface):
         with that, we use some rather ugly passthroughs. First, we start the
         RyuTranslateInterface that takes commands, translates them to Ryu, and
         creates and sends the FlowMod messages. Second, there is a singleton
-        RyuQueue (below) class that both RyuControllerInterface and 
+        RyuQueue class that both RyuControllerInterface and 
         RyuTranslateInterface can talk to in order to pass messages across 
         without yet another network connection.
     '''
@@ -33,11 +32,15 @@ class RyuControllerInterface(ControllerInterface):
 
         self.queue = RyuQueue()
 
+        # crosspollinate
+        cp = RyuCrossPollinate()
+        cp.ControllerInterface = self
+        
         # Start up Ryu
         # FIXME: need a way to get the path to RyuTranslateInterface better than this
         self.ryu_thread = Thread(target=main,
                                  args=(),
-                                 kwargs={'args':["~/atlanticwave-proto/localctlr/RyuTranslateInterface.py"]})
+                                 kwargs={'args':["/home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py"]})
         self.ryu_thread.daemon = True
         self.ryu_thread.start()
 

@@ -95,7 +95,7 @@ class number_field(Field):
                      valid.
     '''
     def __init__(self, name, minval, maxval, value=None, prereq=None,
-                 optional_without=None, others=[]):
+                 optional_without=None, mask=False, others=[]):
         if value is not None:
             if type(value) is not int:
                 raise FieldTypeError("value is not a number")

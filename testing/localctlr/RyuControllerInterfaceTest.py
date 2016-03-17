@@ -1,7 +1,7 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
-<<<<<<< HEAD
+
 import unittest
 import mock
 from localctlr.RyuControllerInterface import *
@@ -26,16 +26,6 @@ class RyuControllerInterfaceSendRecv(unittest.TestCase):
         ctlrint.remove_rule(rule)        
         
         
-=======
-
-# Unit tests for RyuControllerInterface class
-
-import unittest
-import mock
-from time import sleep
-from localctlr.RyuControllerInterface import RyuControllerInterface
-
->>>>>>> 6d1c828ae5f55bfc3739ecf9f07dd80ff6e082d7
 
 
 

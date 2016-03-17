@@ -27,7 +27,7 @@ class OpenFlowMatch(object):
             raise OpenFlowMatchTypeError("fields must be a list")
         for entry in fields:
             if not isinstance(entry, Field):
-                raise OpenFlowMatchTypeError("fields must be a list of Field objects")
+                raise OpenFlowMatchTypeError("fields must be a list of Field objects: " + str(entry))
         self.fields = fields
 
     def check_validity(self):

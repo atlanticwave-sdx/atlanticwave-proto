@@ -7,7 +7,7 @@
 import unittest
 #import mock
 from time import sleep
-from localctlr.RyuTranslateInterface import RyuQueue
+from localctlr.RyuQueue import RyuQueue
 
 
 class SingletonTest(unittest.TestCase):
