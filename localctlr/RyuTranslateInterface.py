@@ -104,9 +104,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         elif isinstance(action, action_SET_FIELD):
             args = {}
-            for f in action.fields.keys():
+            for f in action.fields:#.keys():
                 args[f.get_name()] = f.get()
-            return parser.OFPActionSetField(args)
+            return parser.OFPActionSetField(**args)
 
 
     def translate_instruction(self, datapath, instruction):
@@ -140,7 +140,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                 actions)
 
         elif isinstance(instruction, instruction_CLEAR_ACTIONS):
-            return parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS)
+            # FIXME: The empty list is due to a bug in ofproto_v1_3_parser.py:2758
+            return parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS,[])
 
         
                               

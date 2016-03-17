@@ -3,6 +3,7 @@
 
 
 import sys
+from netaddr import EUI, IPAddress
 from shared.ofconstants import *
 
 
@@ -97,7 +98,7 @@ class number_field(Field):
     def __init__(self, name, minval, maxval, value=None, prereq=None,
                  optional_without=None, mask=False, others=[]):
         if value is not None:
-            if type(value) is not int:
+            if type(value) is not int and type(value) is not long:
                 raise FieldTypeError("value is not a number")
         
         super(number_field, self).__init__(name, value, prereq, optional_without)
@@ -129,20 +130,36 @@ class bitmask_field(number_field):
         now, but could change in the future. '''
     pass
 
-class ipv4_field(Field):
+class mac_field(number_field):
+    ''' Used for MAC address fields. '''
+    def __init__(self, name, value=None, mask=False):
+        if value is not None:
+            mac = EUI(value)
+
+        super(mac_field, self).__init__(name, value=int(mac), 
+                                        minval=0, maxval=2**48-1,
+                                        mask=mask)
+
+
+class ipv4_field(number_field):
     ''' Used for IPv4 addresses. '''
-    
-    def check_validity(self):
-        # TODO: This needs to be written.
-        pass
+    def __init__(self, name, value=None, mask=False, prereq=None):
+        if value is not None:
+            ip = IPAddress(value)
 
-class ipv6_field(Field):
+        super(ipv4_field, self).__init__(name, value=int(ip),
+                                         minval=0, maxval=2**32-1,
+                                         mask=mask, prereq=prereq)
+
+class ipv6_field(number_field):
     ''' Used for IPv6 addresses. '''
-    
-    def check_validity(self):
-        # TODO: This needs to be written.
-        pass
+    def __init__(self, name, value=None, mask=False, prereq=None):
+        if value is not None:
+            ip = IPAddress(value, 6)
 
+        super(ipv6_field, self).__init__(name, value=int(ip),
+                                         minval=0, maxval=2**128-1,
+                                         mask=mask, prereq=prereq)
 
 
 
@@ -154,16 +171,14 @@ class IN_PORT(number_field):
         super(IN_PORT, self).__init__('in_port', value=value,
                                       minval=1, maxval=OFPP_MAX)
         
-class ETH_DST(number_field):
+class ETH_DST(mac_field):
     def __init__(self, value=None, mask=False):
         super(ETH_DST, self).__init__('eth_dst', value=value,
-                                      minval=0, maxval=2**48-1,
                                       mask=mask)
 
-class ETH_SRC(number_field):
+class ETH_SRC(mac_field):
     def __init__(self, value=None, mask=False):
         super(ETH_SRC, self).__init__('eth_src', value=value,
-                                      minval=0, maxval=2**48-1,
                                       mask=mask)
 
 class ETH_TYPE(number_field):

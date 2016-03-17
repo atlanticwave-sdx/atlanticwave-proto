@@ -50,7 +50,7 @@ class instruction_GOTO_TABLE(OpenFlowInstruction):
 class instruction_WRITE_METADATA(OpenFlowInstruction):
     ''' This instruction writes metadata information to matching flows. '''
 
-    def __init__(self, metadata, metadata_mask=None):
+    def __init__(self, metadata, metadata_mask=0xFFFFFFFFFFFFFFFF):
         self.metadata = number_field('metadata', minval=1,
                                      maxval=2**64-1,
                                      value=metadata)
