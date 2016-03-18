@@ -6,6 +6,7 @@
 
 import unittest
 import mock
+import subprocess
 from localctlr.RyuTranslateInterface import *
 from localctlr.RyuControllerInterface import *
 from localctlr.RyuQueue import *
@@ -28,6 +29,7 @@ class RyuTranslateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # Setup RyuControllerInterface, which sets up RyuTranslateInterface
         cls.ctlrint = RyuControllerInterface()
         cls.trans = None
         cp = RyuCrossPollinate()
@@ -37,9 +39,14 @@ class RyuTranslateTests(unittest.TestCase):
             sleep(1)
         cls.trans = cp.TranslateInterface
 
+        # Setup the virtual switch
+        subprocess.call(['ovs-vsctl', 'add-br', 'br_ovs'])
+        subprocess.call(['ovs-vsctl', 'add-port', 'br_ovs', 'vi0', '--', 'set', 'Interface', 'vi0', 'type=internal'])
+        subprocess.call(['ovs-vsctl', 'set', 'bridge', 'br_ovs', 'other-config:datapath-id=0000000000000001'])
+        subprocess.call(['ovs-vsctl', 'set-controller', 'br_ovs', 'tcp:127.0.0.1:6633'])
 
-        # WHY ISN"T THIS SIGNLETON WORKING? I WANT TO MANUALLY GET THIS>>>>
-        # RyuTranslateInterface inherits from something that's not a singleton. This is why it's not working. need to figure out a way to handle that. Singleton internal data structure? 
+
+        # Wait for switch to connect to controller
         while(len(cls.trans.datapaths.keys()) == 0):
             print "Waiting " + str(cls.trans.datapaths)
             sleep(1)
@@ -47,6 +54,10 @@ class RyuTranslateTests(unittest.TestCase):
         print "Datapaths: " + str(cls.trans.datapaths.keys())
         cls.datapath = cls.trans.datapaths[cls.trans.datapaths.keys()[0]]
 
+    @classmethod
+    def tearDownClass(cls):
+        # Delete virtual switch
+        subprocess.call(['ovs-vsctl', 'del-br', 'br_ovs'])
 
     ######################## TRANSLATE MATCH TESTS #########################
     def trans_test(self, ofm, ofpm):
