@@ -23,6 +23,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         super(RyuTranslateInterface, self).__init__(*args, **kwargs)
 
         self.queue = RyuQueue()
+        print "RTI Queue: " + str(self.queue)
         self.datapaths = {}
 
         # Cross pollinate with RyuControllerInterface
@@ -49,7 +50,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
 
         while True:
-            event_type, event = self.queue.get(block=True)
+            print "self.queue.get() about to be called"
+            event_type, event = self.queue.get()
+            print "self.queue.get() returned: " + str(event_type)
             if event.switch_id not in self.datapaths.keys():
                 # FIXME - Need to update this for sending errors back
                 continue

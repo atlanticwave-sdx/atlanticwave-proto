@@ -5,6 +5,7 @@
 # Unit tests for RyuQueue class
 
 import unittest
+import threading
 #import mock
 from time import sleep
 from localctlr.RyuQueue import RyuQueue
@@ -61,6 +62,31 @@ class QueueingTest3(unittest.TestCase):
             self.fail("Did not see error")
 
 
+class QueueingTestThread1(unittest.TestCase):
+    def test_single_queue(self):
+        self.queue = RyuQueue()
+        self.queue._clear()
+        
+        self.listen_thread = threading.Thread(target=self.listening_thread)
+        self.listen_thread.daemon = True
+        self.listen_thread.start()
+        
+        sleep(0.5)
+        self.queue.add_rule("Add")
+        sleep(0.1)
+        event_type, event = self.queue.get()
+        print "Test Received: " + event + " " + str(event_type)
+
+        self.failUnlessEqual(event_type, RyuQueue.ADD)
+        self.failUnlessEqual(event, "Bad")
+
+    def listening_thread(self):
+        event_type, event = self.queue.get()
+        print "Thrd Received: " + event + " " + str(event_type)
+        self.failUnlessEqual(event_type, RyuQueue.ADD)
+        self.failUnlessEqual(event, "Add")
+        sleep(0.5)
+        self.queue.add_rule("Bad")
 
 if __name__ == '__main__':
     unittest.main()

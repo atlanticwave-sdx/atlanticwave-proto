@@ -19,15 +19,24 @@ class RyuQueue(object):
 
     # Use these for adding and removing, rather than put.
     def add_rule(self, rule, block=True, timeout=None):
+        print "Adding to queue"
         self.queue.put((self.ADD, rule), block, timeout)
+        print "Added  to queue"
 
     def remove_rule(self, rule, block=True, timeout=None):
         self.queue.put((self.REMOVE, rule), block, timeout)
 
-    def get(self, block=False):
+    def get(self, block=True):
         ''' This returns the tuple (event_type, event).
             event_type is either ADD or REMOVE. '''
-        return self.queue.get(block)
+        print "Getting from queue"
+        val = self.queue.get(block)
+        print "Got     from queue"
+        return val
+        
+    def _clear(self):
+        while not self.queue.empty():
+            self.queue.get(False)
         
 
 class RyuCrossPollinate(object):

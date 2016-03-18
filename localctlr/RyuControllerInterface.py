@@ -31,6 +31,7 @@ class RyuControllerInterface(ControllerInterface):
         super(RyuControllerInterface, self).__init__(*args, **kwargs)
 
         self.queue = RyuQueue()
+        print "RCI Queue: " + str(self.queue)
 
         # crosspollinate
         cp = RyuCrossPollinate()
