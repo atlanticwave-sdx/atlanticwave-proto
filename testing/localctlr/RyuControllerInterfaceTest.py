@@ -40,6 +40,8 @@ class RyuControllerFullTests(unittest.TestCase):
 
         # Setup the virtual switch
         subprocess.check_call(['mn', '-c'])
+        subprocess.call(['fuser', '-k', '55767/tcp'])
+        subprocess.call(['fuser', '-k', '55767/tcp'])
         subprocess.check_call(['ovs-vsctl', 'add-br', 'br_ovs'])
         subprocess.check_call(['ovs-vsctl', 'add-port', 'br_ovs', 'vi0', '--', 'set', 'Interface', 'vi0', 'type=internal'])
         subprocess.check_call(['ovs-vsctl', 'set', 'bridge', 'br_ovs', 'other-config:datapath-id=0000000000000001'])
@@ -66,8 +68,8 @@ class RyuControllerFullTests(unittest.TestCase):
 
         self.ctlrint.send_command(ofr)
 
-        #output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
-        #print output
+        output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
+        print output
         print "End of test_rule_installation"
         
 

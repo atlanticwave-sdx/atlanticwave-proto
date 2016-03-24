@@ -71,20 +71,21 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 # FIXME - Need to update this for sending errors back
                 continue
                 
-            datapath = self.datapath[event.switch_id]
-            match = translate_match(datapath, event.match)
+            datapath = self.datapaths[event.switch_id]
+            match = self.translate_match(datapath, event.match)
             
             if event_type == ADD:
                 # Convert instruction to Ryu
-                instruction = translate_instruction(datapath, event.instruction)
+                instructions = [self.translate_instruction(datapath, 
+                                                           event.instruction)]
                 
-                self.add_flow(self.datapath[event.switch_id],
+                self.add_flow(datapath,
                               event.cookie,
                               event.table,
                               event.priority,
                               match,
-                              instruction,
-                              event.buffer_id)
+                              instructions)
+                              # event.buffer_id)
 
             elif event_type == REMOVE:
                 # Remove a rule.

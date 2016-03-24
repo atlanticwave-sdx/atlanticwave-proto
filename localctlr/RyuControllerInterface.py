@@ -10,7 +10,7 @@ from shared.OpenFlowRule import OpenFlowRule
 from ryu.cmd.manager import main
 
 import threading
-
+import subprocess
 
 class RyuControllerInterface(ControllerInterface):
     ''' This is a particular implementation of the ControllerInterface class
@@ -39,15 +39,24 @@ class RyuControllerInterface(ControllerInterface):
         
         # Start up Ryu as a subprocess
         # FIXME: need a way to get the path to RyuTranslateInterface better than this
-        self.ryu_thread = threading.Thread(target=main,
-                                           args=(),
-                                           kwargs={'args':["/home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py"]})
-        self.ryu_thread.daemon = True
-        self.ryu_thread.start()
+        #        self.ryu_thread = threading.Thread(target=main,
+        #                                           args=(),
+        #                                           kwargs={'args':["/home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py"]})
+
+        #        self.ryu_thread.daemon = True
+        #        self.ryu_thread.start()
+        # This doesn't work as it should: Normally, you would have two different
+        # strings within the list. For some reason, ryu-manager doesn't like 
+        # this, thus one long string.
+        subprocess.Popen(['ryu-manager /home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py'], shell=True)
+        print "&&&& Subprocess Called &&&&"
+  
 
         # Don't complete until the connection is received by inter_cm ...
         self.inter_cm_condition.acquire()
+        print "&&&& Waiting for connection &&&&"
         self.inter_cm_condition.wait()
+        print "&&&& connection established &&&&"
 
         # ... and we've gotten notice that they've gotten a connection with at
         # least one switch:
