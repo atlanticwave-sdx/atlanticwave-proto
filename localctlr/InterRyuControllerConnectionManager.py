@@ -8,4 +8,4 @@ class InterRyuControllerConnectionManager(ConnectionManager):
     ''' Used to manage the connection between parts of the Local Controller. '''
 
     def __init__(self, *args, **kwargs):
-        super(SDXControllerConnectionManager, self).__init__(*args, **kwargs)
+        super(InterRyuControllerConnectionManager, self).__init__(*args, **kwargs)

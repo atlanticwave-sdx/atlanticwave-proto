@@ -12,7 +12,10 @@ from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
 from ryu.ofproto import ofproto_v1_3
+from time import sleep
 from RyuControllerInterface import RyuControllerInterface
+from InterRyuControllerConnectionManager import *
+
 import threading
 
 ADD = "ADD"
@@ -50,7 +53,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
 
         # First, wait till we have at least one datapath.
-        while len(self.datapaths.keys()) == 0):
+        while len(self.datapaths.keys()) == 0:
             print "Waiting " + str(self.datapaths)
             sleep(1)
 
@@ -62,7 +65,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         while True:
 
             # FIXME - This is static: only installing rules right now.
-            event_type, event = ADD, self.recv()
+            event_type, event = ADD, self.inter_cm_cxn.recv()
+            print "&&&&&&&&&&received: " + str(event)
             if event.switch_id not in self.datapaths.keys():
                 # FIXME - Need to update this for sending errors back
                 continue

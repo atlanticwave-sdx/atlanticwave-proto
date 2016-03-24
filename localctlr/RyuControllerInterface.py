@@ -9,7 +9,7 @@ from shared.Singleton import Singleton
 from shared.OpenFlowRule import OpenFlowRule
 from ryu.cmd.manager import main
 
-from threading import Thread
+import threading
 
 
 class RyuControllerInterface(ControllerInterface):
@@ -39,13 +39,14 @@ class RyuControllerInterface(ControllerInterface):
         
         # Start up Ryu as a subprocess
         # FIXME: need a way to get the path to RyuTranslateInterface better than this
-        self.ryu_thread = Thread(target=main,
-                                 args=(),
-                                 kwargs={'args':["/home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py"]})
+        self.ryu_thread = threading.Thread(target=main,
+                                           args=(),
+                                           kwargs={'args':["/home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py"]})
         self.ryu_thread.daemon = True
         self.ryu_thread.start()
 
         # Don't complete until the connection is received by inter_cm ...
+        self.inter_cm_condition.acquire()
         self.inter_cm_condition.wait()
 
         # ... and we've gotten notice that they've gotten a connection with at
@@ -66,7 +67,9 @@ class RyuControllerInterface(ControllerInterface):
 
     def _new_inter_cm_thread(self, cxn):
         self.inter_cm_cxn = cxn
+        self.inter_cm_condition.acquire()
         self.inter_cm_condition.notify()
+        self.inter_cm_condition.release()
 
     def send_command(self, rule):
         if not isinstance(rule, OpenFlowRule):
