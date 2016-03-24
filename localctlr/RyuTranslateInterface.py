@@ -12,9 +12,11 @@ from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
 from ryu.ofproto import ofproto_v1_3
-from RyuQueue import *
 from RyuControllerInterface import RyuControllerInterface
 import threading
+
+ADD = "ADD"
+REMOVE = "REMOVE"
 
 class RyuTranslateInterface(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -22,13 +24,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(RyuTranslateInterface, self).__init__(*args, **kwargs)
 
-        self.queue = RyuQueue()
-        print "RTI Queue: " + str(self.queue)
-        self.datapaths = {}
+        # Establish connection to RyuControllerInterface
+        self.inter_cm = InterRyuControllerConnectionManager()
+        #FIXME: Hardcoded!
+        self.inter_cm_cxn = self.inter_cm.open_outbound_connection("127.0.0.1", 55767)
 
-        # Cross pollinate with RyuControllerInterface
-        cp = RyuCrossPollinate()
-        cp.TranslateInterface = self
+        self.datapaths = {}
 
         # Spawn main_loop thread
         self.loop_thread = threading.Thread(target=self.main_loop)
@@ -43,16 +44,25 @@ class RyuTranslateInterface(app_manager.RyuApp):
         pass
 
     def main_loop(self):
-        ''' This is the main loop that reads and works with the RyuQueue data
-            structure. It loops through, looking for new events. If there is one
-            to be processed, process it. 
-            Since RyuQueue is a queue structure, we can block on new events.
+        ''' This is the main loop that reads and works with the data coming from
+            the Inter-Ryu Connection. It loops through, looking for new events. 
+            If there is one to be processed, process it. 
         '''
 
+        # First, wait till we have at least one datapath.
+        while len(self.datapaths.keys()) == 0):
+            print "Waiting " + str(self.datapaths)
+            sleep(1)
+
+        # Send message over to the Controller Interface to let it know that
+        # we have at least one switch.
+        self.inter_cm_cxn.send(str(self.datapaths))
+        
+
         while True:
-            print "self.queue.get() about to be called"
-            event_type, event = self.queue.get()
-            print "self.queue.get() returned: " + str(event_type)
+
+            # FIXME - This is static: only installing rules right now.
+            event_type, event = ADD, self.recv()
             if event.switch_id not in self.datapaths.keys():
                 # FIXME - Need to update this for sending errors back
                 continue
@@ -60,7 +70,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             datapath = self.datapath[event.switch_id]
             match = translate_match(datapath, event.match)
             
-            if event_type == RyuQueue.ADD:
+            if event_type == ADD:
                 # Convert instruction to Ryu
                 instruction = translate_instruction(datapath, event.instruction)
                 
@@ -72,7 +82,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                               instruction,
                               event.buffer_id)
 
-            elif event_type == RyuQueue.REMOVE:
+            elif event_type == REMOVE:
                 # Remove a rule.
                 self.remove_flow(datapath,
                                  event.cookie,

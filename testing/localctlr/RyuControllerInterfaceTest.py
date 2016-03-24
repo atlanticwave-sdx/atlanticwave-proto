@@ -37,14 +37,6 @@ class RyuControllerFullTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Taken and modified from  RyuTranslateInterfaceTest.py
-        # Setup RyuControllerInterface, which sets up RyuTranslateInterface
-        cls.ctlrint = RyuControllerInterface()
-        cp = RyuCrossPollinate()
-        while(cp.TranslateInterface == None):
-            # Wait for cross pollination
-            print "Waiting for cross pollination" 
-            sleep(1)
-        cls.trans = cp.TranslateInterface
 
         # Setup the virtual switch
         subprocess.check_call(['mn', '-c'])
@@ -54,13 +46,9 @@ class RyuControllerFullTests(unittest.TestCase):
         subprocess.check_call(['ovs-vsctl', 'set-controller', 'br_ovs', 'tcp:127.0.0.1:6633'])
 
 
-        # Wait for switch to connect to controller
-        while(len(cls.trans.datapaths.keys()) == 0):
-            print "Waiting " + str(cls.trans.datapaths)
-            sleep(1)
-
-        print "Datapaths: " + str(cls.trans.datapaths.keys())
-        cls.datapath = cls.trans.datapaths[cls.trans.datapaths.keys()[0]]
+        # Setup RyuControllerInterface, which sets up RyuTranslateInterface
+        # Only returns once RyuTranslateInterface has a datapath.
+        cls.ctlrint = RyuControllerInterface()
 
     @classmethod
     def tearDownClass(cls):
