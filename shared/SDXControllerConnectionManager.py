@@ -1,6 +1,14 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
+# Commands
+SDX_NEW_RULE = "NEW_RULE"
+SDX_RM_RULE = "RM_RULE"
+
+
+
+# Responses
+
 
 from shared.ConnectionManager import ConnectionManager
 

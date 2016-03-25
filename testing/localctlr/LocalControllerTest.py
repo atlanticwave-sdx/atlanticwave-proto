@@ -9,12 +9,12 @@ import mock
 from localctlr.LocalController import *
 
 class InitController(unittest.TestCase):
-    @mock.patch('localctlr.LocalController.SDXControllerConnectionManager', autospec=True)
+    @mock.patch('shared.SDXControllerConnectionManager', autospec=True)
     @mock.patch('localctlr.LocalController.RyuControllerInterface', autospec=True)
     def test_basic_init(self, ryuctlr, sdxcxn):
         ctlr = LocalController()
 
-    @mock.patch('localctlr.SDXControllerConnectionManager.SDXControllerConnectionManager')
+    @mock.patch('shared.SDXControllerConnectionManager')
     @mock.patch('localctlr.RyuControllerInterface.RyuControllerInterface')
     def test_singleton(self, ryuctlr, sdxcxn):
         first_ctlr = LocalController()
@@ -25,11 +25,13 @@ class InitController(unittest.TestCase):
 
 class StartController(unittest.TestCase):
     @mock.patch('shared.Connection.select', autospec=True)    
-    @mock.patch('localctlr.LocalController.SDXControllerConnectionManager', autospec=True)
+    @mock.patch('shared.SDXControllerConnectionManager', autospec=True)
     @mock.patch('localctlr.LocalController.RyuControllerInterface', autospec=True)
     def test_start(self, ryuctlr, sdxcxn, selectmock):
         ctlr = LocalController()
-        ctlr.start()
+        ctlr.start_main_loop()
+
+
 
 
 

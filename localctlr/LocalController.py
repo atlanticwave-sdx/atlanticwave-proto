@@ -5,8 +5,8 @@
 import logging
 import threading
 from shared.Singleton import Singleton
-from SDXControllerConnectionManager import *
 from RyuControllerInterface import *
+from shared.SDXControllerConnectionManager import *
 from shared.Connection import select
 
 
@@ -29,12 +29,15 @@ class LocalController(object):
         self.switch_connection = RyuControllerInterface()
 
         # Setup connection manager
-        self.sdx_connection = SDXControllerConnectionManager()
-
+        self.sdx_cm = SDXControllerConnectionManager()
+        self.sdx_connection = None
 
         # Start connections:
         self.start_switch_connection()
-        self.start_sdx_controller_connection()
+        self.start_sdx_controller_connection() # Blocking call
+
+        # Start main loop
+        self.start_main_loop()
 
     def start_main_loop(self):
         self.main_loop_thread = threading.Thread(target=self._main_loop)
@@ -44,18 +47,6 @@ class LocalController(object):
     def _main_loop(self):
         ''' This is the main loop for the Local Controller. User should call 
             start_main_loop() to start it. ''' 
-        
-
-        # Other thigns that need setting up
-        self.mainloop = None
-
-    def start(self):
-        self.mainloop = threading.Thread(target=self._main_loop)
-        self.mainloop.daemon = True
-        self.mainloop.start()
-
-    def _main_loop(self):
-        # Main loop
         rlist = [self.sdx_connection]
         wlist = []
         xlist = rlist
@@ -69,18 +60,21 @@ class LocalController(object):
             # Loop through readable
             for entry in readable:
                 if entry == self.sdx_connection:
-                    cmd = self.sdx_connection.recv()
-                    self.switch_connection.send_command(cmd)
+                    cmd, data = self.sdx_connection.recv_cmd()
+                    if cmd == SDX_NEW_RULE:
+                        self.switch_connection.send_command(data)
+                    elif cmd == SDX_RM_RULE:
+                        self.switch_connection.remove_rule(data)
                 #elif?
 
             # Loop through writable
-            for entry in exceptional:
-                # Handle connection failures
+            for entry in writable:
+                # Anything to do here?
                 pass
 
             # Loop through exceptional
             for entry in exceptional:
-                # Handle connection failures
+                # FIXME: Handle connection failures
                 pass
         
 
@@ -101,7 +95,7 @@ class LocalController(object):
         self.logger.addHandler(logfile) 
 
     def start_sdx_controller_connection(self):
-        self.sdx_connection.open_outbound_connection(IPADDR, PORT)
+        self.sdx_connection = self.sdx_cm.open_outbound_connection(IPADDR, PORT)
 
     def start_switch_connection(self):
         pass
