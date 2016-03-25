@@ -9,6 +9,7 @@ import logging
 import threading
 import sys
 import struct
+from time import sleep
 
 class ConnectionTypeError(TypeError):
     pass
@@ -100,6 +101,17 @@ class Connection(object):
         except:
             raise
         pass
+
+    def send_cmd(self, cmd, data):
+        self.send(cmd)
+        sleep(0.005) #FIXME: without this, it doesn't work. WHy?
+        self.send(data)
+
+    def recv_cmd(self):
+        cmd = self.recv()
+        sleep(0.005) #FIXME: without this, it doesn't work. WHy?
+        data = self.recv()
+        return cmd, data
 
     def close(self):
         ''' Close out the connection. '''

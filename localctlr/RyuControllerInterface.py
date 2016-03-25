@@ -49,20 +49,16 @@ class RyuControllerInterface(ControllerInterface):
         # strings within the list. For some reason, ryu-manager doesn't like 
         # this, thus one long string.
         subprocess.Popen(['ryu-manager /home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py'], shell=True)
-        print "&&&& Subprocess Called &&&&"
   
 
         # Don't complete until the connection is received by inter_cm ...
         self.inter_cm_condition.acquire()
-        print "&&&& Waiting for connection &&&&"
         self.inter_cm_condition.wait()
-        print "&&&& connection established &&&&"
 
         # ... and we've gotten notice that they've gotten a connection with at
         # least one switch:
-        dps = self.inter_cm_cxn.recv()
-        print "Datapaths received from RyuTranslateInterface: "
-        print dps
+        dps = self.inter_cm_cxn.recv_cmd()
+
         # FIXME: This cannot be permanent. Each piece should be opened up
         # seperately...
         
@@ -84,15 +80,12 @@ class RyuControllerInterface(ControllerInterface):
         if not isinstance(rule, OpenFlowRule):
             raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + type(rule))
 
-        #FIXME - Need a command and a rule, not just a rule.
-        self.inter_cm_cxn.send(rule)
+        self.inter_cm_cxn.send_cmd(ICX_ADD, rule)
 
     def remove_rule(self, rule):
-        raise Error("NOT IMPLEMENTED.")
         if not isinstance(rule, OpenFlowRule):
             raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + type(rule))
 
-        # FIXME: How to make this cleaner?
-        self.queue.remove_rule(rule)
+        self.inter_cm_cxn.send_cmd(ICX_REMOVE, rule)
 
 

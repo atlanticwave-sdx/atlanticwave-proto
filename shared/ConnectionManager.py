@@ -52,6 +52,9 @@ class ConnectionManager(object):
 
         except:
             raise
+
+    def close_listening_port(self):
+        self.listening_sock.close()
     
     def _internal_new_connection(self, sock, address):
         ''' This will call the callback set in new_connection_callback(). Since

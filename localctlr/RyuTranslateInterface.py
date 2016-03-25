@@ -59,14 +59,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Send message over to the Controller Interface to let it know that
         # we have at least one switch.
-        self.inter_cm_cxn.send(str(self.datapaths))
+        self.inter_cm_cxn.send_cmd(ICX_DATAPATHS,
+                                   str(self.datapaths))
         
 
         while True:
 
             # FIXME - This is static: only installing rules right now.
-            event_type, event = ADD, self.inter_cm_cxn.recv()
-            print "&&&&&&&&&&received: " + str(event)
+            event_type, event = self.inter_cm_cxn.recv_cmd()
             if event.switch_id not in self.datapaths.keys():
                 # FIXME - Need to update this for sending errors back
                 continue

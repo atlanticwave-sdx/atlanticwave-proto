@@ -58,7 +58,9 @@ class RyuControllerFullTests(unittest.TestCase):
         # FIXME: whenever this is called, there is an error: "cannot switch to a different thread"
         #subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
         #sleep(5)
-        print "end of tearDownClass"
+        cls.ctlrint.inter_cm_cxn.close()
+        cls.ctlrint.inter_cm.close_listening_port()
+        subprocess.call(['fuser', '-k', '55767/tcp'])
 
     def test_rule_installation(self):
         match = OpenFlowMatch([ETH_DST("00:00:00:00:00:01")])
@@ -69,8 +71,28 @@ class RyuControllerFullTests(unittest.TestCase):
         self.ctlrint.send_command(ofr)
 
         output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
-        print output
-        print "End of test_rule_installation"
+        lines = output.split('\n')
+        
+        # "cookie=0x0, duration=0.005s, table=0, n_packets=0, n_bytes=0, idle_age=0, priority=100,dl_dst=00:00:00:00:00:01 actions=mod_dl_dst:00:00:00:00:00:02"
+        self.failUnlessEqual(lines[1].split(',')[6].strip(),
+                             "priority=100")
+        self.failUnlessEqual(lines[1].split(',')[7].strip(), 
+                             "dl_dst=00:00:00:00:00:01 actions=mod_dl_dst:00:00:00:00:00:02")
+
+    def test_rule_removal(self):
+        match = OpenFlowMatch([ETH_DST("00:00:00:00:00:01")])
+        actionlist = [action_SET_FIELD(ETH_DST("00:00:00:00:00:02"))]
+        instruction = instruction_APPLY_ACTIONS(actionlist)
+        ofr = OpenFlowRule(match, instruction)
+
+        self.ctlrint.remove_rule(ofr)
+
+        output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
+        lines = output.split('\n')
+        
+        # ''
+        self.failUnlessEqual(lines[1].strip(), "")
+        
         
 
 if __name__ == '__main__':
