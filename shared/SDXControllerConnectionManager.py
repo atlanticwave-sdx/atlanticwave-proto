@@ -10,6 +10,12 @@ SDX_RM_RULE = "RM_RULE"
 # Responses
 
 
+
+
+# Connection details
+IPADDR = '127.0.0.1'
+PORT = 5555
+
 from shared.ConnectionManager import ConnectionManager
 
 class SDXControllerConnectionManager(ConnectionManager):

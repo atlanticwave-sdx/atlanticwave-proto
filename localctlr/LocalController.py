@@ -10,11 +10,6 @@ from shared.SDXControllerConnectionManager import *
 from shared.Connection import select
 
 
-
-# FIXME: this needs to be figured out.
-IPADDR = '127.0.0.1'
-PORT = 5555
-
 class LocalController(object):
     ''' The Local Controller is responsible for passing messages from the SDX 
         Controller to the switch. It needs two connections to both the SDX 
