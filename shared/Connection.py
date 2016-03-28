@@ -103,14 +103,10 @@ class Connection(object):
         pass
 
     def send_cmd(self, cmd, data):
-        self.send(cmd)
-        sleep(0.005) #FIXME: without this, it doesn't work. WHy?
-        self.send(data)
+        self.send((cmd,data))
 
     def recv_cmd(self):
-        cmd = self.recv()
-        sleep(0.005) #FIXME: without this, it doesn't work. WHy?
-        data = self.recv()
+        cmd, data = self.recv()
         return cmd, data
 
     def close(self):

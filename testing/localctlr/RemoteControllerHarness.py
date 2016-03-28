@@ -22,15 +22,18 @@ class RemoteControllerHarness(object):
         self.examples = []
         self.examples.append(OFR(OpenFlowMatch([ETH_DST("00:00:00:00:00:01")]),
                                  instruction_APPLY_ACTIONS([action_SET_FIELD(ETH_DST("00:00:00:00:00:02"))])))
-        self.examples.append(OFR(OpenFlowMatch([IP_SRC("1.2.3.4")]),
-                                 instruction_APPLY_ACTIONS([action_SET_FIELD(IP_DST("2.3.4.5"))])))
-        self.examples.append(OFR(OpenFlowMatch([ETH_DST("00:00:00:00:00:03"),
-                                                IP_SRC("3.4.5.6")]),
+        self.examples.append(OFR(OpenFlowMatch([ETH_TYPE(0x0800), 
+                                                IPV4_SRC("1.2.3.4")]),
+                                 instruction_APPLY_ACTIONS([action_SET_FIELD(IPV4_DST("2.3.4.5"))])))
+        self.examples.append(OFR(OpenFlowMatch([ETH_DST("00:00:00:00:00:03"), 
+                                                ETH_TYPE(0x0800), 
+                                                IPV4_SRC("3.4.5.6")]),
                                  instruction_APPLY_ACTIONS([action_SET_FIELD(ETH_SRC("00:00:00:00:00:04"))])))
         self.examples.append(OFR(OpenFlowMatch([ETH_DST("00:00:00:00:00:05"),
-                                                IP_SRC("4.5.6.7")]),
+                                                ETH_TYPE(0x0800),
+                                                IPV4_SRC("4.5.6.7")]),
                                  instruction_APPLY_ACTIONS([action_SET_FIELD(ETH_SRC("00:00:00:00:00:04")),
-                                                            action_SET_FIELD(IP_DST("5.6.7.8"))])))
+                                                            action_SET_FIELD(IPV4_DST("5.6.7.8"))])))
 
                              
                              
@@ -40,7 +43,7 @@ class RemoteControllerHarness(object):
         self.port = PORT
         self.client = None
         self.cm = SDXControllerConnectionManager()
-        self.cm_thread = threading.Thread(self._cm_thread)
+        self.cm_thread = threading.Thread(target=self._cm_thread)
         self.cm_thread.daemon = True
         self.cm_thread.start()
 
@@ -56,9 +59,9 @@ class RemoteControllerHarness(object):
         return (self.client != None)
 
     def send_new_command(self, cmd):
-        self.cxn.send_cmd(SDX_NEW_RULE, cmd)
+        self.client.send_cmd(SDX_NEW_RULE, cmd)
 
     def send_rm_command(self, cmd):
-        self.cxn.send_cmd(SDX_RM_RULE, cmd)
+        self.client.send_cmd(SDX_RM_RULE, cmd)
 
     

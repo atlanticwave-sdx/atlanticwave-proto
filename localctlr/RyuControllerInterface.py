@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from ControllerInterface import ControllerInterface
+from ControllerInterface import *
 from InterRyuControllerConnectionManager import *
 from ryu.ofproto import ofproto_v1_3
 from shared.Singleton import Singleton
@@ -78,13 +78,15 @@ class RyuControllerInterface(ControllerInterface):
 
     def send_command(self, rule):
         if not isinstance(rule, OpenFlowRule):
-            raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + type(rule))
+            raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + str(type(rule)) + 
+                                               "\n    Value: " + str(rule))
 
         self.inter_cm_cxn.send_cmd(ICX_ADD, rule)
 
     def remove_rule(self, rule):
         if not isinstance(rule, OpenFlowRule):
-            raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + type(rule))
+            raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + str(type(rule)) +
+                                               "\n    Value: " + str(rule))
 
         self.inter_cm_cxn.send_cmd(ICX_REMOVE, rule)
 
