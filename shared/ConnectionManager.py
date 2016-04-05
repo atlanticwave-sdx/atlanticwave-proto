@@ -24,7 +24,8 @@ class ConnectionManager(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        pass
+        self.listening_sock = None
+        self.clients = []
 
     def new_connection_callback(self, handling_function):
         ''' Register for a new connection callback. When a new connection comes 
@@ -54,7 +55,21 @@ class ConnectionManager(object):
             raise
 
     def close_listening_port(self):
-        self.listening_sock.close()
+        if self.listening_sock is not None:
+            try:
+                self.listening_sock.close()
+            except:
+                pass
+        self.listening_sock = None
+        
+    def close_sockets(self):
+        self.close_listening_port()
+        for client in self.clients:
+            try:
+                client.close()
+            except:
+                pass       
+        
     
     def _internal_new_connection(self, sock, address):
         ''' This will call the callback set in new_connection_callback(). Since
@@ -64,6 +79,7 @@ class ConnectionManager(object):
             Private. '''
         client_ip, client_port = address
         client_connection = Connection(client_ip, client_port, sock)
+        self.clients.append(client_connection)
         self.listening_callback(client_connection)
         
     def open_outbound_connection(self, ip, port):
@@ -74,6 +90,7 @@ class ConnectionManager(object):
         try:
             sock.connect((ip, port))
         except:
+            sock.close()
             raise
         return Connection(ip, port, sock)
 

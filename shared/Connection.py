@@ -9,7 +9,6 @@ import logging
 import threading
 import sys
 import struct
-from time import sleep
 
 class ConnectionTypeError(TypeError):
     pass
@@ -59,29 +58,26 @@ class Connection(object):
         ''' Receives an item. This is a blocking call. '''
         try:
             # Based on https://code.activestate.com/recipes/408859-socketrecv-three-ways-to-turn-it-into-recvall/
+            sock_data = ''
+            size_data = ''
+            while len(size_data) < 4:
+                sock_data = self.sock.recv(4 - len(size_data))
+                size_data += sock_data
+                if len(size_data) == 4:
+                    size = struct.unpack('>i', size_data)[0]
+
             total_len = 0
             total_data = []
-            size = sys.maxint
-            size_data = ''
-            sock_data = ''
-            recv_size = 8192
+            recv_size = size
+            if recv_size > 524388:
+                recv_size = 524288
             while total_len < size:
                 sock_data = self.sock.recv(recv_size)
-                if not total_data:
-                    if len(sock_data) > 4:
-                        size_data += sock_data
-                        size = struct.unpack('>i', size_data[:4])[0]
-                        recv_size=size
-                        if recv_size>524288 :
-                            recv_size = 524288
-                        total_data.append(size_data[4:])
-                        total_len = sum([len(i) for i in total_data])
-                        data_raw = ''.join(total_data)
-                    else:
-                        size_data += sock_data
-                else:
-                    total_data.append(sock_data)
+                total_data.append(sock_data)
                 total_len = sum([len(i) for i in total_data])
+                recv_size = size - total_len
+                if recv_size > 524388:
+                    recv_size = 524288
             data_raw = ''.join(total_data)
 
             # Unpickle!
