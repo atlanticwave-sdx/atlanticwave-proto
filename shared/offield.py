@@ -37,6 +37,17 @@ class Field(object):
         self.optional_wo = optional_without
         self.prereq = prereq
 
+    def __repr__(self):
+        return "%s : %s:%s, Optional W/O: %s, Prerequisite: %s" % (self.__class__.__name__,
+                                                                           self._name,
+                                                                           self.value,
+                                                                           self.optional_wo,
+                                                                           self.prereq)
+
+    def __str__(self):
+        retstr = "%s:%s" % (self._name, self.value)
+        return retstr
+        
     #TODO - Can these be represented as a property/discriptor? I don't think so.
     def get(self):
         return self.value

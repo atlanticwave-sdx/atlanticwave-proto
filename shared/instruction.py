@@ -21,7 +21,7 @@ class OpenFlowInstruction(object):
     # Note that it's a child of OpenFlowAction. It gets check_validity()
     # functions for free.
 
-    def __init__(self, actions):
+    def __init__(self, actions, name="OpenFlowInstruction"):
         ''' fields is a list of OpenFlowActions '''
         if type(actions) != type([]):
             raise OpenFlowInstructionTypeError("actions must be a list")
@@ -30,6 +30,24 @@ class OpenFlowInstruction(object):
                 raise OpenFlowInstructionTypeError(
                     "actions must be a list of Field or OpenFlowAction objects")
         self.actions = actions
+        self._name = name
+
+    def __repr__(self):
+        actionstr = ""
+        for entry in self.actions:
+            actionstr = entry.__repr__() + ",\n"
+        if actionstr != "":
+            actionstr = actionstr[0:-2]
+        return "%s : %s" % (self.__class__.__name__,
+                            actionstr)
+
+    def __str__(self):
+        actionstr = ""
+        for entry in self.actions:
+            actionstr += str(entry) + ", "
+        if actionstr != "":
+            actionstr = actionstr[0:-2]
+        return "%s(%s)" % (self._name, actionstr)
 
     def check_validity(self):
         for action in self.actions:
@@ -44,7 +62,8 @@ class instruction_GOTO_TABLE(OpenFlowInstruction):
     def __init__(self, tableid=None):
         self.table_id = number_field('table_id', minval=OF_TABLE_MIN,
                                      maxval=OF_TABLE_MAX, value=tableid)
-        super(instruction_GOTO_TABLE, self).__init__([self.table_id])        
+        super(instruction_GOTO_TABLE, self).__init__([self.table_id],
+                                                     "goto")        
 
 
 class instruction_WRITE_METADATA(OpenFlowInstruction):
@@ -58,7 +77,8 @@ class instruction_WRITE_METADATA(OpenFlowInstruction):
                                           maxval=2**64-1,
                                           value=metadata_mask)
         super(instruction_WRITE_METADATA, self).__init__([self.metadata,
-                                                          self.metadata_mask])
+                                                          self.metadata_mask],
+                                                         "write_metadata")
 
 class instruction_WRITE_ACTIONS(OpenFlowInstruction):
     ''' This instruction writes actions. '''
@@ -71,7 +91,8 @@ class instruction_WRITE_ACTIONS(OpenFlowInstruction):
             if not isinstance(entry, OpenFlowAction):
                 raise OpenFlowInstructionTypeError(
                     "actions must be a list of OpenFlowAction objects")
-        super(instruction_WRITE_ACTIONS, self).__init__(actionlist)
+        super(instruction_WRITE_ACTIONS, self).__init__(actionlist,
+                                                        "write_actions")
 
 
 class instruction_APPLY_ACTIONS(OpenFlowInstruction):
@@ -79,13 +100,15 @@ class instruction_APPLY_ACTIONS(OpenFlowInstruction):
 
     def __init__(self, actionlist):
         self.actions = actionlist
-        super(instruction_APPLY_ACTIONS, self).__init__(actionlist)
+        super(instruction_APPLY_ACTIONS, self).__init__(actionlist,
+                                                        "apply_actions")
         
 class instruction_CLEAR_ACTIONS(OpenFlowInstruction):
     ''' This instruction clears actions. '''
 
     def __init__(self):
-        super(instruction_CLEAR_ACTIONS, self).__init__([])
+        super(instruction_CLEAR_ACTIONS, self).__init__([],
+                                                        "clear_actions")
 
 
 # TODO - OFPIT_METER, page 55,57 of OF 1.3.2 spec.

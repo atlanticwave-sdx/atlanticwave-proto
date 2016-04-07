@@ -57,6 +57,26 @@ class OpenFlowRule(object):
                                          str(OF_COOKIE_MAX))
         self.cookie = cookie
 
+    def __repr__(self):
+        return "%s : (%s) : (%s) : %s : %s : %s : %s" % (self.__class__.__name__,
+                                                         self.match.__repr__(),
+                                                         self.instruction.__repr__(),
+                                                         self.table.__repr__(),
+                                                         self.priority.__repr__(),
+                                                         self.cookie.__repr__(),
+                                                         self.switch_id.__repr__())
+    
+    def __str__(self):
+        retval =  "OpenFlowRule:\n"
+        retval += "  match:       %s\n" % self.match
+        retval += "  instruction: %s\n" % self.instruction
+        retval += "  table:       %s\n" % self.table
+        retval += "  priority:    %s\n" % self.priority
+        retval += "  cookie:      %s\n" % self.cookie
+        retval += "  switchid:    %s\n" % self.switch_id
+        return retval
+
+
     def setMatch(self, match, check_validity=True):
         ''' Sets the match fields. '''
 

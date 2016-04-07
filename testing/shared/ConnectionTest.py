@@ -39,6 +39,8 @@ class InitTest(unittest.TestCase):
         self.failUnlessEqual(cxn.get_address(), "127.0.0.1")
         self.failUnlessEqual(cxn.get_port(), 5555)
         self.failUnlessEqual(cxn.get_socket(), sock)
+        print cxn.__repr__()
+        print cxn
                              
 
 

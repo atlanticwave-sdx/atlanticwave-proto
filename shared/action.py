@@ -19,7 +19,7 @@ class OpenFlowAction(object):
         Sublcasses will need to fill in certain values defined in __init__()
         which will often be enough for the existing validation routines. '''
 
-    def __init__(self, fields):
+    def __init__(self, fields, name="OpenFlowAction"):
         ''' fields is a list of Fields. '''
         if type(fields) != type([]):
             raise OpenFlowActionTypeError("fields must be a list")
@@ -27,7 +27,25 @@ class OpenFlowAction(object):
             if not isinstance(entry, Field):
                 raise OpenFlowActionTypeError("fields must be a list of Field objects")
         self.fields = fields
+        self._name = name
 
+    def __repr__(self):
+        fieldstr = ""
+        for entry in self.fields:
+            fieldstr += entry.__repr__() + ",\n"
+        if fieldstr != "":
+            fieldstr = fieldstr[0:-2]
+        return "%s : %s" % (self.__class__.__name__,
+                            fieldstr)        
+
+    def __str__(self):
+        fieldstr = ""
+        for entry in self.fields:
+            fieldstr += str(entry) + ", "
+        if fieldstr != "":
+            fieldstr = fieldstr[0:-2]
+        return "%s(%s)" % (self._name, fieldstr)
+    
     def check_validity(self):
         for field in self.fields:
             if not field.is_optional(self.fields):
@@ -51,7 +69,7 @@ class action_OUTPUT(OpenFlowAction):
                                                                   minval=1,
                                                                   maxval=OFPP_MAX,
                                                                   value=OFPP_CONTROLLER))
-        super(action_OUTPUT, self).__init__([self.port, self.max_len])
+        super(action_OUTPUT, self).__init__([self.port, self.max_len], "output")
         
         
 class action_SET_FIELD(OpenFlowAction):
@@ -63,7 +81,7 @@ class action_SET_FIELD(OpenFlowAction):
         if field.value == None:
             raise OpenFlowActionValueError("Passed in field does not have its value set.")
         self.field = field
-        super(action_SET_FIELD, self).__init__([self.field])
+        super(action_SET_FIELD, self).__init__([self.field], "set_field")
 
 #TODO - There are a bunch more OFPAT that need to be incorperated here.
 # OF Spec 1.3.2, page 58

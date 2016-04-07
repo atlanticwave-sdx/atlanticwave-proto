@@ -30,6 +30,23 @@ class OpenFlowMatch(object):
                 raise OpenFlowMatchTypeError("fields must be a list of Field objects: " + str(entry))
         self.fields = fields
 
+    def __repr__(self):
+        fieldstr = ""
+        for entry in self.fields:
+            fieldstr += entry.__repr__() + ",\n"
+        if fieldstr != "":
+            fieldstr = fieldstr[0:-2]
+        return "%s : %s" % (self.__class__.__name__,
+                            fieldstr)
+
+    def __str__(self):
+        fieldstr = ""
+        for entry in self.fields:
+            fieldstr += str(entry) + ", "
+        if fieldstr != "":
+            fieldstr = fieldstr[0:-2]
+        return "match(%s)" % fieldstr
+    
     def check_validity(self):
         for field in self.fields:
             if not field.is_optional(self.fields):

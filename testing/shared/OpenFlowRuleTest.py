@@ -25,6 +25,9 @@ class OpenFlowRuleTest(unittest.TestCase):
         OpenFlowRule(match, instruction, priority=priority)
         OpenFlowRule(match)
 
+        print OpenFlowRule(match, instruction, table, priority, cookie).__repr__()
+        print OpenFlowRule(match, instruction, table, priority, cookie)
+
     def test_empty_init(self):
         # This is valid for OpenFlowRules
         rule = OpenFlowRule()

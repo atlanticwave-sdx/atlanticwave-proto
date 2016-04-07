@@ -62,7 +62,9 @@ class BasicOpenFlowMatchTest(unittest.TestCase):
         OpenFlowMatch([notrequired_field]).check_validity()
         OpenFlowMatch([required_field, notrequired_field]).check_validity()
         OpenFlowMatch([required_field, optional_field]).check_validity()
-        OpenFlowMatch(all_fields).check_validity()       
+        OpenFlowMatch(all_fields).check_validity()
+        print OpenFlowMatch(all_fields).__repr__()
+        print OpenFlowMatch(all_fields)
         
     def test_check_validity_invalid(self):
         # Stolen from actionTest.py

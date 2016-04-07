@@ -27,6 +27,28 @@ class ConnectionManager(object):
         self.listening_sock = None
         self.clients = []
 
+    def __repr__(self):
+        clientstr = ""
+        for entry in self.clients:
+            clientstr += entry.__repr__() + ",\n  "
+        if clientstr != "":
+            clientstr = clientstr[0:-4]
+        return "%s : %s :\n  (%s)" % (self.__class__.__name__,
+                                      self.listening_sock,
+                                      clientstr)
+
+    def __str__(self):
+        clientstr = ""
+        for entry in self.clients:
+            clientstr += str(entry) + ",\n  "
+        if clientstr != "":
+            clientstr = clientstr[0:-4]
+        retval =  "ConnectionManager:\n"
+        retval += "  Listening Socket: %s\n" % str(self.listening_sock)
+        retval += "  Clients:\n"
+        retval += clientstr
+        return retval
+
     def new_connection_callback(self, handling_function):
         ''' Register for a new connection callback. When a new connection comes 
             in, handling_function will be called.

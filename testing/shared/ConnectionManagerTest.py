@@ -71,6 +71,9 @@ class OpenSendingText(unittest.TestCase):
         self.ReceiveThread.daemon = True
         self.ReceiveThread.start()
 
+        print self.manager.__repr__()
+        print self.manager
+
     def test_sending_port(self):
         cxn = self.manager.open_outbound_connection(self.ip, self.port)
 

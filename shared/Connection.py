@@ -46,6 +46,23 @@ class Connection(object):
         except:
             pass
 
+    def __repr__(self):
+        return "%s : %s : %s : %s : %s : %s" % (self.__class__.__name__,
+                                                self.address.__repr__(),
+                                                self.port.__repr__(),
+                                                self.recv_cb.__repr__(),
+                                                self.recv_thread.__repr__(),
+                                                self.sock.__repr__())
+    
+    def __str__(self):
+        retval =  "Connection:\n"
+        retval += "  address:     %s\n" % self.address
+        retval += "  port:        %s\n" % self.port
+        retval += "  recv_cb:     %s\n" % self.recv_cb
+        retval += "  recv_thread: %s\n" % self.recv_thread
+        retval += "  sock:        %s\n" % self.sock
+        return retval
+
     def get_address(self):
         return self.address
     def get_port(self):

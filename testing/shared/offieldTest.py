@@ -63,6 +63,8 @@ class BasicFieldTest(unittest.TestCase):
         notrequired_field = Field('required', 0)
         optional_field = Field('opt', 1, optional_without=Field('required', 1))
 
+        print optional_field.__repr__()
+        
         self.failUnlessEqual(True, optional_field.is_optional([]))
         self.failUnlessEqual(True, optional_field.is_optional([notrequired_field]))
         self.failUnlessEqual(False, optional_field.is_optional([required_field]))
@@ -141,6 +143,16 @@ class NumberFieldTest(unittest.TestCase):
         num_field4 = number_field('field', 1, 100)
 
         num_field4.set("a")
+
+        print num_field.__repr__()
+        print num_field
+        print num_field2.__repr__()
+        print num_field2
+        print num_field3.__repr__()
+        print num_field3
+        print num_field4.__repr__()
+        print num_field4
+        
 
         self.failUnlessRaises(TypeError, num_field4.check_validity)
         self.failUnlessRaises(ValueError, num_field.check_validity)

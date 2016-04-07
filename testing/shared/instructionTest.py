@@ -70,23 +70,34 @@ class ChildrenInstructionTest(unittest.TestCase):
     def test_goto(self):
         goto1 = instruction_GOTO_TABLE()
         goto2 = instruction_GOTO_TABLE(1)
+        print goto2.__repr__()
+        print goto2
 
     def test_write_metadata(self):
         write = instruction_WRITE_METADATA(1)
         write = instruction_WRITE_METADATA(1, 0xffff)
+        print write.__repr__()
+        print write
+        
 
     def test_write_actions(self):
         fields = [Field('field'), Field('field')]
         actions = OpenFlowAction(fields)
         write = instruction_WRITE_ACTIONS([actions])
+        print write.__repr__()
+        print write
         
     def test_apply(self):
         fields = [Field('field'), Field('field')]
         actions = OpenFlowAction(fields)
         write = instruction_WRITE_ACTIONS([actions])
+        print write.__repr__()
+        print write
 
     def test_clear(self):
         clear = instruction_CLEAR_ACTIONS()
+        print clear.__repr__()
+        print clear
 
 
         

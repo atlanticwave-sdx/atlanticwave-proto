@@ -68,6 +68,8 @@ class BasicActionTest(unittest.TestCase):
         OpenFlowAction([required_field, notrequired_field]).check_validity()
         OpenFlowAction([required_field, optional_field]).check_validity()
         OpenFlowAction(all_fields).check_validity()
+        print OpenFlowAction(all_fields).__repr__()
+        print OpenFlowAction(all_fields)
 
     def test_check_validity_failure1(self):
         # Borrowing from offieldtest.py BasicFieldTest.test_is_optional
