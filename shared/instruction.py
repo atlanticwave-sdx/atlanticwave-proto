@@ -112,3 +112,17 @@ class instruction_CLEAR_ACTIONS(OpenFlowInstruction):
 
 
 # TODO - OFPIT_METER, page 55,57 of OF 1.3.2 spec.
+
+
+VALID_INSTRUCTIONS = [ instruction_GOTO_TABLE,
+                       instruction_WRITE_METADATA,
+                       instruction_WRITE_ACTIONS,
+                       instruction_APPLY_ACTIONS,
+                       instruction_CLEAR_ACTIONS ]
+
+MATCH_NAME_TO_INSTRUCTION = { 'goto_table': {'type':instruction_GOTO_TABLE},
+                              'write_metadata': {'type':instruction_WRITE_METADATA},
+                              'write_actions': {'type':instruction_WRITE_ACTIONS},
+                              'apply_actions': {'type':instruction_APPLY_ACTIONS},
+                              'clear_actions': {'type':instruction_CLEAR_ACTIONS},
+                            }

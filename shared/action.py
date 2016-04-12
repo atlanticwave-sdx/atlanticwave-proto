@@ -85,3 +85,11 @@ class action_SET_FIELD(OpenFlowAction):
 
 #TODO - There are a bunch more OFPAT that need to be incorperated here.
 # OF Spec 1.3.2, page 58
+
+# This is a translation mechanism for mapping a name to a class
+# Value is assumed
+# Can be used for aliases!
+ACTION_NAME_TO_CLASS = { 'fwd': {'type':action_OUTPUT,'fields' = False},
+                         'output':{'type':action_OUTPUT, 'fields' = False},
+                         'set': {'type':action_SET_FIELD, 'fields' = True},
+                       }
