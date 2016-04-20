@@ -32,16 +32,42 @@ class ConfigurationParser(object):
             data = json.load(data_file)
         self.parse_configuration(data)
 
-    def parse_configuration(self, data)
+    def parse_configuration(self, data):
+        rules = []
         for entry in data['rules']:
             switch = self._parse_switch(entry)
             priority = self._parse_priority(entry)
             cookie = self._parse_cookie(entry)
-            match = self._parse_match(entry)
-            action = self._parse_action(entry)
-            instruction = self._parse_instruction(entry,
-                                                  match,
-                                                  action)
+            table = self._parse_table(entry)
+            instruction_type = self._parse_instruction_type(entry)
+
+            # MATCH_NAME_TO_INSTRUCTION is used to figure out what we need to do
+            # for each entry
+            instruction_params = self.get_instruction_params(instruction_type)
+            
+            # Required fields first
+            match = None
+            param_values = {}
+            if 'match' is in instruction_params['required_fields']:
+                match = self._parse_match(entry)
+            if 'actions' is in instruction_params['required_fields']:
+                param_value['actions'] = self._parse_action(entry)
+                
+            # Parameters
+            for p in instruction_params['required_parameters']:
+                param_values[p] = entry[p]
+            for p in instruction_params['optional_parameters']:
+                param_values[p] = entry[p]
+            
+            instruction = self._build_instruction(instruction_type,
+                                                  param_values)
+
+            # Have all pieces now, build the OpenFlowRule
+            rule = OpenFlowRule(match, instruction, table, priority, cookie)
+            rules.append(rule)
+
+        # Return rules, because that's what the configuration is.
+        return rules
 
     def __parse_type(self, entry, name, typeof):
         if name not in entry.keys():
@@ -59,6 +85,11 @@ class ConfigurationParser(object):
 
     def _parse_cookie(self, entry):
         return self.__parse_type(entry, 'cookie', int)
+
+    def _parse_table(self, entry):
+        return self.__parse_type(entry, 'table', int)
+
+   
 
 
     def __parse_fields(self, fields):
@@ -92,6 +123,10 @@ class ConfigurationParser(object):
             raise ConfigurationParserValueError("actions value not in entry:\n    %s" % entry)
         actionval = entry['actions']
 
+        # actionval is expected to be a list for processing. Convert singletons.
+        if type(actionval) == dict:
+            actionval = [actionval]
+
         valid_actions = ACTION_NAME_TO_CLASS.keys()
         actions = []
         for ent in actionval:
@@ -109,9 +144,14 @@ class ConfigurationParser(object):
 
         return actions
 
-    def _parse_instruction(self, entry, match, action):
-        pass
+    def _parse_instruction_type(self, entry):
+        return self.__parse_type(entry, 'instruction', type("string"))
 
+    def get_instruction_params(self, instruction_type):
+        if instruction_type not in MATCH_NAME_TO_INSTRUCTION.keys():
+            raise ConfigurationParserValueError("%s is not a valid instruction type:\n    %s" % instruction_type, entry)
+        return MATCH_NAME_TO_INSTRUCTION[instruction_type]
 
-    
+    def _build_instruction(self, instruction_type, param_values):
+        return MATCH_NAME_TO_INSTRUCTION[instruction_type]['type'](**param_values)
     
