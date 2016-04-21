@@ -5,7 +5,7 @@
      'table':1,
      'match':{'ip_proto':6,
               'tcp_src':80},
-     'action':[{'fwd':3}, {'fwd':4}],
+     'actions':[{'fwd':3}, {'fwd':4}],
      'instruction':'write_actions'},
     {'switch':2,1
      'priority':123,

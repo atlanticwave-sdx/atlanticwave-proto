@@ -7,6 +7,7 @@ from shared.offield import *
 from shared.match import *
 from shared.action import *
 from shared.instruction import *
+from shared.OpenFlowRule import * 
 
 class ConfigurationParserTypeError(TypeError):
     pass
@@ -30,7 +31,7 @@ class ConfigurationParser(object):
     def parse_configuration_file(self, filename):
         with open(filename) as data_file:    
             data = json.load(data_file)
-        self.parse_configuration(data)
+        return self.parse_configuration(data)
 
     def parse_configuration(self, data):
         rules = []
@@ -48,10 +49,10 @@ class ConfigurationParser(object):
             # Required fields first
             match = None
             param_values = {}
-            if 'match' is in instruction_params['required_fields']:
+            if 'match' in instruction_params['required_fields']:
                 match = self._parse_match(entry)
-            if 'actions' is in instruction_params['required_fields']:
-                param_value['actions'] = self._parse_action(entry)
+            if 'actions' in instruction_params['required_fields']:
+                param_values['actions'] = self._parse_actions(entry)
                 
             # Parameters
             for p in instruction_params['required_parameters']:
@@ -71,10 +72,10 @@ class ConfigurationParser(object):
 
     def __parse_type(self, entry, name, typeof):
         if name not in entry.keys():
-            raise ConfigurationParserValueError("%s value not in entry:\n    %s" % name, entry)
+            raise ConfigurationParserValueError("%s value not in entry:\n    %s" % (name, entry))
         val = entry[name]
         if type(val) is not typeof:
-            raise ConfigurationParserTypeError("%s is not of type %s:\n    %s" % name, typeof, entry)
+            raise ConfigurationParserTypeError("%s is not of type %s of type %s:\n    %s" % (name, typeof, type(val), entry))
         return val
             
     def _parse_switch(self, entry):
@@ -97,18 +98,20 @@ class ConfigurationParser(object):
         match_fields = []
         for ent in fields.keys():
             if ent not in valid_matches:
-                raise "%s is not a valid_match:\n    %s" % ent, entry
+                raise "%s is not a valid_match:\n    %s" % (ent, entry)
             if MATCH_NAME_TO_CLASS[ent]['required'] == None:
                 value = fields[ent]
-                match_fields.append(MATCH_NAME_TO_CLASS[ent](value))
+                fieldtype = MATCH_NAME_TO_CLASS[ent]['type']
+                match_fields.append(fieldtype(value))
             else:
                 vals = fields[ent]
-                match_fields.append(MATCH_NAME_TO_CLASS[ent](**value))
+                fieldtype = MATCH_NAME_TO_CLASS[ent]['type']
+                match_fields.append(fieldttype(**value))
         return match_fields
     
     def _parse_match(self, entry):
         if 'match' not in entry.keys():
-            raise ConfigurationParserValueError("match value not in entry:\n    %s" % entry)
+            raise ConfigurationParserValueError("match value not in entry:\n    %s" % (entry))
         matchval = entry['match']
 
         match_fields = self.__parse_fields(matchval)
@@ -120,7 +123,7 @@ class ConfigurationParser(object):
 
     def _parse_actions(self, entry):
         if 'actions' not in entry.keys():
-            raise ConfigurationParserValueError("actions value not in entry:\n    %s" % entry)
+            raise ConfigurationParserValueError("actions value not in entry:\n    %s" % (entry))
         actionval = entry['actions']
 
         # actionval is expected to be a list for processing. Convert singletons.
@@ -132,8 +135,8 @@ class ConfigurationParser(object):
         for ent in actionval:
             action_type = ent.keys()[0]
             if action_type not in valid_actions:
-                raise "%s is not in valid_actions:\n    %s" % ent, entry
-            if ACTION_NAME_TO_CLASS[action_type][fields] == False:
+                raise "%s is not in valid_actions:\n    %s" % (ent, entry)
+            if ACTION_NAME_TO_CLASS[action_type]['fields'] == False:
                 value = ent[action_type]
                 actions.append(ACTION_NAME_TO_CLASS[action_type]['type'](value))
             else:      # Has a bunch of fields
@@ -145,13 +148,14 @@ class ConfigurationParser(object):
         return actions
 
     def _parse_instruction_type(self, entry):
-        return self.__parse_type(entry, 'instruction', type("string"))
+        return self.__parse_type(entry, 'instruction', unicode)
 
     def get_instruction_params(self, instruction_type):
         if instruction_type not in MATCH_NAME_TO_INSTRUCTION.keys():
-            raise ConfigurationParserValueError("%s is not a valid instruction type:\n    %s" % instruction_type, entry)
+            raise ConfigurationParserValueError("%s is not a valid instruction type:\n    %s" % (instruction_type, entry))
         return MATCH_NAME_TO_INSTRUCTION[instruction_type]
 
     def _build_instruction(self, instruction_type, param_values):
-        return MATCH_NAME_TO_INSTRUCTION[instruction_type]['type'](**param_values)
+        inst_type = MATCH_NAME_TO_INSTRUCTION[instruction_type]['type']
+        return inst_type(**param_values)
     

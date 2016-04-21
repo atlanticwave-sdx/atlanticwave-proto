@@ -83,24 +83,24 @@ class instruction_WRITE_METADATA(OpenFlowInstruction):
 class instruction_WRITE_ACTIONS(OpenFlowInstruction):
     ''' This instruction writes actions. '''
 
-    def __init__(self, actionlist):
-        self.actions = actionlist
+    def __init__(self, actions):
+        self.actions = actions
         if type(self.actions) != type([]):
             raise OpenFlowInstructionTypeError("actions must be a list")
         for entry in self.actions:
             if not isinstance(entry, OpenFlowAction):
                 raise OpenFlowInstructionTypeError(
                     "actions must be a list of OpenFlowAction objects")
-        super(instruction_WRITE_ACTIONS, self).__init__(actionlist,
+        super(instruction_WRITE_ACTIONS, self).__init__(actions,
                                                         "write_actions")
 
 
 class instruction_APPLY_ACTIONS(OpenFlowInstruction):
     ''' This instruction applies actions. '''
 
-    def __init__(self, actionlist):
-        self.actions = actionlist
-        super(instruction_APPLY_ACTIONS, self).__init__(actionlist,
+    def __init__(self, actions):
+        self.actions = actions
+        super(instruction_APPLY_ACTIONS, self).__init__(actions,
                                                         "apply_actions")
         
 class instruction_CLEAR_ACTIONS(OpenFlowInstruction):
@@ -122,18 +122,22 @@ VALID_INSTRUCTIONS = [ instruction_GOTO_TABLE,
 
 MATCH_NAME_TO_INSTRUCTION = { 'goto_table': {'type':instruction_GOTO_TABLE,
                                              'required_fields':['match'],
-                                             'required_parameters':['goto_table']},
+                                             'required_parameters':['goto_table'],
+                                             'optional_parameters':[]},
                               'write_metadata': {'type':instruction_WRITE_METADATA,
                                                  'required_fields':['match'],
                                                  'required_parameters':['metadata'],
                                                  'optional_parameters':['metadata_mask']},
                               'write_actions': {'type':instruction_WRITE_ACTIONS,
                                                 'required_fields':['match', 'actions'],
-                                                'required_parameters':[]},
+                                                'required_parameters':[],
+                                                'optional_parameters':[]},
                               'apply_actions': {'type':instruction_APPLY_ACTIONS,
                                                 'required_fields':['match', 'actions'],
-                                                'required_parameters':[]},
+                                                'required_parameters':[],
+                                                'optional_parameters':[]},
                               'clear_actions': {'type':instruction_CLEAR_ACTIONS,
                                                 'required_fields':[],
-                                                'required_parameters':[]},
+                                                'required_parameters':[],
+                                                'optional_parameters':[]},
                             }
