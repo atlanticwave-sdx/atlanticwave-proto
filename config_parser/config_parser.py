@@ -107,7 +107,6 @@ class ConfigurationParser(object):
                 fieldvals = fields[ent]
                 fieldtype = MATCH_NAME_TO_CLASS[ent]['type']
                 for entry in MATCH_NAME_TO_CLASS[ent]['required']:
-                    print "fieldvals: " + str(fieldvals)
                     if entry not in fieldvals.keys():
                         raise ConfigurationParserValueError("%s is missing field %s" % (fields, entry))
                 match_fields.append(fieldtype(**fieldvals))

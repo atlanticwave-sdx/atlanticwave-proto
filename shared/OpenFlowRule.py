@@ -29,7 +29,7 @@ class OpenFlowRule(object):
             raise OpenFlowRuleTypeError("switch_id must be an int")
         self.switch_id = switch_id
             
-        if (instruction != None and
+        if (match != None and
             not isinstance(match, OpenFlowMatch)):
             raise OpenFlowRuleTypeError("match must be an OpenFlowMatch object")
         self.match = match
