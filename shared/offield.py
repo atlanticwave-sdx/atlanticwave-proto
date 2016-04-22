@@ -47,6 +47,14 @@ class Field(object):
     def __str__(self):
         retstr = "%s:%s" % (self._name, self.value)
         return retstr
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return (self._name == other._name and
+                self.value == other.value and
+                self.optional_wo == other.optional_wo and
+                self.prereq == other.prereq)
         
     #TODO - Can these be represented as a property/discriptor? I don't think so.
     def get(self):

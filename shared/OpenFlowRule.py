@@ -76,6 +76,16 @@ class OpenFlowRule(object):
         retval += "  switchid:    %s\n" % self.switch_id
         return retval
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return (self.match == other.match and
+                self.instruction == other.instruction and
+                self.table == other.table and
+                self.priority == other.priority and
+                self.cookie == other.cookie and
+                self.switch_id == other.switch_id)
+
 
     def setMatch(self, match, check_validity=True):
         ''' Sets the match fields. '''

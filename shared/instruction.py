@@ -49,6 +49,12 @@ class OpenFlowInstruction(object):
             actionstr = actionstr[0:-2]
         return "%s(%s)" % (self._name, actionstr)
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return (self.actions == other.actions and
+                self._name == other._name)
+
     def check_validity(self):
         for action in self.actions:
             if not action.is_optional(self.actions):

@@ -45,6 +45,12 @@ class OpenFlowAction(object):
         if fieldstr != "":
             fieldstr = fieldstr[0:-2]
         return "%s(%s)" % (self._name, fieldstr)
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return (self.fields == other.fields and
+                self._name == other._name)
     
     def check_validity(self):
         for field in self.fields:
