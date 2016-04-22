@@ -36,7 +36,7 @@ class ConfigurationParser(object):
     def parse_configuration(self, data):
         rules = []
         for entry in data['rules']:
-            switch = self._parse_switch(entry)
+            switch_id = self._parse_switch(entry)
             priority = self._parse_priority(entry)
             cookie = self._parse_cookie(entry)
             table = self._parse_table(entry)
@@ -64,7 +64,7 @@ class ConfigurationParser(object):
                                                   param_values)
 
             # Have all pieces now, build the OpenFlowRule
-            rule = OpenFlowRule(match, instruction, table, priority, cookie)
+            rule = OpenFlowRule(match, instruction, table, priority, cookie, switch_id)
             rules.append(rule)
 
         # Return rules, because that's what the configuration is.
@@ -98,15 +98,19 @@ class ConfigurationParser(object):
         match_fields = []
         for ent in fields.keys():
             if ent not in valid_matches:
-                raise "%s is not a valid_match:\n    %s" % (ent, entry)
+                raise ConfigurationParserValueError("%s is not a valid_match" % (ent))
             if MATCH_NAME_TO_CLASS[ent]['required'] == None:
                 value = fields[ent]
                 fieldtype = MATCH_NAME_TO_CLASS[ent]['type']
                 match_fields.append(fieldtype(value))
             else:
-                vals = fields[ent]
+                fieldvals = fields[ent]
                 fieldtype = MATCH_NAME_TO_CLASS[ent]['type']
-                match_fields.append(fieldttype(**value))
+                for entry in MATCH_NAME_TO_CLASS[ent]['required']:
+                    print "fieldvals: " + str(fieldvals)
+                    if entry not in fieldvals.keys():
+                        raise ConfigurationParserValueError("%s is missing field %s" % (fields, entry))
+                match_fields.append(fieldtype(**fieldvals))
         return match_fields
     
     def _parse_match(self, entry):
@@ -143,7 +147,7 @@ class ConfigurationParser(object):
                 valid_matchs = MATCH_NAME_TO_CLASS.keys()
                 fields = self.__parse_fields(ent[action_type])
                 for field in fields:
-                    actions.append(ACTION_NAME_TO_CLASS[action_type]['type'](**field))
+                    actions.append(ACTION_NAME_TO_CLASS[action_type]['type'](field))
 
         return actions
 
