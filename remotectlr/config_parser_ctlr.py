@@ -37,10 +37,10 @@ class ConfigParserCtlr(object):
     def connection_cb(self, cxn):
         # Got a connection, send the configuration over.
         for entry in self.configuration:
-            cxn.send_cmd(SDX_NEW_RULE, cmd) 
+            cxn.send_cmd(SDX_NEW_RULE, entry) 
         
         # Close connection
-        cxn.close
+        cxn.close()
 
 
     def _setup_logger(self):
