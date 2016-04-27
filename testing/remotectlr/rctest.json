@@ -1,0 +1,6 @@
+{"tests": [
+    {"conf_file":"config_simple_rc_1.json",
+     "results":{"num":1,
+		"test6":"priority=100",
+		"test7":"dl_dst=00:00:00:00:00:01 actions=mod_dl_dst:00:00:00:00:00:02"}}
+    ]}

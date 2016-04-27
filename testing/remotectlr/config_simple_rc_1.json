@@ -1,0 +1,8 @@
+{"rules": [
+    {"switch":1,
+     "priority":100,
+     "cookie":0,
+     "table":0,
+     "match":{"eth_dst":{"value":"00:00:00:00:00:01", "mask":"ff:ff:ff:ff:ff:ff"}},
+     "actions":{"set":{"eth_dst":{"value":"00:00:00:00:00:02","mask":"ff:ff:ff:ff:ff:ff"}}},
+     "instruction":"apply_actions"}]}
