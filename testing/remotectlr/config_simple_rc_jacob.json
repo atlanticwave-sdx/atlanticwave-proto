@@ -1,0 +1,9 @@
+{"rules": [
+    {"switch":1,
+     "priority":1000,
+     "cookie":0,
+     "table":0,
+     "match":{"in_port":2, "eth_type":2048},
+     "actions":[{"set":{"ipv4_dst":{"value":"10.0.0.1","mask":"255.255.255.255"}}},
+		{"fwd":1}],
+     "instruction":"apply_actions"}]}

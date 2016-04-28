@@ -90,4 +90,18 @@ class RyuControllerInterface(ControllerInterface):
 
         self.inter_cm_cxn.send_cmd(ICX_REMOVE, rule)
 
-
+    def _setup_logger(self):
+        ''' Internal function for setting up the logger formats. '''
+        # This is from LocalController
+        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.WARNING)
+        console.setFormatter(formatter)
+        logfile = logging.FileHandler('localcontroller.log')
+        logfile.setLevel(logging.DEBUG)
+        logfile.setFormatter(formatter)
+        self.logger = logging.getLogger('localcontroller.ryucontrollerinterface')
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.addHandler(console)
+        self.logger.addHandler(logfile) 

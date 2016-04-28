@@ -98,6 +98,9 @@ class RemoteControllerTest(unittest.TestCase):
     def test_with_local_ctlr_0(self):
         self.run_test(0)
 
+    def test_with_local_ctlr_1(self):
+        self.run_test(1)
+
 
 # I think I'll need test file pairs: one that's the JSON test file, one that's the strings for testing. 
 # looking at LocalControllerTest as the basis for what I'm working on.

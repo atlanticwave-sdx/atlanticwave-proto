@@ -170,6 +170,12 @@ class ipv4_field(number_field):
                                          minval=0, maxval=2**32-1,
                                          mask=mask, prereq=prereq)
 
+    def __str__(self):
+        retstr = "%s:%s" % (self._name, IPAddress(self.value))
+        return retstr
+
+
+
 class ipv6_field(number_field):
     ''' Used for IPv6 addresses. '''
     def __init__(self, name, value=None, mask=False, prereq=None):
@@ -179,6 +185,11 @@ class ipv6_field(number_field):
         super(ipv6_field, self).__init__(name, value=int(ip),
                                          minval=0, maxval=2**128-1,
                                          mask=mask, prereq=prereq)
+
+    def __str__(self):
+        retstr = "%s:%s" % (self._name, IPAddress(self.value, 6))
+        return retstr
+
 
 
 
