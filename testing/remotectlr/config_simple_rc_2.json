@@ -1,0 +1,9 @@
+{"rules": [
+    {"switch":1,
+     "priority":123,
+     "cookie":1234,
+     "table":1,
+     "match":{"ip_proto":6, "eth_type":2048},
+     "actions":[{"fwd":1}],
+     "instruction":"apply_actions"}
+]}

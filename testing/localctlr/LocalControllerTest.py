@@ -39,12 +39,12 @@ class LocalControllerTest(unittest.TestCase):
         cls.harness = RemoteControllerHarness()
         cls.ctlrint = LocalController()
 
-        cls.ctlrint.start_sdx_controller_connection()
+#        cls.ctlrint.start_sdx_controller_connection()
         while cls.harness.is_connected() == False:
             print "Waiting for harness connection"
             sleep(1)
 
-        cls.ctlrint.start_main_loop()
+#        cls.ctlrint.start_main_loop()
 
     @classmethod
     def tearDownClass(cls):
@@ -53,18 +53,19 @@ class LocalControllerTest(unittest.TestCase):
         #subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
         #sleep(5)
 
-        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
+#        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
+#        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
+#        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
+#        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
+        pass
 
     def call_test_rule_installation(self, num, test6, test7, test8=None, test9=None, test10=None):
         #print "test_rule_installation_" + str(num)
+        print "LC: %s" % (self.ctlrint)
         self.harness.send_new_command(self.harness.examples[num])
         sleep(0.01) # To make sure the rule changes have propogated.
         output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
         lines = output.split('\n')
-
 
         self.harness.send_rm_command(self.harness.examples[num])
         sleep(0.01) # To make sure the rule changes have propogated.
@@ -107,6 +108,12 @@ class LocalControllerTest(unittest.TestCase):
                                          "ip",
                                          "dl_dst=00:00:00:00:00:05",
                                          "nw_src=4.5.6.7 actions=mod_dl_src:00:00:00:00:00:04")
+
+    def test_rule_installation_4(self):
+        self.call_test_rule_installation(4,
+                                         "priority=123",
+                                         "tcp actions=output:1")
+                                         
 
 
 

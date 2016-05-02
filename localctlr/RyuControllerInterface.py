@@ -10,7 +10,9 @@ from shared.OpenFlowRule import OpenFlowRule
 from ryu.cmd.manager import main
 
 import threading
+import logging
 import subprocess
+import sys
 
 class RyuControllerInterface(ControllerInterface):
     ''' This is a particular implementation of the ControllerInterface class
@@ -29,6 +31,7 @@ class RyuControllerInterface(ControllerInterface):
     def __init__(self, *args, **kwargs):
         super(RyuControllerInterface, self).__init__(*args, **kwargs)
 
+        self._setup_logger()
         # Set up server connection for RyuTranslateInterface to connect to.
         self.inter_cm = InterRyuControllerConnectionManager()
         self.inter_cm_cxn = None
@@ -48,9 +51,10 @@ class RyuControllerInterface(ControllerInterface):
         # This doesn't work as it should: Normally, you would have two different
         # strings within the list. For some reason, ryu-manager doesn't like 
         # this, thus one long string.
-        subprocess.Popen(['ryu-manager /home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py'], shell=True)
-  
-
+        self.logger.debug("About to start ryu-manager.")
+        subprocess.Popen(['ryu-manager /home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose'], 
+                         shell=True)
+        self.logger.debug("Started ryu-manager.")
         # Don't complete until the connection is received by inter_cm ...
         self.inter_cm_condition.acquire()
         self.inter_cm_condition.wait()
@@ -63,6 +67,7 @@ class RyuControllerInterface(ControllerInterface):
         # seperately...
         
         # FIXME: What else?
+        self.logger.info("RyuControllerInterface initialized.")
         pass
 
     def _inter_cm_thread(self):
@@ -81,6 +86,7 @@ class RyuControllerInterface(ControllerInterface):
             raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + str(type(rule)) + 
                                                "\n    Value: " + str(rule))
 
+        self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s" % (rule))
         self.inter_cm_cxn.send_cmd(ICX_ADD, rule)
 
     def remove_rule(self, rule):
@@ -88,6 +94,7 @@ class RyuControllerInterface(ControllerInterface):
             raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + str(type(rule)) +
                                                "\n    Value: " + str(rule))
 
+        self.logger.debug("Removing old cmd to RyuTranslateInterface: %s" % (rule))
         self.inter_cm_cxn.send_cmd(ICX_REMOVE, rule)
 
     def _setup_logger(self):

@@ -34,6 +34,16 @@ class RemoteControllerHarness(object):
                                                 IPV4_SRC("4.5.6.7")]),
                                  instruction_APPLY_ACTIONS([action_SET_FIELD(ETH_SRC("00:00:00:00:00:04")),
                                                             action_SET_FIELD(IPV4_DST("5.6.7.8"))])))
+        self.examples.append(OFR(OpenFlowMatch([IP_PROTO(6),
+                                                ETH_TYPE(0x0800)]),
+#                                 instruction_WRITE_ACTIONS([action_OUTPUT(1)]),
+                                 instruction_APPLY_ACTIONS([action_OUTPUT(1)]),
+                                 priority=123,
+                                 cookie=1234,
+                                 table=1,
+                                 switch_id=1))
+                                               
+                                                
 
                              
                              

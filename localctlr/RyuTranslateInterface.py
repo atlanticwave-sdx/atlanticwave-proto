@@ -16,6 +16,7 @@ from time import sleep
 from RyuControllerInterface import RyuControllerInterface
 from InterRyuControllerConnectionManager import *
 
+import logging
 import threading
 
 ADD = "ADD"
@@ -26,6 +27,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(RyuTranslateInterface, self).__init__(*args, **kwargs)
+
+        self._setup_logger()
 
         # Establish connection to RyuControllerInterface
         self.inter_cm = InterRyuControllerConnectionManager()
@@ -45,6 +48,23 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # TODO: Reestablish connection? Do I have to do anything?
         
         pass
+
+
+    def _setup_logger(self):
+        ''' Internal function for setting up the logger formats. '''
+        # This is from LocalController
+        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.WARNING)
+        console.setFormatter(formatter)
+        logfile = logging.FileHandler('localcontroller.log')
+        logfile.setLevel(logging.DEBUG)
+        logfile.setFormatter(formatter)
+        self.logger = logging.getLogger('localcontroller.ryutranslateinterface')
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.addHandler(console)
+        self.logger.addHandler(logfile) 
 
     def main_loop(self):
         ''' This is the main loop that reads and works with the data coming from
