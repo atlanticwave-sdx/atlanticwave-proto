@@ -93,11 +93,21 @@ class RemoteControllerTest(unittest.TestCase):
         self.rc.parse_configuration(test['conf_file'])
         self.call_test_rule_installation(**test['results'])
 
-    def atest_with_local_ctlr_0(self):
+    def test_with_local_ctlr_0(self):
         self.run_test(0)
 
     def test_with_local_ctlr_1(self):
         self.run_test(1)
+
+    def test_with_local_ctlr_2(self):
+        self.run_test(2)
+
+    def test_with_local_ctlr_3(self):
+        self.run_test(3)
+
+    def test_with_local_ctlr_4(self):
+        self.run_test(4)
+
 
 
 # I think I'll need test file pairs: one that's the JSON test file, one that's the strings for testing. 

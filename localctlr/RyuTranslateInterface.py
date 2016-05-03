@@ -121,6 +121,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
         #print "Connection from: " + str(ev.msg.datapath.id) + " for " + str(self)
         self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
 
+    # From the Ryu mailing list: https://sourceforge.net/p/ryu/mailman/message/33584125/
+    @set_ev_cls(ofp_event.EventOFPErrorMsg,
+                [CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    def error_msg_handler(self, ev):
+        msg = ev.msg
+        self.logger.error('OFPErrorMsg received: type=0x%02x code=0x%02x '
+                          'message=%s',
+                          msg.type, msg.code, ryu.utils.hex_array(msg.data))
+
+
     # Boilerplate functions
     def translate_match(self, datapath, match):
         ''' Translates shared.match.OpenFlowMatch to OFPMatch. '''

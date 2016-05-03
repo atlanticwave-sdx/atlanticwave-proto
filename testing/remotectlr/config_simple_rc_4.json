@@ -1,10 +1,5 @@
 {"rules": [
     {"switch":1,
-     "priority":123,
-     "cookie":1234,
-     "table":1,
-     "instruction":"clear_actions"},
-    {"switch":2,
      "priority":234,
      "cookie":1235,
      "table":2,
