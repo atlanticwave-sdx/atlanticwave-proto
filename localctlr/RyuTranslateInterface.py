@@ -183,7 +183,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         
                               
-    def add_flow(self, datapath, cookie, table, priority, match, instruction, buffer_id=None):
+    def add_flow(self, datapath, cookie, table, priority, match, instruction, 
+                 buffer_id=None, idle_timeout=0, hard_timeout=0):
         ''' Ease-of-use wrapper for adding flows. ''' 
         parser = datapath.ofproto_parser
 
@@ -191,10 +192,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
             mod = parser.OFPFlowMod(datapath=datapath, cookie=cookie,
                                     table_id=table, buffer_id=buffer_id,
                                     priority=priority, match=match,
-                                    instructions=instruction)
+                                    instructions=instruction,
+                                    idle_timeout=idle_timeout, 
+                                    hard_timeout=hard_timeout)
         else:
-            mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
-                                    match=match, instructions=instruction)
+            mod = parser.OFPFlowMod(datapath=datapath, cookie=cookie,
+                                    table_id=table, priority=priority,
+                                    match=match, instructions=instruction,
+                                    idle_timeout=idle_timeout, 
+                                    hard_timeout=hard_timeout)
+
         datapath.send_msg(mod)
 
     def remove_flow(self, datapath, cookie, table, match):
