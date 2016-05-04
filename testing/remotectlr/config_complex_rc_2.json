@@ -1,0 +1,16 @@
+{"rules": [
+    {"switch":1,
+     "priority":100,
+     "cookie":100,
+     "table":1,
+     "match":{"in_port":1},
+     "actions":{"fwd":2},
+     "instruction":"apply_actions"},
+    {"switch":1,
+     "priority":100,
+     "cookie":101,
+     "table":1,
+     "match":{"in_port":2},
+     "actions":{"fwd":1},
+     "instruction":"apply_actions"}
+]}

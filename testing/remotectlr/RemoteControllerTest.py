@@ -57,7 +57,7 @@ class RemoteControllerTest(unittest.TestCase):
         cls.lc.kill()
         
 
-    def call_test_rule_installation(self, num, test6, test7, test8=None, test9=None, test10=None):
+    def call_test_rule_installation(self, good_lines):
         # Based on LocalControllerTest
         #print "test_rule_installation_" + str(num)
         self.rc.run_configuration()      # Configuration needs to be populated first
@@ -73,25 +73,24 @@ class RemoteControllerTest(unittest.TestCase):
         rmlines = output.split('\n')
 
         # Installation tests
-        self.failUnlessEqual(lines[1].split(',')[6].strip(), test6)
-        self.failUnlessEqual(lines[1].split(',')[7].strip(), test7)
-        if test8 != None:
-            self.failUnlessEqual(lines[1].split(',')[8].strip(), test8)
-            
-        if test9 != None:
-            self.failUnlessEqual(lines[1].split(',')[9].strip(), test9)
-            
-        if test10 != None:
-            self.failUnlessEqual(lines[1].split(',')[10].strip(), test10)
+        for line, good_line in zip(lines[1:], good_lines):
+            self.failUnlessEqual(line.split(',')[6].strip(), good_line['test6'])
+            self.failUnlessEqual(line.split(',')[7].strip(), good_line['test7'])
+            if 'test8' in good_line.keys():
+                self.failUnlessEqual(line.split(',')[8].strip(), good_line['test8'])
+            if 'test9' in good_line.keys():
+                self.failUnlessEqual(line.split(',')[9].strip(), good_line['test9'])
+            if 'test10' in good_line.keys():
+                self.failUnlessEqual(line.split(',')[10].strip(), good_line['test10'])
 
-        # Removal
+        # Removal test
         self.failUnlessEqual(rmlines[1].strip(), "")
 
     def run_test(self, testnum):
         test = self.tests[testnum]
 
         self.rc.parse_configuration(test['conf_file'])
-        self.call_test_rule_installation(**test['results'])
+        self.call_test_rule_installation(test['results'])
 
     def test_with_local_ctlr_0(self):
         self.run_test(0)
@@ -108,6 +107,11 @@ class RemoteControllerTest(unittest.TestCase):
     def test_with_local_ctlr_4(self):
         self.run_test(4)
 
+    def test_with_local_ctlr_5(self):
+        self.run_test(5)
+
+    def test_with_local_ctlr_6(self):
+        self.run_test(6)
 
 
 # I think I'll need test file pairs: one that's the JSON test file, one that's the strings for testing. 
