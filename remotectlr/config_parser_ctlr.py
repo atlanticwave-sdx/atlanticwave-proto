@@ -52,8 +52,10 @@ class ConfigParserCtlr(object):
         self.cxn.close()
         self.cxn = None
 
+    def parse_configuration(self, value):
+        self.configuration = self.config_parse.parse_configuration(value)
 
-    def parse_configuration(self, filename):
+    def parse_configuration_file(self, filename):
         self.configuration = self.config_parser.parse_configuration_file(filename)
 
 #        print self.configuration
@@ -81,4 +83,4 @@ class ConfigParserCtlr(object):
 
 if __name__ == '__main__':
     cp = ConfigParserCtlr()
-    cp.parse_configuration(sys.argv[1])
+    cp.parse_configuration_file(sys.argv[1])
