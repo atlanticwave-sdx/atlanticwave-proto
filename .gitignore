@@ -64,4 +64,4 @@ target/
 .DS_Store
 
 # For Django:
-db.sqlite3
+*sqlite3
