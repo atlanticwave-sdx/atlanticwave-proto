@@ -17,3 +17,6 @@ class JSONConfig(models.Model):
     def to_python(self, value):
         # TODO: This is necessary for validation.
         return parser.parse_configuration(value)
+
+    def __str__(self):
+        return "id: %s\n    submit_time: %s\n    user_name: %s\n    text: %s" % (self.id, self.submit_time, self.user_name, self.configuration_text)

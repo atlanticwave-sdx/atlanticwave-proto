@@ -1,0 +1,9 @@
+{% if latest_config_request_list %}
+    <ul>
+    {% for config in latest_config_request_list %}
+        <li>{{config.id}} - <a href="{% url 'uploadapp:detail' config.id %}">{{ config.configuration_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No configurations are available.</p>
+{% endif %}

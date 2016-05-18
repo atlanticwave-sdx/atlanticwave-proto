@@ -62,3 +62,6 @@ target/
 
 # OSX crap
 .DS_Store
+
+# For Django:
+db.sqlite3
