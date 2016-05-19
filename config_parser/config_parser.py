@@ -35,6 +35,11 @@ class ConfigurationParser(object):
 
     def parse_configuration(self, data):
         rules = []
+        if type(data) is not dict:
+            raise ConfigurationParserTypeError("data is not a dictionar:y\n    %s" % data)
+        if 'rules' not in data.keys():
+            raise ConfigurationParserValueError("%s value not in entry:\n    %s" % ('rules', data))
+
         for entry in data['rules']:
             switch_id = self._parse_switch(entry)
             priority = self._parse_priority(entry)

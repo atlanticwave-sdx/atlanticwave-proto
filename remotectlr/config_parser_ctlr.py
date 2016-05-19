@@ -53,7 +53,7 @@ class ConfigParserCtlr(object):
         self.cxn = None
 
     def parse_configuration(self, value):
-        self.configuration = self.config_parse.parse_configuration(value)
+        self.configuration = self.config_parser.parse_configuration(value)
 
     def parse_configuration_file(self, filename):
         self.configuration = self.config_parser.parse_configuration_file(filename)

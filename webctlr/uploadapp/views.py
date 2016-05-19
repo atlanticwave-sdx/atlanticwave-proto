@@ -3,7 +3,10 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.views import generic
 
+import json
+
 from .models  import *
+from config_parser.config_parser import *
 
 # Create your views here.
 
@@ -20,14 +23,35 @@ def settext(request, jsonconfig_id):
     jsonconfig = get_object_or_404(JSONConfig, pk=jsonconfig_id)
     try:
         text_value = request.POST['configuration_text']
-#        jsonconfig.configuration_text.get(pk=request.POST['configuration_text'])
-    except (KeyError, JSONConfig.DoesNotExist):
+        print "Text Value %s: %s" % (1, text_value)
+        # Validation goes here:
+        json_value = json.loads(text_value)
+        config_parser = ConfigurationParser()
+        config_parser.parse_configuration(json_value)
+
+    except ConfigurationParserTypeError as e:
+        return render(request, 'uploadapp/detail.html', {
+            'jsonconfig': jsonconfig,
+            'error_message': str(e),
+        })
+
+    except ConfigurationParserValueError as e:
+        return render(request, 'uploadapp/detail.html', {
+            'jsonconfig': jsonconfig,
+            'error_message': str(e),
+        })
+
+    except (KeyError, JSONConfig.DoesNotExist) as e:
         # FIXME: what to do here for text field?
         # Redisplay the question voting form.
+        print "Text Value %s: %s" % (3, text_value)
+        print str(type(e)) + " " + str(e)
         return render(request, 'uploadapp/detail.html', {
             'jsonconfig': jsonconfig,
         })
+        
     else:
+        print "Text Value %s: %s" % (2, text_value)
         jsonconfig.configuration_text = text_value
         jsonconfig.save()
         # Always return an HttpResponseRedirect after successfully dealing
