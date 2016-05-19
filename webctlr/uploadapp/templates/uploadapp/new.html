@@ -1,0 +1,8 @@
+<h1>Create new configuration</h1>
+
+<form action="{% url 'uploadapp:create_new_config' %}" method="post">
+{% csrf_token %}
+<br> Configuration Text: <input type="text" name="configuration_text" />
+<br> User Name: <input type="text" name="user_name" />
+<br> <input type="submit" value="Set" />
+</form>

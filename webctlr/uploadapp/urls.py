@@ -11,6 +11,8 @@ urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
     url(r'^(?P<pk>[0-9]+)/$', views.DetailView.as_view(), name='detail'),
     url(r'^(?P<jsonconfig_id>[0-9]+)/settext/$', views.settext, name='settext'),
+    url(r'^create_new_config/$', views.new_config_save, name='create_new_config'),
+    url(r'^new/$', views.new_config, name='new_config'),
 #    url(r'^(?P<pk>[0-9]+)/$', views.DetailView.as_view(), name='detail'),
 #    url(r'^(?P<pk>[0-9]+)/results/$', views.ResultsView.as_view(), name='results'),
 
