@@ -22,90 +22,30 @@ class RemoteControllerTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.django = subprocess.Popen(["python", "../../webctlr/manage.py", "runserver"], stdout=subprocess.PIPE)
-        sleep(3)
 
+        # Parse test file
+        with open("rctest.json") as data_file:
+            data = json.load(data_file)
+        cls.tests = data['tests']
     
-    @classmethod
-    def asetUpClass(cls):
-        # Taken and modified from  RyuControllerInterfaceTest.py
-
-        # Setup the virtual switch
-        print "Set up virtual switch"
-        subprocess.check_call(['mn', '-c'], stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
-        subprocess.check_call(['ovs-vsctl', 'add-br', 'br_ovs'])
-        subprocess.check_call(['ovs-vsctl', 'add-port', 'br_ovs', 'vi0', '--', 'set', 'Interface', 'vi0', 'type=internal'])
-        subprocess.check_call(['ovs-vsctl', 'set', 'bridge', 'br_ovs', 'other-config:datapath-id=0000000000000001'])
-        subprocess.check_call(['ovs-vsctl', 'set-controller', 'br_ovs', 'tcp:127.0.0.1:6633'])
-        print "Virtual switch is setup\n"
-
-
-        # Start the Local Controller
-        cls.lc = subprocess.Popen(["python", "LocalControllerHarness.py"], stdout=subprocess.PIPE)
-        cls.django = subprocess.Popen(["python", "../../webctlr/manage.py", "runserver"], stdout=subprocess.PIPE)
-
-
-    def arun_test(self, testnum):
-        # Based partially on https://stackoverflow.com/questions/21306515/how-to-curl-an-authenticated-django-app
-        filename = "cookies.txt"
-        url = "http://127.0.0.1:8000/upload/7/old/"
-        post_url = "http://127.0.0.1:8000/upload/7/settext/"
-        changed_val = "{\"rules\": [ {\"switch\":1, \"priority\":123, \"cookie\":1234, \"table\":1, \"match\":{\"ip_proto\":6, \"eth_type\":2048}, \"actions\":[{\"fwd\":1}], \"instruction\":\"apply_actions\"} ]}"
-        #changed_val = "{\\\"rules\\\": [ {\\\"switch\\\":1, \\\"priority\\\":123, \\\"cookie\\\":1234, \\\"table\\\":1, \\\"match\\\":{\\\"ip_proto\\\":6, \\\"eth_type\\\":2048}, \\\"actions\\\":[{\\\"fwd\\\":1}], \\\"instruction\\\":\\\"apply_actions\\\"} ]}"
-        
-        # Get csrftoken
-        get_csrftoken_call = "curl -s -c %s -b %s -e %s %s" % (filename, filename, url, url)
-        print "Call to get token:\n    " + get_csrftoken_call
-        subprocess.call(get_csrftoken_call.split(), stdout=FNULL)
-        #subprocess.check_call(get_csrftoken_call.split())
-        #subprocess.check_call(['curl', '-s', '-c', filename, '-b', filename, '-e', url, 
-        #                      url])
-
-        if not os.path.isfile(filename):
-            self.fail("Could not get cookie")
-        csrftoken = "csrfmiddlewaretoken=%s" % self.get_token(filename)
-        change_str = "\"%s&configuration_text=%s\"" % (csrftoken, changed_val)
-
-        # Push changes
-        push_changes_call = "curl -s -c %s -b %s -e %s -d %s -X POST %s" % (filename, filename, url, change_str, post_url)
-        print "Call to push changes:\n    " + push_changes_call
-        subprocess.call(push_changes_call.split(), stdout=FNULL)
-        #sleep (1)
-#        subprocess.check_call(push_changes_call.split())
-        #subprocess.check_call(['curl', '-s', '-c', filename, '-b', filename, '-e', url, 
-        #                       '-d', change_str, '-X', 'POST', post_url])
-
-        # Verify expected results
-        verify_call = "curl -i -H \"Accept: application/json\" %s" % url
-        print "Call to verify output:\n    " + verify_call
-#        subprocess.check_call(verify_call.split())
-#        subprocess.call(verify_call.split(), stdout=FNULL)
-#        output = subprocess.check_output(['curl', '-i', '-H', '\"Accept: application/json\"', url])
-#        print ""
-#        print "Output for verification:"
-#        print output
-        
-        # Cleanup
-        #if os.path.isfile(filename):
-        #    os.remove(filename)
-
     def run_test(self, testnum):
+        if self.tests[testnum]['run_test'] == False:
+            print "Skipping test %s" % testnum
+            return
+
         filename = "cookies.txt"
-        url = "http://127.0.0.1:8000/upload/7/old/"
-        post_url = "http://127.0.0.1:8000/upload/7/settext/"
-        #changed_val = "configuration_text={\"rules\": [ {\"switch\":1, \"priority\":123, \"cookie\":1234, \"table\":1, \"match\":{\"ip_proto\":6, \"eth_type\":2048}, \"actions\":[{\"fwd\":1}], \"instruction\":\"apply_actions\"} ]}"
-        changed_val = "configuration_text={\"rules\": [ {\"switch\":1, \"priority\":234, \"cookie\":1235, \"table\":2, \"match\":{\"ip_proto\":6, \"eth_type\":2048, \"ipv4_src\":{\"value\":\"1.2.3.4\",\"mask\":\"255.255.255.255\"}}, \"actions\":{\"set\":{\"ipv4_src\":{\"value\":\"2.3.4.5\", \"mask\":\"255.255.255.255\"}}}, \"instruction\":\"apply_actions\"} ]}"
+        url = self.tests[testnum]['url']
+        post_url = self.tests[testnum]['post_url']
+        changed_val = self.tests[testnum]['changed_val']
+
 
         # Run the shell script:
         subprocess.call(["bash", "./run_cmd.sh", url, post_url, filename, changed_val])
 
 
         output = subprocess.check_output(["bash", "./get_cmd.sh", url])
-        print "Output of check output:"
-        print output
+        #print "Output of check output:"
+        #print output
         lines = output.split("\n")
 
         config = ""
@@ -122,8 +62,8 @@ class RemoteControllerTest(unittest.TestCase):
         #print "\n\n"
         #print "config     : " + str(config["rules"])
         #print "set_config : " + str(set_config["rules"])
-        
         self.failUnlessEqual(config["rules"], set_config["rules"])
+        sleep(.5)
         
         
         
@@ -135,6 +75,9 @@ class RemoteControllerTest(unittest.TestCase):
             if "csrftoken" in line:
                 return line.split()[-1]
         self.fail("No CSRF token")
+
+    def test_0(self):
+        self.run_test(0)
 
     def test_1(self):
         self.run_test(1)
