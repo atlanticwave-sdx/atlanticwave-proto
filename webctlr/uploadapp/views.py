@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponse, Http404, HttpResponseRedirect, JsonResponse
 from django.core.urlresolvers import reverse
 from django.views import generic
 from django.utils import timezone
@@ -18,6 +18,12 @@ def index(request):
 
 def detail(request, jsonconfig_id):
     jsonconfig = get_object_or_404(JSONConfig, pk=jsonconfig_id)
+    request_details = request.META.get('HTTP_ACCEPT')
+    print "Detail! Request: %s" % request_details
+
+    if "application/json" in request_details:
+        return JsonResponse(jsonconfig.to_json())
+
     return render(request, 'uploadapp/detail.html', {'jsonconfig': jsonconfig})
 
 def new_config(request):
