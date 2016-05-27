@@ -29,7 +29,7 @@ class RemoteControllerTest(unittest.TestCase):
         cls.tests = data['tests']
     
     def run_test(self, testnum):
-        if self.tests[testnum]['run_test'] == False:
+        if self.tests[testnum]['run_test'] == "False":
             print "Skipping test %s" % testnum
             return
 
@@ -41,6 +41,9 @@ class RemoteControllerTest(unittest.TestCase):
 
         # Run the shell script:
         subprocess.call(["bash", "./run_cmd.sh", url, post_url, filename, changed_val])
+
+
+#        sleep(.5)
 
 
         output = subprocess.check_output(["bash", "./get_cmd.sh", url])
@@ -62,8 +65,13 @@ class RemoteControllerTest(unittest.TestCase):
         #print "\n\n"
         #print "config     : " + str(config["rules"])
         #print "set_config : " + str(set_config["rules"])
+        if config["rules"] != set_config["rules"]:
+            print "\n\n"
+            print "config     : " + str(config["rules"])
+            print "set_config : " + str(set_config["rules"])
+            exit()
         self.failUnlessEqual(config["rules"], set_config["rules"])
-        sleep(.5)
+#        sleep(1)
         
         
         
@@ -81,6 +89,15 @@ class RemoteControllerTest(unittest.TestCase):
 
     def test_1(self):
         self.run_test(1)
+
+    def test_2(self):
+        self.run_test(2)
+
+    def test_3(self):
+        self.run_test(3)
+
+    def test_4(self):
+        self.run_test(4)
 
 
 
