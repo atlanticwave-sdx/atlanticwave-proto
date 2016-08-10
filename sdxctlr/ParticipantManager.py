@@ -2,30 +2,25 @@
 # AtlanticWave/SDX Project
 
 
-from UserManager import UserManager
+from shared.Singleton import Singleton
 
-class ParticipantManager(UserManager):
-    ''' This keeps track of participants and what rights they have. Mostly for
-         queries; basically a database. Defining what rights exist, and 
-         modifying as such is important here. Singleton. '''
+class ParticipantManager(object):
+    ''' The ParticipantManager is responsible for keeping track of participant 
+        information. This includes keeping track of authentication information 
+        for each participant, authorization of different participants (both 
+        network operators and scientists), as well as current connectivity.
+        Singleton. '''
+    __metaclass__ = Singleton
 
-    def __init__(self, *args, **kwargs):
-        super(UserManager, self).__init__(*args, **kwargs)
+    def __init__(self):
+        ''' The bulk of work is handled at initialization and pushing user 
+            information to both the AuthenticationInspector and 
+            AuthorizationInspector. '''
         pass
-
-    def add_participant(self, *args, **kwargs):
-        ''' Alias for add_user(). '''
-        return self.add_user(*args, **kwargs)
-
-    def remove_participant(self, *args, **kwargs):
-        ''' Alias for remove_user(). '''
-        return self.remove_user(*args, **kwargs)
-
-    def modify_participant(self, *args, **kwargs):
-        ''' Alias for modify_user(). '''
-        return self.modify_user(*args, **kwargs)
-
-    def query_participant(self, *args, **kwargs):
-        ''' Alias for query_user(). '''
-        return self.query_user(*args, **kwargs)
     
+    def add_user(self, username, credentials, authorizations):
+        ''' This adds users to the ParticipanManager’s database, which will push 
+            information to the AuthenticationInspector and 
+            AuthorizationInspector. '''
+
+        pass

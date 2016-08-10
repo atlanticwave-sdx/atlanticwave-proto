@@ -17,20 +17,31 @@ class AuthorizationInspectorRuleNotAuthorized(AuthorizationInspectorError):
     pass
 
 class AuthorizationInspector(object):
-    ''' Decides if participant or controller can log in. Decides if an incoming 
-        UserRule is allowed based on the participant’s rights. Connects to the 
-        ParticipantManager and LocalControllerManager. Singleton. '''
+    ''' The AuthorizationInspector is responsible for authorizing actions. 
+        Actions include viewing status of the network, viewing rules of the
+        network, pushing rules to network, removing own rules from network, and 
+        removing any rules from network. Most users will be authorized for a 
+        subset of these actions, with only administrators able to remove rules 
+        from other participants. In the future, more granularity will be added 
+        (i.e., Alice will be able to install rule types X, Y, and Z, while Bob 
+        can only install rule type X). The actions will likely evolve 
+        significantly.
+        Singleton. '''
     __metaclass__ = Singleton
 
     def __init__(self):
         pass
-    
-    def is_authorized_login(self, participant):
-        ''' Returns True if participant or controller can log in. 
-            Returns False otherwise. '''
+
+
+    def is_authorized(self, username, action):
+        ''' Returns true if user is allowed to take a particular action, false 
+            otherwise. If a user is not in the database, raise and error. '''
+        #FIXME: Actions need to be defined.
         pass
 
-    def is_authorized_rule(self, rule):
-        ''' Returns True if rule is authorized from the participant. 
-            Returns False otherwise. '''
+    def set_user_authrorization(self, username, list_of_permitted_actions):
+        ''' Adds authorization information for a particular user. Replaces 
+            previous authorization record for that particular user. Must only be
+            called by the ParticipantManager. '''
         pass
+    

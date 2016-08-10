@@ -18,15 +18,20 @@ class ValidityInspectorOverlappingRule(ValidityInspectorError):
     pass
 
 class ValidityInspector(object):
-    ''' Decides if it is possible for this rule to fit in with existing rules. 
+    ''' The ValidityInspector will verify that a particular rule is valid. For 
+        instance, confirming that port 16 exists at a given location. To handle 
+        validation, external information will be needed. As an example, 
+        information about physical setup at each location may be provided by the
+        LocalControllerManager. How this is done is not decided as of this 
+        writing, and may introduce more links into the diagram above.
         Singleton. '''
-
     __metaclass__ = Singleton
 
     def __init__(self):
         pass
     
-    def is_valid_rule(self, participant):
-        ''' Returns True if rule is valid.
-            Raises above errors otherwise. '''
+    def is_valid_rule(self, rule, user):
+        ''' Checks to see if a rule is valid. True if valid, False if not. Raises
+            error if user does not exist. 
+            Needs user to see if user is authorized to make such a rule. ''' 
         pass
