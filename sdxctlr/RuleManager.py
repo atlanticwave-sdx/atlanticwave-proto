@@ -3,6 +3,9 @@
 
 
 from shared.Singleton import Singleton
+from AuthorizationManager import AuthorizationManager
+from BreakdownEngine import BreakdownEngine
+from ValidityInspector import ValidityInspector
 
 class RuleManager(object):
     ''' The RuleManager keeps track of all rules that are installed (and their 

@@ -3,6 +3,9 @@
 
 
 from shared.Singleton import Singleton
+from AuthorizationInspector import AuthorizationInspector
+from TopologyManager import TopologyManager
+from RuleRegistry import RuleRegistry
 
 class BreakdownEngine(object):
     ''' The BreakdownEngine is one of the more complex pieces of the SDX 

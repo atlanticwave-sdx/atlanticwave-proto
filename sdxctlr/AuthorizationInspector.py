@@ -2,7 +2,10 @@
 # AtlanticWave/SDX Project
 
 
+import logging
 from shared.Singleton import Singleton
+
+
 
 class AuthorizationInspectorError(Exception):
     ''' Parent class, can be used as a catch-all for the other errors '''
@@ -33,7 +36,7 @@ class AuthorizationInspector(object):
         pass
 
 
-    def is_authorized(self, username, action):
+    def is_authorized(self, username, action, **kwargs):
         ''' Returns true if user is allowed to take a particular action, false 
             otherwise. If a user is not in the database, raise and error. '''
         #FIXME: Actions need to be defined.

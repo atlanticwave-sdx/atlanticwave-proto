@@ -3,6 +3,9 @@
 
 
 from shared.Singleton import Singleton
+from AuthorizationInspector import AuthorizationInspector 
+from TopologyManager import TopologyManager
+from RuleRegistry import RuleRegistry
 
 class ValidityInspectorError(Exception):
     ''' Parent class, can be used as a catch-all for the other errors '''
