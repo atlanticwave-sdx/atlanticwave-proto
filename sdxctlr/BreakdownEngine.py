@@ -24,7 +24,6 @@ class BreakdownEngine(object):
             handle. Requires a user to verify that the user had the correct 
             permissions determined by the AuthorizationInspector for proposed 
             rules (e.g., if a user cannot create paths through a particular LC, 
-            reroute around that LC).
-            Uses the breakdown functions provided by the RuleRegistry. '''
+            reroute around that LC). '''
         pass
     
