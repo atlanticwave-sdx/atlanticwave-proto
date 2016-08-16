@@ -1,6 +1,6 @@
 {
-  "localcontrollers": [
-    {
+  "localcontrollers": {
+    "atl":{
       "shortname": "atl",
       "credentials": "atlpw",
       "location": "In the kernel",
@@ -42,7 +42,7 @@
         "contact": "sdonovan@gatech.edu"
       }
     },
-    {
+    "mia":{
       "shortname": "mia",
       "credentials": "miapw",
       "location": "In the kernel",
@@ -84,5 +84,5 @@
         "contact": "sdonovan@gatech.edu"
       }
     }
-  ]
+  }
 }
