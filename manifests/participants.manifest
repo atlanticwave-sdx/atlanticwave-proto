@@ -1,9 +1,15 @@
-{'participants': [
-    {'username':'sdonovan',
-     'credentials':'1234',
-     'organization':'Georgia Tech/RNOC',
-     'contact':'sdonovan@gatech.edu',
-     'permitted_actions':['tbd'],
-     'restrictions':['tbd'],
-    },
-]}
+{
+  "participants": {
+    "sdonovan": {
+      "credentials": "1234",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "sdonovan@gatech.edu",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    }
+  }
+}
