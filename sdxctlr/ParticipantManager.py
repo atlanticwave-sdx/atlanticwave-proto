@@ -20,8 +20,8 @@ class ParticipantManager(object):
 
     class ParticipantRecord(object):
         ''' This is used for the current database. '''
-        #FIXME: There's a lot more information in the Manifest than here right now.
-
+        #FIXME: There's a lot more information in the Manifest than here right
+        #now.
 
         def __init__(self, username, credentials, authorizations):
             self.username = username

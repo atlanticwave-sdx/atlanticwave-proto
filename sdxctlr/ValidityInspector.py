@@ -5,7 +5,6 @@
 from shared.Singleton import Singleton
 from AuthorizationInspector import AuthorizationInspector 
 from TopologyManager import TopologyManager
-from RuleRegistry import RuleRegistry
 
 class ValidityInspectorError(Exception):
     ''' Parent class, can be used as a catch-all for the other errors '''
@@ -31,10 +30,14 @@ class ValidityInspector(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        pass
+        # Get connections to data providers
+        self.auth = AuthorizationInspector()
+        self.auth_func = self.auth.is_authorized
+        self.topo = TopologyManager()
+
     
-    def is_valid_rule(self, rule, user):
-        ''' Checks to see if a rule is valid. True if valid, False if not. Raises
-            error if user does not exist. 
-            Needs user to see if user is authorized to make such a rule. ''' 
-        pass
+    def is_valid_rule(self, rule):
+        ''' Checks to see if a rule is valid. True if valid. Raises error 
+            describing problem if invalid. '''
+        return rule.check_validity(self.topo.get_topology(), self.auth_func)
+
