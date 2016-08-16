@@ -9,6 +9,10 @@ from RuleManager import RuleManager
 from TopologyManager import TopologyManager
 from RuleRegistry import RuleRegistry
 
+#API Stuff
+from flask import Flask
+from flask import request
+
 class RestAPI(object):
     ''' The REST API will be the main interface for participants to use to push 
         rules (eventually) down to switches. It will gather authentication 
@@ -21,7 +25,9 @@ class RestAPI(object):
         Singleton. '''
     __metaclass__ = Singleton
 
+
     def __init__(self):
+        app = Flask(__name__)
         pass
 
     def _setup_logger(self):
@@ -38,3 +44,15 @@ class RestAPI(object):
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(console)
         self.logger.addHandler(logfile) 
+
+    @app.route('/user/<username>')
+    def show_user_information(username):
+        return "Test: %s"%username
+
+    @app.route('/user/<username>/<config>',methods=['GET', 'POST'])
+    def show_user_config(username,config):
+        return "Test: %s %s"%(username,config)
+
+    @app.route('/topo')
+    def show_network_topology():
+        return "Test: topo"
