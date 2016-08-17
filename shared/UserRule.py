@@ -10,6 +10,7 @@ class UserRule(object):
     def __init__(self, username, json_rule):
         ''' Parses the json_rule passed in to populate the UserRule. '''
         self.username = username
+        self.ruletype = None
         self.json_rule = json_rule
         self._parse_json(self.json_rule)
 
