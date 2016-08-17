@@ -54,7 +54,7 @@ class AuthenticationInspector(object):
                                 username, credentials)
             return False
 
-        self.debug('User logged in successfully: %s', username)
+        self.logger.debug('User logged in successfully: %s', username)
         return True
 
     
