@@ -1,38 +1,88 @@
-{'localcontrollers': [
-    {'shortname':'atl',
-     'credentials':'atlpw',
-     'location':'In the kernel',
-     'lcip':'10.10.10.10',
-     'switchinfo':[{'name':'atl-switch',
-                    'ip':'10.10.10.11',
-                    'brand':'Open vSwitch',
-                    'model':'2.3.0',
-                    'portinfo':[{'portnumber':1,'speed':1,'destination':'mia'},
-                                {'portnumber':2,'speed':1,'destination':'Georgia Tech'}],
-                    'rulesaccepted':['tbd'],
-                    'rulesnotaccepted':['tbd'],
-                    'reservationsallowed':{'maxtime':'7 days','maxbandwidth':'200 Mbps','maxports':'3'}
-                   }],
-     'operatorinfo':{'organization':'Georgia Tech/RNOC',
-                     'administrator':'Sean Donovan',
-                     'contact':'sdonovan@gatech.edu'}
+{
+  "localcontrollers": {
+    "atl":{
+      "shortname": "atl",
+      "credentials": "atlpw",
+      "location": "In the kernel",
+      "lcip": "10.10.10.10",
+      "switchinfo": [
+        {
+          "name": "atl-switch",
+          "ip": "10.10.10.11",
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 1,
+              "destination": "mia"
+            },
+            {
+              "portnumber": 2,
+              "speed": 1,
+              "destination": "Georgia Tech"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
     },
-    {'shortname':'mia',
-     'credentials':'miapw',
-     'location':'In the kernel',
-     'lcip':'10.10.10.20',
-     'switchinfo':[{'name':'mia-switch',
-                    'ip':'10.10.10.21',
-                    'brand':'Open vSwitch',
-                    'model':'2.3.0',
-                    'portinfo':[{'portnumber':1,'speed':1,'destination':'atl'},
-                                {'portnumber':2,'speed':1,'destination':'FIU'}],
-                    'rulesaccepted':['tbd'],
-                    'rulesnotaccepted':['tbd'],
-                    'reservationsallowed':{'maxtime':'7 days','maxbandwidth':'200 Mbps','maxports':'3'}
-                   }],
-     'operatorinfo':{'organization':'FIU/CIARA',
-                     'administrator':'',
-                     'contact':'sdonovan@gatech.edu'}
-    },    
-]}
+    "mia":{
+      "shortname": "mia",
+      "credentials": "miapw",
+      "location": "In the kernel",
+      "lcip": "10.10.10.20",
+      "switchinfo": [
+        {
+          "name": "mia-switch",
+          "ip": "10.10.10.21",
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 1,
+              "destination": "atl"
+            },
+            {
+              "portnumber": 2,
+              "speed": 1,
+              "destination": "FIU"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "FIU/CIARA",
+        "administrator": "",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+  }
+}
