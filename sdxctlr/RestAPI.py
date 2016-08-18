@@ -1,12 +1,13 @@
 # Copyright 2016 - Sean Donovan
+# Edited by John Skandalakis
 # AtlanticWave/SDX Project
-
+# Login based on example code from https://github.com/maxcountryman/flask-login
 
 from shared.Singleton import Singleton
-#from AuthenticationInspector import AuthenticationInspector
-#from AuthorizationInspector import AuthorizationInspector
+from AuthenticationInspector import AuthenticationInspector
+from AuthorizationInspector import AuthorizationInspector
 #from RuleManager import RuleManager
-#from TopologyManager import TopologyManager
+from TopologyManager import TopologyManager
 #from RuleRegistry import RuleRegistry
 
 #API Stuff
@@ -33,9 +34,9 @@ class RestAPI(object):
     __metaclass__ = Singleton
 
 
-    global User, users, app, login_manager
+    global User, users, app, login_manager, authenticator, authorizor, topo
 
-    # Our mock database.
+    #FIXME: Our mock database should be deleter.
     users = {'foo@bar.tld': {'pw': 'secret'}}
 
     app = Flask(__name__)
@@ -43,11 +44,19 @@ class RestAPI(object):
 
     login_manager = LoginManager()
 
+    authenticator = AuthenticationInspector()
+    authorizor = AuthorizationInspector()
+
+    topo = TopologyManager()
+
+
     def api_process(self):
         login_manager.init_app(app)
         app.run()
 
     def __init__(self):
+        #FIXME: Creating user only for testing purposes
+        authenticator.add_user('sdonovan','1234')
         p = Process(target=self.api_process)
         p.start()
         pass
@@ -73,8 +82,9 @@ class RestAPI(object):
     @staticmethod
     @login_manager.user_loader
     def user_loader(email):
-        if email not in users:
-            return
+        #TODO: Fix this
+        #if email not in users:
+        #    return
 
         user = User()
         user.id = email
@@ -84,8 +94,10 @@ class RestAPI(object):
     @login_manager.request_loader
     def request_loader(request):
         email = request.form.get('email')
-        if email not in users:
-            return
+
+        #TODO: Fix this
+        #if email not in users:
+        #    return
 
         user = User()
         user.id = email
@@ -109,7 +121,8 @@ class RestAPI(object):
                    '''
 
         email = flask.request.form['email']
-        if flask.request.form['pw'] == users[email]['pw']:
+        #if flask.request.form['pw'] == users[email]['pw']:
+        if authenticator.is_authenticated(email,flask.request.form['pw']):
             user = User()
             user.id = email
             flask_login.login_user(user)
@@ -122,7 +135,9 @@ class RestAPI(object):
     @app.route('/protected')
     @flask_login.login_required
     def protected():
-        return 'Logged in as: ' + flask_login.current_user.id
+        if authorizor.is_authorized(flask_login.current_user.id,'login'):
+            return 'Logged in as: ' + flask_login.current_user.id
+        return unauthorized_handler()
 
     @staticmethod
     @app.route('/logout')
@@ -141,14 +156,10 @@ class RestAPI(object):
         return "Test: %s"%username
 
     @staticmethod
-    @app.route('/user/<username>/<config>',methods=['GET', 'POST'])
-    def show_user_config(username,config):
-        return "Test: %s %s"%(username,config)
-
-    @staticmethod
-    @app.route('/topo')
+    @app.route('/topology')
     def show_network_topology():
-        return "Test: topo"
+        if authorizor.is_authorized(flask_login.current_user.id,'show_topology'):
+            return topo.get_topology()
 
 if __name__ == "__main__":
     RestAPI()
