@@ -40,7 +40,8 @@ class AuthorizationInspector(object):
         ''' Returns true if user is allowed to take a particular action, false 
             otherwise. If a user is not in the database, raise and error. '''
         #FIXME: Actions need to be defined.
-        pass
+        #FIXME: This will always return true for the time being.
+        return True
 
     def set_user_authrorization(self, username, list_of_permitted_actions):
         ''' Adds authorization information for a particular user. Replaces 

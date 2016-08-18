@@ -3,9 +3,25 @@
 
 
 from shared.Singleton import Singleton
-from AuthorizationManager import AuthorizationManager
+from AuthorizationInspector import AuthorizationInspector
 from BreakdownEngine import BreakdownEngine
 from ValidityInspector import ValidityInspector
+
+class RuleManagerError(Exception):
+    ''' Parent class, can be used as a catch-all for other errors '''
+    pass
+
+class RuleManagerValidationError(RuleManagerError):
+    ''' When a validation fails, raise this. '''
+    pass
+
+class RuleManagerBreakdownError(RuleManagerError):
+    ''' When a breakdown fails, raise this. '''
+    pass
+
+class RuleManagerAuthorizationError(RuleManagerError):
+    ''' When a authorization fails, raise this. '''
+    pass
 
 class RuleManager(object):
     ''' The RuleManager keeps track of all rules that are installed (and their 
@@ -21,28 +37,86 @@ class RuleManager(object):
         Singleton. ''' 
     __metaclass__ = Singleton
 
+    
+    
     def __init__(self):
-        pass
 
-    def add_rule(self, rule, user):
+        # Initialize rule counter. Used to track the rules as they are installed.
+        self.rule_number = 1
+        
+        # Start database/dictionary
+        self.rule_db = {}
+
+        # Get references to helpers
+        self.vi = ValidationInspector()
+        self.be = BreakdownEngine()
+        self.am = AuthorizationManager()
+
+    def add_rule(self, rule):
         ''' Adds a rule for a particular user. Returns rule hash if successful, 
             failure message based on why the rule installation failed. Also 
-            returns the rules that are pushed to the local controller(s) for 
-            review. '''
-        pass
+            returns a reference to the rule (e.g., a tracking number) so that 
+            more details can be retrieved in the future. '''
 
-    def test_add_rule(self, rule, user):
+        # Check if valid rule
+        if self.vi.is_valid_rule(rule) != True:
+            raise RuleManagerValidationError("Rule cannot be validated: %s" %
+                                             rule)
+        
+        # Get the breakdown of the rule
+        breakdown = self.be.get_breakdown(rule)
+        if breakdown == None:
+            raise RuleManagerBreakdownError("Rule was not broken down: %s" %
+                                            rule)
+
+        # Check if the user is authorized to perform those actions.
+        if self.am.is_authorized(rule.username, rule) != True:
+            raise RuleManagerAuthorizationError("Rule is not authorized: %s" %
+                                                rule)
+
+        # If everything passes, set the hash and breakdown, and put into database
+        rule.set_rule_hash(self._get_new_rule_number())
+        rule.set_breakdown(breakdown)
+        self.rule_db[rule.get_rule_hash] = rule
+
+        #FIXME: Actually send add rules to LC!
+        
+
+    def test_add_rule(self, rule):
         ''' Similar to add rule, save for actually pushing the rule to the local 
             controllers. Useful for testing out whether a rule will be added as 
             expected, or to preview what rules will be pushed to the local 
             controller(s). '''
-        pass
+        # Check if valid rule
+        if self.vi.is_valid_rule(rule) != True:
+            raise RuleManagerValidationError("Rule cannot be validated: %s" %
+                                             rule)
+        
+        # Get the breakdown of the rule
+        breakdown = self.be.get_breakdown(rule)
+        if breakdown == None:
+            raise RuleManagerBreakdownError("Rule was not broken down: %s", rule)
+
+        # Check if the user is authorized to perform those actions.
+        if self.am.is_authorized(rule.username, rule) != True:
+            raise RuleManagerAuthorizationError("Rule is not authorized: %s" %
+                                                rule)
+
+        return breakdown
 
     def remove_rule(self, rule_hash, user):
         ''' Removes the rule that corresponds to the rule_hash that wa returned 
             either from add_rule() or found with get_rules(). If user does not 
             have removal ability, returns an error. '''
-        pass
+        if rule_hash not in self.rule_db.keys():
+            raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
+
+        rule = self.rule_db[rule_hash]
+        if self.am.is_authorized(user, rule): #FIXME
+            raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s" % (user, rule_hash))
+
+        #FIXME: Actually send remove rules to LC!
+
 
     def get_rules(self, filter=None):
         ''' Used for searching for rules based on a filter. The filter could be 
@@ -50,12 +124,20 @@ class RuleManager(object):
             controllers that have rules installed, or the hash_value of the rule.
             This will be useful for both administrators and for participants for
             debugging. This will return a list of tuples (rule_hash, rule). '''
-        #FIXME: What other filters?
+
+        #FIXME: Need to define what the filters actually are.
         pass
 
     def get_rule_details(self, rule_hash):
         ''' This will return details of a rule, including the rule itself, the 
             local controller breakdowns, the user who installed the rule, the 
             date and time of rule installation. '''
-        #FIXME: What other details are useful here?
-        pass
+        return self.rule_db[rule_hash]
+
+    def _get_new_rule_number(self):
+        ''' Returns a new rule number for use. For now, it's incrementing by one,
+            but this can be a security risk, so should be a random number/hash.
+            Good for 4B (or more!) rules!
+        '''
+        self.rule_number += 1
+        return self.rule_number

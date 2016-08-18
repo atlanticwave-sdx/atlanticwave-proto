@@ -2,6 +2,7 @@
 # AtlanticWave/SDX Project
 
 
+import logging
 from shared.Singleton import Singleton
 
 class RuleRegistryTypeError(TypeError):
@@ -47,7 +48,7 @@ class RuleRegistry(object):
     def get_rule_class(self, ruletype):
         ''' From a ruletype, get the correct class to use to implement the rule.
             Raise an error if it's not in the registry. '''
-        if ruletype is in self.ruletype_db.keys():
+        if ruletype in self.ruletype_db.keys():
             return self.ruletype_db[ruletype]
         raise RuleRegistryTypeError("Ruletype %s is not in the ruletype_db" %
                                     ruletype)
