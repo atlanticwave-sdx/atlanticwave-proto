@@ -18,6 +18,9 @@ from flask import request
 from flask_login import LoginManager
 import flask_login
 
+#Topology json stuff
+from networkx.readwrite import json_graph
+
 #multiprocess stuff
 from multiprocessing import Process
 
@@ -153,13 +156,42 @@ class RestAPI(object):
     @staticmethod
     @app.route('/user/<username>')
     def show_user_information(username):
-        return "Test: %s"%username
+        if authorizor.is_authorized(flask_login.current_user.id,'get_user_info'):
+            return "Test: %s"%username
+        return unauthorized_handler()
 
     @staticmethod
     @app.route('/topology')
     def show_network_topology():
         if authorizor.is_authorized(flask_login.current_user.id,'show_topology'):
-            return topo.get_topology()
+            G = topo.get_topology()
+            data = json_graph.adjacency_data(G)
+            return str(data)
+        return unauthorized_handler()
+
+    @staticmethod
+    @app.route('/rule/<rule_hash>'):
+    def get_rule_details_by_hash():
+        if authorizor.is_authorized(flask_login.current_user.id,'access_rule'):
+            #TODO: Write rule functionality.
+            return "test"
+        return unauthorized_handler()
+
+    @staticmethod
+    @app.route('/rule/search/<query>'):
+    def get_rule_details_by_hash():
+        if authorizor.is_authorized(flask_login.current_user.id,'access_rule'):
+            #TODO: Write rule functionality.
+            return "test"
+        return unauthorized_handler()
+
+    @staticmethod
+    @app.route('/rule/'):
+    def get_rule_details_by_hash():
+        if authorizor.is_authorized(flask_login.current_user.id,'add_rule'):
+            #TODO: Write rule functionality.
+            return "test"
+    return unauthorized_handler()
 
 if __name__ == "__main__":
     RestAPI()
