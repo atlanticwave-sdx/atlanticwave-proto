@@ -40,7 +40,7 @@ class LocalControllerManager(object):
             self.connected = True
         
     
-    def __init__(self):
+    def __init__(self, manifest=MANIFEST_FILE):
         ''' The bulk of work is handled at initialization and pushing user 
             information to both the AuthenticationInspector and 
             AuthorizationInspector. '''
@@ -56,7 +56,7 @@ class LocalControllerManager(object):
         self.AuthenticationInspector = AuthenticationInspector()
 
         # Parse the manifest into local database
-        results = self._parse_manifest(MANIFEST_FILE)
+        results = self._parse_manifest(manifest)
         if results is not None:
             self.localctlr_db = results
             
@@ -114,7 +114,8 @@ class LocalControllerManager(object):
         with open(manifest_filename) as data_file:
             data = json.load(data_file)
 
-        for entry in data['localcontrollers']:
+        for key in data['localcontrollers']:
+            entry = data['localcontrollers'][key]
             shortname = entry['shortname']
             credentials = entry['credentials']
             lcip = entry['lcip']
