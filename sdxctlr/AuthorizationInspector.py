@@ -43,7 +43,7 @@ class AuthorizationInspector(object):
         #FIXME: This will always return true for the time being.
         return True
 
-    def set_user_authrorization(self, username, list_of_permitted_actions):
+    def set_user_authorization(self, username, list_of_permitted_actions):
         ''' Adds authorization information for a particular user. Replaces 
             previous authorization record for that particular user. Must only be
             called by the ParticipantManager. '''

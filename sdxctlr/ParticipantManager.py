@@ -29,7 +29,7 @@ class ParticipantManager(object):
             self.authorizations = authorizations
                      
 
-    def __init__(self):
+    def __init__(self, manifest=MANIFEST_FILE):
         ''' The bulk of work is handled at initialization and pushing user 
             information to both the AuthenticationInspector and 
             AuthorizationInspector. '''
@@ -42,17 +42,18 @@ class ParticipantManager(object):
         self.participant_db = {}
 
         # Setup connections to Authentication and Authorization Inspectors.
-        self.AuthenticationInspector = AuthenticationInspector()
-        self.AuthorizationInspector = AuthorizationInspector()
+        self.AuthenticationInsp = AuthenticationInspector()
+        self.AuthorizationInsp = AuthorizationInspector()
 
         # Parse the manifest into local database
-        results = self._parse_manifest(MANIFEST_FILE)
+        results = self._parse_manifest(manifest)
         if results is not None:
             self.participant_db = results
             
         # Push information to the A&A Inspectors.
-        for participant in self.participant_db:
-            self._send_to_AA(part)
+        for username in self.participant_db.keys():
+            participant = self.participant_db[username]
+            self._send_to_AA(participant)
 
 
     def _setup_logger(self):
@@ -71,32 +72,43 @@ class ParticipantManager(object):
         self.logger.addHandler(logfile) 
     
     def add_user(self, username, credentials, authorizations):
-        ''' This adds users to the ParticipanManager’s database, which will push 
+        ''' This adds users to the ParticipanManager's database, which will push 
             information to the AuthenticationInspector and 
             AuthorizationInspector. '''
         # Build a partcipant
-        participant = ParticipantRecord(username, credentials, authorizations)
+        participant = ParticipantManager.ParticipantRecord(username,
+                                                           credentials,
+                                                           authorizations)
         
         # Add to local database
-        self.participant_db[particpant.username] = participant
+        self.participant_db[username] = participant
         
         # Push rules to A&A Inspectors
         self._send_to_AA(participant)
 
+    def _get_user(self, username):
+        if username not in self.participant_db.keys():
+            return None
+        return self.participant_db[username]
 
     def _parse_manifest(self, manifest_filename):
         with open(manifest_filename) as data_file:
             data = json.load(data_file)
 
         participants_dict = {}
-        for entry in data['participants']:
-            participant = ParticipantRecord(entry[username],
-                                            entry[credentials],
-                                            entry[permitted_actions])
-            participants_dict[participant.username] = participant
+
+        for username in data['participants'].keys():
+            entry = data['participants'][username]
+            participant = ParticipantManager.ParticipantRecord(username,
+                                             entry['credentials'],
+                                             entry['permitted_actions'])
+            participants_dict[username] =participant
+
+        return participants_dict
 
     def _send_to_AA(self, participant):
-        self.AuthenticationInspector.add_user(participant.username,
-                                              participant.credentials)
-        self.AuthorizationInspector.set_user_authorization(participant.username,
+        self.AuthenticationInsp.add_user(participant.username,
+                                         participant.credentials)
+        self.AuthorizationInsp.set_user_authorization(participant.username,
                                                            participant.authorizations)
+    
