@@ -65,3 +65,6 @@ target/
 
 # For Django:
 *sqlite3
+
+# For VIM
+*.swp
