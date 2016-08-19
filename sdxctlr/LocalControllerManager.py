@@ -61,8 +61,9 @@ class LocalControllerManager(object):
             self.localctlr_db = results
             
         # Push information to the A&A Inspectors.
-        for ctlr in self.localctlr_db:
-            self._send_to_AI(cltr)
+        for ctlrname in self.localctlr_db.keys():
+            ctlr = self.localctlr_db[ctlrname]
+            self._send_to_AI(ctlr)
 
 
     def _setup_logger(self):
@@ -81,17 +82,25 @@ class LocalControllerManager(object):
         self.logger.addHandler(logfile) 
 
     def add_controller(self, controller, credentials, lcip, switchips):
-        ''' This adds users to the LocalControllerManager’s database, which will 
+        ''' This adds users to the LocalControllerManager's database, which will 
             push information to the AuthenticationInspector. '''
-        rec = LCRecord(shortname, credentials, lcip, switchips)
-        self.localctlr_db[shortname] = rec
+        rec = LocalControllerManager.LCRecord(controller,
+                                              credentials,
+                                              lcip,
+                                              switchips)
+        self.localctlr_db[controller] = rec
         self._send_to_AI(rec)
+
+    def _get_controller(self, controllername):
+        if controllername not in self.localctlr_db.keys():
+            return None
+        return self.localctlr_db[controllername]
 
     def new_controller_connection(self, controllerip):
         '''This is called by the SDXController when a new local controller 
            connects which informs the TopologyManager of the change. '''
         for key in self.localctlr_db.keys():
-            entry = self.localctlr_db[key]:
+            entry = self.localctlr_db[key]
             if entry.lcip == controllerip:
                 entry.set_connected()
                 return
@@ -102,7 +111,7 @@ class LocalControllerManager(object):
     def remove_controller_connection(self, controllerip):
         ''' When a local controller has disconnected, this is called. '''
         for key in self.localctlr_db.keys():
-            entry = self.localctlr_db[key]:
+            entry = self.localctlr_db[key]
             if entry.lcip == controllerip:
                 entry.set_disconnected()
                 return
@@ -124,9 +133,12 @@ class LocalControllerManager(object):
                 switchips.append(sw['ip'])
 
             # Build the LCRecord and add it to the DB
-            rec = LCRecord(shortname, credentials, lcip, switchips)
+            rec = LocalControllerManager.LCRecord(shortname,
+                                                  credentials,
+                                                  lcip,
+                                                  switchips)
             self.localctlr_db[shortname] = rec
         
     def _send_to_AI(self, ctlr):
-        self.AuthenticationInspector.add_user(cltr.shortname,
+        self.AuthenticationInspector.add_user(ctlr.shortname,
                                               ctlr.credentials)

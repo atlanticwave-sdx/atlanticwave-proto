@@ -23,8 +23,6 @@ class ConfigParserCtlr(object):
         self.port = PORT
         self.cxn = None
 
-        self.config_parser = ConfigurationParser()
-        
         # Setup listening connection
         self.sdx_cm = SDXControllerConnectionManager()
         self.cm_thread = threading.Thread(target=self._cm_thread)
@@ -53,10 +51,10 @@ class ConfigParserCtlr(object):
         self.cxn = None
 
     def parse_configuration(self, value):
-        self.configuration = self.config_parser.parse_configuration(value)
+        self.configuration = parse_configuration(value)
 
     def parse_configuration_file(self, filename):
-        self.configuration = self.config_parser.parse_configuration_file(filename)
+        self.configuration = parse_configuration_file(filename)
 
 #        print self.configuration
 
