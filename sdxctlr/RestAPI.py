@@ -6,7 +6,7 @@
 from shared.Singleton import Singleton
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
-#from RuleManager import RuleManager
+from RuleManager import RuleManager
 from TopologyManager import TopologyManager
 #from RuleRegistry import RuleRegistry
 
@@ -37,7 +37,7 @@ class RestAPI(object):
     __metaclass__ = Singleton
 
 
-    global User, users, app, login_manager, authenticator, authorizor, topo
+    global User, users, app, login_manager, authenticator, authorizor, topo, rule_manager
 
     #FIXME: Our mock database should be deleter.
     users = {'foo@bar.tld': {'pw': 'secret'}}
@@ -51,6 +51,8 @@ class RestAPI(object):
     authorizor = AuthorizationInspector()
 
     topo = TopologyManager()
+
+    #rule_manager = RuleManager()
 
 
     def api_process(self):
@@ -170,28 +172,45 @@ class RestAPI(object):
         return unauthorized_handler()
 
     @staticmethod
-    @app.route('/rule/<rule_hash>'):
-    def get_rule_details_by_hash():
+    @app.route('/rule/<rule_hash>')
+    def get_rule_details_by_hash(rule_hash):
+        if authorizor.is_authorized(flask_login.current_user.id,'access_rule'):
+            #TODO: Write rule functionality.
+            try:
+                #return rule_manager.get_rule_details(rule_hash)
+                return "tmp"
+            except:
+                return "Invalid rule hash"
+        return unauthorized_handler()
+
+    @staticmethod
+    @app.route('/rule/search/<query>')
+    def get_rule_search_by_query(query):
         if authorizor.is_authorized(flask_login.current_user.id,'access_rule'):
             #TODO: Write rule functionality.
             return "test"
         return unauthorized_handler()
 
     @staticmethod
-    @app.route('/rule/search/<query>'):
-    def get_rule_details_by_hash():
-        if authorizor.is_authorized(flask_login.current_user.id,'access_rule'):
-            #TODO: Write rule functionality.
-            return "test"
+    @app.route('/rule/', methods=['GET', 'POST'])
+    def rule():
+        if authorizor.is_authorized(flask_login.current_user.id,'rule_form'):
+            if flask.request.method == 'GET':
+                return open('html/rule_form.html','r').read()
+            
+            rule = flask.request.form['rule']
+
+            try:
+                #rule_manager.add_rule(rule2)
+                #TODO: REDIRECT FOR RULE HASH
+                return "rule added"
+            except Exception as e:
+                return str(e) + '<br>' + open('html/rule_form.html','r').read()
+
+            
         return unauthorized_handler()
 
-    @staticmethod
-    @app.route('/rule/'):
-    def get_rule_details_by_hash():
-        if authorizor.is_authorized(flask_login.current_user.id,'add_rule'):
-            #TODO: Write rule functionality.
-            return "test"
-    return unauthorized_handler()
+        
 
 if __name__ == "__main__":
     RestAPI()
