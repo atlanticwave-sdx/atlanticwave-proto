@@ -201,10 +201,11 @@ class RestAPI(object):
             rule = flask.request.form['rule']
 
             try:
-                #rule_manager.add_rule(rule2)
+                #rule_manager.add_rule(rule)
                 #TODO: REDIRECT FOR RULE HASH
                 return "rule added"
             except Exception as e:
+                #FIXME: currently this just appends the exception to the beginning of the form It is ugly.
                 return str(e) + '<br>' + open('html/rule_form.html','r').read()
 
             
