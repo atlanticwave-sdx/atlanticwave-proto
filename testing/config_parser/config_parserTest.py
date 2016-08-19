@@ -16,7 +16,8 @@ class ParserTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.parser = ConfigurationParser()
+        #cls.parser = ConfigurationParser() # How it was once done. Fcns now.
+        pass
 
     def test_config_simple_1(self):
         # Basic, single item test
@@ -28,7 +29,7 @@ class ParserTest(unittest.TestCase):
         priority = 123
         cookie = 1234
         simple_1 = OpenFlowRule(match, instruction, table, priority, cookie)
-        config = self.parser.parse_configuration_file('config_simple_1.json')
+        config = parse_configuration_file('config_simple_1.json')
 #        print "simple_1: " + str(simple_1)
 #        print "config  : " + str(config[0])
         self.failUnlessEqual(str(simple_1), str(config[0]))
@@ -59,7 +60,7 @@ class ParserTest(unittest.TestCase):
         simple_2 = OpenFlowRule(match, instruction, table, priority, cookie, switch_id)
         rules.append(simple_2)
         
-        config = self.parser.parse_configuration_file('config_simple_2.json')
+        config = parse_configuration_file('config_simple_2.json')
 #        print "simple_1 : " + str(simple_1)
 #        print "config[0]: " + str(config[0])
 #        print "simple_2 : " + str(simple_2)
@@ -95,7 +96,7 @@ class ParserTest(unittest.TestCase):
         simple_2 = OpenFlowRule(match, instruction, table, priority, cookie, switch_id)
         rules.append(simple_2)
         
-        config = self.parser.parse_configuration_file('config_simple_3.json')
+        config = parse_configuration_file('config_simple_3.json')
 #        print "simple_1 : " + str(simple_1)
 #        print "config[0]: " + str(config[0])
 #        print "simple_2 : " + str(simple_2)
@@ -130,7 +131,7 @@ class ParserTest(unittest.TestCase):
         simple_2 = OpenFlowRule(match, instruction, table, priority, cookie, switch_id)
         rules.append(simple_2)
         
-        config = self.parser.parse_configuration_file('config_simple_4.json')
+        config = parse_configuration_file('config_simple_4.json')
 #        print "simple_1 : " + str(simple_1)
 #        print "config[0]: " + str(config[0])
 #        print "simple_2 : " + str(simple_2)
