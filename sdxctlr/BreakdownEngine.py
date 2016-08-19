@@ -27,5 +27,5 @@ class BreakdownEngine(object):
             permissions determined by the AuthorizationInspector for proposed 
             rules (e.g., if a user cannot create paths through a particular LC, 
             reroute around that LC). '''
-        rule.breakdown_rule(self.topo.get_topology(), self.auth_func)
+        return rule.breakdown_rule(self.topo.get_topology(), self.auth_func)
     
