@@ -42,11 +42,11 @@ class RestAPI(object):
 
     global User, users, app, login_manager, authenticator, authorizor, topo, rule_manager
 
-    #FIXME: Our mock database should be deleter.
-    users = {'foo@bar.tld': {'pw': 'secret'}}
-
     app = Flask(__name__)
+    
+    #FIXME: This should be more secure.
     app.secret_key = 'ChkaChka.....Boo, Ohhh Yeahh!'
+
 
     login_manager = LoginManager()
 
@@ -90,10 +90,6 @@ class RestAPI(object):
     @staticmethod
     @login_manager.user_loader
     def user_loader(email):
-        #TODO: Fix this
-        #if email not in users:
-        #    return
-
         user = User()
         user.id = email
         return user
@@ -103,19 +99,19 @@ class RestAPI(object):
     def request_loader(request):
         email = request.form.get('email')
 
-        #TODO: Fix this
-        #if email not in users:
-        #    return
-
         user = User()
         user.id = email
 
+        # TODO: This.
         # DO NOT ever store passwords in plaintext and always compare password
         # hashes using constant-time comparison!
         user.is_authenticated = request.form['pw'] == users[email]['pw']
 
         return user
 
+
+    
+    # Preset the login form to the user and request to log user in
     @staticmethod
     @app.route('/login', methods=['GET', 'POST'])
     def login():
@@ -132,7 +128,7 @@ class RestAPI(object):
 
         return 'Bad login'
 
-
+    # This is a worthless function. The redirect will eventually take you somewhere else.
     @staticmethod
     @app.route('/protected')
     @flask_login.login_required
@@ -141,17 +137,20 @@ class RestAPI(object):
             return 'Logged in as: ' + flask_login.current_user.id
         return unauthorized_handler()
 
+    # Log out of the system
     @staticmethod
     @app.route('/logout')
     def logout():
         flask_login.logout_user()
         return 'Logged out'
 
+    # Present the page which tells a user they are unauthorized
     @staticmethod
     @login_manager.unauthorized_handler
     def unauthorized_handler():
         return 'Unauthorized'
 
+    # Access information about a user
     @staticmethod
     @app.route('/user/<username>')
     def show_user_information(username):
@@ -159,6 +158,7 @@ class RestAPI(object):
             return "Test: %s"%username
         return unauthorized_handler()
 
+    # Return the network topology in json format
     @staticmethod
     @app.route('/topology.json')
     def show_network_topology():
@@ -168,6 +168,7 @@ class RestAPI(object):
             return str(data)
         return unauthorized_handler()
 
+    # Get information about a specific rule IDed by hash.
     @staticmethod
     @app.route('/rule/<rule_hash>')
     def get_rule_details_by_hash(rule_hash):
@@ -178,6 +179,7 @@ class RestAPI(object):
                 return "Invalid rule hash"
         return unauthorized_handler()
 
+    # Get a list of rules that match certain filters or a query.
     @staticmethod
     @app.route('/rule/search/<query>')
     def get_rule_search_by_query(query):
@@ -185,6 +187,8 @@ class RestAPI(object):
             return rule_manager.get_rules(query)
         return unauthorized_handler()
 
+
+    # API Call to access the new rule form and to add a new rule.
     @staticmethod
     @app.route('/rule/', methods=['GET', 'POST'])
     def rule():
