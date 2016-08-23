@@ -117,13 +117,7 @@ class RestAPI(object):
     @app.route('/login', methods=['GET', 'POST'])
     def login():
         if flask.request.method == 'GET':
-            return '''
-                   <form action='login' method='POST'>
-                    <input type='text' name='email' id='email' placeholder='email'></input><br>
-                    <input type='password' name='pw' id='pw' placeholder='password'></input><br>
-                    <input type='submit' name='submit'></input>
-                   </form>
-                   '''
+            return open('html/login_form.html').read()
 
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
@@ -163,7 +157,7 @@ class RestAPI(object):
         return unauthorized_handler()
 
     @staticmethod
-    @app.route('/topology')
+    @app.route('/topology.json')
     def show_network_topology():
         if authorizor.is_authorized(flask_login.current_user.id,'show_topology'):
             G = topo.get_topology()
