@@ -24,6 +24,9 @@ from networkx.readwrite import json_graph
 #multiprocess stuff
 from multiprocessing import Process
 
+#System stuff
+import sys, traceback
+
 class RestAPI(object):
     ''' The REST API will be the main interface for participants to use to push 
         rules (eventually) down to switches. It will gather authentication 
@@ -52,7 +55,7 @@ class RestAPI(object):
 
     topo = TopologyManager()
 
-    #rule_manager = RuleManager()
+    rule_manager = RuleManager()
 
 
     def api_process(self):
@@ -168,11 +171,9 @@ class RestAPI(object):
     @staticmethod
     @app.route('/rule/<rule_hash>')
     def get_rule_details_by_hash(rule_hash):
-        if authorizor.is_authorized(flask_login.current_user.id,'access_rule'):
-            #TODO: Write rule functionality.
+        if authorizor.is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
             try:
-                #return rule_manager.get_rule_details(rule_hash)
-                return "tmp"
+                return rule_manager.get_rule_details(rule_hash)
             except:
                 return "Invalid rule hash"
         return unauthorized_handler()
@@ -180,26 +181,31 @@ class RestAPI(object):
     @staticmethod
     @app.route('/rule/search/<query>')
     def get_rule_search_by_query(query):
-        if authorizor.is_authorized(flask_login.current_user.id,'access_rule'):
-            #TODO: Write rule functionality.
-            return "test"
+        if authorizor.is_authorized(flask_login.current_user.id,'search_rules'):
+            return rule_manager.get_rules(query)
         return unauthorized_handler()
 
     @staticmethod
     @app.route('/rule/', methods=['GET', 'POST'])
     def rule():
-        if authorizor.is_authorized(flask_login.current_user.id,'rule_form'):
+        if authorizor.is_authorized(flask_login.current_user.id,'add_rule_form'):
             if flask.request.method == 'GET':
                 return open('html/rule_form.html','r').read()
             
             rule = flask.request.form['rule']
 
             try:
-                #rule_manager.add_rule(rule)
-                #TODO: REDIRECT FOR RULE HASH
-                return "rule added"
+                rule_hash = rule_manager.add_rule(rule)
+
+                redirect_url = 'rule/'+str(rule_hash)
+
+                return flask.redirect(redirect_url)
+
             except Exception as e:
                 #FIXME: currently this just appends the exception to the beginning of the form It is ugly.
+
+                traceback.print_exc(file=sys.stdout)
+
                 return str(e) + '<br>' + open('html/rule_form.html','r').read()
 
             
