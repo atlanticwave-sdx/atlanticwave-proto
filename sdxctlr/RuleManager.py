@@ -48,9 +48,9 @@ class RuleManager(object):
         self.rule_db = {}
 
         # Get references to helpers
-        self.vi = ValidationInspector()
+        self.vi = ValidityInspector()
         self.be = BreakdownEngine()
-        self.am = AuthorizationManager()
+        self.ai = AuthorizationInspector()
 
     def add_rule(self, rule):
         ''' Adds a rule for a particular user. Returns rule hash if successful, 
@@ -58,28 +58,53 @@ class RuleManager(object):
             returns a reference to the rule (e.g., a tracking number) so that 
             more details can be retrieved in the future. '''
 
+        valid = None
+        breakdown = None
+        authorized = None
         # Check if valid rule
-        if self.vi.is_valid_rule(rule) != True:
-            raise RuleManagerValidationError("Rule cannot be validated: %s" %
-                                             rule)
+        try:
+            valid = self.vi.is_valid_rule(rule)
+        except Exception as e:
+            raise RuleManagerValidationError(
+                "Rule cannot be validated, threw exception: %s, %s" %
+                (rule, str(e)))
+        
+        if valid != True:
+            raise RuleManagerValidationError(
+                "Rule cannot be validated: %s" % rule)
         
         # Get the breakdown of the rule
-        breakdown = self.be.get_breakdown(rule)
+        try:
+            breakdown = self.be.get_breakdown(rule)
+        except Exception as e:
+            raise RuleManagerBreakdownError(
+                "Rule breakdown threw exception: %s, %s" %
+                (rule, str(e)))
         if breakdown == None:
-            raise RuleManagerBreakdownError("Rule was not broken down: %s" %
-                                            rule)
+            raise RuleManagerBreakdownError(
+                "Rule was not broken down: %s" % rule)
 
         # Check if the user is authorized to perform those actions.
-        if self.am.is_authorized(rule.username, rule) != True:
-            raise RuleManagerAuthorizationError("Rule is not authorized: %s" %
-                                                rule)
+        try:
+            authorized = self.ai.is_authorized(rule.username, rule)
+        except Exception as e:
+            raise RuleManagerAuthorizationError(
+                "Rule not authorized with exception: %s, %s" %
+                (rule, str(e)))
+            
+        if authorized != True:
+            raise RuleManagerAuthorizationError(
+                "Rule is not authorized: %s" % rule)
 
         # If everything passes, set the hash and breakdown, and put into database
         rule.set_rule_hash(self._get_new_rule_number())
         rule.set_breakdown(breakdown)
-        self.rule_db[rule.get_rule_hash] = rule
+        self.rule_db[rule.get_rule_hash()] = rule
 
         #FIXME: Actually send add rules to LC!
+
+
+        return rule.get_rule_hash()
         
 
     def test_add_rule(self, rule):
@@ -87,21 +112,47 @@ class RuleManager(object):
             controllers. Useful for testing out whether a rule will be added as 
             expected, or to preview what rules will be pushed to the local 
             controller(s). '''
-        # Check if valid rule
-        if self.vi.is_valid_rule(rule) != True:
-            raise RuleManagerValidationError("Rule cannot be validated: %s" %
-                                             rule)
         
+        valid = None
+        breakdown = None
+        authorized = None
+        # Check if valid rule
+        try:
+            valid = self.vi.is_valid_rule(rule)
+        except Exception as e:
+            raise RuleManagerValidationError(
+                "Rule cannot be validated, threw exception: %s, %s" %
+                (rule, str(e)))
+        
+        if valid != True:
+            raise RuleManagerValidationError(
+                "Rule cannot be validated: %s" % rule)
+        
+
         # Get the breakdown of the rule
-        breakdown = self.be.get_breakdown(rule)
+        try:
+            breakdown = self.be.get_breakdown(rule)
+        except Exception as e:
+            raise RuleManagerBreakdownError(
+                "Rule breakdown threw exception: %s, %s" %
+                (rule, str(e)))
         if breakdown == None:
-            raise RuleManagerBreakdownError("Rule was not broken down: %s", rule)
+            raise RuleManagerBreakdownError(
+                "Rule was not broken down: %s" % rule)
 
         # Check if the user is authorized to perform those actions.
-        if self.am.is_authorized(rule.username, rule) != True:
-            raise RuleManagerAuthorizationError("Rule is not authorized: %s" %
-                                                rule)
+        try:
+            authorized = self.ai.is_authorized(rule.username, rule)
+        except Exception as e:
+            raise RuleManagerAuthorizationError(
+                "Rule not authorized with exception: %s, %s" %
+                (rule, str(e)))
+            
+        if authorized != True:
+            raise RuleManagerAuthorizationError(
+                "Rule is not authorized: %s" % rule)
 
+        
         return breakdown
 
     def remove_rule(self, rule_hash, user):
@@ -112,10 +163,19 @@ class RuleManager(object):
             raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
 
         rule = self.rule_db[rule_hash]
-        if self.am.is_authorized(user, rule): #FIXME
+        authorized = None
+        try:
+            authorized = self.ai.is_authorized(user, rule) #FIXME
+        except Exception as e:
+            raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s with exception %s" % (user, rule_hash, str(e)))
+        if authorized != True:
             raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s" % (user, rule_hash))
 
         #FIXME: Actually send remove rules to LC!
+
+
+        # Remove from the rule_db
+        del self.rule_db[rule_hash]
 
 
     def get_rules(self, filter=None):
@@ -132,7 +192,9 @@ class RuleManager(object):
         ''' This will return details of a rule, including the rule itself, the 
             local controller breakdowns, the user who installed the rule, the 
             date and time of rule installation. '''
-        return self.rule_db[rule_hash]
+        if rule_hash in self.rule_db.keys():
+            return self.rule_db[rule_hash]
+        return None
 
     def _get_new_rule_number(self):
         ''' Returns a new rule number for use. For now, it's incrementing by one,

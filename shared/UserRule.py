@@ -48,7 +48,7 @@ class UserRule(object):
     def set_rule_hash(self, hash):
         self.rule_hash = hash
 
-    def get_rule_hash(self, hash):
+    def get_rule_hash(self):
         return self.rule_hash
 
     def _parse_json(self, json_rule):
@@ -62,7 +62,7 @@ class UserRuleBreakdown(object):
     ''' This provides a standard way of holding broken down rules. Captures the
         local controller and the rules passed to them. '''
 
-    def __init__(self, lc, list_of_rules):
+    def __init__(self, lc, list_of_rules=None):
         self.lc = lc
         self.rules = list_of_rules
 
@@ -71,3 +71,6 @@ class UserRuleBreakdown(object):
 
     def get_list_of_rules(self):
         return list_of_rules
+
+    def add_to_list_of_rules(self, rule):
+        self.rules.append(rule)
