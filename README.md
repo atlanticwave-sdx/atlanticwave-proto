@@ -48,3 +48,22 @@ The `testing` and `topo` folders are both for testing. `testing` contains test c
 ## VM Requirements
 
 ** FIXME: This needs to be updated **
+
+### Virtual Environment
+
+Use virtualenv to easily set up the controller
+
+creat a virtual environment.
+do not do this inside of the directory if you are a contributor
+
+    virtualenv venv
+    source venv/bin/activate
+
+now go into the atlanticwave directory and download the requirements
+
+    cd atlanticwave-proto/
+    pip install -r requirements.txt
+
+Also be sure to set your python path
+
+    export PYTHONPATH=/Users/johnskan/atlanticwave-proto
