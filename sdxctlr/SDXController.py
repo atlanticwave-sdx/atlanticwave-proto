@@ -22,6 +22,9 @@ from RuleRegistry import *
 from TopologyManager import *
 from ValidityInspector import *
 
+# Known UserPolicies
+from shared.JsonUploadPolicy import *
+
 
 class SDXControllerError(Exception):
     ''' Parent class, can be used as a catch-all for other errors '''
@@ -72,6 +75,9 @@ class SDXController(object):
         self.cm_thread = threading.Thread(target=self._cm_thread)
         self.cm_thread.daemon = True
         self.cm_thread.start()
+
+        # Register known UserPolicies
+        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
         
         # Go to main loop 
         pass

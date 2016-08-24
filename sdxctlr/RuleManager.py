@@ -82,10 +82,10 @@ class RuleManager(object):
         # Get the breakdown of the rule
         try:
             breakdown = self.be.get_breakdown(rule)
-        except Exception as e:
-            raise RuleManagerBreakdownError(
-                "Rule breakdown threw exception: %s, %s" %
-                (rule, str(e)))
+        except Exception as e: raise
+#            raise RuleManagerBreakdownError(
+#                "Rule breakdown threw exception: %s, %s" %
+#                (rule, str(e)))
         if breakdown == None:
             raise RuleManagerBreakdownError(
                 "Rule was not broken down: %s" % rule)
@@ -184,7 +184,7 @@ class RuleManager(object):
         #FIXME: Actually send remove rules to LC!
         #FIXME: This should be in a try block.
         try:
-            for bd in breakdown:
+            for bd in rule.breakdown:
                 self.send_user_rm_rule(bd)
         except Exception as e: raise
 

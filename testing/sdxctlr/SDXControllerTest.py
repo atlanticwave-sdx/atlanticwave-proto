@@ -16,8 +16,11 @@ from sdxctlr.ParticipantManager import ParticipantManager
 from sdxctlr.LocalControllerManager import LocalControllerManager
 from sdxctlr.SDXController import *
 
+from shared.JsonUploadPolicy import *
+
 TOPO_CONFIG_FILE = 'test_manifests/topo.manifest'
 PART_CONFIG_FILE = 'test_manifests/participants.manifest'
+JSON_POLICY_FILE = 'test_manifests/example_config.json'
 
 class UserPolicyStandin(UserPolicy):
     # Use the username as a return value for checking validity.
@@ -59,8 +62,8 @@ class SingletonTest(unittest.TestCase):
 
 class AddRuleTest(unittest.TestCase):
     @mock.patch('sdxctlr.SDXController.RestAPI', autospec=True)
-    def test_good_test_add_rule(self, restapi):
-
+    def test_add_and_remove_no_exception(self, restapi):
+        
         part = ParticipantManager(PART_CONFIG_FILE)
         topo = TopologyManager(TOPO_CONFIG_FILE)
         lc = LocalControllerManager(TOPO_CONFIG_FILE)
@@ -69,9 +72,35 @@ class AddRuleTest(unittest.TestCase):
         man = RuleManager()
         valid_rule = UserPolicyStandin(True, True)
 
-        self.failUnlessRaises(SDXControllerConnectionError,
-                              man.add_rule, valid_rule)
+        sdxctlr._send_breakdown_rule = mock.MagicMock()
 
+        rule_num = man.add_rule(valid_rule)
+
+        man.remove_rule(rule_num, 'sdonovan')
+        
+
+class JsonUploadTest(unittest.TestCase):
+    @mock.patch('sdxctlr.SDXController.RestAPI', autospec=True)
+    def test_add_json_upload(self, restapi):
+        
+        part = ParticipantManager(PART_CONFIG_FILE)
+        topo = TopologyManager(TOPO_CONFIG_FILE)
+        lc = LocalControllerManager(TOPO_CONFIG_FILE)
+        sdxctlr = SDXController()
+        
+        man = RuleManager()
+        sdxctlr._send_breakdown_rule = mock.MagicMock()
+
+        # Get a JSON policy from a file
+        with open(JSON_POLICY_FILE) as datafile:
+            # Based on: https://stackoverflow.com/questions/8369219/how-do-i-read-a-text-file-into-a-string-variable-in-python
+            data = json.load(datafile)
+            #data = datafile.read().replace('\n', '')
+        valid_rule = JsonUploadPolicy('sdonovan', data)
+
+        rule_num = man.add_rule(valid_rule)
+        man.remove_rule(rule_num, 'sdonovan')
+    
 
 
 

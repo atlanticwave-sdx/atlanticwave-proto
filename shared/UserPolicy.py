@@ -29,7 +29,7 @@ class UserPolicy(object):
         ''' Called by the BreakdownEngine to break a user rule apart. Should
             only be called by the BreakdownEngine, which passes the topology
             and authorization_func to it.
-            Returns a UserPolicyBreakdown object.
+            Returns a list of UserPolicyBreakdown objects.
             Must be implemented by child classes. '''
         raise NotImplementedError("Subclasses must implement this.")
 
@@ -42,7 +42,7 @@ class UserPolicy(object):
     def set_breakdown(self, breakdown):
         self.breakdown = breakdown
 
-    def get_breakdown(self, breakdown):
+    def get_breakdown(self):
         return self.breakdown
 
     def set_rule_hash(self, hash):
@@ -62,7 +62,7 @@ class UserPolicyBreakdown(object):
     ''' This provides a standard way of holding broken down rules. Captures the
         local controller and the rules passed to them. '''
 
-    def __init__(self, lc, list_of_rules=None):
+    def __init__(self, lc, list_of_rules=[]):
         ''' The lc is the IP of the local controller. The list_of_rules is a list
             of rules that are being sent to the Local Controllers. '''
         self.lc = lc

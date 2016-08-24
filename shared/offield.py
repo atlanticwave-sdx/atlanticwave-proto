@@ -102,7 +102,7 @@ class Field(object):
         for field in allfields:
             if field in self.prereq:
                 return
-        raise FieldPrereqError("Prerequisites are not met")
+        raise FieldPrereqError("Prerequisites are not met: %s" % self.prereq)
         
         
 
