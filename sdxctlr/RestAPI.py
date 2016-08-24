@@ -20,6 +20,7 @@ import flask_login
 
 #Topology json stuff
 from networkx.readwrite import json_graph
+import json
 
 #multiprocess stuff
 from multiprocessing import Process
@@ -161,12 +162,25 @@ class RestAPI(object):
     # Return the network topology in json format
     @staticmethod
     @app.route('/topology.json')
+    def show_network_topology_json():
+        if authorizor.is_authorized(flask_login.current_user.id,'show_topology'):
+            G = topo.get_topology()
+            data = json_graph.node_link_data(G)
+            return json.dumps(data)
+        return unauthorized_handler()
+
+    # Return the network topology in json format
+    @staticmethod
+    @app.route('/topology')
     def show_network_topology():
         if authorizor.is_authorized(flask_login.current_user.id,'show_topology'):
+            html = open('html/topology.html').read()
+            return html
             G = topo.get_topology()
             data = json_graph.adjacency_data(G)
             return str(data)
         return unauthorized_handler()
+
 
     # Get information about a specific rule IDed by hash.
     @staticmethod
