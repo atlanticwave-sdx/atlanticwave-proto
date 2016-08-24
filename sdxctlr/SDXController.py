@@ -10,7 +10,7 @@ import Queue
 from shared.Singleton import Singleton
 from shared.SDXControllerConnectionManager import *
 from shared.Connection import select
-from shared.UserRule import UserRuleBreakdown
+from shared.UserPolicy import UserPolicyBreakdown
 from AuthenticationInspector import *
 from AuthorizationInspector import *
 from BreakdownEngine import *
@@ -189,15 +189,15 @@ class SDXController(object):
 
         
     def send_breakdown_rule_add(self, bd):
-        ''' This takes in a UserRuleBreakdown and send it to the Local Controller
-            that it has a connection to in order to add rules. '''
+        ''' This takes in a UserPolicyBreakdown and send it to the Local 
+            Controller that it has a connection to in order to add rules. '''
         try:
             self._send_breakdown_rule(bd, SDX_NEW_RULE)
         except Exception as e: raise
 
     def send_breakdown_rule_rm(self, bd):
-        ''' This takes in a UserRuleBreakdown and send it to the Local Controller
-            that it has a connection to in order to remove rules. '''
+        ''' This takes in a UserPolicyBreakdown and send it to the Local 
+            Controller that it has a connection to in order to remove rules. '''
         try:
             self._send_breakdown_rule(bd, SDX_RM_RULE)
         except Exception as e: raise

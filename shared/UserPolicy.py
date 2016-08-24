@@ -2,19 +2,19 @@
 # AtlanticWave/SDX Project
 
 
-class UserRule(object):
+class UserPolicy(object):
     ''' This is the interface between the SDX controller and the user-level 
         application. This will likely be heavily modified over the course of 
         development, more so than most other interfaces. '''
 
     def __init__(self, username, json_rule):
-        ''' Parses the json_rule passed in to populate the UserRule. '''
+        ''' Parses the json_rule passed in to populate the UserPolicy. '''
         self.username = username
         self.ruletype = None
         self.json_rule = json_rule
         self._parse_json(self.json_rule)
 
-        # The breakdown list should be a list of UserRuleBreakdown objects.
+        # The breakdown list should be a list of UserPolicyBreakdown objects.
         self.breakdown = None
         self.rule_hash = None
         
@@ -29,7 +29,7 @@ class UserRule(object):
         ''' Called by the BreakdownEngine to break a user rule apart. Should
             only be called by the BreakdownEngine, which passes the topology
             and authorization_func to it.
-            Returns a UserRuleBreakdown object.
+            Returns a UserPolicyBreakdown object.
             Must be implemented by child classes. '''
         raise NotImplementedError("Subclasses must implement this.")
 
@@ -58,11 +58,13 @@ class UserRule(object):
 
 
         
-class UserRuleBreakdown(object):
+class UserPolicyBreakdown(object):
     ''' This provides a standard way of holding broken down rules. Captures the
         local controller and the rules passed to them. '''
 
     def __init__(self, lc, list_of_rules=None):
+        ''' The lc is the IP of the local controller. The list_of_rules is a list
+            of rules that are being sent to the Local Controllers. '''
         self.lc = lc
         self.rules = list_of_rules
 

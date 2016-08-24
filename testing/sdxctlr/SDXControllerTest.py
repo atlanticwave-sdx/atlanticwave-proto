@@ -9,7 +9,7 @@ import threading
 import networkx as nx
 import mock
 
-from shared.UserRule import *
+from shared.UserPolicy import *
 from sdxctlr.BreakdownEngine import *
 from sdxctlr.TopologyManager import TopologyManager
 from sdxctlr.ParticipantManager import ParticipantManager
@@ -19,10 +19,10 @@ from sdxctlr.SDXController import *
 TOPO_CONFIG_FILE = 'test_manifests/topo.manifest'
 PART_CONFIG_FILE = 'test_manifests/participants.manifest'
 
-class UserRuleStandin(UserRule):
+class UserPolicyStandin(UserPolicy):
     # Use the username as a return value for checking validity.
     def __init__(self, username, json_rule):
-        super(UserRuleStandin, self).__init__(username, json_rule)
+        super(UserPolicyStandin, self).__init__(username, json_rule)
         self.valid = username
         self.breakdown = json_rule
         
@@ -39,7 +39,7 @@ class UserRuleStandin(UserRule):
         if not isinstance(topology, nx.Graph):
             raise Exception("Topology is not nx.Graph")
         if self.breakdown == True:
-            return [UserRuleBreakdown("1.2.3.4", ["rule1", "rule2"])]
+            return [UserPolicyBreakdown("1.2.3.4", ["rule1", "rule2"])]
         raise Exception("NO BREAKDOWN")
     
     def _parse_json(self, json_rule):
@@ -67,7 +67,7 @@ class AddRuleTest(unittest.TestCase):
         sdxctlr = SDXController()
         
         man = RuleManager()
-        valid_rule = UserRuleStandin(True, True)
+        valid_rule = UserPolicyStandin(True, True)
 
         self.failUnlessRaises(SDXControllerConnectionError,
                               man.add_rule, valid_rule)
