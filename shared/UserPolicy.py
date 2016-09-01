@@ -2,6 +2,12 @@
 # AtlanticWave/SDX Project
 
 
+class UserPolicyTypeError(TypeError):
+    pass
+
+class UserPolicyValueError(ValueError):
+    pass
+
 class UserPolicy(object):
     ''' This is the interface between the SDX controller and the user-level 
         application. This will likely be heavily modified over the course of 

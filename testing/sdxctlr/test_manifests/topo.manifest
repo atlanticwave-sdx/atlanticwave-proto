@@ -8,6 +8,7 @@
       "switchinfo": [
         {
           "name": "atl-switch",
+          "dpid": "1",
           "ip": "10.10.10.11",
           "brand": "Open vSwitch",
           "model": "2.3.0",
@@ -50,6 +51,7 @@
       "switchinfo": [
         {
           "name": "mia-switch",
+          "dpid": "2",
           "ip": "10.10.10.21",
           "brand": "Open vSwitch",
           "model": "2.3.0",

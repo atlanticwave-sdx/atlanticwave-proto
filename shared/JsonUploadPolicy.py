@@ -1,6 +1,7 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
+
 from UserPolicy import *
 from config_parser.config_parser import *
 
@@ -21,7 +22,7 @@ class JsonUploadPolicy(UserPolicy):
             parse_configuration(json_rule)
         except (ConfigurationParserTypeError,
                 ConfigurationParserValueError) as e:
-            raise e
+            raise
         return True
     
     def breakdown_rule(self, topology, authorization_func):

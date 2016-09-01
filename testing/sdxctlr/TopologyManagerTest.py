@@ -53,6 +53,10 @@ class VerifyTopoTest(unittest.TestCase):
             self.failUnless((edge in edges) or (reversed_edge in edges))
             self.failUnless(topo.has_edge(a, b))
 
+        #import json
+        #print json.dumps(topo.nodes(data=True), indent=1)
+        #print "\n\n"
+        #print json.dumps(topo.edges(data=True), indent=1)
 
 if __name__ == '__main__':
     unittest.main()

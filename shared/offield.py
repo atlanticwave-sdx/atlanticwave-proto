@@ -194,7 +194,6 @@ class ipv6_field(number_field):
 
 
 
-
 ###### Below are OpenFlow Header Fields, for matching and modifying. #####
 class IN_PORT(number_field):
     def __init__(self, value=None):
@@ -271,7 +270,11 @@ class UDP_DST(number_field):
                                       minval=0, maxval=2**16-1,
                                       prereq=[IP_PROTO(6)])
 
-
+class VLAN_VID(number_field):
+    def __init__(self, name, value, cfi=0):
+        super(VLAN_VID, self).__init__(name, value,
+                                       minval=0, maxval=2**12-1,
+                                       prereq=None)
 
 
 
@@ -279,7 +282,7 @@ class UDP_DST(number_field):
 # accept.
 VALID_MATCH_FIELDS = [ IN_PORT, ETH_DST, ETH_SRC, ETH_TYPE, IP_PROTO, IPV4_SRC,
                        IPV4_DST, IPV6_SRC, IPV6_DST, TCP_SRC, TCP_DST, UDP_SRC,
-                       UDP_DST ]
+                       UDP_DST, VLAN_VID ]
 
 # This is a translation mechanism for mapping a name to a class
 # Value is assumed
