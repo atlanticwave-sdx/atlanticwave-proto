@@ -1,161 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="AtlanticWave SDX Web Application">
-<meta name="author" content="Ankita Lamba">
-<title>Atlantic Wave SDX</title>
-<link href="css/bootstrap.min.css" rel="stylesheet">
-<link href="css/font-awesome.min.css" rel="stylesheet">
-<link href="css/prettyPhoto.css" rel="stylesheet">
-<link href="css/main.css" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="description" content="AtlanticWave SDX Web Application">
+    <meta name="author" content="Ankita Lamba">
+    <title>Atlantic Wave SDX</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+    <link href="css/prettyPhoto.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
 </head>
-
+<style>
+.tabcontent {display:none;}
+</style>
 <body data-spy="scroll" data-target="#navbar" data-offset="0">
-<header id="header" role="banner">
-<div class="container">
-<div id="navbar" class="navbar navbar-default">
-<div class="navbar-header">
-    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-    </button>
-    <a class="navbar-brand" href="index.html"></a>
-</div>
-<div class="collapse navbar-collapse">
-    <ul class="nav navbar-nav">
-        <li class="active"><a href="#main-slider"><i class="icon-home"></i></a></li>
-        <li><a href="#topology">Topology</a></li>
-        <li><a href="#requests">Requests</a></li>
-        <li><a href="#about-us">About Us</a></li>
-        <li><a href="#login">Login</a></li>
-    </ul>
-</div>
-</div>
-</div>
-</header>
-
-<section id="main-slider" class="carousel">
-<div class="carousel-inner">
-<div class="item active">
-<div class="container">
-    <div class="carousel-content">
-        <h1>AtlanticWave SDX</h1>
-        <p class="lead">The AtlanticWave/SDX is a distributed research and education network Internet exchange point (IXP)<br><br><br>
-        </p>
-    </div>
-</div>
-</div>
-<div class="item">
-<div class="container">
-    <div class="carousel-content">
-        <h1>Use cases for this IXP</h1>
-        <p class="lead">Distribution of terabytes of data from new American telescopes located in the Atacama Desert of Chile back to the US <br>This traffic is bursty in nature, only during certain hours, and will require near-full utilization of the anticipated links between Atlanta, Miami, São Paulo and Chile</p>
-    </div>
-</div>
-</div>
-</div>
-<a class="prev" href="#main-slider" data-slide="prev"><i class="icon-angle-left"></i></a>
-<a class="next" href="#main-slider" data-slide="next"><i class="icon-angle-right"></i></a>
-</section>
-
-<section id="topology">
-<div class="container">
-<div class="box">
-<div class="center gap">
-    <h2>Topology</h2>
-    <p class="lead">This is the current network topology</p>
-</div>
-<ul class="portfolio-items col-2">
-    <li class="portfolio-item apps">
-        <div class="item-inner">
-            <div class="portfolio-image">
-                <img src="images/topo/thumb/item1.jpg" alt="">
-                <div class="overlay">
-                    <a class="preview btn btn-danger" title="Network Topology 2016" href="images/topo/full/item1.jpg"><i class="icon-eye-open"></i></a>             
+    <header id="header" role="banner">
+        <div class="container">
+            <div id="navbar" class="navbar navbar-default">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="index.html"></a>
+                </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="#main-slider"><i class="icon-home"></i></a></li>
+                        <li><a href="#topology">Topology</a></li>
+                        <li><a href="#requests">Requests</a></li>
+                        <li><a href="#about-us">About Us</a></li>
+                        <li><a href="#contact">Login</a></li>
+                    </ul>
                 </div>
             </div>
         </div>
-    </li>
-    <li class="portfolio-item joomla bootstrap">
-        <div class="item-inner">
-            <div class="portfolio-image">
-                <img src="images/topo/thumb/item2.jpg" alt="">
-                <div class="overlay">
-                    <a class="preview btn btn-danger" title="Network Topology 2017" href="images/topo/full/item2.jpg"><i class="icon-eye-open"></i></a>  
+    </header>
+
+    <section id="main-slider" class="carousel">
+        <div class="carousel-inner">
+            <div class="item active">
+                <div class="container">
+                    <div class="carousel-content">
+                        <h1>AtlanticWave SDX</h1>
+                        <p class="lead">The AtlanticWave/SDX is a distributed research and education network Internet exchange point (IXP)<br><br><br>
+                        </p>
+                    </div>
                 </div>
-            </div> 
-
-        </div>
-    </li>
-</ul>   
-</div>
-</div>
-</section>
-
-<section id="requests">
-<div class="container">
-<div class="box">
-<div class="center">
-    <h2>Request a Pipe</h2>
-    <p class="lead">Users can request a pipe between two locations based on their preferences</p>
-</div>  
-<div class="big-gap"></div>
-<div id="pricing-table" class="row">
-    <form id="form" action="" method="post">
-        <div class="col-sm-4">
-            <ul class="plan">
-                <p>Enter the start date: <input type="date" name="startdate"> </p> <br>
-                <p>Enter the start time: <input type="time" name="starttime"> </p> <br>
-                <p>Enter the end date: <input type="date" name="enddate"> </p> <br>
-                <p>Enter the end time: <input type="time" name="endtime"> </p> <br>          
-            </ul>
-        </div>
-        <div class="col-sm-4">
-            <ul class="plan">
-                <p>Enter the desired bandwidth:</p>
-                <input type="text" class="form-control" required="required" placeholder="Bandwidth in GB"> <br>
-                <p>Enter the physical port number at source:</p>
-                <input type="text" class="form-control" required="required" placeholder=" Source Port#"> <br> 
-                <p>Enter the physical port number at destination:</p>
-                <input type="text" class="form-control" required="required" placeholder="Destination Port#"> <br>  
-                <div class="form-group">
-                    <button type="submit" class="btn btn-danger btn-lg">Submit</button>
+            </div>
+            <div class="item">
+                <div class="container">
+                    <div class="carousel-content">
+                        <h1>Use cases for this IXP</h1>
+                        <p class="lead">Distribution of terabytes of data from new American telescopes located in the Atacama Desert of Chile back to the US <br>This traffic is bursty in nature, only during certain hours, and will require near-full utilization of the anticipated links between Atlanta, Miami, São Paulo and Chile</p>
+                    </div>
                 </div>
-            </ul>
+            </div>
         </div>
-        <div class="col-sm-4">
-            <ul class="plan featured">
-                <p>Select source: </p>
-                <select><option value="miami">Miami</option>
-                    <option value="saopaulo">Sao Paulo</option>
-                    <option value="chile">Chile</option>
-                    <option value="atlanta">Atlanta</option></select>
+        <a class="prev" href="#main-slider" data-slide="prev"><i class="icon-angle-left"></i></a>
+        <a class="next" href="#main-slider" data-slide="next"><i class="icon-angle-right"></i></a>
+    </section>
 
-                    <p>Select destination: </p>
-                    <select><option value="miami">Miami</option>
-                        <option value="saopaulo">Sao Paulo</option>
-                        <option value="chile">Chile</option>
-                        <option value="atlanta">Atlanta</option></select>
-                    </ul>
+    <section id="topology">
+        <div class="container">
+            <div class="box">
+                <div class="center">
+                    <h2>Topology</h2>
+                    <p class="lead">This is the current network topology</p>
                 </div>
-                <div class="col-sm-4">
-                    <ul class="plan">
-                        <p>Select source VLAN: </p>
-                        <select><option value="vlan10">VLAN 10</option>
-                            <option value="vlan20">VLAN 20</option>
-                            <option value="vlan30">VLAN 30</option>
-                            <option value="vlan40">VLAN 40</option></select>
+                <ul class="portfolio-items col-2">
+                    <li class="portfolio-item apps">
+                        <div class="item-inner">
+                            <div class="portfolio-image">
+                                <img src="images/topo/thumb/item1.jpg" alt="">
+                                <div class="overlay">
+                                    <a class="preview btn btn-danger" title="Network Topology 2016" href="images/topo/full/item1.jpg"><i class="icon-eye-open"></i></a>             
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="portfolio-item joomla bootstrap">
+                        <div class="item-inner">
+                            <div class="portfolio-image">
+                                <img src="images/topo/thumb/item2.jpg" alt="">
+                                <div class="overlay">
+                                    <a class="preview btn btn-danger" title="Network Topology 2017" href="images/topo/full/item2.jpg"><i class="icon-eye-open"></i></a>  
+                                </div>
+                            </div> 
 
-                            <p>Select destination VLAN: </p>
-                            <select><option value="vlan10">VLAN 10</option>
-                                <option value="vlan20">VLAN 20</option>
-                                <option value="vlan30">VLAN 30</option>
-                                <option value="vlan40">VLAN 40</option></select>
-                            </ul>
+                        </div>
+                    </li>
+                </ul>   
+            </div>
+        </div>
+    </section>
+
+    <section id="requests">
+        <div class="container">
+            <div class="box">
+                <div class="center gap">
+                    <h2>Request a Pipe</h2>
+                    <p class="lead">Users can request for a pipe based on their requirements and role</p>
+                </div>
+                <div id="pricing-table" class="row">
+                    <form id="form" action="" method="post">
+                        <ul class="portfolio-filter">
+                            <li><a class="tablinks" href="#" onclick="role(event, 'NetworkEngr')">Network Engineers</a></li>
+                            <li><a class="tablinks" href="#" onclick="role(event, 'Scientist')">Scientists</a></li>
+                        </ul>
+                        </div>
+                        <div id="NetworkEngr" class="tabcontent">
+                          <div class="col-sm-4">
+                            <p>Enter the start date: <input type="date" class="form-control" required="required" name="startdate"> </p> 
+                            <p>Enter the start time: <input type="time" class="form-control" required="required" name="starttime"> </p> 
+                            <p>Enter the end date: <input type="date" class="form-control" required="required" name="enddate"> </p> 
+                            <p>Enter the end time: <input type="time" class="form-control" required="required" name="endtime"> </p>           
+                        </div>
+                        <div class="col-sm-4">
+                            <p>Enter the desired bandwidth:</p>
+                            <input type="text" class="form-control" required="required" placeholder="Bandwidth in GB">
+                            <p>Enter the physical port number at source:</p>
+                            <input type="text" class="form-control" required="required" placeholder=" Source Port#"> 
+                            <p>Enter the physical port number at destination:</p>
+                            <input type="text" class="form-control" required="required" placeholder="Destination Port#"> <br>
+                            <div class="form-group">
+                                <button type="test" class="btn btn-danger btn-lg" align="middle">Preview</button>
+                                <button type="submit" class="btn btn-danger btn-lg" align="middle">Submit</button>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <p>Enter the source VLAN:</p>
+                            <input type="text" class="form-control" required="required" placeholder="Source VLAN" min="0" max="4090">
+                            <p>Enter the destination VLAN:</p>
+                            <input type="text" class="form-control" required="required" placeholder="Destination VLAN" min="0" max="4090">
+                        </div>
+                        <div class="col-sm-4">
+                            <p>Select source: </p>
+                            <select class="form-control" required="required"><option value="miami">Miami</option>
+                                <option value="saopaulo">Sao Paulo</option>
+                                <option value="chile">Chile</option>
+                                <option value="atlanta">Atlanta</option></select>
+
+                                <p>Select destination: </p>
+                                <select class="form-control" required="required"><option value="miami">Miami</option>
+                                    <option value="saopaulo">Sao Paulo</option>
+                                    <option value="chile">Chile</option>
+                                    <option value="atlanta">Atlanta</option></select>
+                                </div>
+                            </div>
+
+                            <div id="Scientist" class="tabcontent">
+                              <div class="col-sm-4">
+                                <p>Enter the start date: <input type="date" class="form-control" required="required" name="startdate"> </p>
+                                <p>Enter the start time: <input type="time" class="form-control" required="required" name="starttime"> </p>
+                                <p>Enter the end date: <input type="date" class="form-control" required="required" name="enddate"> </p>
+                                <p>Enter the end time: <input type="time" class="form-control" required="required" name="endtime"> </p>          
+                            </div>
+
+                            <div class="col-sm-4">
+                                <p>Enter the desired bandwidth:</p>
+                                <input type="text" class="form-control" required="required" placeholder="Bandwidth in GB">
+                                <p>Enter the source node:</p>
+                                <input type="text" class="form-control" required="required" placeholder="Source Node#">
+                                <p>Enter the destination node:</p>
+                                <input type="text" class="form-control" required="required" placeholder="Destination Node#"> <br>
+                                <div class="form-group">
+                                    <button type="test" class="btn btn-danger btn-lg" align="middle">Preview</button>
+                                    <button type="submit" class="btn btn-danger btn-lg" align="middle">Submit</button>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div> 
@@ -175,19 +190,19 @@
                     <div class="carousel-inner">
                         <div class="item active">
                             <div class="row">
-                                <div class="col-sm-3">
+                                <div class="col-sm-4">
                                     <div class="member">
                                         <p><img class="img-responsive img-thumbnail img-circle" src="images/team1.jpg" alt="" ></p>
                                         <h3>a<small class="designation">b</small></h3>
                                     </div>
                                 </div>
-                                <div class="col-sm-3">
+                                <div class="col-sm-4">
                                     <div class="member">
-                                        <p><img class="img-responsive img-thumbnail img-circle" src="images/team3.jpg" alt="" ></p>
-                                        <h3>Russell Clark<small class="designation">Co-director, GT-RNOC</small></h3>
+                                        <p><img class="img-responsive img-thumbnail img-circle" src="images/team1.jpg" alt="" ></p>
+                                        <h3>Sean Donovan<small class="designation">Software Engineer</small></h3>
                                     </div>
                                 </div>
-                                <div class="col-sm-3">
+                                <div class="col-sm-4">
                                     <div class="member">
                                         <p><img class="img-responsive img-thumbnail img-circle" src="images/team2.jpg" alt="" ></p>
                                         <h3>Jerônimo Bezerra<small class="designation">Software Engineer</small></h3>
@@ -197,21 +212,43 @@
                         </div>
                         <div class="item">
                             <div class="row">
-                                <div class="col-sm-3">
+                                <div class="col-sm-4">
                                     <div class="member">
                                         <p><img class="img-responsive img-thumbnail img-circle" src="images/team3.jpg" alt="" ></p>
                                         <h3>x<small class="designation">y</small></h3>
                                     </div>
                                 </div>   
-                                <div class="col-sm-3">
+                                <div class="col-sm-4">
                                     <div class="member">
-                                        <p><img class="img-responsive img-thumbnail img-circle" src="images/team1.jpg" alt="" ></p>
-                                        <h3>Sean Donovan<small class="designation">Software Engineer</small></h3>
+                                        <p><img class="img-responsive img-thumbnail img-circle" src="images/team4.jpg" alt="" ></p>
+                                        <h3>Ankita Lamba<small class="designation">Graduate Security Researcher</small></h3>
                                     </div>
-                                </div>     
+                                </div> 
+                                <div class="col-sm-4">
+                                    <div class="member">
+                                        <p><img class="img-responsive img-thumbnail img-circle" src="images/team5.jpg" alt="" ></p>
+                                        <h3>John Skandalakis<small class="designation">Graduate Student</small></h3>
+                                    </div>
+                                </div>  
                             </div>
                         </div>
-                    </div>
+                        <div class="item">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="member">
+                                        <p><img class="img-responsive img-thumbnail img-circle" src="images/team3.jpg" alt="" ></p>
+                                        <h3>Russell Clark<small class="designation">Co-director, GT-RNOC</small></h3>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="member">
+                                        <p><img class="img-responsive img-thumbnail img-circle" src="images/team3.jpg" alt="" ></p>
+                                        <h3>Russell Clark<small class="designation">Co-director, GT-RNOC</small></h3>
+                                    </div>
+                                </div>
+                                </div>   
+                            </div>
+                        </div>
                     <a class="left-arrow" href="#team-scroller" data-slide="prev">
                         <i class="icon-angle-left icon-4x"></i>
                     </a>
@@ -223,7 +260,7 @@
         </div>
     </section>
 
-    <section id="login">
+    <section id="contact">
         <div class="container">
             <div class="box last">
                 <div class="row">
@@ -231,7 +268,7 @@
                         <h1>Login Form</h1>
                         <p>Please contact the administrator if you do not already have a user account</p>
                         <div class="status alert alert-success" style="display: none"></div>
-                        <form id="main-contact-form" class="contact-form" name="contact-form" role="form">
+                        <form id="main-contact-form" class="contact-form" name="contact-form" method="post" action="" role="form">
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
@@ -304,5 +341,19 @@
     <script src="js/jquery.isotope.min.js"></script>
     <script src="js/jquery.prettyPhoto.js"></script>
     <script src="js/main.js"></script>
+    <script> function role(evt, roleName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(roleName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+    </script>
 </body>
 </html>
