@@ -78,7 +78,7 @@ class UserPolicyBreakdown(object):
         return self.lc
 
     def get_list_of_rules(self):
-        return list_of_rules
+        return self.rules
 
     def add_to_list_of_rules(self, rule):
         self.rules.append(rule)

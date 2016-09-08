@@ -26,6 +26,12 @@ from ValidityInspector import *
 from shared.JsonUploadPolicy import *
 
 
+# Connection Queue actions defininition
+NEW_CXN = "New Connection"
+DEL_CXN = "Remove Connection"
+
+
+
 class SDXControllerError(Exception):
     ''' Parent class, can be used as a catch-all for other errors '''
     pass
@@ -41,9 +47,6 @@ class SDXController(object):
         Singleton. ''' 
     __metaclass__ = Singleton
 
-    # Connection Queue actions defininition
-    NEW_CXN = "New Connection"
-    DEL_CXN = "Remove Connection"
 
     def __init__(self):
         ''' The bulk of the work happens here. This initializes nearly everything
@@ -186,7 +189,7 @@ class SDXController(object):
         # The cmd is from the list of commands in  SDXControllerConnectionManager
         lc = bd.get_lc()
         if lc not in self.connections.keys():
-            raise SDXControllerConnectionError("%s is not in the current connections." % lc)
+            raise SDXControllerConnectionError("%s is not in the current connections.\n    Current connections %s" % (lc, self.connections.keys()))
         
         lc_cxn = self.connections[lc]
 

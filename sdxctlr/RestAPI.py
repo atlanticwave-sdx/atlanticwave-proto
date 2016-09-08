@@ -41,22 +41,14 @@ class RestAPI(object):
     __metaclass__ = Singleton
 
 
-    global User, users, app, login_manager, authenticator, authorizor, topo, rule_manager
+    global User, users, app, login_manager
 
     app = Flask(__name__)
     
     #FIXME: This should be more secure.
     app.secret_key = 'ChkaChka.....Boo, Ohhh Yeahh!'
 
-
     login_manager = LoginManager()
-
-    authenticator = AuthenticationInspector()
-    authorizor = AuthorizationInspector()
-
-    topo = TopologyManager()
-
-    rule_manager = RuleManager()
 
 
     def api_process(self):
@@ -65,7 +57,7 @@ class RestAPI(object):
 
     def __init__(self):
         #FIXME: Creating user only for testing purposes
-        authenticator.add_user('sdonovan','1234')
+        AuthenicationInspector().add_user('sdonovan','1234')
         p = Process(target=self.api_process)
         p.start()
         pass
@@ -121,7 +113,7 @@ class RestAPI(object):
 
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
-        if authenticator.is_authenticated(email,flask.request.form['pw']):
+        if AuthenicationInspector().is_authenticated(email,flask.request.form['pw']):
             user = User()
             user.id = email
             flask_login.login_user(user)
@@ -134,7 +126,7 @@ class RestAPI(object):
     @app.route('/protected')
     @flask_login.login_required
     def protected():
-        if authorizor.is_authorized(flask_login.current_user.id,'login'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'login'):
             return 'Logged in as: ' + flask_login.current_user.id
         return unauthorized_handler()
 
@@ -155,7 +147,7 @@ class RestAPI(object):
     @staticmethod
     @app.route('/user/<username>')
     def show_user_information(username):
-        if authorizor.is_authorized(flask_login.current_user.id,'get_user_info'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'get_user_info'):
             return "Test: %s"%username
         return unauthorized_handler()
 
@@ -163,8 +155,8 @@ class RestAPI(object):
     @staticmethod
     @app.route('/topology.json')
     def show_network_topology_json():
-        if authorizor.is_authorized(flask_login.current_user.id,'show_topology'):
-            G = topo.get_topology()
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
+            G = TopologyManager().get_topology()
             data = json_graph.node_link_data(G)
             return json.dumps(data)
         return unauthorized_handler()
@@ -173,10 +165,10 @@ class RestAPI(object):
     @staticmethod
     @app.route('/topology')
     def show_network_topology():
-        if authorizor.is_authorized(flask_login.current_user.id,'show_topology'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
             html = open('html/topology.html').read()
             return html
-            G = topo.get_topology()
+            G = TopologyManager().get_topology()
             data = json_graph.adjacency_data(G)
             return str(data)
         return unauthorized_handler()
@@ -186,9 +178,9 @@ class RestAPI(object):
     @staticmethod
     @app.route('/rule/<rule_hash>')
     def get_rule_details_by_hash(rule_hash):
-        if authorizor.is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
             try:
-                return rule_manager.get_rule_details(rule_hash)
+                return RuleManager().get_rule_details(rule_hash)
             except:
                 return "Invalid rule hash"
         return unauthorized_handler()
@@ -197,8 +189,8 @@ class RestAPI(object):
     @staticmethod
     @app.route('/rule/search/<query>')
     def get_rule_search_by_query(query):
-        if authorizor.is_authorized(flask_login.current_user.id,'search_rules'):
-            return rule_manager.get_rules(query)
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'search_rules'):
+            return RuleManager().get_rules(query)
         return unauthorized_handler()
 
 
@@ -206,14 +198,14 @@ class RestAPI(object):
     @staticmethod
     @app.route('/rule/', methods=['GET', 'POST'])
     def rule():
-        if authorizor.is_authorized(flask_login.current_user.id,'add_rule_form'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'add_rule_form'):
             if flask.request.method == 'GET':
                 return open('html/rule_form.html','r').read()
             
             rule = flask.request.form['rule']
 
             try:
-                rule_hash = rule_manager.add_rule(rule)
+                rule_hash = RuleManager().add_rule(rule)
 
                 redirect_url = 'rule/'+str(rule_hash)
 
