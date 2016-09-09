@@ -57,7 +57,7 @@ class RestAPI(object):
 
     def __init__(self):
         #FIXME: Creating user only for testing purposes
-        AuthenicationInspector().add_user('sdonovan','1234')
+        AuthenticationInspector().add_user('sdonovan','1234')
         p = Process(target=self.api_process)
         p.start()
         pass
@@ -102,6 +102,26 @@ class RestAPI(object):
 
         return user
 
+    @staticmethod
+    @app.route('/html/<path:path>')
+    def send_html(path):
+        return send_from_directory('html', path)
+
+
+    # Preset the login form to the user and request to log user in
+    @staticmethod
+    @app.route('/', methods=['GET', 'POST'])
+    def home():
+        if flask.request.method == 'GET':
+            return open('html/index.html').read()
+
+        email = flask.request.form['email']
+        #if flask.request.form['pw'] == users[email]['pw']:
+        if AuthenticationInspector().is_authenticated(email,flask.request.form['pw']):
+            user = User()
+            user.id = email
+            flask_login.login_user(user)
+            return flask.redirect(flask.url_for('home'))
 
     
     # Preset the login form to the user and request to log user in
@@ -113,7 +133,7 @@ class RestAPI(object):
 
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
-        if AuthenicationInspector().is_authenticated(email,flask.request.form['pw']):
+        if AuthenticationInspector().is_authenticated(email,flask.request.form['pw']):
             user = User()
             user.id = email
             flask_login.login_user(user)

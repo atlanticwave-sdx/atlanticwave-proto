@@ -231,16 +231,16 @@
                         <h1>Login Form</h1>
                         <p>Please contact the administrator if you do not already have a user account</p>
                         <div class="status alert alert-success" style="display: none"></div>
-                        <form id="main-contact-form" class="contact-form" name="contact-form" role="form">
+                        <form action="http://127.0.0.1:5000/login" method="POST" id="main-contact-form" class="contact-form" name="contact-form" role="form">
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <input type="text" class="form-control" required="required" placeholder="Username">
+                                        <input type="text" id="email" name="email" class="form-control" required="required" placeholder="Username">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <input type="text" class="form-control" required="required" placeholder="Password">
+                                        <input type="text" id="pw" name="pw" class="form-control" required="required" placeholder="Password">
                                     </div>
                                 </div>
                             </div>
