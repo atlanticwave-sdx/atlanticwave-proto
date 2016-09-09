@@ -1,0 +1,11 @@
+{"l2tunnel":{
+    "starttime":"1985-04-12T23:20:50.52Z",
+    "endtime":"1985-04-12T23:20:50.52Z",
+    "srcswitch":"atl-switch",
+    "dstswitch":"mia-switch",
+    "srcport":5,
+    "dstport":7,
+    "srcvlan":1492,
+    "dstvlan":1789,
+    "bandwidth":1}}
+

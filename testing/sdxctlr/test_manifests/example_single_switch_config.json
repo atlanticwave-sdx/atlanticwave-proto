@@ -1,0 +1,17 @@
+{"rules":{
+    "atl-switch":[
+	{"switch":1,
+	 "priority":100,
+	 "cookie":1111,
+	 "table":1,
+	 "match":{"in_port":1},
+	 "actions":{"fwd":2},
+	 "instruction":"write_actions"},
+	{"switch":1,
+	 "priority":100,
+	 "cookie":1111,
+	 "table":1,
+	 "match":{"in_port":2},
+	 "actions":{"fwd":1},
+	 "instruction":"write_actions"}
+    ]}}

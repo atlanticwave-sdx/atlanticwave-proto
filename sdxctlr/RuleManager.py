@@ -39,7 +39,9 @@ class RuleManager(object):
 
     
     
-    def __init__(self):
+    def __init__(self, send_user_rule_breakdown_add,
+                 send_user_rule_breakdown_remove):
+        # The params are used in order to maintain import hierarchy.
 
         # Initialize rule counter. Used to track the rules as they are installed.
         self.rule_number = 1
@@ -51,6 +53,10 @@ class RuleManager(object):
         self.vi = ValidityInspector()
         self.be = BreakdownEngine()
         self.ai = AuthorizationInspector()
+
+        # Send the rule to the Local Controller
+        self.send_user_add_rule = send_user_rule_breakdown_add
+        self.send_user_rm_rule = send_user_rule_breakdown_remove
 
     def add_rule(self, rule):
         ''' Adds a rule for a particular user. Returns rule hash if successful, 
@@ -76,10 +82,10 @@ class RuleManager(object):
         # Get the breakdown of the rule
         try:
             breakdown = self.be.get_breakdown(rule)
-        except Exception as e:
-            raise RuleManagerBreakdownError(
-                "Rule breakdown threw exception: %s, %s" %
-                (rule, str(e)))
+        except Exception as e: raise
+#            raise RuleManagerBreakdownError(
+#                "Rule breakdown threw exception: %s, %s" %
+#                (rule, str(e)))
         if breakdown == None:
             raise RuleManagerBreakdownError(
                 "Rule was not broken down: %s" % rule)
@@ -102,8 +108,12 @@ class RuleManager(object):
         self.rule_db[rule.get_rule_hash()] = rule
 
         #FIXME: Actually send add rules to LC!
-
-
+        #FIXME: This should be in a try block.
+        try:
+            for bd in breakdown:
+                self.send_user_add_rule(bd)
+        except Exception as e: raise
+            
         return rule.get_rule_hash()
         
 
@@ -172,6 +182,11 @@ class RuleManager(object):
             raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s" % (user, rule_hash))
 
         #FIXME: Actually send remove rules to LC!
+        #FIXME: This should be in a try block.
+        try:
+            for bd in rule.breakdown:
+                self.send_user_rm_rule(bd)
+        except Exception as e: raise
 
 
         # Remove from the rule_db
