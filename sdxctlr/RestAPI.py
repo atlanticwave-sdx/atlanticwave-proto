@@ -12,8 +12,7 @@ from TopologyManager import TopologyManager
 
 #API Stuff
 import flask
-from flask import Flask
-from flask import request
+from flask import Flask, request, url_for, send_from_directory
 
 from flask_login import LoginManager
 import flask_login
@@ -25,8 +24,12 @@ import json
 #multiprocess stuff
 from multiprocessing import Process
 
+#stuff to serve sdxctlr/static content - I will change this in an update but for now this is viable.
+import SimpleHTTPServer
+import SocketServer
+
 #System stuff
-import sys, traceback
+import sys, os, traceback
 
 class RestAPI(object):
     ''' The REST API will be the main interface for participants to use to push 
@@ -43,8 +46,7 @@ class RestAPI(object):
 
     global User, users, app, login_manager
 
-    app = Flask(__name__)
-    
+    app = Flask(__name__, static_url_path='', static_folder='')
     #FIXME: This should be more secure.
     app.secret_key = 'ChkaChka.....Boo, Ohhh Yeahh!'
 
@@ -55,11 +57,24 @@ class RestAPI(object):
         login_manager.init_app(app)
         app.run()
 
+    def file_serve_process(self):
+        os.chdir("sdxctlr/static/")
+        PORT = 8000
+
+        Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+
+        httpd = SocketServer.TCPServer(("", PORT), Handler)
+
+        print "serving at port", PORT
+        httpd.serve_forever()
+
     def __init__(self):
         #FIXME: Creating user only for testing purposes
         AuthenticationInspector().add_user('sdonovan','1234')
         p = Process(target=self.api_process)
+        q = Process(target=self.file_serve_process)
         p.start()
+        #q.start()
         pass
 
     def _setup_logger(self):
@@ -102,18 +117,12 @@ class RestAPI(object):
 
         return user
 
-    @staticmethod
-    @app.route('/html/<path:path>')
-    def send_html(path):
-        return send_from_directory('html', path)
-
-
     # Preset the login form to the user and request to log user in
     @staticmethod
     @app.route('/', methods=['GET', 'POST'])
     def home():
         if flask.request.method == 'GET':
-            return open('html/index.html').read()
+            return open('sdxctlr/static/index.html').read()
 
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
@@ -121,7 +130,8 @@ class RestAPI(object):
             user = User()
             user.id = email
             flask_login.login_user(user)
-            return flask.redirect(flask.url_for('home'))
+            return flask.redirect(flask.url_for('protected'))
+        return 'Bad login'
 
     
     # Preset the login form to the user and request to log user in
@@ -129,7 +139,7 @@ class RestAPI(object):
     @app.route('/login', methods=['GET', 'POST'])
     def login():
         if flask.request.method == 'GET':
-            return open('html/login_form.html').read()
+            return open('sdxctlr/static/login_form.html').read()
 
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
@@ -186,7 +196,7 @@ class RestAPI(object):
     @app.route('/topology')
     def show_network_topology():
         if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
-            html = open('html/topology.html').read()
+            html = open('sdxctlr/static/topology.html').read()
             return html
             G = TopologyManager().get_topology()
             data = json_graph.adjacency_data(G)
@@ -220,7 +230,7 @@ class RestAPI(object):
     def rule():
         if AuthorizationInspector().is_authorized(flask_login.current_user.id,'add_rule_form'):
             if flask.request.method == 'GET':
-                return open('html/rule_form.html','r').read()
+                return open('sdxctlr/static/rule_form.html','r').read()
             
             rule = flask.request.form['rule']
 
@@ -236,7 +246,7 @@ class RestAPI(object):
 
                 traceback.print_exc(file=sys.stdout)
 
-                return str(e) + '<br>' + open('html/rule_form.html','r').read()
+                return str(e) + '<br>' + open('sdxctlr/static/rule_form.html','r').read()
 
             
         return unauthorized_handler()
