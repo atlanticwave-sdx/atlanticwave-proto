@@ -12,10 +12,10 @@ from TopologyManager import TopologyManager
 
 #API Stuff
 import flask
-from flask import Flask, request, url_for, send_from_directory
+from flask import Flask, request, url_for, send_from_directory, render_template
 
-from flask_login import LoginManager
 import flask_login
+from flask_login import LoginManager
 
 #Topology json stuff
 from networkx.readwrite import json_graph
@@ -57,24 +57,11 @@ class RestAPI(object):
         login_manager.init_app(app)
         app.run()
 
-    def file_serve_process(self):
-        os.chdir("sdxctlr/static/")
-        PORT = 8000
-
-        Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-
-        httpd = SocketServer.TCPServer(("", PORT), Handler)
-
-        print "serving at port", PORT
-        httpd.serve_forever()
-
     def __init__(self):
         #FIXME: Creating user only for testing purposes
         AuthenticationInspector().add_user('sdonovan','1234')
         p = Process(target=self.api_process)
-        q = Process(target=self.file_serve_process)
         p.start()
-        #q.start()
         pass
 
     def _setup_logger(self):
@@ -119,35 +106,28 @@ class RestAPI(object):
 
     # Preset the login form to the user and request to log user in
     @staticmethod
-    @app.route('/', methods=['GET', 'POST'])
+    @app.route('/', methods=['GET'])
     def home():
-        if flask.request.method == 'GET':
-            return open('sdxctlr/static/index.html').read()
-
-        email = flask.request.form['email']
-        #if flask.request.form['pw'] == users[email]['pw']:
-        if AuthenticationInspector().is_authenticated(email,flask.request.form['pw']):
-            user = User()
-            user.id = email
-            flask_login.login_user(user)
-            return flask.redirect(flask.url_for('protected'))
-        return 'Bad login'
+        #return app.send_static_file('static/index.html')
+        try: 
+            print flask_login.current_user.id
+            return flask.render_template('index.html')
+        except:
+            print "test"
+            return app.send_static_file('static/index.html')
 
     
     # Preset the login form to the user and request to log user in
     @staticmethod
-    @app.route('/login', methods=['GET', 'POST'])
-    def login():
-        if flask.request.method == 'GET':
-            return open('sdxctlr/static/login_form.html').read()
-
+    @app.route('/login', methods=['POST','GET'])
+    def login(): 
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
         if AuthenticationInspector().is_authenticated(email,flask.request.form['pw']):
             user = User()
             user.id = email
             flask_login.login_user(user)
-            return flask.redirect(flask.url_for('protected'))
+            return flask.redirect(flask.url_for('home'))
 
         return 'Bad login'
 
@@ -165,7 +145,7 @@ class RestAPI(object):
     @app.route('/logout')
     def logout():
         flask_login.logout_user()
-        return 'Logged out'
+        return flask.redirect(flask.url_for('home'))
 
     # Present the page which tells a user they are unauthorized
     @staticmethod
