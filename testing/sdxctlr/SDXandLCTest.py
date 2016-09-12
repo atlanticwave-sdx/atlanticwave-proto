@@ -21,6 +21,7 @@ from sdxctlr.SDXController import *
 from localctlr.LocalController import *
 
 from shared.JsonUploadPolicy import *
+from shared.L2TunnelPolicy import *
 
 FNULL = open(os.devnull, 'w')
 
@@ -28,31 +29,6 @@ TOPO_CONFIG_FILE = 'test_manifests/singleswitchtopo.manifest'
 PART_CONFIG_FILE = 'test_manifests/participants.manifest'
 JSON_POLICY_FILE = 'test_manifests/example_single_switch_config.json'
 
-class UserPolicyStandin(UserPolicy):
-    # Use the username as a return value for checking validity.
-    def __init__(self, username, json_rule):
-        super(UserPolicyStandin, self).__init__(username, json_rule)
-        self.valid = username
-        self.breakdown = json_rule
-        
-    def check_validity(self, topology, authorization_func):
-        # Verify that topology is a nx.Graph, and authorization_func is ???
-        if not isinstance(topology, nx.Graph):
-            raise Exception("Topology is not nx.Graph")
-        if self.valid == True:
-            return True
-        raise Exception("NOT VALID")
-    
-    def breakdown_rule(self, topology, authorization_func):
-        # Verify that topology is a nx.Graph, and authorization_func is ???
-        if not isinstance(topology, nx.Graph):
-            raise Exception("Topology is not nx.Graph")
-        if self.breakdown == True:
-            return [UserPolicyBreakdown("1.2.3.4", ["rule1", "rule2"])]
-        raise Exception("NO BREAKDOWN")
-    
-    def _parse_json(self, json_rule):
-        return
 
 
 
@@ -97,10 +73,9 @@ class ConnectivityTest(unittest.TestCase):
         pass
 
     @mock.patch('sdxctlr.SDXController.RestAPI', autospec=True)
-    def test_add_json_upload(self, restapi):
+    def atest_add_json_upload(self, restapi):
         
         man = RuleManager()
-#        sdxctlr._send_breakdown_rule = mock.MagicMock()
 
         # Get a JSON policy from a file
         with open(JSON_POLICY_FILE) as datafile:
@@ -112,6 +87,28 @@ class ConnectivityTest(unittest.TestCase):
         rule_num = man.add_rule(valid_rule)
         man.remove_rule(rule_num, 'sdonovan')
 
+    @mock.patch('sdxctlr.SDXController.RestAPI', autospec=True)
+    def test_L2_tunnel_upload(self, restapi):
+        
+        man = RuleManager()
+
+        # Example JSON
+        l2json =  {"l2tunnel":{
+            "starttime":"1985-04-12T23:20:50",
+            "endtime":"1985-04-12T23:20:50",
+            "srcswitch":"atl-switch",
+            "dstswitch":"atl-switch",
+            "srcport":1,
+            "dstport":2,
+            "srcvlan":1492,
+            "dstvlan":1789,
+            "bandwidth":1}}
+
+        # Get a JSON policy from a file
+        l2rule = L2TunnelPolicy('sdonovan', l2json)
+
+        rule_num = man.add_rule(l2rule)
+        man.remove_rule(rule_num, 'sdonovan')
 
 
 

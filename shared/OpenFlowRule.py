@@ -26,17 +26,20 @@ class OpenFlowRule(object):
             cookie is an arbitrary cookie number. '''
 
         if not isinstance(switch_id, int):
-            raise OpenFlowRuleTypeError("switch_id must be an int")
+            raise OpenFlowRuleTypeError("switch_id must be an int: %s, %s" % 
+                                        (type(switch_id), switch_id))
         self.switch_id = switch_id
             
         if (match != None and
             not isinstance(match, OpenFlowMatch)):
-            raise OpenFlowRuleTypeError("match must be an OpenFlowMatch object")
+            raise OpenFlowRuleTypeError("match must be an OpenFlowMatch object: %s" %
+                                        type(match))
         self.match = match
 
         if (instruction != None and
             not isinstance(instruction, OpenFlowInstruction)):
-            raise OpenFlowRuleTypeError("matches must be an OpenFlowInstruction object")
+            raise OpenFlowRuleTypeError("matches must be an OpenFlowInstruction object: %s" %
+                                        type(instruction))
         self.instruction = instruction
 
         if table < OF_TABLE_MIN or table > OF_TABLE_MAX:
