@@ -31,6 +31,9 @@ import SocketServer
 #System stuff
 import sys, os, traceback
 
+#datetime
+from datetime import datetime
+
 class RestAPI(object):
     ''' The REST API will be the main interface for participants to use to push 
         rules (eventually) down to switches. It will gather authentication 
@@ -186,12 +189,26 @@ class RestAPI(object):
     @staticmethod
     @app.route('/pipe',methods=['POST'])
     def make_new_pipe():
+        rfc3339format = "%Y-%m-%dT%H:%M:%S%z"
         if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
-            try: #Scientist portal
-                sn = request.form['sn']
-                return "Scientist Pipe"
-            except: #Network Engineer Portal
-                return "Network Engineer Pipe"
+            starttime = datetime.strptime(request.form['startdate'] + ' ' + request.form['starttime'], '%Y-%m-%d %H:%M')
+            endtime = datetime.strptime(request.form['enddate'] + ' ' + request.form['endtime'], '%Y-%m-%d %H:%M')
+            try: #Network Engineer Portal
+                l2tunnel = json.dumps({"l2tunnel":{"starttime":starttime.strftime(rfc3339format),
+                                                "endtime":endtime.strftime(rfc3339format),
+                                                "srcswitch":request.form['source'],
+                                                "dstswitch":request.form['dest'],
+                                                "srcport":request.form['sp'],
+                                                "dstport":request.form['dp'],
+                                                "srcvlan":request.form['sv'],
+                                                "dstvlan":request.form['dv'],
+                                                "bandwidth":request.form['bw']}})
+
+                return l2tunnel
+
+            except: #Scientist Portal             
+                return "Scientist Portal - This feature is not yet implemented"
+                
 
     # Get information about a specific rule IDed by hash.
     @staticmethod
