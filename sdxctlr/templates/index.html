@@ -12,6 +12,11 @@
 <link href="static/css/main.css" rel="stylesheet">
 </head>
 
+<style>
+.tabcontent {display:none;}
+</style>
+
+
 <body data-spy="scroll" data-target="#navbar" data-offset="0">
 <header id="header" role="banner">
 <div class="container">
@@ -38,29 +43,30 @@
 </div>
 </header>
 
-<section id="main-slider" class="carousel">
-<div class="carousel-inner">
-<div class="item active">
-<div class="container">
-    <div class="carousel-content">
-        <h1>AtlanticWave SDX</h1>
-        <p class="lead">The AtlanticWave/SDX is a distributed research and education network Internet exchange point (IXP)<br><br><br>
-        </p>
-    </div>
-</div>
-</div>
-<div class="item">
-<div class="container">
-    <div class="carousel-content">
-        <h1>Use cases for this IXP</h1>
-        <p class="lead">Distribution of terabytes of data from new American telescopes located in the Atacama Desert of Chile back to the US <br>This traffic is bursty in nature, only during certain hours, and will require near-full utilization of the anticipated links between Atlanta, Miami, São Paulo and Chile</p>
-    </div>
-</div>
-</div>
-</div>
-<a class="prev" href="#main-slider" data-slide="prev"><i class="icon-angle-left"></i></a>
-<a class="next" href="#main-slider" data-slide="next"><i class="icon-angle-right"></i></a>
-</section>
+    <section id="main-slider" class="carousel">
+        <div class="carousel-inner">
+            <div class="item active">
+                <div class="container">
+                    <div class="carousel-content">
+                        <h1>AtlanticWave SDX</h1>
+                        <p class="lead">The AtlanticWave/SDX is a distributed research and education network Internet exchange point (IXP)<br><br><br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="item">
+                <div class="container">
+                    <div class="carousel-content">
+                        <h1>Use cases for this IXP</h1>
+                        <p class="lead">Distribution of terabytes of data from new American telescopes located in the Atacama Desert of Chile back to the US. This traffic is bursty in nature, only during certain hours, and will require near-full utilization of the anticipated links between Atlanta, Miami, São Paulo and Chile</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a class="prev" href="#main-slider" data-slide="prev"><i class="icon-angle-left"></i></a>
+        <a class="next" href="#main-slider" data-slide="next"><i class="icon-angle-right"></i></a>
+    </section>
+
 
 <section id="topology">
 <div class="container">
@@ -96,68 +102,80 @@
 </div>
 </section>
 
-<section id="requests">
-<div class="container">
-<div class="box">
-<div class="center">
-    <h2>Request a Pipe</h2>
-    <p class="lead">Users can request a pipe between two locations based on their preferences</p>
-</div>  
-<div class="big-gap"></div>
-<div id="pricing-table" class="row">
-    <form id="form" action="" method="post">
-        <div class="col-sm-4">
-            <ul class="plan">
-                <p>Enter the start date: <input type="date" name="startdate"> </p> <br>
-                <p>Enter the start time: <input type="time" name="starttime"> </p> <br>
-                <p>Enter the end date: <input type="date" name="enddate"> </p> <br>
-                <p>Enter the end time: <input type="time" name="endtime"> </p> <br>          
-            </ul>
-        </div>
-        <div class="col-sm-4">
-            <ul class="plan">
-                <p>Enter the desired bandwidth:</p>
-                <input type="text" class="form-control" required="required" placeholder="Bandwidth in GB"> <br>
-                <p>Enter the physical port number at source:</p>
-                <input type="text" class="form-control" required="required" placeholder=" Source Port#"> <br> 
-                <p>Enter the physical port number at destination:</p>
-                <input type="text" class="form-control" required="required" placeholder="Destination Port#"> <br>  
-                <div class="form-group">
-                    <button type="submit" class="btn btn-danger btn-lg">Submit</button>
+    <section id="requests">
+        <div class="container">
+            <div class="box">
+                <div class="center gap">
+                    <h2>Request a Pipe</h2>
+                    <p class="lead">Users can request for a pipe based on their requirements and role</p>
                 </div>
-            </ul>
-        </div>
-        <div class="col-sm-4">
-            <ul class="plan featured">
-                <p>Select source: </p>
-                <select><option value="miami">Miami</option>
-                    <option value="saopaulo">Sao Paulo</option>
-                    <option value="chile">Chile</option>
-                    <option value="atlanta">Atlanta</option></select>
-
-                    <p>Select destination: </p>
-                    <select><option value="miami">Miami</option>
-                        <option value="saopaulo">Sao Paulo</option>
-                        <option value="chile">Chile</option>
-                        <option value="atlanta">Atlanta</option></select>
+                <div id="pricing-table" class="row">
+                    <ul class="portfolio-filter">
+                        <li><a class="tablinks" href="#" onclick="role(event, 'NetworkEngr')">Network Engineers</a></li>
+                        <li><a class="tablinks" href="#" onclick="role(event, 'Scientist')">Scientists</a></li>
                     </ul>
-                </div>
-                <div class="col-sm-4">
-                    <ul class="plan">
-                        <p>Select source VLAN: </p>
-                        <select><option value="vlan10">VLAN 10</option>
-                            <option value="vlan20">VLAN 20</option>
-                            <option value="vlan30">VLAN 30</option>
-                            <option value="vlan40">VLAN 40</option></select>
+                    <form action="pipe" method="POST" id="NetworkEngr" class="tabcontent">
+                          <div class="col-sm-4">
+                            <p>Enter the start date: <input type="date" class="form-control" required="required" id="startdate" name="startdate"> </p> 
+                            <p>Enter the start time: <input type="time" class="form-control" required="required" id="starttime" name="starttime"> </p> 
+                            <p>Enter the end date: <input type="date" class="form-control" required="required" id="enddate" name="enddate"> </p> 
+                            <p>Enter the end time: <input type="time" class="form-control" required="required" id="endtime" name="endtime"> </p>           
+                          </div>
+                          <div class="col-sm-4">
+                            <p>Enter the desired bandwidth:</p>
+                            <input type="text" class="form-control" required="required" id="bw" name="bw" placeholder="Bandwidth in GB">
+                            <p>Enter the physical port number at source:</p>
+                            <input type="text" class="form-control" required="required" id="sp" name="sp" placeholder=" Source Port#"> 
+                            <p>Enter the physical port number at destination:</p>
+                            <input type="text" class="form-control" required="required" id="dp" name="dp" placeholder="Destination Port#"> <br>
+                          </div>
+                          <div class="col-sm-4">
+                            <p>Enter the source VLAN:</p>
+                            <input type="text" class="form-control" required="required" id="sv" name="sv" placeholder="Source VLAN" min="0" max="4090">
+                            <p>Enter the destination VLAN:</p>
+                            <input type="text" class="form-control" required="required" id="dv" name="dv" placeholder="Destination VLAN" min="0" max="4090">
+                          </div>
+                          <div class="col-sm-4">
+                            <p>Select source: </p>
+                            <select class="form-control" required="required" id="source" name="source"><option value="miami">Miami</option>
+                                <option value="saopaulo">Sao Paulo</option>
+                                <option value="chile">Chile</option>
+                                <option value="atlanta">Atlanta</option>
+                            </select>
 
-                            <p>Select destination VLAN: </p>
-                            <select><option value="vlan10">VLAN 10</option>
-                                <option value="vlan20">VLAN 20</option>
-                                <option value="vlan30">VLAN 30</option>
-                                <option value="vlan40">VLAN 40</option></select>
-                            </ul>
-                        </div>
+                            <p>Select destination: </p>
+                            <select class="form-control" id="dest" name="dest" required="required"><option value="miami">Miami</option>
+                                <option value="saopaulo">Sao Paulo</option>
+                                <option value="chile">Chile</option>
+                                <option value="atlanta">Atlanta</option>
+                            </select>
+                          </div>
+                          <button type="test" class="btn btn-danger btn-lg" align="middle">Preview</button>
+                          <button type="submit" class="btn btn-danger btn-lg" align="middle">Submit</button>
+                        </form>
+
+                        <form action="pipe" method="POST" id="Scientist" class="tabcontent">
+                          <div class="col-sm-4">
+                            <p>Enter the start date: <input type="date" class="form-control" required="required" id="startdate" name="startdate"> </p> 
+                            <p>Enter the start time: <input type="time" class="form-control" required="required" id="starttime" name="starttime"> </p> 
+                            <p>Enter the end date: <input type="date" class="form-control" required="required" id="enddate" name="enddate"> </p> 
+                            <p>Enter the end time: <input type="time" class="form-control" required="required" id="endtime" name="endtime"> </p>           
+                          </div>
+
+                          <div class="col-sm-4">
+                            <p>Enter the desired bandwidth:</p>
+                            <input type="text" class="form-control" required="required" placeholder="Bandwidth in GB" id="bw" name="bw">
+                            <p>Enter the source node:</p>
+                            <input type="text" class="form-control" required="required" placeholder="Source Node#" id="sn" name="sn">
+                            <p>Enter the destination node:</p>
+                            <input type="text" class="form-control" required="required" placeholder="Destination Node#" id="dn" name="dn">
+                          </div>
+                          <div class="row"></div>
+                          <button type="test" class="btn btn-danger btn-lg" align="middle">Preview</button>
+                          <button type="submit" class="btn btn-danger btn-lg" align="middle">Submit</button>
+                        </form>
                     </form>
+
                 </div> 
             </div> 
         </div>
@@ -173,43 +191,41 @@
                 <div class="gap"></div>
                 <div id="team-scroller" class="carousel scale">
                     <div class="carousel-inner">
-                        <div class="item active">
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <div class="member">
-                                        <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team1.jpg" alt="" ></p>
-                                        <h3>a<small class="designation">b</small></h3>
-                                    </div>
-                                </div>
-                                <div class="col-sm-3">
-                                    <div class="member">
-                                        <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team3.jpg" alt="" ></p>
-                                        <h3>Russell Clark<small class="designation">Co-director, GT-RNOC</small></h3>
-                                    </div>
-                                </div>
-                                <div class="col-sm-3">
-                                    <div class="member">
-                                        <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team2.jpg" alt="" ></p>
-                                        <h3>Jerônimo Bezerra<small class="designation">Software Engineer</small></h3>
-                                    </div>
-                                </div>        
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <div class="member">
-                                        <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team3.jpg" alt="" ></p>
-                                        <h3>x<small class="designation">y</small></h3>
-                                    </div>
-                                </div>   
-                                <div class="col-sm-3">
-                                    <div class="member">
-                                        <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team1.jpg" alt="" ></p>
+                        <div class="item active"> 
+                                    <div class="member" style="float:left">
+                                        <div style="width:200px;height:200px;overflow:hidden">
+                                            <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team1.jpg" alt="" ></p>
+                                        </div>
                                         <h3>Sean Donovan<small class="designation">Software Engineer</small></h3>
                                     </div>
-                                </div>     
-                            </div>
+                                    <div class="member" style="float:right">
+                                        <div style="width:200px;height:200px;overflow:hidden">
+                                            <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team2.jpg" alt="" ></p>
+                                        </div>
+                                        <h3>Jerônimo Bezerra<small class="designation">Software Engineer</small></h3>
+                                    </div>
+                        </div>
+                        <div class="item" style="margin:0 auto;">
+                                    <div class="member" style="float:left">
+                                        <div style="width:200px;height:200px;overflow:hidden">
+                                            <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team4.jpg" alt="" ></p>
+                                        </div>
+                                        <h3>Ankita Lamba<small class="designation">Graduate Security Researcher</small></h3>
+                                    </div>
+                                    <div class="member" style="float:right">
+                                        <div style="width:200px;height:200px;overflow:hidden">
+                                            <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team5.jpg" alt="" ></p>
+                                        </div>
+                                        <h3>John Skandalakis<small class="designation">Graduate Student</small></h3>
+                                    </div>
+                        </div>
+                        <div class="item">
+                                    <div class="member" style="float:center">
+                                        <div style="width:200px;height:200px;overflow:hidden;float:center">
+                                            <p style="float:center"><img style="float:center" class="img-thumbnail img-circle" src="static/images/team3.jpg" alt="" ></p>
+                                        </div>
+                                        <h3>Russell Clark<small class="designation">Co-director, GT-RNOC</small></h3>
+                                    </div>
                         </div>
                     </div>
                     <a class="left-arrow" href="#team-scroller" data-slide="prev">
@@ -229,21 +245,9 @@
                 <div class="row">
                     <div class="col-sm-6">
                         <h1>User Information</h1>
+                        <p>Hello, {{ current_user.id }}!</p>
                         <form action="logout" method="GET">
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        {{ current_user.id }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div class="form-group">
-                                        <button type="submit" class="btn btn-danger btn-lg">Logout</button>
-                                    </div>
-                                </div>
-                            </div>
+                            <button type="submit" class="btn btn-danger btn-lg" align="middle">Log Out</button>
                         </form>
                     </div>
                     <div class="col-sm-6">
@@ -297,5 +301,19 @@
     <script src="static/js/jquery.isotope.min.js"></script>
     <script src="static/js/jquery.prettyPhoto.js"></script>
     <script src="static/js/main.js"></script>
+    <script> function role(evt, roleName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(roleName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+    </script>
 </body>
 </html>

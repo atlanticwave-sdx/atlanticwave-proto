@@ -183,6 +183,15 @@ class RestAPI(object):
             return str(data)
         return unauthorized_handler()
 
+    @staticmethod
+    @app.route('/pipe',methods=['POST'])
+    def make_new_pipe():
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
+            try: #Scientist portal
+                sn = request.form['sn']
+                return "Scientist Pipe"
+            except: #Network Engineer Portal
+                return "Network Engineer Pipe"
 
     # Get information about a specific rule IDed by hash.
     @staticmethod
