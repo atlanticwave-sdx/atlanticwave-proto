@@ -4,6 +4,7 @@
 # Login based on example code from https://github.com/maxcountryman/flask-login
 
 from shared.Singleton import Singleton
+from shared.L2TunnelPolicy import L2TunnelPolicy
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
 from RuleManager import RuleManager
@@ -47,7 +48,7 @@ class RestAPI(object):
     __metaclass__ = Singleton
 
 
-    global User, users, app, login_manager
+    global User, app, login_manager
 
     app = Flask(__name__, static_url_path='', static_folder='')
     #FIXME: This should be more secure.
@@ -84,27 +85,13 @@ class RestAPI(object):
 
     class User(flask_login.UserMixin):
         pass
-
+    
+    # This maintains the state of a logged in user.
     @staticmethod
     @login_manager.user_loader
     def user_loader(email):
         user = User()
         user.id = email
-        return user
-
-    @staticmethod
-    @login_manager.request_loader
-    def request_loader(request):
-        email = request.form.get('email')
-
-        user = User()
-        user.id = email
-
-        # TODO: This.
-        # DO NOT ever store passwords in plaintext and always compare password
-        # hashes using constant-time comparison!
-        user.is_authenticated = request.form['pw'] == users[email]['pw']
-
         return user
 
     # Preset the login form to the user and request to log user in
@@ -190,25 +177,35 @@ class RestAPI(object):
     @app.route('/pipe',methods=['POST'])
     def make_new_pipe():
         rfc3339format = "%Y-%m-%dT%H:%M:%S%z"
-        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
+        if AuthorizationInspector().is_authorized(flaqsk_login.current_user.id,'show_topology'):
+
+            # Just making sure the datetimes are okay
             starttime = datetime.strptime(request.form['startdate'] + ' ' + request.form['starttime'], '%Y-%m-%d %H:%M')
             endtime = datetime.strptime(request.form['enddate'] + ' ' + request.form['endtime'], '%Y-%m-%d %H:%M')
-            try: #Network Engineer Portal
-                l2tunnel = json.dumps({"l2tunnel":{"starttime":starttime.strftime(rfc3339format),
-                                                "endtime":endtime.strftime(rfc3339format),
-                                                "srcswitch":request.form['source'],
-                                                "dstswitch":request.form['dest'],
-                                                "srcport":request.form['sp'],
-                                                "dstport":request.form['dp'],
-                                                "srcvlan":request.form['sv'],
-                                                "dstvlan":request.form['dv'],
-                                                "bandwidth":request.form['bw']}})
 
-                return l2tunnel
+            try:
+                arb = request.form['sv']
+            except:
+                return "Scientists Portal has not yet been implemented!"
+    
+            # The Object to pass into L2TunnelPolicy
+            data = {"l2tunnel":{"starttime":str(starttime.strftime(rfc3339format)),
+                                            "endtime":str(endtime.strftime(rfc3339format)),
+                                            "srcswitch":request.form['source'],
+                                            "dstswitch":request.form['dest'],
+                                            "srcport":request.form['sp'],
+                                            "dstport":request.form['dp'],
+                                            "srcvlan":request.form['sv'],
+                                            "dstvlan":request.form['dv'],
+                                            "bandwidth":request.form['bw']}}
+            
+            policy = L2TunnelPolicy(flask_login.current_user.id, data)
 
-            except: #Scientist Portal             
-                return "Scientist Portal - This feature is not yet implemented"
-                
+            # I am really not sure what to pass through RuleManager as args
+            rule_hash = RuleManager(0,0).add_rule(policy)
+
+            # I plan on making this redirect to a page for the rulehash, but currently this is not ready
+            return rule_hash
 
     # Get information about a specific rule IDed by hash.
     @staticmethod
@@ -229,7 +226,9 @@ class RestAPI(object):
             return RuleManager().get_rules(query)
         return unauthorized_handler()
 
-
+    #OBSOLETE - /pipe does what this is supposed to do.
+    #            I am not sure If I want to do anything with this yet
+    #
     # API Call to access the new rule form and to add a new rule.
     @staticmethod
     @app.route('/rule/', methods=['GET', 'POST'])

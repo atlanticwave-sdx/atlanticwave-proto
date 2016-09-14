@@ -3,7 +3,7 @@
 
 
 from UserPolicy import *
-import datetime
+from datetime import datetime
 import networkx as nx
 
 # For building rules, may need to change in the future with a better intermediary
@@ -193,7 +193,7 @@ class L2TunnelPolicy(UserPolicy):
                 # Outbound
                 match = OpenFlowMatch([IN_PORT(outport),
                                        VLAN_VID(intermediate_vlan)])
-                actions = [action_OUTPUT(inport)
+                actions = [action_OUTPUT(inport)]
                 instruction = instruction_WRITE_ACTIONS(actions)
                 rule = OpenFlowRule(match, instruction, table,
                                     priority, cookie, switch_id)
@@ -210,7 +210,7 @@ class L2TunnelPolicy(UserPolicy):
         #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
         return True
 
-    def _parse_json(self, json_rule):
+    def _parse_json(self, data):
         if type(data) is not dict:
             raise UserPolicyTypeError("data is not a dictionar:y\n    %s" % data)
         if 'l2tunnel' not in data.keys():
@@ -219,6 +219,7 @@ class L2TunnelPolicy(UserPolicy):
         # Borrowing parsing from:
         # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
         rfc3339format = "%Y-%m-%dT%H:%M:%S"
+        print data['l2tunnel']['starttime']
         self.start_time = datetime.strptime(data['l2tunnel']['starttime'],
                                             rfc3339format)
         self.end_time = datetime.strptime(data['l2tunnel']['endtime'],
