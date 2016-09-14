@@ -219,7 +219,6 @@ class L2TunnelPolicy(UserPolicy):
         # Borrowing parsing from:
         # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
         rfc3339format = "%Y-%m-%dT%H:%M:%S"
-        print data['l2tunnel']['starttime']
         self.start_time = datetime.strptime(data['l2tunnel']['starttime'],
                                             rfc3339format)
         self.end_time = datetime.strptime(data['l2tunnel']['endtime'],
