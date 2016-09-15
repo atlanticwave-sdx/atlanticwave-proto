@@ -177,7 +177,7 @@ class RestAPI(object):
     @app.route('/pipe',methods=['POST'])
     def make_new_pipe():
         rfc3339format = "%Y-%m-%dT%H:%M:%S%z"
-        if AuthorizationInspector().is_authorized(flaqsk_login.current_user.id,'show_topology'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
 
             # Just making sure the datetimes are okay
             starttime = datetime.strptime(request.form['startdate'] + ' ' + request.form['starttime'], '%Y-%m-%d %H:%M')
