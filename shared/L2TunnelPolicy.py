@@ -280,10 +280,10 @@ class L2TunnelPolicy(UserPolicy):
 
         self.src_switch = json_rule['l2tunnel']['srcswitch']
         self.dst_switch = json_rule['l2tunnel']['dstswitch']
-        self.src_port = json_rule['l2tunnel']['srcport']
-        self.dst_port = json_rule['l2tunnel']['dstport']
-        self.src_vlan = json_rule['l2tunnel']['srcvlan']
-        self.dst_vlan = json_rule['l2tunnel']['dstvlan']
+        self.src_port = int(json_rule['l2tunnel']['srcport'])
+        self.dst_port = int(json_rule['l2tunnel']['dstport'])
+        self.src_vlan = int(json_rule['l2tunnel']['srcvlan'])
+        self.dst_vlan = int(json_rule['l2tunnel']['dstvlan'])
         self.bandwidth = json_rule['l2tunnel']['bandwidth']
 
         #FIXME: Really need some type verifications here.
