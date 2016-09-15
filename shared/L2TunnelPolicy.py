@@ -30,8 +30,8 @@ class L2TunnelPolicy(UserPolicy):
 
         Example Json:
         {"l2tunnel":{
-            "starttime":"1985-04-12T23:20:50.52Z",
-            "endtime":"1985-04-12T23:20:50.52Z",
+            "starttime":"1985-04-12T23:20:50",
+            "endtime":"1985-04-12T23:20:50+0400",
             "srcswitch":"atl-switch",
             "dstswitch":"mia-switch",
             "srcport":5,
@@ -39,8 +39,11 @@ class L2TunnelPolicy(UserPolicy):
             "srcvlan":1492,
             "dstvlan":1789,
             "bandwidth":1}}
-        Times are RFC3339 formated
+        Times are RFC3339 formated offset from UTC, if any, is after the seconds.
         Bandwidth is in Mbit/sec
+
+        Side effect of coming from JSON, everything's unicode. Need to handle 
+        parsing things into the appropriate types (int, for instance).
     '''
 
     def __init__(self, username, json_rule):
@@ -61,18 +64,18 @@ class L2TunnelPolicy(UserPolicy):
     @staticmethod
     def check_syntax(json_rule):
         try:
-            rfc3339format = "%Y-%m-%dT%H:%M:%S"
-            starttime = datetime.strptime(data['l2tunnel']['starttime'],
+            rfc3339format = "%Y-%m-%dT%H:%M:%S%z"
+            starttime = datetime.strptime(json_rule['l2tunnel']['starttime'],
                                          rfc3339format)
-            endtime = datetime.strptime(data['l2tunnel']['endtime'],
+            endtime = datetime.strptime(json_rule['l2tunnel']['endtime'],
                                          rfc3339format)
-            src_switch = data['l2tunnel']['srcswitch']
-            dst_switch = data['l2tunnel']['dstswitch']
-            src_port = data['l2tunnel']['srcport']
-            dst_port = data['l2tunnel']['dstport']
-            src_vlan = data['l2tunnel']['srcvlan']
-            dst_vlan = data['l2tunnel']['dstvlan']
-            bandwidth = data['l2tunnel']['bandwidth']
+            src_switch = json_rule['l2tunnel']['srcswitch']
+            dst_switch = json_rule['l2tunnel']['dstswitch']
+            src_port = json_rule['l2tunnel']['srcport']
+            dst_port = json_rule['l2tunnel']['dstport']
+            src_vlan = json_rule['l2tunnel']['srcvlan']
+            dst_vlan = json_rule['l2tunnel']['dstvlan']
+            bandwidth = json_rule['l2tunnel']['bandwidth']
 
             delta = endtime - starttime
             if delta.total_seconds() < 0:
@@ -105,12 +108,59 @@ class L2TunnelPolicy(UserPolicy):
         path = nx.shortest_path(topology,
                                 source=self.src_switch,
                                 target=self.dst_switch)
-        nodes = topology.nodes()
-        edges = topology.edges()
+        nodes = topology.nodes(data=True)
+        edges = topology.edges(data=True)
+
+        print "NODES:"
+        print nodes
+        print "\n\nEDGES:"
+        print edges
         
         # Get a VLAN to use
         #FIXME: how to figure this out? Do we need better access to the topology manager?
         intermediate_vlan = self.src_vlan
+
+
+        # Special case: Single node:
+        if len(path) == 1:
+            if (self.src_switch != self.dst_switch):
+                raise UserPolicyValueError("Path length is 1, but switches are different: path %s, src_switch %s, dst_switch %s" % (path, src_switch, dst_switch))
+                
+            location = self.src_switch
+            switch_id = topology.node[location]['dpid']
+            inport = self.src_port
+            outport = self.dst_port
+            invlan = self.src_vlan
+            outvlan = self.dst_vlan
+
+            priority = 100 #FIXME
+            cookie = 1234 #FIXME
+            table = 0 #FIXME
+
+            bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
+
+            # Inbound
+            match = OpenFlowMatch([IN_PORT(inport),
+                                   VLAN_VID(invlan)])
+            actions = [action_OUTPUT(outport),
+                       action_SET_FIELD(VLAN_VID(outvlan))]
+            instruction = instruction_WRITE_ACTIONS(actions)
+            rule = OpenFlowRule(match, instruction, table,
+                                priority, cookie, switch_id)
+            bd.add_to_list_of_rules(rule)
+
+            # Outbound
+            match = OpenFlowMatch([IN_PORT(outport),
+                                   VLAN_VID(outvlan)])
+            actions = [action_OUTPUT(inport),
+                       action_SET_FIELD(VLAN_VID(invlan))]
+            instruction = instruction_WRITE_ACTIONS(actions)
+            rule = OpenFlowRule(match, instruction, table,
+                                priority, cookie, switch_id)
+            bd.add_to_list_of_rules(rule)
+            self.breakdown.append(bd)
+            return self.breakdown
+
         
         # Create breakdown rule for this node
 
@@ -126,14 +176,14 @@ class L2TunnelPolicy(UserPolicy):
                                                 src_vlan, srcpath),
                                                (self.dst_switch, dst_port,
                                                 dst_vlan, dstpath)]:
-            bd = UserPolicyBreakdown(location)
-            switch_id = nodes[location]['dpid']
+            bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
+            switch_id = topology.node[location]['dpid']
             priority = 100 #FIXME
             cookie = 1234 #FIXME
             table = 0 #FIXME
 
             # get edge
-            edge = topology[location][path]
+            edge = topology.node[location][path]
             outport = edge[path]
 
             # Inbound
@@ -168,16 +218,16 @@ class L2TunnelPolicy(UserPolicy):
             #               action set fwd
             #  - on outbound, match on the switch, port, and intermediate VLAN
             #               action set fwd
-            bd = UserPolicyBreakdown(location)
+            bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
             location = node
-            switch_id = nodes[location]['dpid']
+            switch_id = topology.node[location]['dpid']
             priority = 100 #FIXME
             cookie = 1234 #FIXME
             table = 0 #FIXME
 
             # get edges
-            prevedge = topology[location][prevnode]
-            nextedge = topology[location][nextnode]
+            prevedge = topology.node[location][prevnode]
+            nextedge = topology.node[location][nextnode]
 
             for inport, outport in [(prevedge[node], prevedge[prevnode]),
                                     (nextedge[node], nextedge[nextnode])]:
@@ -210,29 +260,29 @@ class L2TunnelPolicy(UserPolicy):
         #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
         return True
 
-    def _parse_json(self, data):
-        if type(data) is not dict:
-            raise UserPolicyTypeError("data is not a dictionar:y\n    %s" % data)
-        if 'l2tunnel' not in data.keys():
-            raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', data))        
+    def _parse_json(self, json_rule):
+        if type(json_rule) is not dict:
+            raise UserPolicyTypeError("json_rule is not a dictionar:y\n    %s" % json_rule)
+        if 'l2tunnel' not in json_rule.keys():
+            raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
         # Borrowing parsing from:
         # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
         rfc3339format = "%Y-%m-%dT%H:%M:%S"
-        self.start_time = datetime.strptime(data['l2tunnel']['starttime'],
+        self.start_time = datetime.strptime(json_rule['l2tunnel']['starttime'],
                                             rfc3339format)
-        self.end_time = datetime.strptime(data['l2tunnel']['endtime'],
-                                          rfc3339format)
+        self.end_time =   datetime.strptime(json_rule['l2tunnel']['endtime'],
+                                            rfc3339format)
         # Make sure end is after start and after now.
         #FIXME
 
-        self.src_switch = data['l2tunnel']['srcswitch']
-        self.dst_switch = data['l2tunnel']['dstswitch']
-        self.src_port = data['l2tunnel']['srcport']
-        self.dst_port = data['l2tunnel']['dstport']
-        self.src_vlan = data['l2tunnel']['srcvlan']
-        self.dst_vlan = data['l2tunnel']['dstvlan']
-        self.bandwidth = data['l2tunnel']['bandwidth']
+        self.src_switch = json_rule['l2tunnel']['srcswitch']
+        self.dst_switch = json_rule['l2tunnel']['dstswitch']
+        self.src_port = json_rule['l2tunnel']['srcport']
+        self.dst_port = json_rule['l2tunnel']['dstport']
+        self.src_vlan = json_rule['l2tunnel']['srcvlan']
+        self.dst_vlan = json_rule['l2tunnel']['dstvlan']
+        self.bandwidth = json_rule['l2tunnel']['bandwidth']
 
         #FIXME: Really need some type verifications here.
     

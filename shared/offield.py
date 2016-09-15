@@ -271,8 +271,8 @@ class UDP_DST(number_field):
                                       prereq=[IP_PROTO(6)])
 
 class VLAN_VID(number_field):
-    def __init__(self, name, value, cfi=0):
-        super(VLAN_VID, self).__init__(name, value,
+    def __init__(self, value, cfi=0):
+        super(VLAN_VID, self).__init__('vlan_vid', value=value,
                                        minval=0, maxval=2**12-1,
                                        prereq=None)
 

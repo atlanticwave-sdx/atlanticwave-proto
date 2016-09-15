@@ -17,6 +17,7 @@ from sdxctlr.LocalControllerManager import LocalControllerManager
 from sdxctlr.SDXController import *
 
 from shared.JsonUploadPolicy import *
+from shared.L2TunnelPolicy import *
 
 TOPO_CONFIG_FILE = 'test_manifests/topo.manifest'
 PART_CONFIG_FILE = 'test_manifests/participants.manifest'
@@ -104,6 +105,30 @@ class JsonUploadTest(unittest.TestCase):
         rule_num = man.add_rule(valid_rule)
         man.remove_rule(rule_num, 'sdonovan')
     
+    @mock.patch('sdxctlr.SDXController.SDXControllerConnectionManager', autospec=True)
+    @mock.patch('sdxctlr.SDXController.RestAPI', autospec=True)
+    def test_L2_tunnel_upload(self, restapi, cxm):
+        
+        man = RuleManager()
+
+        # Example JSON
+        l2json =  {"l2tunnel":{
+            "starttime":"1985-04-12T23:20:50",
+            "endtime":"1985-04-12T23:20:50",
+            "srcswitch":"atl-switch",
+            "dstswitch":"atl-switch",
+            "srcport":1,
+            "dstport":2,
+            "srcvlan":1492,
+            "dstvlan":1789,
+            "bandwidth":1}}
+
+        # Get a JSON policy from a file
+        l2rule = L2TunnelPolicy('sdonovan', l2json)
+
+        rule_num = man.add_rule(l2rule)
+        man.remove_rule(rule_num, 'sdonovan')
+
 
 
 

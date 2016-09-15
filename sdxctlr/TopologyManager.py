@@ -67,7 +67,7 @@ class TopologyManager(object):
                 if not self.topo.has_node(name):
                     self.topo.add_node(name)
                 # Per switch info, gets added to topo
-                self.topo.node[name]['dpid'] = switchinfo['dpid']
+                self.topo.node[name]['dpid'] = int(switchinfo['dpid'])
                 self.topo.node[name]['ip'] = switchinfo['ip']
                 self.topo.node[name]['brand'] = switchinfo['brand']
                 self.topo.node[name]['model'] = switchinfo['model']
@@ -80,7 +80,7 @@ class TopologyManager(object):
 
                 # Add the links
                 for port in switchinfo['portinfo']:
-                    portnumber = port['portnumber']
+                    portnumber = int(port['portnumber'])
                     speed = port['speed']
                     destination = port['destination']
 
