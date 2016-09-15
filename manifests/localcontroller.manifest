@@ -8,6 +8,7 @@
       "switchinfo": [
         {
           "name": "atl-switch",
+          "dpid": "1",
           "ip": "10.10.10.11",
           "dpid":1,
           "brand": "Open vSwitch",
@@ -16,7 +17,7 @@
             {
               "portnumber": 1,
               "speed": 1,
-              "destination": "mia"
+              "destination": "mia-switch"
             },
             {
               "portnumber": 2,
@@ -51,6 +52,7 @@
       "switchinfo": [
         {
           "name": "mia-switch",
+          "dpid": "2",
           "ip": "10.10.10.21",
           "dpid":2,
           "brand": "Open vSwitch",
@@ -59,7 +61,7 @@
             {
               "portnumber": 1,
               "speed": 1,
-              "destination": "atl"
+              "destination": "atl-switch"
             },
             {
               "portnumber": 2,

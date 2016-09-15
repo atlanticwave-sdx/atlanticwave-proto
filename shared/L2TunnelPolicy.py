@@ -71,10 +71,10 @@ class L2TunnelPolicy(UserPolicy):
                                          rfc3339format)
             src_switch = json_rule['l2tunnel']['srcswitch']
             dst_switch = json_rule['l2tunnel']['dstswitch']
-            src_port = json_rule['l2tunnel']['srcport']
-            dst_port = json_rule['l2tunnel']['dstport']
-            src_vlan = json_rule['l2tunnel']['srcvlan']
-            dst_vlan = json_rule['l2tunnel']['dstvlan']
+            src_port = int(json_rule['l2tunnel']['srcport'])
+            dst_port = int(json_rule['l2tunnel']['dstport'])
+            src_vlan = int(json_rule['l2tunnel']['srcvlan'])
+            dst_vlan = int(json_rule['l2tunnel']['dstvlan'])
             bandwidth = json_rule['l2tunnel']['bandwidth']
 
             delta = endtime - starttime
@@ -105,26 +105,26 @@ class L2TunnelPolicy(UserPolicy):
         self.breakdown = []
         # Get a path from the src_switch to the dst_switch form the topology
         #FIXME: This needs to be updated to get *multiple* options
-        path = nx.shortest_path(topology,
-                                source=self.src_switch,
-                                target=self.dst_switch)
+        fullpath = nx.shortest_path(topology,
+                                    source=self.src_switch,
+                                    target=self.dst_switch)
         nodes = topology.nodes(data=True)
         edges = topology.edges(data=True)
 
+        import json
         print "NODES:"
-        print nodes
+        print json.dumps(nodes, indent=2)
         print "\n\nEDGES:"
-        print edges
+        print json.dumps(edges, indent=2)
         
         # Get a VLAN to use
         #FIXME: how to figure this out? Do we need better access to the topology manager?
         intermediate_vlan = self.src_vlan
 
-
         # Special case: Single node:
-        if len(path) == 1:
+        if len(fullpath) == 1:
             if (self.src_switch != self.dst_switch):
-                raise UserPolicyValueError("Path length is 1, but switches are different: path %s, src_switch %s, dst_switch %s" % (path, src_switch, dst_switch))
+                raise UserPolicyValueError("Path length is 1, but switches are different: fullpath %s, src_switch %s, dst_switch %s" % (fullpath, src_switch, dst_switch))
                 
             location = self.src_switch
             switch_id = topology.node[location]['dpid']
@@ -170,12 +170,12 @@ class L2TunnelPolicy(UserPolicy):
         #               action set VLAN to intermediate, fwd
         #  - on outbound, match on the switch, port, intermediate VLAN
         #               action set VLAN to local VLAN, fwd
-        srcpath = path[1]   # Next one after src
-        dstpath = path[-2]  # One prior to dst
-        for location, inport, invlan, path in [(self.src_switch, src_port,
-                                                src_vlan, srcpath),
-                                               (self.dst_switch, dst_port,
-                                                dst_vlan, dstpath)]:
+        srcpath = fullpath[1]   # Next one after src
+        dstpath = fullpath[-2]  # One prior to dst
+        for location, inport, invlan, path in [(self.src_switch, self.src_port,
+                                                self.src_vlan, srcpath),
+                                               (self.dst_switch, self.dst_port,
+                                                self.dst_vlan, dstpath)]:
             bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
             switch_id = topology.node[location]['dpid']
             priority = 100 #FIXME
@@ -183,7 +183,7 @@ class L2TunnelPolicy(UserPolicy):
             table = 0 #FIXME
 
             # get edge
-            edge = topology.node[location][path]
+            edge = topology.edge[location][path]
             outport = edge[path]
 
             # Inbound
@@ -211,7 +211,9 @@ class L2TunnelPolicy(UserPolicy):
         # Loop through the intermediary nodes in the path. Python's smart, so
         # the slicing that's happening just works, even if there are only two
         # locations in the path. Magic!
-        for (prevnode, node, nextnode) in zip(path[0:-2], path[1:-1], path[2:]):
+        for (prevnode, node, nextnode) in zip(fullpath[0:-2], 
+                                              fullpath[1:-1], 
+                                              fullpath[2:]):
             # Need inbound and outbound rules for the VLAN that's being used,
             # Don't need to modify packet.
             #  - on inbound, match on the switch, port, and intermediate VLAN
@@ -219,7 +221,7 @@ class L2TunnelPolicy(UserPolicy):
             #  - on outbound, match on the switch, port, and intermediate VLAN
             #               action set fwd
             bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
-            location = node
+
             switch_id = topology.node[location]['dpid']
             priority = 100 #FIXME
             cookie = 1234 #FIXME
