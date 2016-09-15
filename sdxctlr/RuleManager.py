@@ -23,6 +23,12 @@ class RuleManagerAuthorizationError(RuleManagerError):
     ''' When a authorization fails, raise this. '''
     pass
 
+def TESTING_CALL(param):
+    ''' RuleManager requires two parameters for proper initialization. However
+        we also want for the REST API to be able to get a copy of the RuleManger
+        easily."
+    raise RuleManagerError("RuleManager has not been properly initialized")
+
 class RuleManager(object):
     ''' The RuleManager keeps track of all rules that are installed (and their 
         metadata), the breakdowns of the abstract rule per local controller as 
@@ -39,8 +45,8 @@ class RuleManager(object):
 
     
     
-    def __init__(self, send_user_rule_breakdown_add,
-                 send_user_rule_breakdown_remove):
+    def __init__(self, send_user_rule_breakdown_add=TESTING_CALL,
+                 send_user_rule_breakdown_remove=TESTING_CALL):
         # The params are used in order to maintain import hierarchy.
 
         # Initialize rule counter. Used to track the rules as they are installed.
