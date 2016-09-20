@@ -42,7 +42,8 @@ class RuleManager(object):
     def __init__(self, send_user_rule_breakdown_add,
                  send_user_rule_breakdown_remove):
         # The params are used in order to maintain import hierarchy.
-
+        print "Rule Manager Initializing,,,"
+        
         # Initialize rule counter. Used to track the rules as they are installed.
         self.rule_number = 1
         

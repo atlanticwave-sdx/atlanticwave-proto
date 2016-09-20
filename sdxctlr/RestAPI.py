@@ -166,7 +166,7 @@ class RestAPI(object):
     @app.route('/topology')
     def show_network_topology():
         if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
-            html = open('sdxctlr/static/topology.html').read()
+            html = open('static/topology.html').read()
             return html
             G = TopologyManager().get_topology()
             data = json_graph.adjacency_data(G)
@@ -202,7 +202,9 @@ class RestAPI(object):
             policy = L2TunnelPolicy(flask_login.current_user.id, data)
 
             # I am really not sure what to pass through RuleManager as args
-            rule_hash = RuleManager(0,0).add_rule(policy)
+            rule_hash = RuleManager().add_rule(policy)
+
+            return '<pre>%s</pre>'%json.dumps(data, indent=2)
 
             # I plan on making this redirect to a page for the rulehash, but currently this is not ready
             return rule_hash
@@ -226,37 +228,11 @@ class RestAPI(object):
             return RuleManager().get_rules(query)
         return unauthorized_handler()
 
-    #OBSOLETE - /pipe does what this is supposed to do.
-    #            I am not sure If I want to do anything with this yet
-    #
-    # API Call to access the new rule form and to add a new rule.
-    @staticmethod
-    @app.route('/rule/', methods=['GET', 'POST'])
-    def rule():
-        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'add_rule_form'):
-            if flask.request.method == 'GET':
-                return open('sdxctlr/static/rule_form.html','r').read()
-            
-            rule = flask.request.form['rule']
-
-            try:
-                rule_hash = RuleManager().add_rule(rule)
-
-                redirect_url = 'rule/'+str(rule_hash)
-
-                return flask.redirect(redirect_url)
-
-            except Exception as e:
-                #FIXME: currently this just appends the exception to the beginning of the form It is ugly.
-
-                traceback.print_exc(file=sys.stdout)
-
-                return str(e) + '<br>' + open('sdxctlr/static/rule_form.html','r').read()
-
-            
-        return unauthorized_handler()
-
-        
 
 if __name__ == "__main__":
+    def blah(param):
+        pass
+
+    RuleManager(blah,blah)    
+
     RestAPI()
