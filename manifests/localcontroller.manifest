@@ -10,6 +10,7 @@
           "name": "atl-switch",
           "dpid": "1",
           "ip": "10.10.10.11",
+          "dpid":1,
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -53,6 +54,7 @@
           "name": "mia-switch",
           "dpid": "2",
           "ip": "10.10.10.21",
+          "dpid":2,
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
