@@ -176,8 +176,8 @@ def select(rlist, wlist, xlist, timeout=0):
         for entry in xlist:
             if not isinstance(entry, Connection):
                 raise ConnectionTypeError("xlist must be a list of Connection objects.")
-    if not isinstance(timeout, int):
-        raise ConnectionTypeError("timeout must be an int")
+    if not isinstance(timeout, float):
+        raise ConnectionTypeError("timeout must be a float")
 
     rlistsocket = list(map((lambda x: x.sock), rlist))
     wlistsocket = list(map((lambda x: x.sock), wlist))

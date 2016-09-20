@@ -48,10 +48,13 @@ class SDXController(object):
     __metaclass__ = Singleton
 
 
-    def __init__(self):
+    def __init__(self, runloop=False):
         ''' The bulk of the work happens here. This initializes nearly everything
             and starts up the main processing loop for the entire SDX
             Controller. '''
+
+        self._setup_logger()
+
         # Initialize all the modules - Ordering is relatively important here
         self.aci = AuthenticationInspector()
         self.azi = AuthorizationInspector()
@@ -83,7 +86,8 @@ class SDXController(object):
         self.rr.add_ruletype("json-upload", JsonUploadPolicy)
         
         # Go to main loop 
-        pass
+        if runloop:
+            self._main_loop()
 
     def _setup_logger(self):
         ''' Internal function for setting up the logger formats. '''
@@ -150,11 +154,12 @@ class SDXController(object):
 
             
             # Dispatch messages as appropriate
-            try: readable, writeable, exceptional = select(rlist,
-                                                           wlist,
-                                                           xlist,
-                                                           timeout)
-            except Error as e:
+            try: 
+                readable, writable, exceptional = select(rlist,
+                                                          wlist,
+                                                          xlist,
+                                                          timeout)
+            except Exception as e:
                 self.logger.error("Error in select - %s" % (e))                
 
 
@@ -182,6 +187,8 @@ class SDXController(object):
             for entry in exceptional:
                 # FIXME: Handle connection failures
                 pass
+
+
     def _send_breakdown_rule(self, bd, cmd):
         ''' Used by the callback functions (below) to actually perform the 
             sending of commands to the Local Controllers. This is all pretty
@@ -210,3 +217,7 @@ class SDXController(object):
         try:
             self._send_breakdown_rule(bd, SDX_RM_RULE)
         except Exception as e: raise
+
+
+if __name__ == '__main__':
+    SDXController(True)
