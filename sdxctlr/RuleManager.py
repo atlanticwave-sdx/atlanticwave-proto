@@ -26,7 +26,7 @@ class RuleManagerAuthorizationError(RuleManagerError):
 def TESTING_CALL(param):
     ''' RuleManager requires two parameters for proper initialization. However
         we also want for the REST API to be able to get a copy of the RuleManger
-        easily."
+        easily.'''
     raise RuleManagerError("RuleManager has not been properly initialized")
 
 class RuleManager(object):
