@@ -196,6 +196,12 @@ class RuleManager(SingletonMixin):
         # Remove from the rule_db
         del self.rule_db[rule_hash]
 
+    def remove_all_rules(self, user):
+        ''' Removes all rules. Just an alias for repeatedly calling 
+            remove_rule() without needing to know all the hashes. '''
+        for rule_hash in self.rule_db.keys():
+            self.remove_rule(rule_hash, user)
+
 
     def get_rules(self, filter=None):
         ''' Used for searching for rules based on a filter. The filter could be 
