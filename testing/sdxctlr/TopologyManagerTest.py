@@ -15,8 +15,8 @@ CONFIG_FILE = 'test_manifests/topo.manifest'
 
 class SingletonTest(unittest.TestCase):
     def test_singleton(self):
-        firstManager = TopologyManager(CONFIG_FILE) 
-        secondManager = TopologyManager(CONFIG_FILE)
+        firstManager = TopologyManager.instance(CONFIG_FILE) 
+        secondManager = TopologyManager.instance(CONFIG_FILE)
 
         self.failUnless(firstManager is secondManager)
 
@@ -58,5 +58,117 @@ class VerifyTopoTest(unittest.TestCase):
         #print "\n\n"
         #print json.dumps(topo.edges(data=True), indent=1)
 
+
+class VLANTopoTest(unittest.TestCase):
+    
+    def test_path_empty(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        
+        # It should return 1
+        vlan = man.find_vlan_on_path(path)
+        self.failUnlessEqual(vlan, 1)
+
+    def test_path_with_node_set(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        # Should return 1
+        vlan = man.find_vlan_on_path(path)
+        self.failUnlessEqual(vlan, 1)
+
+        # Add VLAN 1 to one of the points on the path
+        man.topo.node["mia-switch"]['vlans_in_use'].append(1)
+        
+        # Should return 2
+        vlan = man.find_vlan_on_path(path)
+        self.failUnlessEqual(vlan, 2)
+
+    def test_path_with_edge_set(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        # Should return 1
+        vlan = man.find_vlan_on_path(path)
+        self.failUnlessEqual(vlan, 1)
+        
+        # Add VLAN 1 to one of the points on the path
+        man.topo.edge["mia-switch"]["atl-switch"]['vlans_in_use'].append(1)
+        
+        # Should return 2
+        vlan = man.find_vlan_on_path(path)
+        self.failUnlessEqual(vlan, 2)
+
+    def test_path_node_filled(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        # Should return 1
+        vlan = man.find_vlan_on_path(path)
+        self.failUnlessEqual(vlan, 1)
+        
+        # Add VLANs 1-4090 to one of the points on the path        
+        man.topo.node["mia-switch"]['vlans_in_use'] = range(1,4090)
+        
+        # Should return None
+        vlan = man.find_vlan_on_path(path)
+        self.failUnlessEqual(vlan, None)
+
+
+    def test_path_edge_filled(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        # Should return 1
+        vlan = man.find_vlan_on_path(path)
+        self.failUnlessEqual(vlan, 1)
+        
+        # Add VLANs 1-4090 to one of the points on the path        
+        man.topo.edge["mia-switch"]["atl-switch"]['vlans_in_use'] = range(1,4090)
+        # Should return None
+        vlan = man.find_vlan_on_path(path)
+        self.failUnlessEqual(vlan, None)
+
+    def test_reserve_on_empty(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        # Reserve path on VLAN 1
+        man.reserve_vlan_on_path(path, 1)
+        # Should work
+
+    def test_reserve_on_invalid(self):
+        # Get a path
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        
+        # set VLAN 1 on one of the points on the path
+        man.topo.edge["mia-switch"]["atl-switch"]['vlans_in_use'].append(1)
+
+        # Reserve path on VLAN 1
+        self.failUnlessRaises(Exception, man.reserve_vlan_on_path, path, 1)
+        # Should throw an exception
+    
 if __name__ == '__main__':
     unittest.main()
