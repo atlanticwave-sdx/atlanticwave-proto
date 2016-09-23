@@ -3,9 +3,9 @@
 
 
 import json, logging
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 from AuthenticationInspector import AuthenticationInspector
-from TopologyManager import TopologyManager
+#from TopologyManager import TopologyManager
 
 #FIXME: This shouldn't be hard coded.
 MANIFEST_FILE = '../manifests/localcontroller.manifest'
@@ -13,14 +13,13 @@ MANIFEST_FILE = '../manifests/localcontroller.manifest'
 class LocalControllerManagerValueError(ValueError):
     pass
 
-class LocalControllerManager(object):
+class LocalControllerManager(SingletonMixin):
     ''' The LocalControllerManager is responsible for keeping track of local 
         controller information, in particular authorization information for 
         different local controllers. In the future, this may also include 
         information as to capabilities present at different local controllers 
         (i.e., different switch capabilities).
         Singleton. '''
-    __metaclass__ = Singleton
 
     class LCRecord(object):
         ''' This is used for the current database. '''
@@ -51,9 +50,6 @@ class LocalControllerManager(object):
         # Setup database. Currently just a dictionary. Probably to be an actual
         # database in the future.
         self.localctlr_db = {}
-
-        # Setup connections to AuthenticationInspector and the CxnMgr.
-        self.AuthenticationInspector = AuthenticationInspector()
 
         # Parse the manifest into local database
         results = self._parse_manifest(manifest)
@@ -140,5 +136,5 @@ class LocalControllerManager(object):
             self.localctlr_db[shortname] = rec
         
     def _send_to_AI(self, ctlr):
-        self.AuthenticationInspector.add_user(ctlr.shortname,
-                                              ctlr.credentials)
+        AuthenticationInspector.instance().add_user(ctlr.shortname,
+                                                    ctlr.credentials)

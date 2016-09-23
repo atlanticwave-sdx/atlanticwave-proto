@@ -3,20 +3,19 @@
 
 
 import json, logging
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
 
 #FIXME: This shouldn't be hard coded.
 MANIFEST_FILE = '../manifests/participants.manifest' 
 
-class ParticipantManager(object):
+class ParticipantManager(SingletonMixin):
     ''' The ParticipantManager is responsible for keeping track of participant 
         information. This includes keeping track of authentication information 
         for each participant, authorization of different participants (both 
         network operators and scientists), as well as current connectivity.
         Singleton. '''
-    __metaclass__ = Singleton
 
     class ParticipantRecord(object):
         ''' This is used for the current database. '''
@@ -40,10 +39,6 @@ class ParticipantManager(object):
         # Setup database. Currently just a dictionary. Probably to be an actual
         # database in the future.
         self.participant_db = {}
-
-        # Setup connections to Authentication and Authorization Inspectors.
-        self.AuthenticationInsp = AuthenticationInspector()
-        self.AuthorizationInsp = AuthorizationInspector()
 
         # Parse the manifest into local database
         results = self._parse_manifest(manifest)
@@ -107,8 +102,8 @@ class ParticipantManager(object):
         return participants_dict
 
     def _send_to_AA(self, participant):
-        self.AuthenticationInsp.add_user(participant.username,
-                                         participant.credentials)
-        self.AuthorizationInsp.set_user_authorization(participant.username,
-                                                           participant.authorizations)
+        AuthenticationInspector.instance().add_user(participant.username,
+                                                    participant.credentials)
+        AuthorizationInspector.instance().set_user_authorization(participant.username,
+                                                                 participant.authorizations)
     

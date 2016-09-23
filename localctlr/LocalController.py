@@ -1,31 +1,31 @@
-# Copyright 2016 - Sean Donovan
+# Copyrightg 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 import logging
 import threading
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 from RyuControllerInterface import *
 from shared.SDXControllerConnectionManager import *
 from shared.Connection import select
 
 
-class LocalController(object):
+class LocalController(SingletonMixin):
     ''' The Local Controller is responsible for passing messages from the SDX 
         Controller to the switch. It needs two connections to both the SDX 
-        controller and switch(es). ''' 
-    __metaclass__ = Singleton
+        controller and switch(es).
+        Singleton. ''' 
 
-    def __init__(self):
+    def __init__(self, runloop=False):
         # Setup logger
         self._setup_logger()
 
         # Setup switch
-        self.switch_connection = RyuControllerInterface()
+        self.switch_connection = RyuControllerInterface.instance()
         self.logger.info("RyuControllerInterface setup finish.")
 
         # Setup connection manager
-        self.sdx_cm = SDXControllerConnectionManager()
+        self.sdx_cm = SDXControllerConnectionManager.instance()
         self.sdx_connection = None
         self.logger.info("SDXControllerConnectionManager setup finish.")
         self.logger.debug("SDXControllerConnectionManager - %s" % (self.sdx_cm))
@@ -36,8 +36,9 @@ class LocalController(object):
         self.logger.info("SDX Controller Connection established.")
 
         # Start main loop
-        self.start_main_loop()
-        self.logger.info("Main Loop started.")
+        if runloop:
+            self.start_main_loop()
+            self.logger.info("Main Loop started.")
 
     def start_main_loop(self):
         self.main_loop_thread = threading.Thread(target=self._main_loop)
@@ -60,7 +61,7 @@ class LocalController(object):
                 readable, writable, exceptional = select(rlist,
                                                          wlist,
                                                          xlist)
-            except Error as e:
+            except Exception as e:
                 self.logger.error("Error in select - %s" % (e))
                 
 
@@ -118,4 +119,5 @@ class LocalController(object):
     # Is this necessary?
 
 if __name__ == '__main__':
-    LocalController()
+    lc = LocalController(False)
+    lc._main_loop()

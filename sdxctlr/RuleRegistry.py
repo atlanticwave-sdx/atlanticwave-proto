@@ -3,16 +3,15 @@
 
 
 import logging
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 
 class RuleRegistryTypeError(TypeError):
     pass
 
-class RuleRegistry(object):
+class RuleRegistry(SingletonMixin):
     ''' The RuleRegistry provides a centralized lookup service for converting 
         user rules into the class that implements them. 
         Singleton. '''
-    __metaclass__ = Singleton
 
     def __init__(self):
         # Setup logger

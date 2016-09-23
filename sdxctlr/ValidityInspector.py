@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 from AuthorizationInspector import AuthorizationInspector 
 from TopologyManager import TopologyManager
 
@@ -19,7 +19,7 @@ class ValidityInspectorOverlappingRule(ValidityInspectorError):
         Rule can be installed, but may not have the indented effect. '''
     pass
 
-class ValidityInspector(object):
+class ValidityInspector(SingletonMixin):
     ''' The ValidityInspector will verify that a particular rule is valid. For 
         instance, confirming that port 16 exists at a given location. To handle 
         validation, external information will be needed. As an example, 
@@ -27,18 +27,14 @@ class ValidityInspector(object):
         LocalControllerManager. How this is done is not decided as of this 
         writing, and may introduce more links into the diagram above.
         Singleton. '''
-    __metaclass__ = Singleton
 
     def __init__(self):
-        # Get connections to data providers
-        self.auth = AuthorizationInspector()
-        self.auth_func = self.auth.is_authorized
-        self.topo = TopologyManager()
-
+        pass
     
     def is_valid_rule(self, rule):
         ''' Checks to see if a rule is valid. True if valid. Raises error 
             describing problem if invalid. '''
         #FIXME: I am confused. I cannot find an object named 'rule' anywhere and doing a search in the filesystem for objects that call "check_validity" just takes me back here. I need some clarification please.
-        return rule.check_validity(self.topo.get_topology(), self.auth_func)
+        return rule.check_validity(TopologyManager.instance().get_topology(),
+                                   AuthorizationInspector.instance().is_authorized)
 

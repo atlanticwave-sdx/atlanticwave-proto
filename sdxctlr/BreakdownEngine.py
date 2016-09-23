@@ -2,24 +2,20 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 from AuthorizationInspector import AuthorizationInspector
 from TopologyManager import TopologyManager
 
-class BreakdownEngine(object):
+class BreakdownEngine(SingletonMixin):
     ''' The BreakdownEngine is one of the more complex pieces of the SDX 
         controller. It takes participant-level rules and breaks them down into 
         per-local controller rules. In the future, failover considerations will
-        be added, in particular automatically creating backup paths will be added
-        as a standard feature.
+        be added, in particular automatically creating backup paths will be 
+        added as a standard feature.
         Singleton. '''
-    __metaclass__ = Singleton
     
     def __init__(self):
-        self.auth = AuthorizationInspector()
-        self.auth_func = self.auth.is_authorized
-        self.topo = TopologyManager()
-
+        pass
         
     def get_breakdown(self, rule):
         ''' Breaks down the given rule to rules that each local controller can 
@@ -27,5 +23,6 @@ class BreakdownEngine(object):
             permissions determined by the AuthorizationInspector for proposed 
             rules (e.g., if a user cannot create paths through a particular LC, 
             reroute around that LC). '''
-        return rule.breakdown_rule(self.topo.get_topology(), self.auth_func)
+        return rule.breakdown_rule(TopologyManager.instance().get_topology(),
+                                   AuthorizationInspector.instance().is_authorized)
     

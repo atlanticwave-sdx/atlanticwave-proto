@@ -3,16 +3,15 @@
 
 
 import logging
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 
-class AuthenticationInspector(object):
+class AuthenticationInspector(SingletonMixin):
     ''' The AuthenticationInspector is responsible for determining if someone or
         something is authenticated (is who they say they are). It receives 
         information from both the ParticipantManager and the 
         LocalControllerManager about the credentials of the participants and 
         local controllers, respectively.
         Singleton. ''' 
-    __metaclass__ = Singleton
 
     def __init__(self):
         # Setup logger

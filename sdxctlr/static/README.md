@@ -1,0 +1,1 @@
+Based on https://shapebootstrap.net/item/1524966-xeon-best-onepage-site-template

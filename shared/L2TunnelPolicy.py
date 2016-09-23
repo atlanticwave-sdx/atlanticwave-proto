@@ -112,10 +112,10 @@ class L2TunnelPolicy(UserPolicy):
         edges = topology.edges(data=True)
 
         import json
-        print "NODES:"
-        print json.dumps(nodes, indent=2)
-        print "\n\nEDGES:"
-        print json.dumps(edges, indent=2)
+#        print "NODES:"
+#        print json.dumps(nodes, indent=2)
+#        print "\n\nEDGES:"
+#        print json.dumps(edges, indent=2)
         
         # Get a VLAN to use
         #FIXME: how to figure this out? Do we need better access to the topology manager?

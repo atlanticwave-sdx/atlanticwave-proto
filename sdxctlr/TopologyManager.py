@@ -2,23 +2,22 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 import networkx as nx
 import json
 
 #FIXME: This shouldn't be hard coded.
 MANIFEST_FILE = '../manifests/localcontroller.manifest'
 
-class TopologyManager(object):
-    ''' The TopologyManager handles the topology of the network. Initially, this 
-        will be very simple, as there will only be three switches, and ~100 ports
-        total.
+class TopologyManager(SingletonMixin):
+    ''' The TopologyManager handles the topology of the network. Initially, this
+        will be very simple, as there will only be three switches, and ~100 
+        ports total.
         It may be used to manage virtual topologies (VLANs, for instance) as 
         well.
-        It will likely use NetworkX for handling large graphs, as well as for its
-        JSON generation abilities.
+        It will likely use NetworkX for handling large graphs, as well as for 
+        its JSON generation abilities.
         Singleton. '''
-    __metaclass__ = Singleton
     
     def __init__(self, topology_file=MANIFEST_FILE):
         # Initialize topology

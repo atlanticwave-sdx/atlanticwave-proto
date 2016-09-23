@@ -3,7 +3,7 @@
 # AtlanticWave/SDX Project
 # Login based on example code from https://github.com/maxcountryman/flask-login
 
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 from shared.L2TunnelPolicy import L2TunnelPolicy
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
@@ -35,7 +35,7 @@ import sys, os, traceback
 #datetime
 from datetime import datetime
 
-class RestAPI(object):
+class RestAPI(SingletonMixin):
     ''' The REST API will be the main interface for participants to use to push 
         rules (eventually) down to switches. It will gather authentication 
         information from the participant and check with the 
@@ -45,8 +45,6 @@ class RestAPI(object):
         RuleManager. It will draw some of its API from the RuleRegistry, 
         specifically for the libraries that register with the RuleRegistry. 
         Singleton. '''
-    __metaclass__ = Singleton
-
 
     global User, app, login_manager
 
@@ -63,8 +61,9 @@ class RestAPI(object):
 
     def __init__(self):
         #FIXME: Creating user only for testing purposes
-        AuthenticationInspector().add_user('sdonovan','1234')
+        AuthenticationInspector.instance().add_user('sdonovan','1234')
         p = Process(target=self.api_process)
+        p.daemon = True
         p.start()
         pass
 
@@ -113,7 +112,7 @@ class RestAPI(object):
     def login(): 
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
-        if AuthenticationInspector().is_authenticated(email,flask.request.form['pw']):
+        if AuthenticationInspector.instance().is_authenticated(email,flask.request.form['pw']):
             user = User()
             user.id = email
             flask_login.login_user(user)
@@ -126,7 +125,7 @@ class RestAPI(object):
     @app.route('/protected')
     @flask_login.login_required
     def protected():
-        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'login'):
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'login'):
             return 'Logged in as: ' + flask_login.current_user.id
         return unauthorized_handler()
 
@@ -147,7 +146,7 @@ class RestAPI(object):
     @staticmethod
     @app.route('/user/<username>')
     def show_user_information(username):
-        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'get_user_info'):
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'get_user_info'):
             return "Test: %s"%username
         return unauthorized_handler()
 
@@ -155,8 +154,8 @@ class RestAPI(object):
     @staticmethod
     @app.route('/topology.json')
     def show_network_topology_json():
-        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
-            G = TopologyManager().get_topology()
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
+            G = TopologyManager.instance().get_topology()
             data = json_graph.node_link_data(G)
             return json.dumps(data)
         return unauthorized_handler()
@@ -165,10 +164,10 @@ class RestAPI(object):
     @staticmethod
     @app.route('/topology')
     def show_network_topology():
-        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
             html = open('static/topology.html').read()
             return html
-            G = TopologyManager().get_topology()
+            G = TopologyManager.instance().get_topology()
             data = json_graph.adjacency_data(G)
             return str(data)
         return unauthorized_handler()
@@ -177,7 +176,7 @@ class RestAPI(object):
     @app.route('/pipe',methods=['POST'])
     def make_new_pipe():
         rfc3339format = "%Y-%m-%dT%H:%M:%S%z"
-        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
 
             # Just making sure the datetimes are okay
             starttime = datetime.strptime(request.form['startdate'] + ' ' + request.form['starttime'], '%Y-%m-%d %H:%M')
@@ -202,7 +201,7 @@ class RestAPI(object):
             policy = L2TunnelPolicy(flask_login.current_user.id, data)
 
             # I am really not sure what to pass through RuleManager as args
-            rule_hash = RuleManager().add_rule(policy)
+            rule_hash = RuleManager.instance().add_rule(policy)
 
             return '<pre>%s</pre>'%json.dumps(data, indent=2)
 
@@ -213,9 +212,9 @@ class RestAPI(object):
     @staticmethod
     @app.route('/rule/<rule_hash>')
     def get_rule_details_by_hash(rule_hash):
-        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
             try:
-                return RuleManager().get_rule_details(rule_hash)
+                return RuleManager.instance().get_rule_details(rule_hash)
             except:
                 return "Invalid rule hash"
         return unauthorized_handler()
@@ -224,8 +223,8 @@ class RestAPI(object):
     @staticmethod
     @app.route('/rule/search/<query>')
     def get_rule_search_by_query(query):
-        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'search_rules'):
-            return RuleManager().get_rules(query)
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
+            return RuleManager.instance().get_rules(query)
         return unauthorized_handler()
 
 

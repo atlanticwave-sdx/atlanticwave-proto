@@ -160,7 +160,7 @@ class Connection(object):
 
     
 
-def select(rlist, wlist, xlist, timeout=0):
+def select(rlist, wlist, xlist, timeout=0.0):
     ''' The equivalent of select.select(), but tailored for Connection and
         ConnectionManager. '''
     # Sanity check inputs.

@@ -1,0 +1,58 @@
+{
+  "localcontrollers": {
+    "atl":{
+      "shortname": "atl",
+      "credentials": "atlpw",
+      "location": "In the kernel",
+      "lcip": "127.0.0.1",
+      "switchinfo": [
+        {
+          "name": "atl-switch",
+          "dpid": "1",
+          "ip": "127.0.0.1",
+          "dpid":1,
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 1,
+              "destination": "atl"
+            },
+            {
+              "portnumber": 2,
+              "speed": 1,
+              "destination": "atldtn"
+            },
+            {
+              "portnumber": 3,
+              "speed": 1,
+              "destination": "mia"
+            },
+            {
+              "portnumber": 4,
+              "speed": 1,
+              "destination": "miadtn"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+  }
+}

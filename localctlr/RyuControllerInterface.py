@@ -33,7 +33,7 @@ class RyuControllerInterface(ControllerInterface):
 
         self._setup_logger()
         # Set up server connection for RyuTranslateInterface to connect to.
-        self.inter_cm = InterRyuControllerConnectionManager()
+        self.inter_cm = InterRyuControllerConnectionManager.instance()
         self.inter_cm_cxn = None
         self.inter_cm_condition = threading.Condition()
         self.inter_cm_thread = threading.Thread(target=self._inter_cm_thread)

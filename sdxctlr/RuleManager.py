@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 from AuthorizationInspector import AuthorizationInspector
 from BreakdownEngine import BreakdownEngine
 from ValidityInspector import ValidityInspector
@@ -29,7 +29,7 @@ def TESTING_CALL(param):
         easily.'''
     raise RuleManagerError("RuleManager has not been properly initialized")
 
-class RuleManager(object):
+class RuleManager(SingletonMixin):
     ''' The RuleManager keeps track of all rules that are installed (and their 
         metadata), the breakdowns of the abstract rule per local controller as 
         created by the BreakdownEngine, as well as orchestrating new rule 
@@ -41,29 +41,26 @@ class RuleManager(object):
         RuleManager will check with the AuthorizationInspector to see if the 
         breakdowns are allowed to be installed by that particular user. 
         Singleton. ''' 
-    __metaclass__ = Singleton
-
     
     
     def __init__(self, send_user_rule_breakdown_add=TESTING_CALL,
                  send_user_rule_breakdown_remove=TESTING_CALL):
         # The params are used in order to maintain import hierarchy.
-        print "Rule Manager Initializing,,,"
-        
-        # Initialize rule counter. Used to track the rules as they are installed.
+        # Initialize rule counter. Used to track the rules as they are installed
         self.rule_number = 1
         
         # Start database/dictionary
         self.rule_db = {}
 
-        # Get references to helpers
-        self.vi = ValidityInspector()
-        self.be = BreakdownEngine()
-        self.ai = AuthorizationInspector()
+        # Use these to send the rule to the Local Controller
+        self.set_send_add_rule(send_user_rule_breakdown_add)
+        self.set_send_rm_rule(send_user_rule_breakdown_remove)
 
-        # Send the rule to the Local Controller
-        self.send_user_add_rule = send_user_rule_breakdown_add
-        self.send_user_rm_rule = send_user_rule_breakdown_remove
+    def set_send_add_rule(self, fcn):
+        self.send_user_add_rule = fcn
+
+    def set_send_rm_rule(self, fcn):
+        self.send_user_rm_rule = fcn
 
     def add_rule(self, rule):
         ''' Adds a rule for a particular user. Returns rule hash if successful, 
@@ -76,7 +73,7 @@ class RuleManager(object):
         authorized = None
         # Check if valid rule
         try:
-            valid = self.vi.is_valid_rule(rule)
+            valid = ValidityInspector.instance().is_valid_rule(rule)
         except Exception as e:
             raise RuleManagerValidationError(
                 "Rule cannot be validated, threw exception: %s, %s" %
@@ -88,7 +85,7 @@ class RuleManager(object):
         
         # Get the breakdown of the rule
         try:
-            breakdown = self.be.get_breakdown(rule)
+            breakdown = BreakdownEngine.instance().get_breakdown(rule)
         except Exception as e: raise
 #            raise RuleManagerBreakdownError(
 #                "Rule breakdown threw exception: %s, %s" %
@@ -99,7 +96,7 @@ class RuleManager(object):
 
         # Check if the user is authorized to perform those actions.
         try:
-            authorized = self.ai.is_authorized(rule.username, rule)
+            authorized = AuthorizationInspector.instance().is_authorized(rule.username, rule)
         except Exception as e:
             raise RuleManagerAuthorizationError(
                 "Rule not authorized with exception: %s, %s" %
@@ -135,7 +132,7 @@ class RuleManager(object):
         authorized = None
         # Check if valid rule
         try:
-            valid = self.vi.is_valid_rule(rule)
+            valid = ValidityInspector.instance().is_valid_rule(rule)
         except Exception as e:
             raise RuleManagerValidationError(
                 "Rule cannot be validated, threw exception: %s, %s" %
@@ -148,7 +145,7 @@ class RuleManager(object):
 
         # Get the breakdown of the rule
         try:
-            breakdown = self.be.get_breakdown(rule)
+            breakdown = BreakdownEngine.instance().get_breakdown(rule)
         except Exception as e:
             raise RuleManagerBreakdownError(
                 "Rule breakdown threw exception: %s, %s" %
@@ -159,7 +156,7 @@ class RuleManager(object):
 
         # Check if the user is authorized to perform those actions.
         try:
-            authorized = self.ai.is_authorized(rule.username, rule)
+            authorized = AuthorizationInspector.instance().is_authorized(rule.username, rule)
         except Exception as e:
             raise RuleManagerAuthorizationError(
                 "Rule not authorized with exception: %s, %s" %
@@ -182,7 +179,7 @@ class RuleManager(object):
         rule = self.rule_db[rule_hash]
         authorized = None
         try:
-            authorized = self.ai.is_authorized(user, rule) #FIXME
+            authorized = AuthorizationInspector.instance().is_authorized(user, rule) #FIXME
         except Exception as e:
             raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s with exception %s" % (user, rule_hash, str(e)))
         if authorized != True:

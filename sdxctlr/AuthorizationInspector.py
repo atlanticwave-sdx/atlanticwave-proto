@@ -3,8 +3,7 @@
 
 
 import logging
-from shared.Singleton import Singleton
-
+from shared.Singleton import SingletonMixin
 
 
 class AuthorizationInspectorError(Exception):
@@ -19,7 +18,7 @@ class AuthorizationInspectorRuleNotAuthorized(AuthorizationInspectorError):
     ''' Raised when a rule installation is not authorized. '''
     pass
 
-class AuthorizationInspector(object):
+class AuthorizationInspector(SingletonMixin):
     ''' The AuthorizationInspector is responsible for authorizing actions. 
         Actions include viewing status of the network, viewing rules of the
         network, pushing rules to network, removing own rules from network, and 
@@ -30,7 +29,6 @@ class AuthorizationInspector(object):
         can only install rule type X). The actions will likely evolve 
         significantly.
         Singleton. '''
-    __metaclass__ = Singleton
 
     def __init__(self):
         pass

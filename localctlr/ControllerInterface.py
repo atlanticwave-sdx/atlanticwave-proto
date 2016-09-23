@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 
 class ControllerInterfaceTypeError(TypeError):
     pass
@@ -10,13 +10,12 @@ class ControllerInterfaceTypeError(TypeError):
 class ControllerInterfaceValueError(ValueError):
     pass
 
-class ControllerInterface(object):
+class ControllerInterface(SingletonMixin):
     ''' This parent class is meant to act as a standard interface between a 
         particular OpenFlow speaker and the LocalController class. It isolates
         LocalController from the specifics of the speaker that is being used. 
         It allows changes in the speaker to be much easier. 
         Singleton. '''
-    __metaclass__ = Singleton
     
 
     def __init__(self):

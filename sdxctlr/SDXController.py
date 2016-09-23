@@ -7,7 +7,7 @@ import threading
 import sys
 import Queue
 
-from shared.Singleton import Singleton
+from shared.Singleton import SingletonMixin
 from shared.SDXControllerConnectionManager import *
 from shared.Connection import select
 from shared.UserPolicy import UserPolicyBreakdown
@@ -40,51 +40,60 @@ class SDXControllerConnectionError(SDXControllerError):
     ''' When there's an error with a connection. '''
     pass
 
-class SDXController(object):
+class SDXController(SingletonMixin):
     ''' This is the main coordinating module of the SDX controller. It mostly 
-        provides startup and coordination, rathe rthan performan many actions by
+        provides startup and coordination, rather than performan many actions by
         itself.
         Singleton. ''' 
-    __metaclass__ = Singleton
 
-
-    def __init__(self, runloop=False):
+    def __init__(self, runloop=True, mani=None):
         ''' The bulk of the work happens here. This initializes nearly everything
             and starts up the main processing loop for the entire SDX
             Controller. '''
 
         self._setup_logger()
 
-        # Initialize all the modules - Ordering is relatively important here
-        self.aci = AuthenticationInspector()
-        self.azi = AuthorizationInspector()
-        self.be = BreakdownEngine()
-        self.rr = RuleRegistry()
-        self.tm = TopologyManager()
-        self.vi = ValidityInspector()
-        self.pm = ParticipantManager()
-        self.lcm = LocalControllerManager()
+        # Modules with potentially configurable configuration files
+        if mani != None:
+            self.tm = TopologyManager.instance(mani)
+        else:
+            self.tm = TopologyManager.instance()
 
-        # Start these modules last!
-        self.rm = RuleManager(self.send_breakdown_rule_add,
-                              self.send_breakdown_rule_rm)
-        self.rapi = RestAPI()
-        self.pm = ParticipantManager()      #FIXME - Filename
-        self.lcm = LocalControllerManager() #FIXME - Filename
+        # Initialize all the modules - Ordering is relatively important here
+        self.aci = AuthenticationInspector.instance()
+        self.azi = AuthorizationInspector.instance()
+        self.be = BreakdownEngine.instance()
+        self.rr = RuleRegistry.instance()
+        self.vi = ValidityInspector.instance()
+        self.pm = ParticipantManager.instance()
+
+        if mani != None:
+            self.lcm = LocalControllerManager.instance(mani)
+        else: 
+            self.lcm = LocalControllerManager.instance()
+
+
 
         # Set up the connection-related nonsense - Have a connection event queue
         self.ip = IPADDR        # from share.SDXControllerConnectionManager
         self.port = PORT
         self.cxn_q = Queue.Queue()
         self.connections = {}
-        self.sdx_cm = SDXControllerConnectionManager()
+        self.sdx_cm = SDXControllerConnectionManager.instance()
         self.cm_thread = threading.Thread(target=self._cm_thread)
         self.cm_thread.daemon = True
         self.cm_thread.start()
 
         # Register known UserPolicies
         self.rr.add_ruletype("json-upload", JsonUploadPolicy)
-        
+
+
+        # Start these modules last!
+        self.rm = RuleManager.instance(self.sdx_cm.send_breakdown_rule_add,
+                                       self.sdx_cm.send_breakdown_rule_rm)
+        self.pm = ParticipantManager.instance()      #FIXME - Filename
+        self.rapi = RestAPI.instance()
+
         # Go to main loop 
         if runloop:
             self._main_loop()
@@ -114,10 +123,19 @@ class SDXController(object):
         self.cxn_q.put((NEW_CXN, cxn))
         #FIXME: Send this to the LocalControllerManager
 
+        #FIXME: This is to update the Rule Manager. It seems that whenever a callback is set, it gets a static image of that function/object. That seems incorrect. This should be a workaround.
+        self.rm.set_send_add_rule(self.sdx_cm.send_breakdown_rule_add)
+        self.rm.set_send_rm_rule(self.sdx_cm.send_breakdown_rule_rm)
+        
     def _handle_connection_loss(self, cxn):
         #FIXME: Send this to the LocalControllerManager
         pass
 
+    def start_main_loop(self):
+        self.main_loop_thread = threading.Thread(target=self._main_loop)
+        self.main_loop_thread.daemon = True
+        self.main_loop_thread.start()
+        self.logger.debug("Main Loop - %s" % (self.main_loop_thread))
 
     def _main_loop(self):
         # Set up the select structures
@@ -189,35 +207,13 @@ class SDXController(object):
                 pass
 
 
-    def _send_breakdown_rule(self, bd, cmd):
-        ''' Used by the callback functions (below) to actually perform the 
-            sending of commands to the Local Controllers. This is all pretty
-            much the same, with only the command changing. '''
-        # The cmd is from the list of commands in  SDXControllerConnectionManager
-        lc = bd.get_lc()
-        if lc not in self.connections.keys():
-            raise SDXControllerConnectionError("%s is not in the current connections.\n    Current connections %s" % (lc, self.connections.keys()))
-        
-        lc_cxn = self.connections[lc]
-
-        for rule in bd.get_list_of_rules():
-            lc_cxn.send_cmd(cmd, rule)
-
-        
-    def send_breakdown_rule_add(self, bd):
-        ''' This takes in a UserPolicyBreakdown and send it to the Local 
-            Controller that it has a connection to in order to add rules. '''
-        try:
-            self._send_breakdown_rule(bd, SDX_NEW_RULE)
-        except Exception as e: raise
-
-    def send_breakdown_rule_rm(self, bd):
-        ''' This takes in a UserPolicyBreakdown and send it to the Local 
-            Controller that it has a connection to in order to remove rules. '''
-        try:
-            self._send_breakdown_rule(bd, SDX_RM_RULE)
-        except Exception as e: raise
 
 
 if __name__ == '__main__':
-    SDXController(True)
+    if len(sys.argv) != 2:
+        print "USAGE: python SDXController.py manifest"
+        print "You must provide manifest files for the SDXController if running from the command line."
+        exit()
+    mani = sys.argv[1]
+    sdx = SDXController(False, mani)
+    sdx._main_loop()
