@@ -24,7 +24,7 @@ class ConfigParserCtlr(object):
         self.cxn = None
 
         # Setup listening connection
-        self.sdx_cm = SDXControllerConnectionManager.instance()
+        self.sdx_cm = SDXControllerConnectionManager()
         self.cm_thread = threading.Thread(target=self._cm_thread)
         self.cm_thread.daemon = True
         self.cm_thread.start()

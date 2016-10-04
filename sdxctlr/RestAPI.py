@@ -22,8 +22,10 @@ from flask_login import LoginManager
 from networkx.readwrite import json_graph
 import json
 
-#multiprocess stuff
-from multiprocessing import Process
+#multiprocess stuff - This must be a thread, as Process is problematic with 
+#syncing is necessary. With multiprocessing.Process, objects are not synched
+#after the Process is started. 
+from threading import Thread
 
 #stuff to serve sdxctlr/static content - I will change this in an update but for now this is viable.
 import SimpleHTTPServer
@@ -62,7 +64,7 @@ class RestAPI(SingletonMixin):
     def __init__(self):
         #FIXME: Creating user only for testing purposes
         AuthenticationInspector.instance().add_user('sdonovan','1234')
-        p = Process(target=self.api_process)
+        p = Thread(target=self.api_process)
         p.daemon = True
         p.start()
         pass

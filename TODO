@@ -1,0 +1,17 @@
+This is just a list of TODO items
+
+- Fix the Singleton mess. Ran into issues with the old Singleton class when things weren't synching across different threads. I find this hard to believe, but switched to the SingletonMixin style instead. I hate having to call CLASS.instance() every time. Look into it again. It works now, but seems silly. Further, there are some classes (shared.ConnectionManager, in particular) that are still using the Singleton metaclass.
+
+- Multiple LCs at the same IP address.
+
+- Shibboleth integration
+
+- Better input abilities for the web interface, e.g., selecting locations from a map, rather than from a dropdown
+
+- Dynamic population of the web interface based on the Topology, for instance.
+
+- Add SDX capabilities
+
+- Bootstrapping the OF tables. FOr instance, there's only one as of this checkin, but there's no proper fallthrough to the next table for SDX capabilities.
+
+- Fix VLAN installation bugs. Right now, it tries to set a VLAN like setting a TCP port number. This is incorrect, and uses a different OF function.

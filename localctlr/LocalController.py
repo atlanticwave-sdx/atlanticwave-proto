@@ -21,11 +21,11 @@ class LocalController(SingletonMixin):
         self._setup_logger()
 
         # Setup switch
-        self.switch_connection = RyuControllerInterface.instance()
+        self.switch_connection = RyuControllerInterface()
         self.logger.info("RyuControllerInterface setup finish.")
 
         # Setup connection manager
-        self.sdx_cm = SDXControllerConnectionManager.instance()
+        self.sdx_cm = SDXControllerConnectionManager()
         self.sdx_connection = None
         self.logger.info("SDXControllerConnectionManager setup finish.")
         self.logger.debug("SDXControllerConnectionManager - %s" % (self.sdx_cm))

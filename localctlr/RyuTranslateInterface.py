@@ -31,7 +31,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self._setup_logger()
 
         # Establish connection to RyuControllerInterface
-        self.inter_cm = InterRyuControllerConnectionManager.instance()
+        self.inter_cm = InterRyuControllerConnectionManager()
         #FIXME: Hardcoded!
         self.inter_cm_cxn = self.inter_cm.open_outbound_connection("127.0.0.1", 55767)
 

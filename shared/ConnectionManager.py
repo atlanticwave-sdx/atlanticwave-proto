@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import SingletonMixin
+from shared.Singleton import Singleton
 from shared.Connection import Connection
 
 import socket
@@ -16,11 +16,12 @@ class ConnectionManagerTypeError(TypeError):
 class ConnectionManagerValueError(ValueError):
     pass
 
-class ConnectionManager(SingletonMixin):
+class ConnectionManager(object):
     ''' This is a parent class for handling connections, dispatching the new 
         connection to handling functions, and otherwise tracking what's going 
         on. One per incoming connection. One for outbound connections. Needs to
         be subclassed, even though much will be in common. Singleton. '''
+    __metaclass__ = Singleton
 
     def __init__(self):
         self.listening_sock = None
