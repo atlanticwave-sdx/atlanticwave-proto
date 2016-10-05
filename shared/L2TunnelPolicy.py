@@ -142,9 +142,9 @@ class L2TunnelPolicy(UserPolicy):
             # Inbound
             match = OpenFlowMatch([IN_PORT(inport),
                                    VLAN_VID(invlan)])
-            actions = [action_OUTPUT(outport),
-                       action_SET_FIELD(VLAN_VID(outvlan))]
-            instruction = instruction_WRITE_ACTIONS(actions)
+            actions = [action_SET_FIELD(VLAN_VID(outvlan)),
+                       action_OUTPUT(outport)]
+            instruction = instruction_APPLY_ACTIONS(actions)
             rule = OpenFlowRule(match, instruction, table,
                                 priority, cookie, switch_id)
             bd.add_to_list_of_rules(rule)
@@ -152,9 +152,9 @@ class L2TunnelPolicy(UserPolicy):
             # Outbound
             match = OpenFlowMatch([IN_PORT(outport),
                                    VLAN_VID(outvlan)])
-            actions = [action_OUTPUT(inport),
-                       action_SET_FIELD(VLAN_VID(invlan))]
-            instruction = instruction_WRITE_ACTIONS(actions)
+            actions = [action_SET_FIELD(VLAN_VID(invlan)),
+                       action_OUTPUT(inport)]
+            instruction = instruction_APPLY_ACTIONS(actions)
             rule = OpenFlowRule(match, instruction, table,
                                 priority, cookie, switch_id)
             bd.add_to_list_of_rules(rule)
@@ -189,9 +189,9 @@ class L2TunnelPolicy(UserPolicy):
             # Inbound
             match = OpenFlowMatch([IN_PORT(inport),
                                    VLAN_VID(invlan)])
-            actions = [action_OUTPUT(outport),
-                       action_SET_FIELD(VLAN_VID(intermediate_vlan))]
-            instruction = instruction_WRITE_ACTIONS(actions)
+            actions = [action_SET_FIELD(VLAN_VID(intermediate_vlan)),
+                       action_OUTPUT(outport)]
+            instruction = instruction_APPLY_ACTIONS(actions)
             rule = OpenFlowRule(match, instruction, table,
                                 priority, cookie, switch_id)
             bd.add_to_list_of_rules(rule)
@@ -199,9 +199,9 @@ class L2TunnelPolicy(UserPolicy):
             # Outbound
             match = OpenFlowMatch([IN_PORT(outport),
                                    VLAN_VID(intermediate_vlan)])
-            actions = [action_OUTPUT(inport),
-                       action_SET_FIELD(VLAN_VID(invlan))]
-            instruction = instruction_WRITE_ACTIONS(actions)
+            actions = [action_SET_FIELD(VLAN_VID(invlan)),
+                       action_OUTPUT(inport)]
+            instruction = instruction_APPLY_ACTIONS(actions)
             rule = OpenFlowRule(match, instruction, table,
                                 priority, cookie, switch_id)
             bd.add_to_list_of_rules(rule)
@@ -237,7 +237,7 @@ class L2TunnelPolicy(UserPolicy):
                 match = OpenFlowMatch([IN_PORT(inport),
                                        VLAN_VID(intermediate_vlan)])
                 actions = [action_OUTPUT(outport)]
-                instruction = instruction_WRITE_ACTIONS(actions)
+                instruction = instruction_APPLY_ACTIONS(actions)
                 rule = OpenFlowRule(match, instruction, table,
                                     priority, cookie, switch_id)
                 bd.add_to_list_of_rules(rule)
@@ -246,7 +246,7 @@ class L2TunnelPolicy(UserPolicy):
                 match = OpenFlowMatch([IN_PORT(outport),
                                        VLAN_VID(intermediate_vlan)])
                 actions = [action_OUTPUT(inport)]
-                instruction = instruction_WRITE_ACTIONS(actions)
+                instruction = instruction_APPLY_ACTIONS(actions)
                 rule = OpenFlowRule(match, instruction, table,
                                     priority, cookie, switch_id)
                 bd.add_to_list_of_rules(rule)

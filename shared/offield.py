@@ -271,10 +271,20 @@ class UDP_DST(number_field):
                                       prereq=[IP_PROTO(6)])
 
 class VLAN_VID(number_field):
-    def __init__(self, value, cfi=0):
+    # FIXME: Perhaps this should be changed from a number_field to something
+    # new, like a vlan_field that can handle the 12+1 bits that VLANs need?
+    def __init__(self, value, cfi=1, mask=False):
+        # Adjust for the CFI bit. maxval is also adjusted for this.
+        self.cfi = cfi
+        value = value + (0x1000*cfi)
         super(VLAN_VID, self).__init__('vlan_vid', value=value,
-                                       minval=0, maxval=2**12-1,
-                                       prereq=None)
+                                       minval=0, maxval=2**13-1,
+                                       prereq=None, mask=mask)
+    def __str__(self):
+        retstr = "%s:%s,%s" % (self._name,
+                               (self.value - (0x1000*self.cfi)), # Actual VLAN
+                               self.cfi)
+        return retstr
 
 
 
@@ -300,4 +310,5 @@ MATCH_NAME_TO_CLASS = { 'in_port': {'type':IN_PORT, 'required':None},
                         'tcp_dst': {'type':TCP_DST, 'required':None},
                         'udp_src': {'type':UDP_SRC, 'required':None},
                         'udp_dst': {'type':UDP_DST, 'required':None},
+                        'vlan_vid': {'type':VLAN_VID, 'required':None},
                        }

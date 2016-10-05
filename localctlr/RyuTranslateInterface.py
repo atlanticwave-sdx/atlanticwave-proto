@@ -12,6 +12,7 @@ from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
 from ryu.ofproto import ofproto_v1_3
+from ryu.utils import hex_array
 from time import sleep
 from RyuControllerInterface import RyuControllerInterface
 from InterRyuControllerConnectionManager import *
@@ -128,7 +129,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         msg = ev.msg
         self.logger.error('OFPErrorMsg received: type=0x%02x code=0x%02x '
                           'message=%s',
-                          msg.type, msg.code, ryu.utils.hex_array(msg.data))
+                          msg.type, msg.code, hex_array(msg.data))
 
 
     # Boilerplate functions
