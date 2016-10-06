@@ -237,3 +237,5 @@ if __name__ == "__main__":
     RuleManager(blah,blah)    
 
     RestAPI()
+
+    raw_input('Press <ENTER> to quit at any time...\n')
