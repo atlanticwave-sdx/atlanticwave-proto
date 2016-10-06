@@ -101,16 +101,19 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/', methods=['GET'])
     def home():
-        #return app.send_static_file('static/index.html')
         try: 
 
+            # Get the Topo for dynamic list gen
             G = TopologyManager.instance().get_topology()            
             data = json_graph.node_link_data(G)
             points=[]
+
+            # Go through the topo and get the nodes of interest.
             for i in  data['nodes']:
                 if 'id' in i and 'org' in i:
                     points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['org'])))
             
+            # Pass to flask to render a template
             return flask.render_template('index.html',points=points)
         except:
             return app.send_static_file('static/index.html')
