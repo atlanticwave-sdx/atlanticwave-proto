@@ -116,24 +116,25 @@
                     </ul>
                     <form action="pipe" method="POST" id="NetworkEngr" class="tabcontent">
                           <div class="col-sm-4">
-                            <p>Enter the start date: <input type="date" class="form-control" required="required" id="startdate" name="startdate"> </p> 
+                            <p>Enter the start date: <input type="text" class="form-control" required="required" id="startdate" name="startdate"> </p> 
                             <p>Enter the start time: <input type="time" class="form-control" required="required" id="starttime" name="starttime"> </p> 
-                            <p>Enter the end date: <input type="date" class="form-control" required="required" id="enddate" name="enddate"> </p> 
+                            <p>Enter the end date: <input type="text" class="form-control" required="required" id="enddate" name="enddate"> </p> 
                             <p>Enter the end time: <input type="time" class="form-control" required="required" id="endtime" name="endtime"> </p>           
                           </div>
                           <div class="col-sm-4">
                             <p>Enter the desired bandwidth:</p>
-                            <input type="text" class="form-control" required="required" id="bw" name="bw" placeholder="Bandwidth in GB">
+                            <input type="number" class="form-control" required="required" id="bw" name="bw" placeholder="Bandwidth in GB" min="1" max="100">
                             <p>Enter the physical port number at source:</p>
-                            <input type="text" class="form-control" required="required" id="sp" name="sp" placeholder=" Source Port#"> 
+                            <input type="number" class="form-control" required="required" id="sp" name="sp" placeholder=" Source Port#" min="0" max="65535"> 
                             <p>Enter the physical port number at destination:</p>
-                            <input type="text" class="form-control" required="required" id="dp" name="dp" placeholder="Destination Port#"> <br>
+                            <input type="number" class="form-control" required="required" id="dp" name="dp" placeholder="Destination Port#" min="0" max="65535"> <br>
+                            <input type="checkbox" name="recur" value="yes"> Create recurring reservation<br>
                           </div>
                           <div class="col-sm-4">
                             <p>Enter the source VLAN:</p>
-                            <input type="text" class="form-control" required="required" id="sv" name="sv" placeholder="Source VLAN" min="0" max="4090">
+                            <input type="number" class="form-control" required="required" id="sv" name="sv" placeholder="Source VLAN" min="0" max="4090">
                             <p>Enter the destination VLAN:</p>
-                            <input type="text" class="form-control" required="required" id="dv" name="dv" placeholder="Destination VLAN" min="0" max="4090">
+                            <input type="number" class="form-control" required="required" id="dv" name="dv" placeholder="Destination VLAN" min="0" max="4090">
                           </div>
                           <div class="col-sm-4">
                             <p>Select source: </p>
@@ -152,19 +153,20 @@
 
                         <form action="pipe" method="POST" id="Scientist" class="tabcontent">
                           <div class="col-sm-4">
-                            <p>Enter the start date: <input type="date" class="form-control" required="required" id="startdate" name="startdate"> </p> 
+                            <p>Enter the start date: <input type="text" class="form-control" required="required" id="startdate" name="startdate"> </p> 
                             <p>Enter the start time: <input type="time" class="form-control" required="required" id="starttime" name="starttime"> </p> 
-                            <p>Enter the end date: <input type="date" class="form-control" required="required" id="enddate" name="enddate"> </p> 
+                            <p>Enter the end date: <input type="text" class="form-control" required="required" id="enddate" name="enddate"> </p> 
                             <p>Enter the end time: <input type="time" class="form-control" required="required" id="endtime" name="endtime"> </p>           
                           </div>
 
                           <div class="col-sm-4">
                             <p>Enter the desired bandwidth:</p>
-                            <input type="text" class="form-control" required="required" placeholder="Bandwidth in GB" id="bw" name="bw">
+                            <input type="number" class="form-control" required="required" placeholder="Bandwidth in GB" id="bw" name="bw" min="1" max="100">
                             <p>Enter the source node:</p>
-                            <input type="text" class="form-control" required="required" placeholder="Source Node#" id="sn" name="sn">
+                            <input type="number" class="form-control" required="required" placeholder="Source Node#" id="sn" name="sn">
                             <p>Enter the destination node:</p>
-                            <input type="text" class="form-control" required="required" placeholder="Destination Node#" id="dn" name="dn">
+                            <input type="number" class="form-control" required="required" placeholder="Destination Node#" id="dn" name="dn"> <br>
+                            <input type="checkbox" name="recur" value="yes"> Create recurring reservation<br>
                           </div>
                           <div class="row"></div>
                           <button type="test" class="btn btn-danger btn-lg" align="middle">Preview</button>
@@ -297,6 +299,10 @@
     <script src="static/js/jquery.isotope.min.js"></script>
     <script src="static/js/jquery.prettyPhoto.js"></script>
     <script src="static/js/main.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script> function role(evt, roleName) {
         var i, tabcontent, tablinks;
         tabcontent = document.getElementsByClassName("tabcontent");
@@ -311,5 +317,32 @@
         evt.currentTarget.className += " active";
     }
     </script>
+    <script type="text/javascript">
+    $(function () {
+    $("#startdate").datepicker({
+        numberOfMonths: 1,
+        changeMonth: true,
+        changeYear: true,
+        yearRange: 'dateToday:+5',
+        minDate: 0,
+        onSelect: function (selected) {
+            var dt = new Date(selected);
+            dt.setDate(dt.getDate() + 1);
+            $("#enddate").datepicker("option", "minDate", dt);
+        }
+    });
+    $("#enddate").datepicker({
+        numberOfMonths: 1,
+        changeMonth: true,
+        changeYear: true,
+        yearRange: 'dateToday:+5',
+        onSelect: function (selected) {
+            var dt = new Date(selected);
+            dt.setDate(dt.getDate() - 1);
+            $("#startdate").datepicker("option", "maxDate", dt);
+        }
+    });
+});
+</script>
 </body>
 </html>
