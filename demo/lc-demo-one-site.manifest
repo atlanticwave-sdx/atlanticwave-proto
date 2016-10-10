@@ -13,6 +13,7 @@
       "switchinfo": [
         {
           "name": "atl-switch",
+	  "friendlyname":"Main Atlanta Switch",
           "ip": "127.0.0.1",
           "dpid":1,
           "brand": "Open vSwitch",

@@ -12,6 +12,7 @@
       "switchinfo": [
         {
           "name": "atl-switch",
+	  "friendlyname":"Main Atlanta Switch",
           "ip": "127.0.0.1",
           "dpid":1,
           "brand": "Open vSwitch",
@@ -64,6 +65,7 @@
       "switchinfo": [
         {
           "name": "mia-switch",
+	  "friendlyname":"Main Miami Switch",
           "ip": "127.0.0.1",
           "dpid":2,
           "brand": "Open vSwitch",
