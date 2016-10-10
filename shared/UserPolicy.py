@@ -69,8 +69,8 @@ class UserPolicyBreakdown(object):
         local controller and the rules passed to them. '''
 
     def __init__(self, lc, list_of_rules=[]):
-        ''' The lc is the IP of the local controller. The list_of_rules is a list
-            of rules that are being sent to the Local Controllers. '''
+        ''' The lc is the shortname of the local controller. The list_of_rules 
+            is a list of rules that are being sent to the Local Controllers. '''
         self.lc = lc
         self.rules = list_of_rules
 

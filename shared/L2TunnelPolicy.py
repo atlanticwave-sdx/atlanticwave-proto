@@ -127,6 +127,7 @@ class L2TunnelPolicy(UserPolicy):
                 raise UserPolicyValueError("Path length is 1, but switches are different: fullpath %s, src_switch %s, dst_switch %s" % (fullpath, src_switch, dst_switch))
                 
             location = self.src_switch
+            shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             inport = self.src_port
             outport = self.dst_port
@@ -137,7 +138,7 @@ class L2TunnelPolicy(UserPolicy):
             cookie = 1234 #FIXME
             table = 0 #FIXME
 
-            bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
+            bd = UserPolicyBreakdown(shortname)
 
             # Inbound
             match = OpenFlowMatch([IN_PORT(inport),
@@ -176,11 +177,13 @@ class L2TunnelPolicy(UserPolicy):
                                                 self.src_vlan, srcpath),
                                                (self.dst_switch, self.dst_port,
                                                 self.dst_vlan, dstpath)]:
-            bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
+            shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             priority = 100 #FIXME
             cookie = 1234 #FIXME
             table = 0 #FIXME
+
+            bd = UserPolicyBreakdown(shortname)
 
             # get edge
             edge = topology.edge[location][path]
@@ -220,12 +223,13 @@ class L2TunnelPolicy(UserPolicy):
             #               action set fwd
             #  - on outbound, match on the switch, port, and intermediate VLAN
             #               action set fwd
-            bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
-
+            shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             priority = 100 #FIXME
             cookie = 1234 #FIXME
             table = 0 #FIXME
+
+            bd = UserPolicyBreakdown(shortname)
 
             # get edges
             prevedge = topology.node[location][prevnode]

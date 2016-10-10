@@ -8,6 +8,7 @@ from shared.match import *
 from shared.offield import *
 from shared.action import *
 from shared.instruction import *
+from ryu import cfg
 from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
@@ -22,6 +23,11 @@ import threading
 
 ADD = "ADD"
 REMOVE = "REMOVE"
+LOCALHOST = "127.0.0.1"
+
+
+CONF = cfg.CONF
+
 
 class RyuTranslateInterface(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -31,10 +37,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         self._setup_logger()
 
+        # Configuration information
+        self.lcip = CONF['atlanticwave']['lcip']
+        self.ryu_cxn_port = CONF['atlanticwave']['ryu_cxn_port']
+        
+
         # Establish connection to RyuControllerInterface
         self.inter_cm = InterRyuControllerConnectionManager()
         #FIXME: Hardcoded!
-        self.inter_cm_cxn = self.inter_cm.open_outbound_connection("127.0.0.1", 55767)
+        self.inter_cm_cxn = self.inter_cm.open_outbound_connection(self.lcip,
+                                                                   self.ryu_cxn_port)
 
         self.datapaths = {}
 
@@ -119,7 +131,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
     # Handles switch connect event
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
-        #print "Connection from: " + str(ev.msg.datapath.id) + " for " + str(self)
+        print "Connection from: " + str(ev.msg.datapath.id) + " for " + str(self)
         self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
 
     # From the Ryu mailing list: https://sourceforge.net/p/ryu/mailman/message/33584125/

@@ -72,6 +72,7 @@ class SDXController(SingletonMixin):
         else: 
             self.lcm = LocalControllerManager.instance()
 
+        topo = self.tm.get_topology()
 
 
         # Set up the connection-related nonsense - Have a connection event queue
@@ -119,7 +120,18 @@ class SDXController(SingletonMixin):
         pass
         
     def _handle_new_connection(self, cxn):
-        self.connections[cxn.get_address()] = cxn
+        # Receive name from LocalController, verify that it's in the topology
+        name = cxn.recv()
+        topo = self.tm.get_topology()
+        
+        if name not in topo.node.keys():
+            self.logger.error("LocalController with name %s attempting to get in. Only known nodes: %s" % (name, topo.node.keys()))
+            return
+        # FIXME: Credentials exchange
+
+        # Add connection to connections list
+        self.connections[name] = cxn
+        self.sdx_cm.associate_cxn_with_name(name, cxn)
         self.cxn_q.put((NEW_CXN, cxn))
         #FIXME: Send this to the LocalControllerManager
 

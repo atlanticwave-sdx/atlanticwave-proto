@@ -5,10 +5,14 @@
       "credentials": "atlpw",
       "location": "In the kernel",
       "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633
+      },
+
       "switchinfo": [
         {
           "name": "atl-switch",
-          "dpid": "1",
           "ip": "127.0.0.1",
           "dpid":1,
           "brand": "Open vSwitch",
