@@ -13,12 +13,10 @@ from TopologyManager import TopologyManager
 
 #API Stuff
 import flask
-from flask import Flask, request, url_for, send_from_directory, render_template
+from flask import Flask, request, url_for, send_from_directory, render_template, Markup
 
 import flask_login
 from flask_login import LoginManager
-
-from flask import Markup
 
 #Topology json stuff
 from networkx.readwrite import json_graph
@@ -101,8 +99,10 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/', methods=['GET'])
     def home():
-        try: 
-
+        if flask_login.current_user.get_id() == None:
+            return app.send_static_file('static/index.html')
+ 
+        else: 
             # Get the Topo for dynamic list gen
             G = TopologyManager.instance().get_topology()            
             data = json_graph.node_link_data(G)
@@ -114,10 +114,7 @@ class RestAPI(SingletonMixin):
                     points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['org'])))
             
             # Pass to flask to render a template
-            return flask.render_template('index.html',points=points)
-        except:
-            return app.send_static_file('static/index.html')
-
+            return flask.render_template('index.html',points=points,current_user=flask_login.current_user)
     
     # Preset the login form to the user and request to log user in
     @staticmethod
