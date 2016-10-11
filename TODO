@@ -10,22 +10,45 @@ This is just a list of TODO items
 
 - Add L2 learning switch (prereq for SDX)
 
-- How to handle tables better in the 
+- How to handle tables better in the ??? RuleManager? SDXController? I'm thinking RuleManager, as they control where things are going.
 
-- Bootstrapping the OF tables. For instance, there's only one as of this checkin, but there's no proper fallthrough to the next table for SDX capabilities.
+- Bootstrapping the OF tables. For instance, there's only one as of this checkin, but there's no proper fallthrough to the next table for SDX capabilities. Local Controller's responsibility?
 
-- Logging update
+- Logging update - Most code needs to actually use the logger functionality that's built in.
 
-- Timer Manager - To handle rule installation *in the future*. Also, needs to handle scheduled rules (recurring rules). Should be used by the RuleManager and the REST API, for showing what rules are coming up. Should it just be integral with the RuleManager?
+- Lots of things need __str__() and __repr__() functions either created or updated
 
 - Bandwidth reservation - How to do this? Look at OF1.3 spec.
-
-- Extend TopologyManager to handle different types of objects, DTNs for instance. These should be able to be added from the REST API: There's a DTN off of the mia switch on port 6, with name "FIU DTN" and max bandwidth of 100Mbps.
-
-- TopologyManager should have a "Type" as part of the different Nodes in the topology. Should it be part of the Manifest or TopologyManager networkx topology specific?
 
 - Better abstraction between SDX and Local controllers. Right now, it's very close to OpenFlow. If it was abstracted better, writing the UserPolicy children would be much easier. It would require more work on the Local Controllers, but that's not the end of the world. This is a non-trivial design challenge. Match-Action makes some sense, but so does "connect ports 3 and 6 together on VLAN 17". 
 
 - East/West interfaces as a pair of Northbound/southbound interfaces. See NSI, below.
 
 - Integrate with NSI at both the top and bottom. Will likely need a northbound adapter to talk with the REST API.
+
+- What to do if someone's priviledges change? What happens to their existing rules? How to trigger a recalculation of rule? What about recurring rules?
+
+
+
+TOPOLOGY MANAGER
+
+- Extend TopologyManager to handle different types of objects, DTNs for instance. These should be able to be added from the REST API: There's a DTN off of the mia switch on port 6, with name "FIU DTN" and max bandwidth of 100Mbps.
+
+- TopologyManager should have a "Type" as part of the different Nodes in the topology. Should it be part of the Manifest or TopologyManager networkx topology specific?
+
+
+
+
+RULE MANAGER
+
+- RuleManager needs to have a proper database. Perhaps https://dataset.readthedocs.io/en/latest/ isn't a bad option? I'm thinking SQLite in a flat file's probably good enough. The TopologyManager may also need a DB, but not sure on that yet.
+
+- Timer management - To handle rule installation *in the future*. Also, needs to handle scheduled rules (recurring rules). Should be used by the RuleManager and the REST API, for showing what rules are coming up. Should it just be integral with the RuleManager?
+
+- Timer management should be integral with the RuleManager. 
+
+- Needs an "Active Rule" state or similar for making it easier to extract active rules. This could be part of a transition to a database.
+- Needs an "Inactive Rule" state
+- Needs an "Expired Rule" state
+- Needs an "Insufficient Privileges" state
+- Need a transition diagram for this, including what will cause updates. 
