@@ -2,16 +2,30 @@ This is just a list of TODO items
 
 - Fix the Singleton mess. Ran into issues with the old Singleton class when things weren't synching across different threads. I find this hard to believe, but switched to the SingletonMixin style instead. I hate having to call CLASS.instance() every time. Look into it again. It works now, but seems silly. Further, there are some classes (shared.ConnectionManager, in particular) that are still using the Singleton metaclass.
 
-- Multiple LCs at the same IP address.
-
-- Shibboleth integration
+- Shibboleth integration for login
 
 - Better input abilities for the web interface, e.g., selecting locations from a map, rather than from a dropdown
 
-- Dynamic population of the web interface based on the Topology, for instance.
-
 - Add SDX capabilities
 
-- Bootstrapping the OF tables. FOr instance, there's only one as of this checkin, but there's no proper fallthrough to the next table for SDX capabilities.
+- Add L2 learning switch (prereq for SDX)
 
-- Fix VLAN installation bugs. Right now, it tries to set a VLAN like setting a TCP port number. This is incorrect, and uses a different OF function.
+- How to handle tables better in the 
+
+- Bootstrapping the OF tables. For instance, there's only one as of this checkin, but there's no proper fallthrough to the next table for SDX capabilities.
+
+- Logging update
+
+- Timer Manager - To handle rule installation *in the future*. Also, needs to handle scheduled rules (recurring rules). Should be used by the RuleManager and the REST API, for showing what rules are coming up. Should it just be integral with the RuleManager?
+
+- Bandwidth reservation - How to do this? Look at OF1.3 spec.
+
+- Extend TopologyManager to handle different types of objects, DTNs for instance. These should be able to be added from the REST API: There's a DTN off of the mia switch on port 6, with name "FIU DTN" and max bandwidth of 100Mbps.
+
+- TopologyManager should have a "Type" as part of the different Nodes in the topology. Should it be part of the Manifest or TopologyManager networkx topology specific?
+
+- Better abstraction between SDX and Local controllers. Right now, it's very close to OpenFlow. If it was abstracted better, writing the UserPolicy children would be much easier. It would require more work on the Local Controllers, but that's not the end of the world. This is a non-trivial design challenge. Match-Action makes some sense, but so does "connect ports 3 and 6 together on VLAN 17". 
+
+- East/West interfaces as a pair of Northbound/southbound interfaces. See NSI, below.
+
+- Integrate with NSI at both the top and bottom. Will likely need a northbound adapter to talk with the REST API.
