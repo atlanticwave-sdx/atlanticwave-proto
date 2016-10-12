@@ -7,6 +7,8 @@ from AuthorizationInspector import AuthorizationInspector
 from BreakdownEngine import BreakdownEngine
 from ValidityInspector import ValidityInspector
 
+import dataset
+
 class RuleManagerError(Exception):
     ''' Parent class, can be used as a catch-all for other errors '''
     pass
@@ -44,13 +46,25 @@ class RuleManager(SingletonMixin):
     
     
     def __init__(self, send_user_rule_breakdown_add=TESTING_CALL,
-                 send_user_rule_breakdown_remove=TESTING_CALL):
+                 send_user_rule_breakdown_remove=TESTING_CALL,
+                 database=":memory:"):
         # The params are used in order to maintain import hierarchy.
-        # Initialize rule counter. Used to track the rules as they are installed
-        self.rule_number = 1
         
         # Start database/dictionary
-        self.rule_db = {}
+        self.db = dataset.connect('sqlite:///' + database)
+        self.rule_table = self.db['rules']        # All the rules live here.
+        self.config_table = self.db['config']     # Key-value configuration DB
+        
+        # Initialize rule counter. Used to track the rules as they are installed
+        # It may be in the DB.
+        rulenum = self.config_table.find_one(key='rule_number')
+        if rulenum == None:
+            self.rule_number = 1
+            self.config_table.insert({'key':'rule_number',
+                                      'value':self.rule_number})
+        else:
+            self.rule_number = rulenum['value']
+        
 
         # Use these to send the rule to the Local Controller
         self.set_send_add_rule(send_user_rule_breakdown_add)
@@ -109,7 +123,9 @@ class RuleManager(SingletonMixin):
         # If everything passes, set the hash and breakdown, and put into database
         rule.set_rule_hash(self._get_new_rule_number())
         rule.set_breakdown(breakdown)
-        self.rule_db[rule.get_rule_hash()] = rule
+
+        self.rule_table.insert({'hash':rule.get_rule_hash(), 
+                                'rule':rule})
 
         #FIXME: Actually send add rules to LC!
         #FIXME: This should be in a try block.
@@ -122,7 +138,7 @@ class RuleManager(SingletonMixin):
         
 
     def test_add_rule(self, rule):
-        ''' Similar to add rule, save for actually pushing the rule to the local 
+        ''' Similar to add rule, save for actually pushing the rule to the local
             controllers. Useful for testing out whether a rule will be added as 
             expected, or to preview what rules will be pushed to the local 
             controller(s). '''
@@ -173,10 +189,10 @@ class RuleManager(SingletonMixin):
         ''' Removes the rule that corresponds to the rule_hash that wa returned 
             either from add_rule() or found with get_rules(). If user does not 
             have removal ability, returns an error. '''
-        if rule_hash not in self.rule_db.keys():
+        if self.rule_table.find_one(hash=rule_hash) == None:
             raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
 
-        rule = self.rule_db[rule_hash]
+        rule = self.rule_table.find_one(hash=rule_hash)['rule']
         authorized = None
         try:
             authorized = AuthorizationInspector.instance().is_authorized(user, rule) #FIXME
@@ -193,14 +209,14 @@ class RuleManager(SingletonMixin):
         except Exception as e: raise
 
 
-        # Remove from the rule_db
-        del self.rule_db[rule_hash]
+        # Remove from the rule_table
+        self.rule_table.delete(hash=rule_hash)
 
     def remove_all_rules(self, user):
         ''' Removes all rules. Just an alias for repeatedly calling 
             remove_rule() without needing to know all the hashes. '''
-        for rule_hash in self.rule_db.keys():
-            self.remove_rule(rule_hash, user)
+        for rule in self.rule_table:
+            self.remove_rule(rule['hash'], user)
 
 
     def get_rules(self, filter=None):
@@ -217,9 +233,7 @@ class RuleManager(SingletonMixin):
         ''' This will return details of a rule, including the rule itself, the 
             local controller breakdowns, the user who installed the rule, the 
             date and time of rule installation. '''
-        if rule_hash in self.rule_db.keys():
-            return self.rule_db[rule_hash]
-        return None
+        return self.rule_table.find_one(hash=rule_hash)
 
     def _get_new_rule_number(self):
         ''' Returns a new rule number for use. For now, it's incrementing by one,
@@ -227,4 +241,6 @@ class RuleManager(SingletonMixin):
             Good for 4B (or more!) rules!
         '''
         self.rule_number += 1
+        self.config_table.update({'key':'rule_number', 
+                                  'value':self.rule_number})
         return self.rule_number

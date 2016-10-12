@@ -28,6 +28,7 @@ This is just a list of TODO items
 
 - What to do if someone's priviledges change? What happens to their existing rules? How to trigger a recalculation of rule? What about recurring rules?
 
+- Tests need to be updated: regressions haven't been performed, so there are a lot of outdated tests still kicking around.
 
 
 TOPOLOGY MANAGER
@@ -36,12 +37,14 @@ TOPOLOGY MANAGER
 
 - TopologyManager should have a "Type" as part of the different Nodes in the topology. Should it be part of the Manifest or TopologyManager networkx topology specific?
 
+- TopologyManager needs to have a proper database. Use https://dataset.readthedocs.io/en/latest/, as it's being used by the RuleManager now.
+
+
+
 
 
 
 RULE MANAGER
-
-- RuleManager needs to have a proper database. Perhaps https://dataset.readthedocs.io/en/latest/ isn't a bad option? I'm thinking SQLite in a flat file's probably good enough. The TopologyManager may also need a DB, but not sure on that yet.
 
 - Timer management - To handle rule installation *in the future*. Also, needs to handle scheduled rules (recurring rules). Should be used by the RuleManager and the REST API, for showing what rules are coming up. Should it just be integral with the RuleManager?
 
