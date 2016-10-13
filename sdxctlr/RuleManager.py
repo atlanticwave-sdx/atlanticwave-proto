@@ -9,6 +9,8 @@ from ValidityInspector import ValidityInspector
 
 import dataset
 
+# Rule database
+
 class RuleManagerError(Exception):
     ''' Parent class, can be used as a catch-all for other errors '''
     pass
@@ -45,13 +47,13 @@ class RuleManager(SingletonMixin):
         Singleton. ''' 
     
     
-    def __init__(self, send_user_rule_breakdown_add=TESTING_CALL,
-                 send_user_rule_breakdown_remove=TESTING_CALL,
-                 database=":memory:"):
+    def __init__(self, database,
+                 send_user_rule_breakdown_add=TESTING_CALL,
+                 send_user_rule_breakdown_remove=TESTING_CALL):
         # The params are used in order to maintain import hierarchy.
         
         # Start database/dictionary
-        self.db = dataset.connect('sqlite:///' + database)
+        self.db = database
         self.rule_table = self.db['rules']        # All the rules live here.
         self.config_table = self.db['config']     # Key-value configuration DB
         
@@ -82,57 +84,15 @@ class RuleManager(SingletonMixin):
             returns a reference to the rule (e.g., a tracking number) so that 
             more details can be retrieved in the future. '''
 
-        valid = None
-        breakdown = None
-        authorized = None
-        # Check if valid rule
         try:
-            valid = ValidityInspector.instance().is_valid_rule(rule)
-        except Exception as e:
-            raise RuleManagerValidationError(
-                "Rule cannot be validated, threw exception: %s, %s" %
-                (rule, str(e)))
-        
-        if valid != True:
-            raise RuleManagerValidationError(
-                "Rule cannot be validated: %s" % rule)
-        
-        # Get the breakdown of the rule
-        try:
-            breakdown = BreakdownEngine.instance().get_breakdown(rule)
+            breakdown = self._determine_breakdown(rule)
         except Exception as e: raise
-#            raise RuleManagerBreakdownError(
-#                "Rule breakdown threw exception: %s, %s" %
-#                (rule, str(e)))
-        if breakdown == None:
-            raise RuleManagerBreakdownError(
-                "Rule was not broken down: %s" % rule)
-
-        # Check if the user is authorized to perform those actions.
-        try:
-            authorized = AuthorizationInspector.instance().is_authorized(rule.username, rule)
-        except Exception as e:
-            raise RuleManagerAuthorizationError(
-                "Rule not authorized with exception: %s, %s" %
-                (rule, str(e)))
-            
-        if authorized != True:
-            raise RuleManagerAuthorizationError(
-                "Rule is not authorized: %s" % rule)
 
         # If everything passes, set the hash and breakdown, and put into database
         rule.set_rule_hash(self._get_new_rule_number())
         rule.set_breakdown(breakdown)
 
-        self.rule_table.insert({'hash':rule.get_rule_hash(), 
-                                'rule':rule})
-
-        #FIXME: Actually send add rules to LC!
-        #FIXME: This should be in a try block.
-        try:
-            for bd in breakdown:
-                self.send_user_add_rule(bd)
-        except Exception as e: raise
+        self._add_rule_to_db(rule)
             
         return rule.get_rule_hash()
         
@@ -142,47 +102,10 @@ class RuleManager(SingletonMixin):
             controllers. Useful for testing out whether a rule will be added as 
             expected, or to preview what rules will be pushed to the local 
             controller(s). '''
-        
-        valid = None
-        breakdown = None
-        authorized = None
-        # Check if valid rule
         try:
-            valid = ValidityInspector.instance().is_valid_rule(rule)
-        except Exception as e:
-            raise RuleManagerValidationError(
-                "Rule cannot be validated, threw exception: %s, %s" %
-                (rule, str(e)))
-        
-        if valid != True:
-            raise RuleManagerValidationError(
-                "Rule cannot be validated: %s" % rule)
-        
+            breakdown = self._determine_breakdown(rule)
+        except Exception as e: raise
 
-        # Get the breakdown of the rule
-        try:
-            breakdown = BreakdownEngine.instance().get_breakdown(rule)
-        except Exception as e:
-            raise RuleManagerBreakdownError(
-                "Rule breakdown threw exception: %s, %s" %
-                (rule, str(e)))
-        if breakdown == None:
-            raise RuleManagerBreakdownError(
-                "Rule was not broken down: %s" % rule)
-
-        # Check if the user is authorized to perform those actions.
-        try:
-            authorized = AuthorizationInspector.instance().is_authorized(rule.username, rule)
-        except Exception as e:
-            raise RuleManagerAuthorizationError(
-                "Rule not authorized with exception: %s, %s" %
-                (rule, str(e)))
-            
-        if authorized != True:
-            raise RuleManagerAuthorizationError(
-                "Rule is not authorized: %s" % rule)
-
-        
         return breakdown
 
     def remove_rule(self, rule_hash, user):
@@ -201,16 +124,7 @@ class RuleManager(SingletonMixin):
         if authorized != True:
             raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s" % (user, rule_hash))
 
-        #FIXME: Actually send remove rules to LC!
-        #FIXME: This should be in a try block.
-        try:
-            for bd in rule.breakdown:
-                self.send_user_rm_rule(bd)
-        except Exception as e: raise
-
-
-        # Remove from the rule_table
-        self.rule_table.delete(hash=rule_hash)
+        self._rm_rule_from_db(rule_hash, rule)
 
     def remove_all_rules(self, user):
         ''' Removes all rules. Just an alias for repeatedly calling 
@@ -244,3 +158,66 @@ class RuleManager(SingletonMixin):
         self.config_table.update({'key':'rule_number', 
                                   'value':self.rule_number})
         return self.rule_number
+
+    def _determine_breakdown(self, rule):
+        ''' This performs the bulk of the add_rule() and test_add_rule() 
+            processing, including all the authorization checking. 
+            Raises error if there are any problems.
+            Returns breakdown of the rule if successful. '''
+
+        valid = None
+        breakdown = None
+        authorized = None
+        # Check if valid rule
+        try:
+            valid = ValidityInspector.instance().is_valid_rule(rule)
+        except Exception as e: raise
+        
+        if valid != True:
+            raise RuleManagerValidationError(
+                "Rule cannot be validated: %s" % rule)
+        
+        # Get the breakdown of the rule
+        try:
+            breakdown = BreakdownEngine.instance().get_breakdown(rule)
+        except Exception as e: raise
+
+        if breakdown == None:
+            raise RuleManagerBreakdownError(
+                "Rule was not broken down: %s" % rule)
+
+        # Check if the user is authorized to perform those actions.
+        try:
+            authorized = AuthorizationInspector.instance().is_authorized(rule.username, rule)
+        except Exception as e: raise
+            
+        if authorized != True:
+            raise RuleManagerAuthorizationError(
+                "Rule is not authorized: %s" % rule)
+
+        return breakdown
+
+    def _add_rule_to_db(self, rule):
+        ''' Adds rule to the database, which also include handling timed 
+            insertion of rules. '''
+
+        self.rule_table.insert({'hash':rule.get_rule_hash(), 
+                                'rule':rule})
+
+        try:
+            for bd in breakdown:
+                self.send_user_add_rule(bd)
+        except Exception as e: raise
+
+
+    def _rm_rule_from_db(self, rule_hash, rule):
+        ''' Removes rule from the database, which also includes cancelling any
+            outstanding timed installations of the rule. '''
+       try:
+            for bd in rule.breakdown:
+                self.send_user_rm_rule(bd)
+        except Exception as e: raise
+
+
+        # Remove from the rule_table
+        self.rule_table.delete(hash=rule_hash)

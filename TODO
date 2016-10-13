@@ -55,3 +55,5 @@ RULE MANAGER
 - Needs an "Expired Rule" state
 - Needs an "Insufficient Privileges" state
 - Need a transition diagram for this, including what will cause updates. 
+
+- Needs some sort of tracking mechanism for recurrant rules. This may be related to the states discussed above.

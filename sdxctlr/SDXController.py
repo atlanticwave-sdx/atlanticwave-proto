@@ -6,6 +6,7 @@ import logging
 import threading
 import sys
 import Queue
+import dataset
 
 from shared.Singleton import SingletonMixin
 from shared.SDXControllerConnectionManager import *
@@ -46,12 +47,15 @@ class SDXController(SingletonMixin):
         itself.
         Singleton. ''' 
 
-    def __init__(self, runloop=True, mani=None):
+    def __init__(self, runloop=True, mani=None, db=":memory:"):
         ''' The bulk of the work happens here. This initializes nearly everything
             and starts up the main processing loop for the entire SDX
             Controller. '''
 
         self._setup_logger()
+
+        # Start DB connection. Used by other modules.
+        self.db = dataset.connect('sqlite:///' + db)
 
         # Modules with potentially configurable configuration files
         if mani != None:
@@ -90,7 +94,8 @@ class SDXController(SingletonMixin):
 
 
         # Start these modules last!
-        self.rm = RuleManager.instance(self.sdx_cm.send_breakdown_rule_add,
+        self.rm = RuleManager.instance(self.db,
+                                       self.sdx_cm.send_breakdown_rule_add,
                                        self.sdx_cm.send_breakdown_rule_rm)
         self.pm = ParticipantManager.instance()      #FIXME - Filename
         self.rapi = RestAPI.instance()
@@ -222,10 +227,14 @@ class SDXController(SingletonMixin):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print "USAGE: python SDXController.py manifest"
+    if len(sys.argv) != 2 or len(sys.argv) != 3:
+        print "USAGE: python SDXController.py manifest <db-location>"
         print "You must provide manifest files for the SDXController if running from the command line."
+        print "You can provide a database location for the sqlite database. Otherwise, uses an in-memory database for temporary storage."
         exit()
     mani = sys.argv[1]
-    sdx = SDXController(False, mani)
+    db = ":memory:"
+    if len(sys.argv) == 3:
+        db = sys.argv[2]
+    sdx = SDXController(False, mani, db)
     sdx._main_loop()
