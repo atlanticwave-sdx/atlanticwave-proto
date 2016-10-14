@@ -23,6 +23,12 @@ class UserPolicy(object):
         # The breakdown list should be a list of UserPolicyBreakdown objects.
         self.breakdown = None
         self.rule_hash = None
+
+        # All rules should have start and stop times. They may be rediculously
+        # far in the past and/or the future, but the should have them.
+        # They should be strings in rfc3339format (see shared.constants).
+        self.start_time = None
+        self.stop_time = None
         
 
     @staticmethod
@@ -50,6 +56,12 @@ class UserPolicy(object):
 
     def get_breakdown(self):
         return self.breakdown
+
+    def get_start_time(self):
+        return self.start_time
+
+    def get_stop_time(self):
+        return self.stop_time
 
     def set_rule_hash(self, hash):
         self.rule_hash = hash

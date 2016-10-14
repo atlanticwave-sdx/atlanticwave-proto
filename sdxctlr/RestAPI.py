@@ -37,6 +37,9 @@ import sys, os, traceback
 #datetime
 from datetime import datetime
 
+#Constants
+from shared.constants import *
+
 class RestAPI(SingletonMixin):
     ''' The REST API will be the main interface for participants to use to push 
         rules (eventually) down to switches. It will gather authentication 
@@ -185,7 +188,6 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/pipe',methods=['POST'])
     def make_new_pipe():
-        rfc3339format = "%Y-%m-%dT%H:%M:%S%z"
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
 
             # Just making sure the datetimes are okay
