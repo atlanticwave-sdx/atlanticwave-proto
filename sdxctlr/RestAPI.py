@@ -36,6 +36,7 @@ import sys, os, traceback
 
 #datetime
 from datetime import datetime
+from dateutil.parser import parse as pd
 
 #Constants
 from shared.constants import *
@@ -185,14 +186,17 @@ class RestAPI(SingletonMixin):
             return str(data)
         return unauthorized_handler()
 
+
+    
+
     @staticmethod
     @app.route('/pipe',methods=['POST'])
     def make_new_pipe():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
 
             # Just making sure the datetimes are okay
-            starttime = datetime.strptime(request.form['startdate'] + ' ' + request.form['starttime'], '%Y-%m-%d %H:%M')
-            endtime = datetime.strptime(request.form['enddate'] + ' ' + request.form['endtime'], '%Y-%m-%d %H:%M')
+            starttime = datetime.strptime(str(pd(request.form['startdate'] + ' ' + request.form['starttime'])), '%Y-%m-%d %H:%M:%S')
+            endtime = datetime.strptime(str(pd(request.form['enddate'] + ' ' + request.form['endtime'])), '%Y-%m-%d %H:%M:%S')
 
             try:
                 arb = request.form['sv']
