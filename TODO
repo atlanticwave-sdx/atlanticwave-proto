@@ -41,6 +41,7 @@ TOPOLOGY MANAGER
 
 - TopologyManager needs to have a proper database. Use https://dataset.readthedocs.io/en/latest/, as it's being used by the RuleManager now.
 
+- GPS Coordinates on nodes.
 
 
 
