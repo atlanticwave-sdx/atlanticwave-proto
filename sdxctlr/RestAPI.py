@@ -19,6 +19,8 @@ import flask_login
 from flask_login import LoginManager
 
 #Topology json stuff
+import networkx as nx
+
 from networkx.readwrite import json_graph
 import json
 
@@ -176,14 +178,32 @@ class RestAPI(SingletonMixin):
 
     # Return the network topology in json format
     @staticmethod
+    @app.route('/topology_node.json')
+    def show_network_topology_node_json():
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
+            G = TopologyManager.instance().get_topology()
+
+
+            links = []
+            nodes = []
+            for i in G.edges(data=True):
+                links.append({"source":i[0], "target":i[1], "value":i[2]["weight"]})
+
+            for i in G.nodes(data=True):
+                nodes.append({"id":i[0], "group":0})
+            
+            json_data = {"nodes":nodes, "links":links}
+            
+            return json.dumps(json_data)
+        return unauthorized_handler()
+
+    # Return the network topology in json format
+    @staticmethod
     @app.route('/topology')
     def show_network_topology():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
             html = open('static/topology.html').read()
             return html
-            G = TopologyManager.instance().get_topology()
-            data = json_graph.adjacency_data(G)
-            return str(data)
         return unauthorized_handler()
 
 
