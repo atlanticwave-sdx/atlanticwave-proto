@@ -180,14 +180,13 @@ class RestAPI(SingletonMixin):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
             G = TopologyManager.instance().get_topology()
 
-
             links = []
-            nodes = []
-            for i in G.edges(data=True):
-                links.append({"source":i[0], "target":i[1], "value":i[2]["weight"]})
+            for edge in G.edges(data=True):
+                links.append({"source":edge[0], "target":edge[1], "value":edge[2]["weight"]})
 
-            for i in G.nodes(data=True):
-                nodes.append({"id":i[0], "group":0})
+            nodes = []
+            for node in G.nodes(data=True):
+                nodes.append({"id":node[0], "group":0})
             
             json_data = {"nodes":nodes, "links":links}
             
