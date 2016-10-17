@@ -37,8 +37,6 @@ TOPOLOGY MANAGER
 
 - Extend TopologyManager to handle different types of objects, DTNs for instance. These should be able to be added from the REST API: There's a DTN off of the mia switch on port 6, with name "FIU DTN" and max bandwidth of 100Mbps.
 
-- TopologyManager should have a "Type" as part of the different Nodes in the topology. Should it be part of the Manifest or TopologyManager networkx topology specific?
-
 - TopologyManager needs to have a proper database. Use https://dataset.readthedocs.io/en/latest/, as it's being used by the RuleManager now.
 
 - GPS Coordinates on nodes.

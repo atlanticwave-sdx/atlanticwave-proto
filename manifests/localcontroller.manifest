@@ -1,4 +1,12 @@
 {
+  "endpoints": {
+    "Georgia Tech": {
+      "type":"network",
+      "location":"33.772080,-84.392869"},
+    "FIU": {
+      "type":"network",
+      "location":"25.755971,-80.373737"}
+  },
   "localcontrollers": {
     "atl":{
       "shortname": "atl",
@@ -8,6 +16,7 @@
       "switchinfo": [
         {
           "name": "atl-switch",
+	  "friendlyname":"Main Atlanta Switch",
           "dpid": "1",
           "ip": "10.10.10.11",
           "dpid":1,
@@ -52,6 +61,7 @@
       "switchinfo": [
         {
           "name": "mia-switch",
+	  "friendlyname":"Main Miami Switch",
           "dpid": "2",
           "ip": "10.10.10.21",
           "dpid":2,

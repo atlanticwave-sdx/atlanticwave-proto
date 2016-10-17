@@ -1,9 +1,23 @@
 {
+  "endpoints": {
+    "atlh1": {
+      "type":"host",
+      "location":"33.772080,-84.392869"},
+    "atlh2": {
+      "type":"host",
+      "location":"33.772080,-84.392869"},
+    "miah1": {
+      "type":"host",
+      "location":"25.755971,-80.373737"},
+    "miah2": {
+      "type":"host",
+      "location":"25.755971,-80.373737"}
+  },
   "localcontrollers": {
     "atl":{
       "shortname": "atl",
       "credentials": "atlpw",
-      "location": "In the kernel",
+      "location": "33.772000,-84.390000",
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55767,
@@ -56,7 +70,7 @@
     "mia":{
       "shortname": "mia",
       "credentials": "miapw",
-      "location": "In the kernel",
+      "location":"25.756,-80.373000",
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55768,
