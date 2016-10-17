@@ -30,6 +30,8 @@ This is just a list of TODO items
 
 - Tests need to be updated: regressions haven't been performed, so there are a lot of outdated tests still kicking around.
 
+- Replace cPickle with something more secure.
+
 
 TOPOLOGY MANAGER
 
@@ -45,15 +47,5 @@ TOPOLOGY MANAGER
 
 
 RULE MANAGER
-
-- Timer management - To handle rule installation *in the future*. Also, needs to handle scheduled rules (recurring rules). Should be used by the RuleManager and the REST API, for showing what rules are coming up. Should it just be integral with the RuleManager?
-
-- Timer management should be integral with the RuleManager. 
-
-- Needs an "Active Rule" state or similar for making it easier to extract active rules. This could be part of a transition to a database.
-- Needs an "Inactive Rule" state
-- Needs an "Expired Rule" state
-- Needs an "Insufficient Privileges" state
-- Need a transition diagram for this, including what will cause updates. 
 
 - Needs some sort of tracking mechanism for recurrant rules. This may be related to the states discussed above.

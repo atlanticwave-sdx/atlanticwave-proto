@@ -12,6 +12,7 @@ from shared.match import *
 from shared.action import *
 from shared.instruction import *
 from shared.OpenFlowRule import * 
+from shared.constants import *
 
 
 class L2TunnelPolicy(UserPolicy):
@@ -48,7 +49,7 @@ class L2TunnelPolicy(UserPolicy):
 
     def __init__(self, username, json_rule):
         self.start_time = None
-        self.end_time = None
+        self.stop_time = None
         self.src_switch = None
         self.dst_switch = None
         self.src_port = None
@@ -64,7 +65,9 @@ class L2TunnelPolicy(UserPolicy):
     @staticmethod
     def check_syntax(json_rule):
         try:
-            rfc3339format = "%Y-%m-%dT%H:%M:%S%z"
+            # Make sure the times are the right format
+            # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
+
             starttime = datetime.strptime(json_rule['l2tunnel']['starttime'],
                                          rfc3339format)
             endtime = datetime.strptime(json_rule['l2tunnel']['endtime'],
@@ -272,13 +275,8 @@ class L2TunnelPolicy(UserPolicy):
         if 'l2tunnel' not in json_rule.keys():
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
-        # Borrowing parsing from:
-        # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
-        rfc3339format = "%Y-%m-%dT%H:%M:%S"
-        self.start_time = datetime.strptime(json_rule['l2tunnel']['starttime'],
-                                            rfc3339format)
-        self.end_time =   datetime.strptime(json_rule['l2tunnel']['endtime'],
-                                            rfc3339format)
+        self.start_time = json_rule['l2tunnel']['starttime']
+        self.stop_time =   json_rule['l2tunnel']['endtime']
         # Make sure end is after start and after now.
         #FIXME
 

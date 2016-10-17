@@ -18,7 +18,6 @@ class UserPolicy(object):
         self.username = username
         self.ruletype = None
         self.json_rule = json_rule
-        self._parse_json(self.json_rule)
 
         # The breakdown list should be a list of UserPolicyBreakdown objects.
         self.breakdown = None
@@ -29,7 +28,10 @@ class UserPolicy(object):
         # They should be strings in rfc3339format (see shared.constants).
         self.start_time = None
         self.stop_time = None
-        
+
+        # Now that all the fields are set up, parse the json.
+        self._parse_json(self.json_rule)
+
 
     @staticmethod
     def check_syntax(json_rule):

@@ -54,8 +54,12 @@ class SDXController(SingletonMixin):
 
         self._setup_logger()
 
-        # Start DB connection. Used by other modules.
-        self.db = dataset.connect('sqlite:///' + db)
+        # Start DB connection. Used by other modules. details on the setup:
+        # https://dataset.readthedocs.io/en/latest/api.html
+        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
+        self.db = dataset.connect('sqlite:///' + db, 
+                                  engine_kwargs={'connect_args':
+                                                 {'check_same_thread':False}})
 
         # Modules with potentially configurable configuration files
         if mani != None:
@@ -227,7 +231,7 @@ class SDXController(SingletonMixin):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 or len(sys.argv) != 3:
+    if len(sys.argv) != 2 and len(sys.argv) != 3:
         print "USAGE: python SDXController.py manifest <db-location>"
         print "You must provide manifest files for the SDXController if running from the command line."
         print "You can provide a database location for the sqlite database. Otherwise, uses an in-memory database for temporary storage."

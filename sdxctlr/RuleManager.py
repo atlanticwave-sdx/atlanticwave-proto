@@ -3,6 +3,8 @@
 
 
 import dataset
+import cPickle as pickle
+
 from threading import Timer, Lock, Thread
 from datetime import datetime, timedelta
 
@@ -137,7 +139,7 @@ class RuleManager(SingletonMixin):
         if self.rule_table.find_one(hash=rule_hash) == None:
             raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
 
-        rule = self.rule_table.find_one(hash=rule_hash)['rule']
+        rule = pickle.loads(self.rule_table.find_one(hash=rule_hash)['rule'])
         authorized = None
         try:
             authorized = AuthorizationInspector.instance().is_authorized(user, rule) #FIXME
@@ -231,10 +233,19 @@ class RuleManager(SingletonMixin):
         now = datetime.now()
         install_time = datetime.strptime(rule.get_start_time(), 
                                          rfc3339format)
+        remove_time  = datetime.strptime(rule.get_stop_time(), 
+                                         rfc3339format)
 
-        if now >= install_time:
+        print "Now     : %s" % now
+        print "Install : %s" % install_time
+        print "Remove  : %s" % remove_time
+
+        if now >= remove_time:
+            state = EXPIRED_RULE
+        elif now >= install_time: # implicitly, before remove_time
             state = ACTIVE_RULE
             self._install_rule(rule)
+        
 
         # If it's in the future, is it the next rule in the future? 
         # Update timer if so.
@@ -256,7 +267,7 @@ class RuleManager(SingletonMixin):
 
         # Push into DB.
         self.rule_table.insert({'hash':rule.get_rule_hash(), 
-                                'rule':rule,
+                                'rule':pickle.dumps(rule),
                                 'state':state,
                                 'starttime':rule.get_start_time(),
                                 'stoptime':rule.get_stop_time()})
@@ -353,7 +364,7 @@ class RuleManager(SingletonMixin):
 
     def _remove_rule(self, rule):
         ''' Helper function that remove a rule from the switch. '''
-       try:
+        try:
             for bd in rule.get_breakdown():
                 self.send_user_rm_rule(bd)
         except Exception as e: raise
@@ -384,7 +395,7 @@ class RuleManager(SingletonMixin):
             self.rule_table.update({'hash':rule['hash'],
                                     'state':ACTIVE_RULE}, 
                                    ['hash'])
-            self._install_rule(rule['rule'])
+            self._install_rule(pickle.loads(rule['rule']))
             
         
         # Set timer for next rule install, if necessary.
@@ -431,7 +442,7 @@ class RuleManager(SingletonMixin):
             self.rule_table.update({'hash':rule['hash'],
                                     'state':INACTIVE_RULE}, 
                                    ['hash'])
-            self._remove_rule(rule['rule'])
+            self._remove_rule(pickle.loads(rule['rule']))
             # FIXME: Recurrant rules will need to be updated on the install list potentially.
 
         # Set timer for next rule removal, if necessary
