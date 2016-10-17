@@ -37,14 +37,17 @@ TOPOLOGY MANAGER
 
 - Extend TopologyManager to handle different types of objects, DTNs for instance. These should be able to be added from the REST API: There's a DTN off of the mia switch on port 6, with name "FIU DTN" and max bandwidth of 100Mbps.
 
-- TopologyManager needs to have a proper database. Use https://dataset.readthedocs.io/en/latest/, as it's being used by the RuleManager now.
+- TopologyManager needs to have a proper database. Use https://dataset.readthedocs.io/en/latest/, as it's being used by the RuleManager now. Base any changes on RuleManager changes.
 
-- GPS Coordinates on nodes.
+- Updating topology in real time. Topology Manager needs calls that can be made to add and remove nodes and links, and change properties on links. Needs a DB for this first.
 
+- Upon property changes (think of a LAG losing one connection), need to be able to call registered listeners (e.g., RuleManager) about a property change (bandwidth of a link, in this example). Need registration for callback capabilities as well as calling the callbacks themselves.
 
-
+- What other properties are useful for the Topology nodes and links?
 
 
 RULE MANAGER
 
 - Needs some sort of tracking mechanism for recurrant rules. This may be related to the states discussed above.
+
+- Need to handle constraints (bandwidth, for instance). Need to handle adjusting constraints as well! 
