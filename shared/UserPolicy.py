@@ -18,12 +18,20 @@ class UserPolicy(object):
         self.username = username
         self.ruletype = None
         self.json_rule = json_rule
-        self._parse_json(self.json_rule)
 
         # The breakdown list should be a list of UserPolicyBreakdown objects.
         self.breakdown = None
         self.rule_hash = None
-        
+
+        # All rules should have start and stop times. They may be rediculously
+        # far in the past and/or the future, but the should have them.
+        # They should be strings in rfc3339format (see shared.constants).
+        self.start_time = None
+        self.stop_time = None
+
+        # Now that all the fields are set up, parse the json.
+        self._parse_json(self.json_rule)
+
 
     @staticmethod
     def check_syntax(json_rule):
@@ -51,6 +59,12 @@ class UserPolicy(object):
     def get_breakdown(self):
         return self.breakdown
 
+    def get_start_time(self):
+        return self.start_time
+
+    def get_stop_time(self):
+        return self.stop_time
+
     def set_rule_hash(self, hash):
         self.rule_hash = hash
 
@@ -69,8 +83,8 @@ class UserPolicyBreakdown(object):
         local controller and the rules passed to them. '''
 
     def __init__(self, lc, list_of_rules=[]):
-        ''' The lc is the IP of the local controller. The list_of_rules is a list
-            of rules that are being sent to the Local Controllers. '''
+        ''' The lc is the shortname of the local controller. The list_of_rules 
+            is a list of rules that are being sent to the Local Controllers. '''
         self.lc = lc
         self.rules = list_of_rules
 

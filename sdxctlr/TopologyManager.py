@@ -57,6 +57,16 @@ class TopologyManager(SingletonMixin):
         with open(manifest_filename) as data_file:
             data = json.load(data_file)
 
+        for key in data['endpoints'].keys():
+            # All the other nodes
+            endpoint = data['endpoints'][key]
+            with self.topolock:
+                if not self.topo.has_node(key):
+                    self.topo.add_node(key)
+                self.topo.node[key]['type'] = endpoint['type']
+                self.topo.node[key]['location'] = endpoint['location']
+                    
+
         for key in data['localcontrollers'].keys():
             # Generic per-location information that applies to all switches at
             # a location.
@@ -67,7 +77,7 @@ class TopologyManager(SingletonMixin):
             org = entry['operatorinfo']['organization']
             administrator = entry['operatorinfo']['administrator']
             contact = entry['operatorinfo']['contact']
-
+            
             with self.topolock:
                 for switchinfo in entry['switchinfo']:
                     name = switchinfo['name']
@@ -75,6 +85,7 @@ class TopologyManager(SingletonMixin):
                     if not self.topo.has_node(name):
                         self.topo.add_node(name)
                     # Per switch info, gets added to topo
+                    self.topo.node[name]['friendlyname'] = switchinfo['friendlyname']
                     self.topo.node[name]['dpid'] = int(switchinfo['dpid'])
                     self.topo.node[name]['ip'] = switchinfo['ip']
                     self.topo.node[name]['brand'] = switchinfo['brand']
@@ -85,6 +96,7 @@ class TopologyManager(SingletonMixin):
                     self.topo.node[name]['org'] = org
                     self.topo.node[name]['administrator'] = administrator
                     self.topo.node[name]['contact'] = contact
+                    self.topo.node[name]['type'] = "switch"
 
                     # Other fields that may be of use
                     self.topo.node[name]['vlans_in_use'] = []

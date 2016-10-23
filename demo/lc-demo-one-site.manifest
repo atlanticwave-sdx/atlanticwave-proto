@@ -1,14 +1,32 @@
 {
+  "endpoints": {
+    "atl": {
+      "type":"host",
+      "location":"33.772080,-84.392869"},
+    "atldtn": {
+      "type":"data-transfer-node",
+      "location":"33.772080,-84.392869"},
+    "mia": {
+      "type":"host",
+      "location":"25.755971,-80.373737"},
+    "miadtn": {
+      "type":"data-transfer-node",
+      "location":"25.755971,-80.373737"}
+  },
   "localcontrollers": {
     "atl":{
       "shortname": "atl",
       "credentials": "atlpw",
       "location": "In the kernel",
       "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633
+      },
       "switchinfo": [
         {
           "name": "atl-switch",
-          "dpid": "1",
+	  "friendlyname":"Main Atlanta Switch",
           "ip": "127.0.0.1",
           "dpid":1,
           "brand": "Open vSwitch",

@@ -9,6 +9,10 @@ The initial deployment for the AtlanticWave/SDX will be Atlanta, Miami, and Sao 
 It is written in Python, using the [Ryu](https://osrg.github.io/ryu/) SDN Framework as an OpenFlow speaker, and has a REST API and web application for management. It is being designed to allow for new types of rules to be added, as well as communicating using other SDN protocols ([P4](http://p4.org/), for instance).
 
 
+## Updating Ryu
+  
+The AtlanticWave/SDX controller is built upon Ryu. Ryu isn't the friendliest controller to extend, thus there is a folder vendor-update. Inside of it, there isa script *update-ryu-flags.sh* that must be run with the location of your ryu installation. 
+
 
 ## Controller Breakdown
 

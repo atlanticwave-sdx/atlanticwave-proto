@@ -2,10 +2,28 @@
 # AtlanticWave/SDX Project
 
 
+import dataset
+import cPickle as pickle
+
+from threading import Timer, Lock, Thread
+from datetime import datetime, timedelta
+
 from shared.Singleton import SingletonMixin
 from AuthorizationInspector import AuthorizationInspector
 from BreakdownEngine import BreakdownEngine
 from ValidityInspector import ValidityInspector
+
+from shared.constants import *
+
+# Define different states!
+ACTIVE_RULE                 = 1
+INACTIVE_RULE               = 2
+EXPIRED_RULE                = 3
+INSUFFICIENT_PRIVILEGES     = 4
+
+
+
+
 
 class RuleManagerError(Exception):
     ''' Parent class, can be used as a catch-all for other errors '''
@@ -43,14 +61,36 @@ class RuleManager(SingletonMixin):
         Singleton. ''' 
     
     
-    def __init__(self, send_user_rule_breakdown_add=TESTING_CALL,
+    def __init__(self, database,
+                 send_user_rule_breakdown_add=TESTING_CALL,
                  send_user_rule_breakdown_remove=TESTING_CALL):
         # The params are used in order to maintain import hierarchy.
-        # Initialize rule counter. Used to track the rules as they are installed
-        self.rule_number = 1
         
         # Start database/dictionary
-        self.rule_db = {}
+        self.db = database
+        self.rule_table = self.db['rules']        # All the rules live here.
+        self.config_table = self.db['config']     # Key-value configuration DB
+
+
+        # Setup timers and their associated locks.
+        # Timer code in part based on https://github.com/sdonovan1985/py-timer
+        self.install_timer = None
+        self.install_next_time = None
+        self.install_lock = Lock()
+        self.remove_timer = None
+        self.remove_next_time = None
+        self.remove_lock = Lock()
+        
+        # Initialize rule counter. Used to track the rules as they are installed
+        # It may be in the DB.
+        rulenum = self.config_table.find_one(key='rule_number')
+        if rulenum == None:
+            self.rule_number = 1
+            self.config_table.insert({'key':'rule_number',
+                                      'value':self.rule_number})
+        else:
+            self.rule_number = rulenum['value']
+        
 
         # Use these to send the rule to the Local Controller
         self.set_send_add_rule(send_user_rule_breakdown_add)
@@ -68,115 +108,38 @@ class RuleManager(SingletonMixin):
             returns a reference to the rule (e.g., a tracking number) so that 
             more details can be retrieved in the future. '''
 
-        valid = None
-        breakdown = None
-        authorized = None
-        # Check if valid rule
         try:
-            valid = ValidityInspector.instance().is_valid_rule(rule)
-        except Exception as e:
-            raise RuleManagerValidationError(
-                "Rule cannot be validated, threw exception: %s, %s" %
-                (rule, str(e)))
-        
-        if valid != True:
-            raise RuleManagerValidationError(
-                "Rule cannot be validated: %s" % rule)
-        
-        # Get the breakdown of the rule
-        try:
-            breakdown = BreakdownEngine.instance().get_breakdown(rule)
+            breakdown = self._determine_breakdown(rule)
         except Exception as e: raise
-#            raise RuleManagerBreakdownError(
-#                "Rule breakdown threw exception: %s, %s" %
-#                (rule, str(e)))
-        if breakdown == None:
-            raise RuleManagerBreakdownError(
-                "Rule was not broken down: %s" % rule)
 
-        # Check if the user is authorized to perform those actions.
-        try:
-            authorized = AuthorizationInspector.instance().is_authorized(rule.username, rule)
-        except Exception as e:
-            raise RuleManagerAuthorizationError(
-                "Rule not authorized with exception: %s, %s" %
-                (rule, str(e)))
-            
-        if authorized != True:
-            raise RuleManagerAuthorizationError(
-                "Rule is not authorized: %s" % rule)
-
-        # If everything passes, set the hash and breakdown, and put into database
+        # If everything passes, set the hash and breakdown, put into database
         rule.set_rule_hash(self._get_new_rule_number())
         rule.set_breakdown(breakdown)
-        self.rule_db[rule.get_rule_hash()] = rule
 
-        #FIXME: Actually send add rules to LC!
-        #FIXME: This should be in a try block.
-        try:
-            for bd in breakdown:
-                self.send_user_add_rule(bd)
-        except Exception as e: raise
+        self._add_rule_to_db(rule)
             
         return rule.get_rule_hash()
         
 
     def test_add_rule(self, rule):
-        ''' Similar to add rule, save for actually pushing the rule to the local 
+        ''' Similar to add rule, save for actually pushing the rule to the local
             controllers. Useful for testing out whether a rule will be added as 
             expected, or to preview what rules will be pushed to the local 
             controller(s). '''
-        
-        valid = None
-        breakdown = None
-        authorized = None
-        # Check if valid rule
         try:
-            valid = ValidityInspector.instance().is_valid_rule(rule)
-        except Exception as e:
-            raise RuleManagerValidationError(
-                "Rule cannot be validated, threw exception: %s, %s" %
-                (rule, str(e)))
-        
-        if valid != True:
-            raise RuleManagerValidationError(
-                "Rule cannot be validated: %s" % rule)
-        
+            breakdown = self._determine_breakdown(rule)
+        except Exception as e: raise
 
-        # Get the breakdown of the rule
-        try:
-            breakdown = BreakdownEngine.instance().get_breakdown(rule)
-        except Exception as e:
-            raise RuleManagerBreakdownError(
-                "Rule breakdown threw exception: %s, %s" %
-                (rule, str(e)))
-        if breakdown == None:
-            raise RuleManagerBreakdownError(
-                "Rule was not broken down: %s" % rule)
-
-        # Check if the user is authorized to perform those actions.
-        try:
-            authorized = AuthorizationInspector.instance().is_authorized(rule.username, rule)
-        except Exception as e:
-            raise RuleManagerAuthorizationError(
-                "Rule not authorized with exception: %s, %s" %
-                (rule, str(e)))
-            
-        if authorized != True:
-            raise RuleManagerAuthorizationError(
-                "Rule is not authorized: %s" % rule)
-
-        
         return breakdown
 
     def remove_rule(self, rule_hash, user):
         ''' Removes the rule that corresponds to the rule_hash that wa returned 
             either from add_rule() or found with get_rules(). If user does not 
             have removal ability, returns an error. '''
-        if rule_hash not in self.rule_db.keys():
+        if self.rule_table.find_one(hash=rule_hash) == None:
             raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
 
-        rule = self.rule_db[rule_hash]
+        rule = pickle.loads(self.rule_table.find_one(hash=rule_hash)['rule'])
         authorized = None
         try:
             authorized = AuthorizationInspector.instance().is_authorized(user, rule) #FIXME
@@ -185,22 +148,13 @@ class RuleManager(SingletonMixin):
         if authorized != True:
             raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s" % (user, rule_hash))
 
-        #FIXME: Actually send remove rules to LC!
-        #FIXME: This should be in a try block.
-        try:
-            for bd in rule.breakdown:
-                self.send_user_rm_rule(bd)
-        except Exception as e: raise
-
-
-        # Remove from the rule_db
-        del self.rule_db[rule_hash]
+        self._rm_rule_from_db(rule_hash, rule)
 
     def remove_all_rules(self, user):
         ''' Removes all rules. Just an alias for repeatedly calling 
             remove_rule() without needing to know all the hashes. '''
-        for rule_hash in self.rule_db.keys():
-            self.remove_rule(rule_hash, user)
+        for rule in self.rule_table:
+            self.remove_rule(rule['hash'], user)
 
 
     def get_rules(self, filter=None):
@@ -217,9 +171,7 @@ class RuleManager(SingletonMixin):
         ''' This will return details of a rule, including the rule itself, the 
             local controller breakdowns, the user who installed the rule, the 
             date and time of rule installation. '''
-        if rule_hash in self.rule_db.keys():
-            return self.rule_db[rule_hash]
-        return None
+        return self.rule_table.find_one(hash=rule_hash)
 
     def _get_new_rule_number(self):
         ''' Returns a new rule number for use. For now, it's incrementing by one,
@@ -227,4 +179,283 @@ class RuleManager(SingletonMixin):
             Good for 4B (or more!) rules!
         '''
         self.rule_number += 1
+        self.config_table.update({'key':'rule_number', 
+                                  'value':self.rule_number},
+                                 ['key'])
         return self.rule_number
+
+    def _determine_breakdown(self, rule):
+        ''' This performs the bulk of the add_rule() and test_add_rule() 
+            processing, including all the authorization checking. 
+            Raises error if there are any problems.
+            Returns breakdown of the rule if successful. '''
+
+        valid = None
+        breakdown = None
+        authorized = None
+        # Check if valid rule
+        try:
+            valid = ValidityInspector.instance().is_valid_rule(rule)
+        except Exception as e: raise
+        
+        if valid != True:
+            raise RuleManagerValidationError(
+                "Rule cannot be validated: %s" % rule)
+        
+        # Get the breakdown of the rule
+        try:
+            breakdown = BreakdownEngine.instance().get_breakdown(rule)
+        except Exception as e: raise
+
+        if breakdown == None:
+            raise RuleManagerBreakdownError(
+                "Rule was not broken down: %s" % rule)
+
+        # Check if the user is authorized to perform those actions.
+        try:
+            authorized = AuthorizationInspector.instance().is_authorized(rule.username, rule)
+        except Exception as e: raise
+            
+        if authorized != True:
+            raise RuleManagerAuthorizationError(
+                "Rule is not authorized: %s" % rule)
+
+        return breakdown
+
+    def _add_rule_to_db(self, rule):
+        ''' Adds rule to the database, which also include handling timed 
+            insertion of rules. '''
+
+        state = INACTIVE_RULE
+
+        # Should this be installed now? e.g., Is the begin time before *now*?
+        # Set state based on this question.
+        now = datetime.now()
+        install_time = datetime.strptime(rule.get_start_time(), 
+                                         rfc3339format)
+        remove_time  = datetime.strptime(rule.get_stop_time(), 
+                                         rfc3339format)
+
+        print "Now     : %s" % now
+        print "Install : %s" % install_time
+        print "Remove  : %s" % remove_time
+
+        if now >= remove_time:
+            state = EXPIRED_RULE
+        elif now >= install_time: # implicitly, before remove_time
+            state = ACTIVE_RULE
+            self._install_rule(rule)
+        
+
+        # If it's in the future, is it the next rule in the future? 
+        # Update timer if so.
+        else:
+            with self.install_lock:
+                if ((self.install_next_time == None) or
+                    (install_time < datetime.strptime(self.install_next_time,
+                                                      rfc3339format))):
+
+                    self.install_next_time = install_time
+                    if self.install_timer != None:
+                        self.install_timer.cancel()
+                    delta = (datetime.strptime(self.install_next_time,
+                                               rfc3339format) - now)
+                    self.install_timer = Timer(delta.total_seconds(),
+                                               self._rule_install_timer_cb)
+                    self.install_timer.daemon = True
+                    self.install_timer.start()
+
+        # Push into DB.
+        self.rule_table.insert({'hash':rule.get_rule_hash(), 
+                                'rule':pickle.dumps(rule),
+                                'state':state,
+                                'starttime':rule.get_start_time(),
+                                'stoptime':rule.get_stop_time()})
+
+
+
+    def _rm_rule_from_db(self, rule):
+        ''' Removes rule from the database, which also includes cancelling any
+            outstanding timed installations of the rule. '''
+
+        # Find rule in DB, get important information: state, start/stop time
+        record = self.rule_table.find_one(hash=rule.get_rule_hash())
+        state = record['state']
+        starttime = record['starttime']
+        stoptime = record['stoptime']
+
+        # Remove from the rule_table
+        self.rule_table.delete(hash=rule.get_rule_hash())
+        
+        # Is the rule active? If so, remove it from the LCs.
+        # Was it the next remove timer to pop? If so, need to update timer.
+        if state == ACTIVE_RULE:
+            self._remove_rule(rule)
+
+            if stoptime == self.remove_next_time:
+                with self.remove_lock:
+                    # Clean up existing remove timer
+                    if self.remove_timer != None:
+                        self.remove_timer.cancel()
+                    self.remove_timer = None
+                    self.remove_next_time = None
+
+                    # Pull next active rules, and reset the timer.
+                    active_rules = self.rule_table.find(state=ACTIVE_RULE,
+                                                        order_by="stoptime", 
+                                                        _limit=1)
+
+                    # If there are no new active rules, this was just be skipped
+                    for r in active_rules:
+                        now = datetime.now()
+                        self.remove_next_time = r['stoptime']
+                        delta = (datetime.strptime(self.remove_next_time,
+                                                   rfc3339format) - now)
+                        self.remove_timer = Timer(delta.total_seconds(),
+                                                  self._rule_remove_timer_cb)
+                        self.remove_timer.daemon = True
+                        self.remove_timer.start()
+
+        # If inactive, 
+        # Was it the next install timer to pop? If so, update timer.
+        elif state == INACTIVE_RULE:
+            if starttime == self.install_next_time:
+                with self.install_lock:
+                    # Clean up existing install timer
+                    if self.install_timer != None:
+                        self.install_timer.cancel()
+                    self.install_timer = None
+                    self.install_next_time = None
+
+                    # Pull next inactive rule, and reset the timer.
+                    inactive_rules = self.rule_table.find(state=INACTIVE_RULE,
+                                                          order_by="stoptime", 
+                                                          _limit=1)
+
+                    # If there are no new active rules, this was just be skipped
+                    for r in inactive_rules:
+                        now = datetime.now()
+                        self.install_next_time = r['stoptime']
+                        delta = (datetime.strptime(self.install_next_time,
+                                                   rfc3339format) - now)
+                        self.install_timer = Timer(delta.total_seconds(),
+                                                  self._rule_install_timer_cb)
+                        self.install_timer.daemon = True
+                        self.install_timer.start()
+
+        # If Expired:
+        # Nothing specific to do right now
+        elif state == EXPIRED_RULE:
+            pass
+            #FIXME: Recurrent rules are weird. 
+
+        # If Insufficient Privileges:
+        # Nothing specific to do right now
+        elif state == INSUFFICIENT_PRIVILEGES:
+            pass
+
+
+    def _install_rule(self, rule):
+        ''' Helper function that installs a rule into the switch. '''
+        try:
+            for bd in rule.get_breakdown():
+                self.send_user_add_rule(bd)
+        except Exception as e: raise
+
+    def _remove_rule(self, rule):
+        ''' Helper function that remove a rule from the switch. '''
+        try:
+            for bd in rule.get_breakdown():
+                self.send_user_rm_rule(bd)
+        except Exception as e: raise
+        
+    def _rule_install_timer_cb(self):
+        ''' This is the timer callback for rule installation. Called when the 
+            rule install timer pops. '''
+
+        # Get list of future rules ordered by install time
+        rules = self.rule_table.find(state = INACTIVE_RULE,
+                                     order_by = "starttime")
+
+        now = datetime.now()
+        next_install_time = None
+
+        # Does first rule in the list need installing? At least one should.
+        for rule in rules:
+            install_time = datetime.strptime(rule['starttime'],
+                                             rfc3339format)
+            # If this rule should be installed later, we're done with the loop
+            # thanks to rules being in order by start time. First, save off time
+            # for the next rule to be installed.
+            if now < install_time:
+                next_install_time = rule['starttime']
+                break
+
+            # Install rule and update state.
+            self.rule_table.update({'hash':rule['hash'],
+                                    'state':ACTIVE_RULE}, 
+                                   ['hash'])
+            self._install_rule(pickle.loads(rule['rule']))
+            
+        
+        # Set timer for next rule install, if necessary.
+        with self.install_lock:
+            self.install_next_time = next_install_time
+            if self.install_timer != None:
+                self.install_timer.cancel()
+
+            if self.install_next_time != None:
+                delta = (datetime.strptime(next_install_time, rfc3339format) -
+                         now)
+
+                self.install_timer=Timer(delta.total_seconds(),
+                                         self._rule_install_timer_cb)
+                self.install_timer.daemon = True
+                self.install_timer.start()
+            
+            
+
+    def _rule_remove_timer_cb(self):
+        ''' This is the timer callback for rule removal (expiring rules). Called
+            when the rule removal timer pops. '''
+
+        # Get the list of existing rules, ordered by expiry time.
+        rules = self.rule_table.find(state = ACTIVE_RULE,
+                                     order_by = "stoptime")
+
+        now = datetime.now()
+        next_remove_time = None
+
+        # Is the first rule in the list also expired? At least one should be.
+        for rule in rules:
+            remove_time = datetime.strptime(rule['stoptime'],
+                                            rfc3339format)
+            
+            # If this rule should be removed later, we're done with the loop
+            # thanks to rules being in order by stop time. First, save off time
+            # for the next rule to be installed.
+            if now < remove_time:
+                next_remove_time = rule['stoptime']
+                break
+
+            # Remove rule and update state.
+            self.rule_table.update({'hash':rule['hash'],
+                                    'state':INACTIVE_RULE}, 
+                                   ['hash'])
+            self._remove_rule(pickle.loads(rule['rule']))
+            # FIXME: Recurrant rules will need to be updated on the install list potentially.
+
+        # Set timer for next rule removal, if necessary
+        with self.remove_lock:
+            self.remove_next_time = next_remove_time
+            if self.remove_timer != None:
+                self.remove_timer.cancel()
+
+            if self.remove_next_time != None:
+                delta = (datetime.strptime(next_remove_time, rfc3339format) -
+                         now)
+
+                self.remove_timer=Timer(delta.total_seconds(),
+                                        self._rule_remove_timer_cb)
+                self.remove_timer.daemon = True
+                self.remove_timer.start()

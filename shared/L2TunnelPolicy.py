@@ -12,6 +12,7 @@ from shared.match import *
 from shared.action import *
 from shared.instruction import *
 from shared.OpenFlowRule import * 
+from shared.constants import *
 
 
 class L2TunnelPolicy(UserPolicy):
@@ -48,7 +49,7 @@ class L2TunnelPolicy(UserPolicy):
 
     def __init__(self, username, json_rule):
         self.start_time = None
-        self.end_time = None
+        self.stop_time = None
         self.src_switch = None
         self.dst_switch = None
         self.src_port = None
@@ -64,7 +65,9 @@ class L2TunnelPolicy(UserPolicy):
     @staticmethod
     def check_syntax(json_rule):
         try:
-            rfc3339format = "%Y-%m-%dT%H:%M:%S%z"
+            # Make sure the times are the right format
+            # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
+
             starttime = datetime.strptime(json_rule['l2tunnel']['starttime'],
                                          rfc3339format)
             endtime = datetime.strptime(json_rule['l2tunnel']['endtime'],
@@ -127,6 +130,7 @@ class L2TunnelPolicy(UserPolicy):
                 raise UserPolicyValueError("Path length is 1, but switches are different: fullpath %s, src_switch %s, dst_switch %s" % (fullpath, src_switch, dst_switch))
                 
             location = self.src_switch
+            shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             inport = self.src_port
             outport = self.dst_port
@@ -137,7 +141,7 @@ class L2TunnelPolicy(UserPolicy):
             cookie = 1234 #FIXME
             table = 0 #FIXME
 
-            bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
+            bd = UserPolicyBreakdown(shortname)
 
             # Inbound
             match = OpenFlowMatch([IN_PORT(inport),
@@ -176,11 +180,13 @@ class L2TunnelPolicy(UserPolicy):
                                                 self.src_vlan, srcpath),
                                                (self.dst_switch, self.dst_port,
                                                 self.dst_vlan, dstpath)]:
-            bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
+            shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             priority = 100 #FIXME
             cookie = 1234 #FIXME
             table = 0 #FIXME
+
+            bd = UserPolicyBreakdown(shortname)
 
             # get edge
             edge = topology.edge[location][path]
@@ -220,12 +226,13 @@ class L2TunnelPolicy(UserPolicy):
             #               action set fwd
             #  - on outbound, match on the switch, port, and intermediate VLAN
             #               action set fwd
-            bd =  UserPolicyBreakdown(topology.node[location]['lcip'])
-
+            shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             priority = 100 #FIXME
             cookie = 1234 #FIXME
             table = 0 #FIXME
+
+            bd = UserPolicyBreakdown(shortname)
 
             # get edges
             prevedge = topology.node[location][prevnode]
@@ -268,13 +275,8 @@ class L2TunnelPolicy(UserPolicy):
         if 'l2tunnel' not in json_rule.keys():
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
-        # Borrowing parsing from:
-        # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
-        rfc3339format = "%Y-%m-%dT%H:%M:%S"
-        self.start_time = datetime.strptime(json_rule['l2tunnel']['starttime'],
-                                            rfc3339format)
-        self.end_time =   datetime.strptime(json_rule['l2tunnel']['endtime'],
-                                            rfc3339format)
+        self.start_time = json_rule['l2tunnel']['starttime']
+        self.stop_time =   json_rule['l2tunnel']['endtime']
         # Make sure end is after start and after now.
         #FIXME
 

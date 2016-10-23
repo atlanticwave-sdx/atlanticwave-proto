@@ -25,6 +25,7 @@ class SDXControllerConnectionManager(ConnectionManager):
 
     def __init__(self, *args, **kwargs):
         super(SDXControllerConnectionManager, self).__init__(*args, **kwargs)
+        self.associations = {}
 
     def send_breakdown_rule_add(self, bd):
         ''' This takes in a UserPolicyBreakdown and send it to the Local
@@ -46,14 +47,11 @@ class SDXControllerConnectionManager(ConnectionManager):
             sending of commands to the Local Controllers. This is all pretty
             much the same, with only the command changing. '''
         # The cmd is from the list of commands in  SDXControllerConnectionManager
-        lc = bd.get_lc()
-
         # Find the correct client
+        lc = bd.get_lc()
         lc_cxn = None
-        for client in self.clients:
-            if client.get_address() == lc:
-                lc_cxn = client
-                break
+        if lc in self.associations.keys():
+            lc_cxn = self.associations[lc]    
 
         if lc_cxn == None:
             raise ConnectionManagerValueError("%s is not in the current connections.\n    Current connections %s" % (lc, self.clients))
@@ -61,3 +59,12 @@ class SDXControllerConnectionManager(ConnectionManager):
         # Send rules
         for rule in bd.get_list_of_rules():
             lc_cxn.send_cmd(cmd, rule)
+
+    def associate_cxn_with_name(self, name, cxn):
+        ''' This is to allow connections to be referred to by shortnames, rather
+            than by IP addresses and whatnot. Related to the 
+            send_breakdown_rule_*() functions. 
+            More hacky than I'd like it to be. '''
+        self.associations[name] = cxn
+        #FIXME: Should this check to make sure that the cxn is in self.clients?
+                                

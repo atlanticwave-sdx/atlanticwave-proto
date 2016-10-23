@@ -6,6 +6,7 @@ import logging
 import threading
 import sys
 import Queue
+import dataset
 
 from shared.Singleton import SingletonMixin
 from shared.SDXControllerConnectionManager import *
@@ -46,12 +47,19 @@ class SDXController(SingletonMixin):
         itself.
         Singleton. ''' 
 
-    def __init__(self, runloop=True, mani=None):
+    def __init__(self, runloop=True, mani=None, db=":memory:"):
         ''' The bulk of the work happens here. This initializes nearly everything
             and starts up the main processing loop for the entire SDX
             Controller. '''
 
         self._setup_logger()
+
+        # Start DB connection. Used by other modules. details on the setup:
+        # https://dataset.readthedocs.io/en/latest/api.html
+        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
+        self.db = dataset.connect('sqlite:///' + db, 
+                                  engine_kwargs={'connect_args':
+                                                 {'check_same_thread':False}})
 
         # Modules with potentially configurable configuration files
         if mani != None:
@@ -72,6 +80,7 @@ class SDXController(SingletonMixin):
         else: 
             self.lcm = LocalControllerManager.instance()
 
+        topo = self.tm.get_topology()
 
 
         # Set up the connection-related nonsense - Have a connection event queue
@@ -89,7 +98,8 @@ class SDXController(SingletonMixin):
 
 
         # Start these modules last!
-        self.rm = RuleManager.instance(self.sdx_cm.send_breakdown_rule_add,
+        self.rm = RuleManager.instance(self.db,
+                                       self.sdx_cm.send_breakdown_rule_add,
                                        self.sdx_cm.send_breakdown_rule_rm)
         self.pm = ParticipantManager.instance()      #FIXME - Filename
         self.rapi = RestAPI.instance()
@@ -119,7 +129,18 @@ class SDXController(SingletonMixin):
         pass
         
     def _handle_new_connection(self, cxn):
-        self.connections[cxn.get_address()] = cxn
+        # Receive name from LocalController, verify that it's in the topology
+        name = cxn.recv()
+        topo = self.tm.get_topology()
+        
+        if name not in topo.node.keys():
+            self.logger.error("LocalController with name %s attempting to get in. Only known nodes: %s" % (name, topo.node.keys()))
+            return
+        # FIXME: Credentials exchange
+
+        # Add connection to connections list
+        self.connections[name] = cxn
+        self.sdx_cm.associate_cxn_with_name(name, cxn)
         self.cxn_q.put((NEW_CXN, cxn))
         #FIXME: Send this to the LocalControllerManager
 
@@ -210,10 +231,14 @@ class SDXController(SingletonMixin):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print "USAGE: python SDXController.py manifest"
+    if len(sys.argv) != 2 and len(sys.argv) != 3:
+        print "USAGE: python SDXController.py manifest <db-location>"
         print "You must provide manifest files for the SDXController if running from the command line."
+        print "You can provide a database location for the sqlite database. Otherwise, uses an in-memory database for temporary storage."
         exit()
     mani = sys.argv[1]
-    sdx = SDXController(False, mani)
+    db = ":memory:"
+    if len(sys.argv) == 3:
+        db = sys.argv[2]
+    sdx = SDXController(False, mani, db)
     sdx._main_loop()
