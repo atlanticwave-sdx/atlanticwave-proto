@@ -5,6 +5,7 @@
 
 from shared.Singleton import SingletonMixin
 from shared.L2TunnelPolicy import L2TunnelPolicy
+from shared.SDXControllerConnectionManager import *
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
 from RuleManager import RuleManager
@@ -264,10 +265,16 @@ class RestAPI(SingletonMixin):
 
 
 if __name__ == "__main__":
-    def blah(param):
-        pass
+    #def blah(param):
+    #    pass
 
-    RuleManager(blah,blah)    
+    blah = {'rules':'','config':''}
+
+    sdx_cm = SDXControllerConnectionManager()    
+    import dataset    
+    db = dataset.connect('sqlite:///:memory:', engine_kwargs={'connect_args':{'check_same_thread':False}})
+
+    RuleManager(db, sdx_cm.send_breakdown_rule_add, sdx_cm.send_breakdown_rule_rm)    
 
     RestAPI()
 
