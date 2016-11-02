@@ -183,7 +183,7 @@ class RuleManager(SingletonMixin):
 
         return self._valid_table_columns
 
-    def get_rules(self, filter=None, ordering=None):
+    def get_rules(self, filter={}, ordering=None):
         ''' Used for searching for rules based on a filter. The filter could be 
             based on the rule type, the user that installed the rule, the local 
             controllers that have rules installed, or the hash_value of the 
@@ -219,10 +219,10 @@ class RuleManager(SingletonMixin):
 
         #FIXME: need to figure out what to send back to the caller of the rules. What does the rule look like? Should it be the JSON version? I think so.
         retval = [(x['hash'],
-                   pickle.loads(x['rule']).get_json_rule(),
+                   pickle.loads(str(x['rule'])).get_json_rule(),
                    x['ruletype'],
-                   pickle.loads(x['rule']).get_user(),
-                   STATE_TO_STRING(x['state'])) for x in results]
+                   pickle.loads(str(x['rule'])).get_user(),
+                   STATE_TO_STRING(str(x['state']))) for x in results]
         return retval
 
     def get_rule_details(self, rule_hash):
@@ -324,9 +324,9 @@ class RuleManager(SingletonMixin):
             remove_time  = datetime.strptime(rule.get_stop_time(), 
                                              rfc3339format)
 
-        print "Now     : %s" % now
-        print "Install : %s" % install_time
-        print "Remove  : %s" % remove_time
+#        print "Now     : %s" % now
+#        print "Install : %s" % install_time
+#        print "Remove  : %s" % remove_time
 
         if remove_time != None and now >= remove_time:
             state = EXPIRED_RULE

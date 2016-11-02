@@ -118,6 +118,33 @@ class RemoveRuleTest(unittest.TestCase):
 
         man.remove_rule(hash, "dummy_user")
         self.failUnless(man.get_rule_details(hash) == None)
+
+class GetRules(unittest.TestCase):
+    def test_get_rules(self):
+        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
+        man = RuleManager.instance(db, rmhappy, rmhappy)
+        valid_rule = UserPolicyStandin(True, True)
+
+        hash = man.add_rule(valid_rule)
+        self.failUnless(man.get_rules() != [])
+
+
+class RemoveAllRules(unittest.TestCase):
+    def test_remove_all_rules(self):
+        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
+        man = RuleManager.instance(db, rmhappy, rmhappy)
+        valid_rule = UserPolicyStandin(True, True)
+
+        # Add a rule.
+        man.add_rule(valid_rule)
+
+        self.failUnless(man.get_rules() != [])
+        
+        man.remove_all_rules("dummy_user")
+
+        rules = man.get_rules()
+        self.failUnless(man.get_rules() == [])
+
         
 if __name__ == '__main__':
     unittest.main()
