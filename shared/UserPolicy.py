@@ -13,10 +13,10 @@ class UserPolicy(object):
         application. This will likely be heavily modified over the course of 
         development, more so than most other interfaces. '''
 
-    def __init__(self, username, json_rule):
+    def __init__(self, username, ruletype, json_rule):
         ''' Parses the json_rule passed in to populate the UserPolicy. '''
         self.username = username
-        self.ruletype = None
+        self.ruletype = ruletype
         self.json_rule = json_rule
 
         # The breakdown list should be a list of UserPolicyBreakdown objects.
@@ -65,11 +65,22 @@ class UserPolicy(object):
     def get_stop_time(self):
         return self.stop_time
 
+    def get_json_rule(self):
+        return self.json_rule
+
+    def get_ruletype(self):
+        return self.ruletype
+
+    def get_user(self):
+        return self.username
+
     def set_rule_hash(self, hash):
         self.rule_hash = hash
 
     def get_rule_hash(self):
         return self.rule_hash
+
+
 
     def _parse_json(self, json_rule):
         ''' Actually does parsing. 

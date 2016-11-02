@@ -17,7 +17,7 @@
     "atl":{
       "shortname": "atl",
       "credentials": "atlpw",
-      "location": "In the kernel",
+      "location": "33.772000, -84.390000",
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55767,

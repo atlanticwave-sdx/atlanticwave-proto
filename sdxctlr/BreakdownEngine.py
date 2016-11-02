@@ -23,6 +23,9 @@ class BreakdownEngine(SingletonMixin):
             permissions determined by the AuthorizationInspector for proposed 
             rules (e.g., if a user cannot create paths through a particular LC, 
             reroute around that LC). '''
-        return rule.breakdown_rule(TopologyManager.instance().get_topology(),
-                                   AuthorizationInspector.instance().is_authorized)
+        try:
+            return rule.breakdown_rule(TopologyManager.instance().get_topology(),
+                                       AuthorizationInspector.instance().is_authorized)
+        except Exception as e:
+            raise
     

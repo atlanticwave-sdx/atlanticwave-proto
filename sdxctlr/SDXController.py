@@ -25,6 +25,7 @@ from ValidityInspector import *
 
 # Known UserPolicies
 from shared.JsonUploadPolicy import *
+from shared.L2TunnelPolicy import *
 
 
 # Connection Queue actions defininition
@@ -95,6 +96,7 @@ class SDXController(SingletonMixin):
 
         # Register known UserPolicies
         self.rr.add_ruletype("json-upload", JsonUploadPolicy)
+        self.rr.add_ruletype("l2tunnel", L2TunnelPolicy)
 
 
         # Start these modules last!
