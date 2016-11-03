@@ -14,10 +14,12 @@ from TopologyManager import TopologyManager
 
 #API Stuff
 import flask
-from flask import Flask, request, url_for, send_from_directory, render_template, Markup
+from flask import Flask, session, redirect, request, url_for, send_from_directory, render_template, Markup
 
 import flask_login
 from flask_login import LoginManager
+
+from flask_sso import SSO
 
 #Topology json stuff
 import networkx as nx
@@ -55,12 +57,26 @@ class RestAPI(SingletonMixin):
         specifically for the libraries that register with the RuleRegistry. 
         Singleton. '''
 
-    global User, app, login_manager
+    global User, app, login_manager, sso
 
     app = Flask(__name__, static_url_path='', static_folder='')
     #FIXME: This should be more secure.
     app.secret_key = 'ChkaChka.....Boo, Ohhh Yeahh!'
 
+    #: Default attribute map
+    SSO_ATTRIBUTE_MAP = {
+        'ADFS_AUTHLEVEL': (False, 'authlevel'),
+        'ADFS_GROUP': (True, 'group'),
+        'ADFS_LOGIN': (True, 'nickname'),
+        'ADFS_ROLE': (False, 'role'),
+        'ADFS_EMAIL': (True, 'email'),
+        'ADFS_IDENTITYCLASS': (False, 'external'),
+        'HTTP_SHIB_AUTHENTICATION_METHOD': (False, 'authmethod'),
+    }
+
+    app.config['SSO_ATTRIBUTE_MAP'] = SSO_ATTRIBUTE_MAP
+
+    sso = SSO(app=app)
 
     login_manager = LoginManager()
 
@@ -93,7 +109,24 @@ class RestAPI(SingletonMixin):
 
     class User(flask_login.UserMixin):
         pass
-    
+
+    #This is for shibboleth loggin
+    @staticmethod
+    @sso.login_handler
+    def login_callback(user_info):
+        """Store information in session."""
+        session['user'] = user_info
+
+    # This is a test endpoint for shibboleth
+    @staticmethod
+    @app.route('/shibboleth/')
+    def index():
+        """Display user information or force login."""
+        if 'user' in session:
+            return 'Welcome {name}'.format(name=session['user']['nickname'])
+        return redirect(app.config['SSO_LOGIN_URL'])
+
+ 
     # This maintains the state of a logged in user.
     @staticmethod
     @login_manager.user_loader
@@ -243,6 +276,27 @@ class RestAPI(SingletonMixin):
 
             # I plan on making this redirect to a page for the rulehash, but currently this is not ready
             return rule_hash
+
+    # Get information about a specific rule IDed by hash.
+    @staticmethod
+    @app.route('/rule/<rule_hash>',methods=['GET','DELETE'])
+    def get_rule_details_by_hash(rule_hash):
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
+            # Shows info for rule
+            if request.method == 'GET':
+                try:
+                    return RuleManager.instance().get_rule_details(rule_hash)
+                except:
+                    return "Invalid rule hash"
+            # Deletes Rules
+            if request.method == 'DELETE':
+                RuleManager.instance().remove_rule(rule_hash, flask_login.current_user.id)
+
+            # Handles other HTTP request methods
+            else:
+                return "Invalid HTTP request for rule manager"
+
+        return unauthorized_handler()
 
     # Get information about a specific rule IDed by hash.
     @staticmethod
