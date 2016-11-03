@@ -57,7 +57,7 @@ class L2TunnelPolicy(UserPolicy):
         self.src_vlan = None
         self.dst_vlan = None
         self.bandwidth = None
-        super(L2TunnelPolicy, self).__init__(username, json_rule)
+        super(L2TunnelPolicy, self).__init__(username, "L2Tunnel", json_rule)
 
         # Anything specific here?
         pass

@@ -1,27 +1,51 @@
 {
+  "endpoints": {
+    "atlh1": {
+      "type":"host",
+      "location":"33.772080,-84.392869"},
+    "atlh2": {
+      "type":"host",
+      "location":"33.772080,-84.392869"},
+    "miah1": {
+      "type":"host",
+      "location":"25.755971,-80.373737"},
+    "miah2": {
+      "type":"host",
+      "location":"25.755971,-80.373737"}
+  },
   "localcontrollers": {
     "atl":{
       "shortname": "atl",
       "credentials": "atlpw",
-      "location": "In the kernel",
-      "lcip": "10.10.10.10",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633
+      },
       "switchinfo": [
         {
           "name": "atl-switch",
-          "dpid": "1",
-          "ip": "10.10.10.11",
+	  "friendlyname":"Main Atlanta Switch",
+          "ip": "127.0.0.1",
+          "dpid":1,
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
             {
               "portnumber": 1,
               "speed": 1,
-              "destination": "mia-switch"
+              "destination": "atlh1"
             },
             {
               "portnumber": 2,
               "speed": 1,
-              "destination": "Georgia Tech"
+              "destination": "atlh2"
+            },
+            {
+              "portnumber": 3,
+              "speed": 1,
+              "destination": "mia"
             }
           ],
           "rulesaccepted": [
@@ -46,25 +70,35 @@
     "mia":{
       "shortname": "mia",
       "credentials": "miapw",
-      "location": "In the kernel",
-      "lcip": "10.10.10.20",
+      "location":"25.756,-80.373000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55768,
+	"openflowport": 6653
+      },
       "switchinfo": [
         {
           "name": "mia-switch",
-          "dpid": "2",
-          "ip": "10.10.10.21",
+	  "friendlyname":"Main Miami Switch",
+          "ip": "127.0.0.1",
+          "dpid":2,
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
             {
               "portnumber": 1,
               "speed": 1,
-              "destination": "atl-switch"
+              "destination": "miah1"
             },
             {
               "portnumber": 2,
               "speed": 1,
-              "destination": "FIU"
+              "destination": "miah2"
+            },
+            {
+              "portnumber": 3,
+              "speed": 1,
+              "destination": "atl"
             }
           ],
           "rulesaccepted": [
@@ -81,8 +115,8 @@
         }
       ],
       "operatorinfo": {
-        "organization": "FIU/CIARA",
-        "administrator": "",
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
         "contact": "sdonovan@gatech.edu"
       }
     }
