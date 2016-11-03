@@ -90,6 +90,7 @@ class RestAPI(SingletonMixin):
         p = Thread(target=self.api_process)
         p.daemon = True
         p.start()
+        print RuleManager.instance()
         pass
 
     def _setup_logger(self):
@@ -303,10 +304,10 @@ class RestAPI(SingletonMixin):
     # Get a list of rules that match certain filters or a query.
     @staticmethod
     @app.route('/rule/all/')
-    def get_rules(query):
+    def get_rules():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
             #TODO: Throws exception currently
-            return RuleManager.instance().get_rules()
+            return str(RuleManager.instance().get_rules())
         return unauthorized_handler()
  
     # Get a list of rules that match certain filters or a query.
@@ -316,7 +317,7 @@ class RestAPI(SingletonMixin):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
 
             # TODO: Parse query into filters and ordering
-            return RuleManager.instance().get_rules(filter={query},ordering=query)
+            return str(RuleManager.instance().get_rules(filter={query},ordering=query))
         return unauthorized_handler()
 
 
@@ -330,7 +331,7 @@ if __name__ == "__main__":
     import dataset    
     db = dataset.connect('sqlite:///:memory:', engine_kwargs={'connect_args':{'check_same_thread':False}})
 
-    RuleManager(db, sdx_cm.send_breakdown_rule_add, sdx_cm.send_breakdown_rule_rm)    
+    rm = RuleManager.instance(db, sdx_cm.send_breakdown_rule_add, sdx_cm.send_breakdown_rule_rm)    
 
     RestAPI()
 
