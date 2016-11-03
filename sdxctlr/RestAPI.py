@@ -282,12 +282,14 @@ class RestAPI(SingletonMixin):
     @app.route('/rule/<rule_hash>',methods=['GET','DELETE'])
     def get_rule_details_by_hash(rule_hash):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
+
             # Shows info for rule
             if request.method == 'GET':
                 try:
                     return RuleManager.instance().get_rule_details(rule_hash)
                 except:
                     return "Invalid rule hash"
+
             # Deletes Rules
             if request.method == 'DELETE':
                 RuleManager.instance().remove_rule(rule_hash, flask_login.current_user.id)
@@ -296,17 +298,6 @@ class RestAPI(SingletonMixin):
             else:
                 return "Invalid HTTP request for rule manager"
 
-        return unauthorized_handler()
-
-    # Get information about a specific rule IDed by hash.
-    @staticmethod
-    @app.route('/rule/<rule_hash>')
-    def get_rule_details_by_hash(rule_hash):
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
-            try:
-                return RuleManager.instance().get_rule_details(rule_hash)
-            except:
-                return "Invalid rule hash"
         return unauthorized_handler()
 
     # Get a list of rules that match certain filters or a query.
