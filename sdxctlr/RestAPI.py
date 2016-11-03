@@ -302,10 +302,21 @@ class RestAPI(SingletonMixin):
 
     # Get a list of rules that match certain filters or a query.
     @staticmethod
+    @app.route('/rule/all/')
+    def get_rules(query):
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
+            #TODO: Throws exception currently
+            return RuleManager.instance().get_rules()
+        return unauthorized_handler()
+ 
+    # Get a list of rules that match certain filters or a query.
+    @staticmethod
     @app.route('/rule/search/<query>')
     def get_rule_search_by_query(query):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
-            return RuleManager.instance().get_rules(query)
+
+            # TODO: Parse query into filters and ordering
+            return RuleManager.instance().get_rules(filter={query},ordering=query)
         return unauthorized_handler()
 
 
