@@ -343,7 +343,7 @@ class RuleManager(SingletonMixin):
                     (install_time < datetime.strptime(self.install_next_time,
                                                       rfc3339format))):
 
-                    self.install_next_time = install_time
+                    self.install_next_time = install_time.strftime(rfc3339format)
                     if self.install_timer != None:
                         self.install_timer.cancel()
                     delta = (datetime.strptime(self.install_next_time,
