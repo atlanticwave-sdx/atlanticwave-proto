@@ -235,8 +235,8 @@ class L2TunnelPolicy(UserPolicy):
             bd = UserPolicyBreakdown(shortname)
 
             # get edges
-            prevedge = topology.node[location][prevnode]
-            nextedge = topology.node[location][nextnode]
+            prevedge = topology.edge[prevnode][node]
+            nextedge = topology.edge[node][nextnode]
 
             for inport, outport in [(prevedge[node], prevedge[prevnode]),
                                     (nextedge[node], nextedge[nextnode])]:
