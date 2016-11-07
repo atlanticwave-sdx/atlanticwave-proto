@@ -240,9 +240,17 @@ class RestAPI(SingletonMixin):
             return html
         return unauthorized_handler()
 
-
-    
-
+    @staticmethod
+    @app.route('/batch_pipe', methods=['POST'])
+    def make_many_pipes():
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
+            data = request.json
+            hashes = []
+            for rule in data: 
+                policy = L2TunnelPolicy(flask_login.current_user.id, rule)
+                hashes.append(RuleManager.instance().add_rule(policy))
+            return '<pre>%s</pre>'%json.dumps(data, indent=2)
+            
     @staticmethod
     @app.route('/pipe',methods=['POST'])
     def make_new_pipe():
@@ -327,7 +335,7 @@ if __name__ == "__main__":
 
     blah = {'rules':'','config':''}
 
-    sdx_cm = SDXControllerConnectionManager()    
+    sdx_cm = SDXControllerConnectionManager()
     import dataset    
     db = dataset.connect('sqlite:///:memory:', engine_kwargs={'connect_args':{'check_same_thread':False}})
 
