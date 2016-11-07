@@ -240,16 +240,55 @@ class RestAPI(SingletonMixin):
             return html
         return unauthorized_handler()
 
+
+    '''
+    This is for functionality to add multiple rules at once.
+
+    A typical set of rules should be a json object in following form:
+        {"rules":[
+          {"l2tunnel":{
+            "starttime":<START_TIME>,
+            "endtime":<END_TIME>,
+            "srcswitch":<SOURCE_SWITCH>,
+            "dstswitch":<DESTINATION_SWITCH>,
+            "srcport":<SOURCE_PORT>,
+            "dstport":<DESTINATION_PORT>,
+            "srcvlan":<SOURCE_VLAN>,
+            "dstvlan":<DESTINATION_VLAN>,
+            "bandwidth":<BANDWIDTH>}},
+          {"l2tunnel":{
+            "starttime":<START_TIME>,
+            "endtime":<END_TIME>,
+            "srcswitch":<SOURCE_SWITCH>,
+            "dstswitch":<DESTINATION_SWITCH>,
+            "srcport":<SOURCE_PORT>,
+            "dstport":<DESTINATION_PORT>,
+            "srcvlan":<SOURCE_VLAN>,
+            "dstvlan":<DESTINATION_VLAN>,
+            "bandwidth":<BANDWIDTH>}},
+          {"l2tunnel":{
+            "starttime":<START_TIME>,
+            "endtime":<END_TIME>,
+            "srcswitch":<SOURCE_SWITCH>,
+            "dstswitch":<DESTINATION_SWITCH>,
+            "srcport":<SOURCE_PORT>,
+            "dstport":<DESTINATION_PORT>,
+            "srcvlan":<SOURCE_VLAN>,
+            "dstvlan":<DESTINATION_VLAN>,
+            "bandwidth":<BANDWIDTH>}}]
+        }
+    '''
     @staticmethod
     @app.route('/batch_pipe', methods=['POST'])
     def make_many_pipes():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
             data = request.json
             hashes = []
-            for rule in data: 
+            for rule in data['rules']: 
                 policy = L2TunnelPolicy(flask_login.current_user.id, rule)
                 hashes.append(RuleManager.instance().add_rule(policy))
-            return '<pre>%s</pre>'%json.dumps(data, indent=2)
+                
+            return '<pre>%s</pre><p>%s</p>'%(json.dumps(data, indent=2),str(hashes))
             
     @staticmethod
     @app.route('/pipe',methods=['POST'])
