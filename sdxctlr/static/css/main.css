@@ -39,6 +39,17 @@ a:focus {
   text-decoration: none;
   outline: none;
 }
+
+#rules-table {
+  background-image: url(../images/slider-bg.jpg);
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  padding: 200px 0;
+  color: #fff;
+}
+
 #header {
   position: fixed;
   top: 0;
@@ -582,6 +593,7 @@ textarea#message {
   padding: 10px 15px;
   height: 220px;
 }
+
 @keyframes scaleUp {
   0% {
     opacity: 0;
@@ -632,3 +644,4 @@ textarea#message {
     -o-transform: scale(1);
   }
 }
+

@@ -151,8 +151,9 @@ class RestAPI(SingletonMixin):
 
             # Go through the topo and get the nodes of interest.
             for i in  data['nodes']:
+                print i
                 if 'id' in i and 'org' in i:
-                    points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['org'])))
+                    points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['friendlyname'])))
             
             # Pass to flask to render a template
             return flask.render_template('index.html',points=points,current_user=flask_login.current_user)
@@ -281,14 +282,13 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/batch_pipe', methods=['POST'])
     def make_many_pipes():
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
-            data = request.json
-            hashes = []
-            for rule in data['rules']: 
-                policy = L2TunnelPolicy(flask_login.current_user.id, rule)
-                hashes.append(RuleManager.instance().add_rule(policy))
-                
-            return '<pre>%s</pre><p>%s</p>'%(json.dumps(data, indent=2),str(hashes))
+        data = request.json
+        hashes = []
+        for rule in data['rules']: 
+            policy = L2TunnelPolicy(flask_login.current_user.id, rule)
+            hashes.append(RuleManager.instance().add_rule(policy))
+            
+        return '<pre>%s</pre><p>%s</p>'%(json.dumps(data, indent=2),str(hashes))
             
     @staticmethod
     @app.route('/pipe',methods=['POST'])
@@ -354,7 +354,7 @@ class RestAPI(SingletonMixin):
     def get_rules():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
             #TODO: Throws exception currently
-            return str(RuleManager.instance().get_rules())
+            return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
         return unauthorized_handler()
  
     # Get a list of rules that match certain filters or a query.
@@ -369,16 +369,14 @@ class RestAPI(SingletonMixin):
 
 
 if __name__ == "__main__":
-    #def blah(param):
-    #    pass
-
-    blah = {'rules':'','config':''}
+    def blah(param):
+        pass
 
     sdx_cm = SDXControllerConnectionManager()
     import dataset    
     db = dataset.connect('sqlite:///:memory:', engine_kwargs={'connect_args':{'check_same_thread':False}})
 
-    rm = RuleManager.instance(db, sdx_cm.send_breakdown_rule_add, sdx_cm.send_breakdown_rule_rm)    
+    rm = RuleManager.instance(db, blah, blah)
 
     RestAPI()
 
