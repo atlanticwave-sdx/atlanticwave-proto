@@ -5,6 +5,7 @@
 
 from shared.Singleton import SingletonMixin
 from shared.L2TunnelPolicy import L2TunnelPolicy
+from shared.SDXControllerConnectionManager import *
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
 from RuleManager import RuleManager
@@ -13,10 +14,12 @@ from TopologyManager import TopologyManager
 
 #API Stuff
 import flask
-from flask import Flask, request, url_for, send_from_directory, render_template, Markup
+from flask import Flask, session, redirect, request, url_for, send_from_directory, render_template, Markup
 
 import flask_login
 from flask_login import LoginManager
+
+from flask_sso import SSO
 
 #Topology json stuff
 import networkx as nx
@@ -54,12 +57,26 @@ class RestAPI(SingletonMixin):
         specifically for the libraries that register with the RuleRegistry. 
         Singleton. '''
 
-    global User, app, login_manager
+    global User, app, login_manager, sso
 
     app = Flask(__name__, static_url_path='', static_folder='')
     #FIXME: This should be more secure.
     app.secret_key = 'ChkaChka.....Boo, Ohhh Yeahh!'
 
+    #: Default attribute map
+    SSO_ATTRIBUTE_MAP = {
+        'ADFS_AUTHLEVEL': (False, 'authlevel'),
+        'ADFS_GROUP': (True, 'group'),
+        'ADFS_LOGIN': (True, 'nickname'),
+        'ADFS_ROLE': (False, 'role'),
+        'ADFS_EMAIL': (True, 'email'),
+        'ADFS_IDENTITYCLASS': (False, 'external'),
+        'HTTP_SHIB_AUTHENTICATION_METHOD': (False, 'authmethod'),
+    }
+
+    app.config['SSO_ATTRIBUTE_MAP'] = SSO_ATTRIBUTE_MAP
+
+    sso = SSO(app=app)
 
     login_manager = LoginManager()
 
@@ -73,6 +90,7 @@ class RestAPI(SingletonMixin):
         p = Thread(target=self.api_process)
         p.daemon = True
         p.start()
+        print RuleManager.instance()
         pass
 
     def _setup_logger(self):
@@ -92,7 +110,24 @@ class RestAPI(SingletonMixin):
 
     class User(flask_login.UserMixin):
         pass
-    
+
+    #This is for shibboleth loggin
+    @staticmethod
+    @sso.login_handler
+    def login_callback(user_info):
+        """Store information in session."""
+        session['user'] = user_info
+
+    # This is a test endpoint for shibboleth
+    @staticmethod
+    @app.route('/shibboleth/')
+    def index():
+        """Display user information or force login."""
+        if 'user' in session:
+            return 'Welcome {name}'.format(name=session['user']['nickname'])
+        return redirect(app.config['SSO_LOGIN_URL'])
+
+ 
     # This maintains the state of a logged in user.
     @staticmethod
     @login_manager.user_loader
@@ -116,8 +151,9 @@ class RestAPI(SingletonMixin):
 
             # Go through the topo and get the nodes of interest.
             for i in  data['nodes']:
+                print i
                 if 'id' in i and 'org' in i:
-                    points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['org'])))
+                    points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['friendlyname'])))
             
             # Pass to flask to render a template
             return flask.render_template('index.html',points=points,current_user=flask_login.current_user)
@@ -183,14 +219,13 @@ class RestAPI(SingletonMixin):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
             G = TopologyManager.instance().get_topology()
 
-
             links = []
-            nodes = []
-            for i in G.edges(data=True):
-                links.append({"source":i[0], "target":i[1], "value":i[2]["weight"]})
+            for edge in G.edges(data=True):
+                links.append({"source":edge[0], "target":edge[1], "value":edge[2]["weight"]})
 
-            for i in G.nodes(data=True):
-                nodes.append({"id":i[0], "group":0})
+            nodes = []
+            for node in G.nodes(data=True):
+                nodes.append({"id":node[0], "group":0})
             
             json_data = {"nodes":nodes, "links":links}
             
@@ -207,8 +242,54 @@ class RestAPI(SingletonMixin):
         return unauthorized_handler()
 
 
-    
+    '''
+    This is for functionality to add multiple rules at once.
 
+    A typical set of rules should be a json object in following form:
+        {"rules":[
+          {"l2tunnel":{
+            "starttime":<START_TIME>,
+            "endtime":<END_TIME>,
+            "srcswitch":<SOURCE_SWITCH>,
+            "dstswitch":<DESTINATION_SWITCH>,
+            "srcport":<SOURCE_PORT>,
+            "dstport":<DESTINATION_PORT>,
+            "srcvlan":<SOURCE_VLAN>,
+            "dstvlan":<DESTINATION_VLAN>,
+            "bandwidth":<BANDWIDTH>}},
+          {"l2tunnel":{
+            "starttime":<START_TIME>,
+            "endtime":<END_TIME>,
+            "srcswitch":<SOURCE_SWITCH>,
+            "dstswitch":<DESTINATION_SWITCH>,
+            "srcport":<SOURCE_PORT>,
+            "dstport":<DESTINATION_PORT>,
+            "srcvlan":<SOURCE_VLAN>,
+            "dstvlan":<DESTINATION_VLAN>,
+            "bandwidth":<BANDWIDTH>}},
+          {"l2tunnel":{
+            "starttime":<START_TIME>,
+            "endtime":<END_TIME>,
+            "srcswitch":<SOURCE_SWITCH>,
+            "dstswitch":<DESTINATION_SWITCH>,
+            "srcport":<SOURCE_PORT>,
+            "dstport":<DESTINATION_PORT>,
+            "srcvlan":<SOURCE_VLAN>,
+            "dstvlan":<DESTINATION_VLAN>,
+            "bandwidth":<BANDWIDTH>}}]
+        }
+    '''
+    @staticmethod
+    @app.route('/batch_pipe', methods=['POST'])
+    def make_many_pipes():
+        data = request.json
+        hashes = []
+        for rule in data['rules']: 
+            policy = L2TunnelPolicy(flask_login.current_user.id, rule)
+            hashes.append(RuleManager.instance().add_rule(policy))
+            
+        return '<pre>%s</pre><p>%s</p>'%(json.dumps(data, indent=2),str(hashes))
+            
     @staticmethod
     @app.route('/pipe',methods=['POST'])
     def make_new_pipe():
@@ -246,21 +327,44 @@ class RestAPI(SingletonMixin):
 
     # Get information about a specific rule IDed by hash.
     @staticmethod
-    @app.route('/rule/<rule_hash>')
+    @app.route('/rule/<rule_hash>',methods=['GET','DELETE'])
     def get_rule_details_by_hash(rule_hash):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
-            try:
-                return RuleManager.instance().get_rule_details(rule_hash)
-            except:
-                return "Invalid rule hash"
+
+            # Shows info for rule
+            if request.method == 'GET':
+                try:
+                    return RuleManager.instance().get_rule_details(rule_hash)
+                except:
+                    return "Invalid rule hash"
+
+            # Deletes Rules
+            if request.method == 'DELETE':
+                RuleManager.instance().remove_rule(rule_hash, flask_login.current_user.id)
+
+            # Handles other HTTP request methods
+            else:
+                return "Invalid HTTP request for rule manager"
+
         return unauthorized_handler()
 
+    # Get a list of rules that match certain filters or a query.
+    @staticmethod
+    @app.route('/rule/all/')
+    def get_rules():
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
+            #TODO: Throws exception currently
+            return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
+        return unauthorized_handler()
+ 
     # Get a list of rules that match certain filters or a query.
     @staticmethod
     @app.route('/rule/search/<query>')
     def get_rule_search_by_query(query):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
-            return RuleManager.instance().get_rules(query)
+
+            # TODO: Parse query into filters and ordering
+            return str(RuleManager.instance().get_rules(filter={query},ordering=query))
         return unauthorized_handler()
 
 
@@ -268,7 +372,11 @@ if __name__ == "__main__":
     def blah(param):
         pass
 
-    RuleManager(blah,blah)    
+    sdx_cm = SDXControllerConnectionManager()
+    import dataset    
+    db = dataset.connect('sqlite:///:memory:', engine_kwargs={'connect_args':{'check_same_thread':False}})
+
+    rm = RuleManager.instance(db, blah, blah)
 
     RestAPI()
 
