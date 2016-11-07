@@ -151,7 +151,6 @@ class RestAPI(SingletonMixin):
 
             # Go through the topo and get the nodes of interest.
             for i in  data['nodes']:
-                print i
                 if 'id' in i and 'org' in i:
                     points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['friendlyname'])))
             
@@ -327,7 +326,7 @@ class RestAPI(SingletonMixin):
 
     # Get information about a specific rule IDed by hash.
     @staticmethod
-    @app.route('/rule/<rule_hash>',methods=['GET','DELETE'])
+    @app.route('/rule/<rule_hash>',methods=['GET','POST'])
     def get_rule_details_by_hash(rule_hash):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
 
@@ -339,9 +338,9 @@ class RestAPI(SingletonMixin):
                     return "Invalid rule hash"
 
             # Deletes Rules
-            if request.method == 'DELETE':
+            if request.method == 'POST':
                 RuleManager.instance().remove_rule(rule_hash, flask_login.current_user.id)
-
+                return flask.redirect(flask.url_for('get_rules'))
             # Handles other HTTP request methods
             else:
                 return "Invalid HTTP request for rule manager"
@@ -350,11 +349,15 @@ class RestAPI(SingletonMixin):
 
     # Get a list of rules that match certain filters or a query.
     @staticmethod
-    @app.route('/rule/all/')
+    @app.route('/rule/all/', methods=['GET','POST'])
     def get_rules():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
             #TODO: Throws exception currently
-            return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
+            if request.method == 'GET':
+                return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
+            if request.method == 'POST':
+                RuleManager.instance().remove_all_rules(flask_login.current_user.id)
+                return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
         return unauthorized_handler()
  
     # Get a list of rules that match certain filters or a query.

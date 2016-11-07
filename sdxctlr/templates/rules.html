@@ -113,32 +113,30 @@ table tr:hover td {
 </style>
 
 <body data-spy="scroll" data-target="#navbar" data-offset="0">
-<header id="header" role="banner">
-<div class="container">
-<div id="navbar" class="navbar navbar-default">
-<div class="navbar-header">
-    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-    </button>
-    <a class="navbar-brand" href="/"></a>
-</div>
-<div class="collapse navbar-collapse">
-    <ul class="nav navbar-nav">
-        <li class="active"><a href="#main-slider"><i class="icon-home"></i></a></li>
-        <li><a href="/#topology">Topology</a></li>
-        <li><a href="/#requests">Requests</a></li>
-        <li><a href="/#about-us">About Us</a></li>
-        <li><a href="/#login">{{ current_user.id }}</a></li>
-    </ul>
-</div>
-</div>
-</div>
-</header>
-
-
+    <header id="header" role="banner">
+        <div class="container">
+            <div id="navbar" class="navbar navbar-default">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/"></a>
+                </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="#main-slider"><i class="icon-home"></i></a></li>
+                        <li><a href="#topology">Topology</a></li>
+                        <li><a href="/#requests">Requests</a></li>
+                        <li><a href="/#about-us">About Us</a></li>
+                        <li><a href="/#login">{{ current_user.id }}</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
     <section id="rules-table">
         <div class="container">
                     <br>
@@ -160,6 +158,7 @@ table tr:hover td {
                                     <th>Destination VLAN</th>
                                     <th>Bandwidth</th>
                                     <th>Creator</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <!-- Table Header -->
@@ -179,13 +178,14 @@ table tr:hover td {
                                     <td>{{ rule[1]['l2tunnel']['dstvlan'] }}</td>
                                     <td>{{ rule[1]['l2tunnel']['bandwidth'] }}</td>
                                     <td>{{ rule[3] }}</td>
+                                    <td><form action="/rule/{{ rule[0] }}" method="POST"><button type="submit" class="btn btn-danger btn-lg">[X]</button></form></td>
                                 </tr>
                                 {% endfor %}
-
                             </tbody>
                             <!-- Table Body -->
 
                         </table>
+                                <form action="/rule/all/" method="POST" onsubmit="return confirm('Are you sure you want to submit this form?');"><button type="submit" class="btn btn-danger btn-lg">Delete all rules</button></form>
         </div>
     </section>
     <footer id="footer">
@@ -197,6 +197,13 @@ table tr:hover td {
             </div>
         </div>
     </footer>
+    <script type="text/javascript">
+    var el = document.getElementById('delete-all');
+
+    el.addEventListener('submit', function(){
+    return confirm('Are you sure you want to delete all rules?');
+    }, false);
+    </script>
     <script src="/static/js/jquery.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
     <script src="/static/js/jquery.isotope.min.js"></script>
