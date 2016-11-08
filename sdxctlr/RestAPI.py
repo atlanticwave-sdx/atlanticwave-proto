@@ -279,7 +279,7 @@ class RestAPI(SingletonMixin):
         }
     '''
     @staticmethod
-    @app.route('/batch_pipe', methods=['POST'])
+    @app.route('/batch_rule', methods=['POST'])
     def make_many_pipes():
         data = request.json
         hashes = []
@@ -290,7 +290,7 @@ class RestAPI(SingletonMixin):
         return '<pre>%s</pre><p>%s</p>'%(json.dumps(data, indent=2),str(hashes))
             
     @staticmethod
-    @app.route('/pipe',methods=['POST'])
+    @app.route('/rule',methods=['POST'])
     def make_new_pipe():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
 
@@ -333,14 +333,15 @@ class RestAPI(SingletonMixin):
             # Shows info for rule
             if request.method == 'GET':
                 try:
-                    return RuleManager.instance().get_rule_details(rule_hash)
+                    return  str(RuleManager.instance().get_rule_details(rule_hash))
                 except:
                     return "Invalid rule hash"
 
-            # Deletes Rules
+            # Deletes Rules : POST because HTML does not support DELETE Requests
             if request.method == 'POST':
                 RuleManager.instance().remove_rule(rule_hash, flask_login.current_user.id)
                 return flask.redirect(flask.url_for('get_rules'))
+
             # Handles other HTTP request methods
             else:
                 return "Invalid HTTP request for rule manager"
