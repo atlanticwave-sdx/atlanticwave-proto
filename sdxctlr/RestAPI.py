@@ -151,7 +151,6 @@ class RestAPI(SingletonMixin):
 
             # Go through the topo and get the nodes of interest.
             for i in  data['nodes']:
-                print i
                 if 'id' in i and 'org' in i:
                     points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['friendlyname'])))
             
@@ -280,7 +279,7 @@ class RestAPI(SingletonMixin):
         }
     '''
     @staticmethod
-    @app.route('/batch_pipe', methods=['POST'])
+    @app.route('/batch_rule', methods=['POST'])
     def make_many_pipes():
         data = request.json
         hashes = []
@@ -291,7 +290,7 @@ class RestAPI(SingletonMixin):
         return '<pre>%s</pre><p>%s</p>'%(json.dumps(data, indent=2),str(hashes))
             
     @staticmethod
-    @app.route('/pipe',methods=['POST'])
+    @app.route('/rule',methods=['POST'])
     def make_new_pipe():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
 
@@ -327,20 +326,21 @@ class RestAPI(SingletonMixin):
 
     # Get information about a specific rule IDed by hash.
     @staticmethod
-    @app.route('/rule/<rule_hash>',methods=['GET','DELETE'])
+    @app.route('/rule/<rule_hash>',methods=['GET','POST'])
     def get_rule_details_by_hash(rule_hash):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
 
             # Shows info for rule
             if request.method == 'GET':
                 try:
-                    return RuleManager.instance().get_rule_details(rule_hash)
+                    return  str(RuleManager.instance().get_rule_details(rule_hash))
                 except:
                     return "Invalid rule hash"
 
-            # Deletes Rules
-            if request.method == 'DELETE':
+            # Deletes Rules : POST because HTML does not support DELETE Requests
+            if request.method == 'POST':
                 RuleManager.instance().remove_rule(rule_hash, flask_login.current_user.id)
+                return flask.redirect(flask.url_for('get_rules'))
 
             # Handles other HTTP request methods
             else:
@@ -350,11 +350,15 @@ class RestAPI(SingletonMixin):
 
     # Get a list of rules that match certain filters or a query.
     @staticmethod
-    @app.route('/rule/all/')
+    @app.route('/rule/all/', methods=['GET','POST'])
     def get_rules():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
             #TODO: Throws exception currently
-            return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
+            if request.method == 'GET':
+                return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
+            if request.method == 'POST':
+                RuleManager.instance().remove_all_rules(flask_login.current_user.id)
+                return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
         return unauthorized_handler()
  
     # Get a list of rules that match certain filters or a query.

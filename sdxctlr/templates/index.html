@@ -114,7 +114,7 @@
                         <li><a class="tablinks" href="#" onclick="role(event, 'NetworkEngr')">Network Engineers</a></li>
                         <li><a class="tablinks" href="#" onclick="role(event, 'Scientist')">Scientists</a></li>
                     </ul>
-                    <form action="pipe" method="POST" id="NetworkEngr" class="tabcontent">
+                    <form action="rule" method="POST" id="NetworkEngr" class="tabcontent">
                           <div class="col-sm-4">
                             <p>Enter the start date: <input type="text" class="form-control" required="required" id="startdate" name="startdate"> </p> 
                             <p>Enter the start time: <input type="time" class="form-control" required="required" id="starttime" name="starttime"> </p> 
@@ -173,7 +173,11 @@
                           <button type="submit" class="btn btn-danger btn-lg" align="middle">Submit</button>
                         </form>
                     </form>
-
+                    <div class="col-sm-6">
+                    <form action="/rule/all/">
+                        <input type="submit" class="btn btn-danger btn-lg" value="View all rules" />
+                    </form>
+                    </div>
                 </div> 
             </div> 
         </div>
