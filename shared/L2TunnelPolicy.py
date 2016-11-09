@@ -141,7 +141,7 @@ class L2TunnelPolicy(UserPolicy):
             cookie = 1234 #FIXME
             table = 0 #FIXME
 
-            bd = UserPolicyBreakdown(shortname)
+            bd = UserPolicyBreakdown(shortname, [])
 
             # Inbound
             match = OpenFlowMatch([IN_PORT(inport),
@@ -186,7 +186,7 @@ class L2TunnelPolicy(UserPolicy):
             cookie = 1234 #FIXME
             table = 0 #FIXME
 
-            bd = UserPolicyBreakdown(shortname)
+            bd = UserPolicyBreakdown(shortname, [])
 
             # get edge
             edge = topology.edge[location][path]
@@ -211,6 +211,7 @@ class L2TunnelPolicy(UserPolicy):
             rule = OpenFlowRule(match, instruction, table,
                                 priority, cookie, switch_id)
             bd.add_to_list_of_rules(rule)
+
             self.breakdown.append(bd)
         
         
@@ -226,13 +227,13 @@ class L2TunnelPolicy(UserPolicy):
             #               action set fwd
             #  - on outbound, match on the switch, port, and intermediate VLAN
             #               action set fwd
-            shortname = topology.node[location]['locationshortname']
-            switch_id = topology.node[location]['dpid']
+            shortname = topology.node[node]['locationshortname']
+            switch_id = topology.node[node]['dpid']
             priority = 100 #FIXME
             cookie = 1234 #FIXME
             table = 0 #FIXME
 
-            bd = UserPolicyBreakdown(shortname)
+            bd = UserPolicyBreakdown(shortname, [])
 
             # get edges
             prevedge = topology.edge[prevnode][node]

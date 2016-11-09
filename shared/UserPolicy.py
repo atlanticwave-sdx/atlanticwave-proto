@@ -93,7 +93,7 @@ class UserPolicyBreakdown(object):
     ''' This provides a standard way of holding broken down rules. Captures the
         local controller and the rules passed to them. '''
 
-    def __init__(self, lc, list_of_rules=[]):
+    def __init__(self, lc, list_of_rules):
         ''' The lc is the shortname of the local controller. The list_of_rules 
             is a list of rules that are being sent to the Local Controllers. '''
         self.lc = lc
