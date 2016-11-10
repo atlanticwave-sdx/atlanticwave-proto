@@ -190,7 +190,7 @@ class L2TunnelPolicy(UserPolicy):
 
             # get edge
             edge = topology.edge[location][path]
-            outport = edge[path]
+            outport = edge[location]
 
             # Inbound
             match = OpenFlowMatch([IN_PORT(inport),
@@ -239,25 +239,25 @@ class L2TunnelPolicy(UserPolicy):
             prevedge = topology.edge[prevnode][node]
             nextedge = topology.edge[node][nextnode]
 
-            for inport, outport in [(prevedge[node], prevedge[prevnode]),
-                                    (nextedge[node], nextedge[nextnode])]:
-                # Inbound
-                match = OpenFlowMatch([IN_PORT(inport),
-                                       VLAN_VID(intermediate_vlan)])
-                actions = [action_OUTPUT(outport)]
-                instruction = instruction_APPLY_ACTIONS(actions)
-                rule = OpenFlowRule(match, instruction, table,
-                                    priority, cookie, switch_id)
-                bd.add_to_list_of_rules(rule)
+            inport = prevedge[node]
+            outport = nextedge[node]
+            # Inbound
+            match = OpenFlowMatch([IN_PORT(inport),
+                                   VLAN_VID(intermediate_vlan)])
+            actions = [action_OUTPUT(outport)]
+            instruction = instruction_APPLY_ACTIONS(actions)
+            rule = OpenFlowRule(match, instruction, table,
+                                priority, cookie, switch_id)
+            bd.add_to_list_of_rules(rule)
 
-                # Outbound
-                match = OpenFlowMatch([IN_PORT(outport),
-                                       VLAN_VID(intermediate_vlan)])
-                actions = [action_OUTPUT(inport)]
-                instruction = instruction_APPLY_ACTIONS(actions)
-                rule = OpenFlowRule(match, instruction, table,
-                                    priority, cookie, switch_id)
-                bd.add_to_list_of_rules(rule)
+            # Outbound
+            match = OpenFlowMatch([IN_PORT(outport),
+                                   VLAN_VID(intermediate_vlan)])
+            actions = [action_OUTPUT(inport)]
+            instruction = instruction_APPLY_ACTIONS(actions)
+            rule = OpenFlowRule(match, instruction, table,
+                                priority, cookie, switch_id)
+            bd.add_to_list_of_rules(rule)
 
             # Add the four new rules created above to the breakdown
             self.breakdown.append(bd)
