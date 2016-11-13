@@ -1005,7 +1005,7 @@
       "switchinfo": [
         {
           "name": "rjsw",
-	  "friendlyname": "rj Switch",
+	  "friendlyname": "RJ Switch",
 	  "ip": "127.0.0.1",
 	  "dpid": 19,
 	  "brand": "Open vSwitch",

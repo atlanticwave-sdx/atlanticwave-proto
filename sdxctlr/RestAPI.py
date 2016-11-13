@@ -82,7 +82,7 @@ class RestAPI(SingletonMixin):
 
     def api_process(self):
         login_manager.init_app(app)
-        app.run()
+        app.run(host='0.0.0.0')
 
     def __init__(self):
         #FIXME: Creating user only for testing purposes

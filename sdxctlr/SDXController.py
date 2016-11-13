@@ -10,7 +10,7 @@ import dataset
 
 from shared.Singleton import SingletonMixin
 from shared.SDXControllerConnectionManager import *
-from shared.Connection import select
+from shared.Connection import select as cxnselect
 from shared.UserPolicy import UserPolicyBreakdown
 from AuthenticationInspector import *
 from AuthorizationInspector import *
@@ -179,7 +179,7 @@ class SDXController(SingletonMixin):
         rlist = self.connections.values()
         wlist = []
         xlist = rlist
-        timeout = .5
+        timeout = 2.0
 
         # Main loop - Have a ~500ms timer on the select call to handle cxn events
         while True:
@@ -210,12 +210,12 @@ class SDXController(SingletonMixin):
             
             # Dispatch messages as appropriate
             try: 
-                readable, writable, exceptional = select(rlist,
-                                                          wlist,
-                                                          xlist,
-                                                          timeout)
+                readable, writable, exceptional = cxnselect(rlist,
+                                                            wlist,
+                                                            xlist,
+                                                            timeout)
             except Exception as e:
-                self.logger.error("Error in select - %s" % (e))                
+                raise
 
 
             # Loop through readable
