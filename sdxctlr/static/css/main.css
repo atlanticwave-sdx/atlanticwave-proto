@@ -46,7 +46,8 @@ a:focus {
   background-size: cover;
   background-position: 50% 50%;
   background-repeat: no-repeat;
-  padding: 200px 0;
+  padding: 50px 0;
+  background-color: #52b6ec;
   color: #fff;
 }
 
@@ -497,6 +498,7 @@ a:focus {
   font-size: 16px;
   line-height: 18px;
   color: #999;
+  background: url(/index.html) no-repeat 0 50%;
 }
 .navbar-default .navbar-nav > li > a > i {
   display: inline-block;
