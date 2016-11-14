@@ -236,8 +236,7 @@ class RestAPI(SingletonMixin):
     @app.route('/topology')
     def show_network_topology():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
-            html = open('static/topology.html').read()
-            return html
+            return flask.render_template('topology.html')
         return unauthorized_handler()
 
 

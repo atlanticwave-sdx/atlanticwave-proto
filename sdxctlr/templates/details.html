@@ -1,6 +1,10 @@
 {% include "head.html" %}
     <section id="rules-table">
         <div class="container">
+            <form action="/rule/all/">
+                <br><input type="submit" class="btn btn-danger btn-lg" value="View all rules"/>
+            </form>
+
             <table cellspacing='0'>
 
                 <thead>
@@ -9,6 +13,7 @@
                         <th>Rule Type</th>
                         <th>Status</th>
                         <th>User</th>
+                        <th>Delete Rule</th>
                     </tr>
                 </thead>
 
@@ -18,10 +23,12 @@
                         <td>{{ detail[2] }}</td>
                         <td>{{ detail[3] }}</td>
                         <td>{{ detail[4] }}</td>
+                        <td><form action="/rule/{{ detail[0] }}" method="POST"><button type="submit" class="btn btn-danger btn-lg">[x]</button></form></td>
                     </tr>
                 </tbody>
 
             </table>
+
             
             <table cellspacing='0'>
 
