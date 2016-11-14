@@ -291,7 +291,23 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/rule',methods=['POST'])
     def make_new_pipe():
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
+        theID = "curlUser"
+        try:
+            if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
+                theID = flask_login.current_user.id
+            else:
+                theID = "curlUser"
+        except:
+            pass
+
+        #TODO: YUUUGGGGGEEEE security hole here. Patch after demo.
+        if True:
+
+            print theID
+            print request.form['startdate']
+            print request.form['starttime']
+            print request.form['enddate']
+            print request.form['endtime']
 
             # Just making sure the datetimes are okay
             starttime = datetime.strptime(str(pd(request.form['startdate'] + ' ' + request.form['starttime'])), '%Y-%m-%d %H:%M:%S')
@@ -313,7 +329,7 @@ class RestAPI(SingletonMixin):
                                             "dstvlan":request.form['dv'],
                                             "bandwidth":request.form['bw']}}
             
-            policy = L2TunnelPolicy(flask_login.current_user.id, data)
+            policy = L2TunnelPolicy(theID, data)
 
             # I am really not sure what to pass through RuleManager as args
             rule_hash = RuleManager.instance().add_rule(policy)
