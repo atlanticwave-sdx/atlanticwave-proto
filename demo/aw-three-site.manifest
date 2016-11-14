@@ -1,0 +1,188 @@
+{
+  "endpoints": {
+    "atlh1": {
+      "type":"host",
+      "location":"33.772080,-84.392869"},
+    "atlh2": {
+      "type":"host",
+      "location":"33.772080,-84.392869"},
+    "miah1": {
+      "type":"host",
+      "location":"25.755971,-80.373737"},
+    "miah2": {
+      "type":"host",
+      "location":"25.755971,-80.373737"},
+    "gruh1": {
+      "type":"host",
+      "location":"-23.4348091,-46.4816877"},
+    "gruh2": {
+      "type":"host",
+      "location":"-23.4348091,-46.4816877"}     
+  },
+  "localcontrollers": {
+    "atl":{
+      "shortname": "atl",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633
+      },
+      "switchinfo": [
+        {
+          "name": "atl-switch",
+	  "friendlyname":"Main Atlanta Switch",
+          "ip": "127.0.0.1",
+          "dpid":1,
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 1,
+              "destination": "atlh1"
+            },
+            {
+              "portnumber": 2,
+              "speed": 1,
+              "destination": "atlh2"
+            },
+            {
+              "portnumber": 3,
+              "speed": 1,
+              "destination": "mia-switch"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "mia":{
+      "shortname": "mia",
+      "credentials": "miapw",
+      "location":"25.756,-80.373000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55768,
+	"openflowport": 6643
+      },
+      "switchinfo": [
+        {
+          "name": "mia-switch",
+	  "friendlyname":"Main Miami Switch",
+          "ip": "127.0.0.1",
+          "dpid":2,
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 1,
+              "destination": "miah1"
+            },
+            {
+              "portnumber": 2,
+              "speed": 1,
+              "destination": "miah2"
+            },
+            {
+              "portnumber": 3,
+              "speed": 1,
+              "destination": "atl-switch"
+            },
+            {
+              "portnumber": 4,
+              "speed": 1,
+              "destination": "gru-switch"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "gru":{
+      "shortname": "gru",
+      "credentials": "grupw",
+      "location": "-23.430000,-46.480000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55769,
+	"openflowport": 6653
+      },
+      "switchinfo": [
+        {
+          "name": "gru-switch",
+	  "friendlyname":"Main Sao Paulo Switch",
+          "ip": "127.0.0.1",
+          "dpid":3,
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 1,
+              "destination": "gruh1"
+            },
+            {
+              "portnumber": 2,
+              "speed": 1,
+              "destination": "gruh2"
+            },
+            {
+              "portnumber": 3,
+              "speed": 1,
+              "destination": "mia-switch"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+  }
+}

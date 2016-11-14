@@ -115,16 +115,41 @@ class MyTopo():
     net.addLink(rsSw, scSw, port1=2, port2=3)
 
     # Add hosts
-    rsHost = net.addHost('h1', mac='00:00:00:00:01:00', cls=VLANHost, vlan=1)
-    miaHost = net.addHost('h2', mac='00:00:00:00:02:00', cls=VLANHost, vlan=2)
-    baHost = net.addHost('h3', mac='00:00:00:00:03:00', cls=VLANHost, vlan=3)
-    acHost = net.addHost('h4', mac='00:00:00:00:04:00', cls=VLANHost, vlan=4)
+    rs100Host = net.addHost('rs100', mac='00:00:00:00:01:00', cls=VLANHost, 
+                            vlan=100)
+    rs200Host = net.addHost('rs200', mac='00:00:00:00:01:00', cls=VLANHost, 
+                            vlan=100)
+    rs300Host = net.addHost('rs300', mac='00:00:00:00:01:00', cls=VLANHost, 
+                            vlan=100)
+    mia200Host = net.addHost('mia200', mac='00:00:00:00:02:00', cls=VLANHost, 
+                             vlan=200)
+    mia400Host = net.addHost('mia400', mac='00:00:00:00:02:00', cls=VLANHost, 
+                             vlan=400)
+    ba300Host = net.addHost('ba300', mac='00:00:00:00:03:00', cls=VLANHost, 
+                            vlan=300)
+    ba400Host = net.addHost('ba400', mac='00:00:00:00:03:00', cls=VLANHost, 
+                            vlan=400)
+    ba500Host = net.addHost('ba500', mac='00:00:00:00:03:00', cls=VLANHost, 
+                            vlan=500)
+    ac400Host = net.addHost('ac400', mac='00:00:00:00:04:00', cls=VLANHost, 
+                            vlan=400)
+    ac600Host = net.addHost('ac600', mac='00:00:00:00:04:00', cls=VLANHost, 
+                            vlan=600)
+    ac800Host = net.addHost('ac800', mac='00:00:00:00:04:00', cls=VLANHost, 
+                            vlan=800)
     
     # Add links to hosts
-    net.addLink(rsHost, rsSw, port1=1, port2=3)
-    net.addLink(miaHost, miaSw, port1=1, port2=3)
-    net.addLink(baHost, baSw, port1=1, port2=5)
-    net.addLink(acHost, acSw, port1=1, port2=3)
+    net.addLink(rs100Host, rsSw, port1=1, port2=3)
+    net.addLink(rs200Host, rsSw, port1=1, port2=4)
+    net.addLink(rs300Host, rsSw, port1=1, port2=5)
+    net.addLink(mia200Host, miaSw, port1=1, port2=3)
+    net.addLink(mia400Host, miaSw, port1=1, port2=4)
+    net.addLink(ba300Host, baSw, port1=1, port2=5)
+    net.addLink(ba400Host, baSw, port1=1, port2=6)
+    net.addLink(ba500Host, baSw, port1=1, port2=7)
+    net.addLink(ac400Host, acSw, port1=1, port2=3)
+    net.addLink(ac600Host, acSw, port1=1, port2=4)
+    net.addLink(ac800Host, acSw, port1=1, port2=5)
     
     # Add controllers:
     acCtlr = net.addController('ctlr1', controller=RemoteController, ip='127.0.0.1', port=6601)

@@ -169,8 +169,8 @@
       },
       "switchinfo": [
         {
-          "name": "alsw",
-	  "friendlyname": "AL Switch",
+          "name": "amsw",
+	  "friendlyname": "AM Switch",
 	  "ip": "127.0.0.1",
 	  "dpid": 4,
 	  "brand": "Open vSwitch",
@@ -285,7 +285,7 @@
       },
       "switchinfo": [
         {
-          "name": "alsw",
+          "name": "cesw",
 	  "friendlyname": "CE Switch",
 	  "ip": "127.0.0.1",
 	  "dpid": 6,

@@ -281,8 +281,8 @@ class L2TunnelPolicy(UserPolicy):
         # Make sure end is after start and after now.
         #FIXME
 
-        self.src_switch = json_rule['l2tunnel']['srcswitch']
-        self.dst_switch = json_rule['l2tunnel']['dstswitch']
+        self.src_switch = str(json_rule['l2tunnel']['srcswitch'])
+        self.dst_switch = str(json_rule['l2tunnel']['dstswitch'])
         self.src_port = int(json_rule['l2tunnel']['srcport'])
         self.dst_port = int(json_rule['l2tunnel']['dstport'])
         self.src_vlan = int(json_rule['l2tunnel']['srcvlan'])
