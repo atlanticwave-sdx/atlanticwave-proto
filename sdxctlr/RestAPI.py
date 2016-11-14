@@ -236,8 +236,7 @@ class RestAPI(SingletonMixin):
     @app.route('/topology')
     def show_network_topology():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
-            html = open('static/topology.html').read()
-            return html
+            return flask.render_template('topology.html')
         return unauthorized_handler()
 
 
@@ -319,6 +318,9 @@ class RestAPI(SingletonMixin):
             # I am really not sure what to pass through RuleManager as args
             rule_hash = RuleManager.instance().add_rule(policy)
 
+            return flask.redirect('/rule/' + str(rule_hash))
+
+            #Just going to save this for later
             return '<pre>%s</pre>'%json.dumps(data, indent=2)
 
             # I plan on making this redirect to a page for the rulehash, but currently this is not ready
@@ -333,7 +335,7 @@ class RestAPI(SingletonMixin):
             # Shows info for rule
             if request.method == 'GET':
                 try:
-                    return  str(RuleManager.instance().get_rule_details(rule_hash))
+                    return  flask.render_template('details.html', detail=RuleManager.instance().get_rule_details(rule_hash))
                 except:
                     return "Invalid rule hash"
 
@@ -353,12 +355,10 @@ class RestAPI(SingletonMixin):
     @app.route('/rule/all/', methods=['GET','POST'])
     def get_rules():
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
-            #TODO: Throws exception currently
-            if request.method == 'GET':
-                return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
+            #TODO: Throws exception currently    
             if request.method == 'POST':
                 RuleManager.instance().remove_all_rules(flask_login.current_user.id)
-                return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
+            return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
         return unauthorized_handler()
  
     # Get a list of rules that match certain filters or a query.

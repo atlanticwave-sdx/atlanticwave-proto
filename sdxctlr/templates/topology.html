@@ -1,5 +1,5 @@
-<DOCTYPE html>
-<meta charset="utf-8">
+{% include "head.html" %}
+
 <style>
 
 html, body, #map {
@@ -37,8 +37,9 @@ html, body, #map {
 }
 
 </style>
+
+
 <svg width="960" height="600"></svg>
-<script src="//maps.google.com/maps/api/js?key=AIzaSyA6Azq7w98DkxpMIzgZV3ZLkPNwRPA8DDc&sensor=true"></script>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
 
@@ -116,3 +117,4 @@ function dragended(d) {
 }
 
 </script>
+{% include "foot.html" %}
