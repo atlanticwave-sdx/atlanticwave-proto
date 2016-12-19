@@ -7,46 +7,40 @@ from netaddr import EUI, IPAddress
 from shared.ofconstants import *
 
 
-class FieldTypeError(TypeError):
+class LCFieldTypeError(TypeError):
     pass
 
-class FieldValueError(ValueError):
+class LCFieldValueError(ValueError):
     pass
 
-class FieldPrereqError(ValueError):
+class LCFieldPrereqError(ValueError):
     pass
 
-class Field(object):
+class LCField(object):
     ''' This is the parent class for different kinds of fields that are used in
         OpenFlowActions (defined below). It provides common structure and defines
         descriptors for each child class. '''
     
-    def __init__(self, name, value=None, prereq=None, optional_without=None, mask=False):
-        ''' - name is the name of the field, and is used for prerequisite
-              checking.
+    def __init__(self, name, value=None, mask=False):
+        ''' - name is the name of the field
             - value is the value that this particular field is initialized with
               and can be changed by setting the value.
-            - prereq is a list of prerequisite conditions. If at least one of 
-              them is satisfied, then prerequisites are met. 
-            - optional_without is a condition that, if satisfied, this Field is
-              not optional. If it is None, then it is also not optional. '''
-        
+        '''
         
         self._name = name
         self.value = value
-        self.optional_wo = optional_without
-        self.prereq = prereq
         self.mask = mask
 
     def __repr__(self):
-        return "%s : %s:%s, Optional W/O: %s, Prerequisite: %s" % (self.__class__.__name__,
-                                                                           self._name,
-                                                                           self.value,
-                                                                           self.optional_wo,
-                                                                           self.prereq)
+        return "%s : %s:%s %s" % (self.__class__.__name__,
+                               self._name,
+                               self.value,
+                               self.mask)
 
     def __str__(self):
         retstr = "%s:%s" % (self._name, self.value)
+        if self.mask != False:
+            retstr += " %s" % self.mask
         return retstr
 
     def __eq__(self, other):
@@ -54,8 +48,7 @@ class Field(object):
             return False
         return (self._name == other._name and
                 self.value == other.value and
-                self.optional_wo == other.optional_wo and
-                self.prereq == other.prereq)
+                self.mask == other.mask)
         
     #TODO - Can these be represented as a property/discriptor? I don't think so.
     def get(self):
@@ -63,6 +56,12 @@ class Field(object):
 
     def set(self, value):
         self.value = value
+
+    def get_mask(self):
+        return self.mask
+
+    def set_mask(self, mask):
+        self.mask = mask
 
     def get_name(self):
         return self._name
@@ -78,36 +77,8 @@ class Field(object):
     def check_validity(self):
         raise NotImplementedError("Subclasses must implement this.")
 
-    def is_optional(self, allfields):
-        ''' This checks the other fields in this particular action to see if 
-            this is an optional field. If it is optional, returns True, if it is
-            required, return False. '''
-            
-        if self.optional_wo == None:
-            return False
-        # Loop through all the fields
-        for field in allfields:
-            # If the field matches the prerequisites, then this is not an
-            # optional field, return False.
-            if self.optional_wo == field:
-                return False
-        # Seems it is optional.
-        return True
 
-    def check_prerequisites(self, allfields):
-        ''' This checks to see if any of the prereqs exist in allfields that
-            is passed in. If at least one of the prereqs are satisfied, the
-            check passes. Otherwise, raises an error. '''
-        if self.prereq == None:
-            return
-        for field in allfields:
-            if field in self.prereq:
-                return
-        raise FieldPrereqError("Prerequisites are not met: %s" % self.prereq)
-        
-        
-
-class number_field(Field):
+class number_field(LCField):
     ''' Used for fields that need to be numbers. Has additional required init
         fields:
             minval - Minimum value that is allowed.
@@ -115,31 +86,31 @@ class number_field(Field):
             others - Optional field that is a list of other values that are
                      valid.
     '''
-    def __init__(self, name, minval, maxval, value=None, prereq=None,
-                 optional_without=None, mask=False, others=[]):
+    def __init__(self, name, minval, maxval, value=None, mask=False, others=[]):
         if value is not None:
             if type(value) is not int and type(value) is not long:
-                raise FieldTypeError("value is not a number")
+                raise LCFieldTypeError("value is not a number")
         
-        super(number_field, self).__init__(name, value, prereq, optional_without)
-
         self.minval = minval
         self.maxval = maxval
         self.others = others
 
+        super(number_field, self).__init__(name, value)
+
+
     def check_validity(self):
         # Check if self.value is a number
         if not isinstance(self.value, int):
-            raise FieldTypeError("self.value of " + self._name + " is not of type int: " + str(type(self.value)))
+            raise LCFieldTypeError("self.value of " + self._name + " is not of type int: " + str(type(self.value)))
 
         # Check if self.value is between self.minval and self.maxval
         if (self.value < self.minval) or (self.value > self.maxval):
              if len(self.others) == 0 :
-                 raise FieldValueError(
+                 raise LCFieldValueError(
                      "self.value (" + str(self.value) + ") is not between " + str(self.minval) +
                      " and " + str(self.maxval))
              elif self.value not in self.others:
-                 raise FieldValueError(
+                 raise LCFieldValueError(
                      "self.value is not between " + str(self.minval) +
                      " and " + str(self.maxval) + " and not in (" +
                      str(self.others) + ")")        
@@ -163,13 +134,13 @@ class mac_field(number_field):
 
 class ipv4_field(number_field):
     ''' Used for IPv4 addresses. '''
-    def __init__(self, name, value=None, mask=False, prereq=None):
+    def __init__(self, name, value=None, mask=False):
         if value is not None:
             ip = IPAddress(value)
 
         super(ipv4_field, self).__init__(name, value=int(ip),
                                          minval=0, maxval=2**32-1,
-                                         mask=mask, prereq=prereq)
+                                         mask=mask)
 
     def __str__(self):
         retstr = "%s:%s" % (self._name, IPAddress(self.value))
@@ -179,14 +150,13 @@ class ipv4_field(number_field):
 
 class ipv6_field(number_field):
     ''' Used for IPv6 addresses. '''
-    def __init__(self, name, value=None, mask=False, prereq=None):
+    def __init__(self, name, value=None, mask=False):
         if value is not None:
             ip = IPAddress(value, 6)
 
         super(ipv6_field, self).__init__(name, value=int(ip),
                                          minval=0, maxval=2**128-1,
-                                         mask=mask, prereq=prereq)
-
+                                         mask=mask)
     def __str__(self):
         retstr = "%s:%s" % (self._name, IPAddress(self.value, 6))
         return retstr
@@ -195,7 +165,8 @@ class ipv6_field(number_field):
 
 
 
-###### Below are OpenFlow Header Fields, for matching and modifying. #####
+###### Below are fields that can be sent from the SDXController to the 
+###### LocalController and be properly interpreted
 class IN_PORT(number_field):
     def __init__(self, value=None):
         super(IN_PORT, self).__init__('in_port', value=value,
@@ -219,57 +190,47 @@ class ETH_TYPE(number_field):
 class IP_PROTO(number_field):
     def __init__(self, value=None):
         super(IP_PROTO, self).__init__('ip_proto', value=value,
-                                       minval=0, maxval=2**8-1,
-                                       prereq=[ETH_TYPE(0x0800),
-                                               ETH_TYPE(0x86dd)])
+                                       minval=0, maxval=2**8-1)
 
 class IPV4_SRC(ipv4_field):
     def __init__(self, value=None, mask=False):
         super(IPV4_SRC, self).__init__('ipv4_src', value=value,
-                                       prereq=[ETH_TYPE(0x0800)],
                                        mask=mask)
 
 class IPV4_DST(ipv4_field):
     def __init__(self, value=None, mask=False):
         super(IPV4_DST, self).__init__('ipv4_dst', value=value,
-                                       prereq=[ETH_TYPE(0x0800)],
                                        mask=mask)
         
 class IPV6_SRC(ipv6_field):
     def __init__(self, value=None, mask=False):
         super(IPV6_SRC, self).__init__('ipv6_src', value=value,
-                                       prereq=[ETH_TYPE(0x86dd)],
                                        mask=mask)
 
 class IPV6_DST(ipv6_field):
     def __init__(self, value=None, mask=False):
         super(IPV6_DST, self).__init__('ipv6_dst', value=value,
-                                       prereq=[ETH_TYPE(0x86dd)],
                                        mask=mask)
 
 class TCP_SRC(number_field):
     def __init__(self, value=None):
         super(TCP_SRC, self).__init__('tcp_src', value=value,
-                                      minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(6)])
+                                      minval=0, maxval=2**16-1)
 
 class TCP_DST(number_field):
     def __init__(self, value=None):
         super(TCP_DST, self).__init__('tcp_dst', value=value,
-                                      minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(6)])
+                                      minval=0, maxval=2**16-1)
 
 class UDP_SRC(number_field):
     def __init__(self, value=None):
         super(UDP_SRC, self).__init__('udp_src', value=value,
-                                      minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(6)])
+                                      minval=0, maxval=2**16-1)
 
 class UDP_DST(number_field):
     def __init__(self, value=None):
         super(UDP_DST, self).__init__('udp_dst', value=value,
-                                      minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(6)])
+                                      minval=0, maxval=2**16-1)
 
 class VLAN_VID(number_field):
     # FIXME: Perhaps this should be changed from a number_field to something
@@ -280,7 +241,7 @@ class VLAN_VID(number_field):
         value = value + (0x1000*cfi)
         super(VLAN_VID, self).__init__('vlan_vid', value=value,
                                        minval=0, maxval=2**13-1,
-                                       prereq=None, mask=mask)
+                                       mask=mask)
     def __str__(self):
         retstr = "%s:%s,%s" % (self._name,
                                (self.value - (0x1000*self.cfi)), # Actual VLAN
@@ -295,9 +256,11 @@ VALID_MATCH_FIELDS = [ IN_PORT, ETH_DST, ETH_SRC, ETH_TYPE, IP_PROTO, IPV4_SRC,
                        IPV4_DST, IPV6_SRC, IPV6_DST, TCP_SRC, TCP_DST, UDP_SRC,
                        UDP_DST, VLAN_VID ]
 
+
 # This is a translation mechanism for mapping a name to a class
 # Value is assumed
 # Can be used for aliases!
+#FIXME: is this necessary?
 MATCH_NAME_TO_CLASS = { 'in_port': {'type':IN_PORT, 'required':None},
                         'eth_dst': {'type':ETH_DST, 'required':['mask']},
                         'eth_src': {'type':ETH_SRC, 'required':['mask']},
