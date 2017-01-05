@@ -11,10 +11,9 @@ class VlanTunnelLCRule(LCRule):
     ''' This structure is used to pass Rules that create VLANs between two ports
         on a switch. Connection can be unidirectional or bidirectional.'''
 
-    def __init__(self, cookie, switch_id, inport, outport, vlan_in, vlan_out, 
+    def __init__(self, switch_id, inport, outport, vlan_in, vlan_out, 
                  bidrectional=True, bandwidth=None):
         ''' Field descriptions:
-                cookie - Unique identifier for the given rule
                 inport - Physical port on the switch
                 outport - Physical port on the switch
                 vlan_in - VLAN in use on the in-port
@@ -24,7 +23,7 @@ class VlanTunnelLCRule(LCRule):
                 bandwidth - Bandwidth requirement in megabits-per-second. None 
                     means there is no specific requirement.
         '''
-        super(VlanTunnelLCRule, self).__init__(switch_id, cookie)
+        super(VlanTunnelLCRule, self).__init__(switch_id)
 
         # Validate inputs, as much as we can.
         if type(inport) != int:

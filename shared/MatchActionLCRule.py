@@ -11,19 +11,14 @@ class MatchActionLCRule(LCRule):
         for a single location. These are close to OpenFlow rules, but abstract
         away quite of bit of the detail. ''' 
 
-    def __init__(self, cookie, switch_id, matches, actions, ingress=True):
+    def __init__(self, switch_id, matches, actions, ingress=True):
         ''' Field descriptions:
-                cookie - Unique identifier for the given rule. Opaque, just used
-                    for identification. Smaller is better, a number is probably
-                    best, but a string could work. For instance: 
-                        "sdonovan-756"
-                    could be the user 'sdonovan' 756th rule.
                 matches - List of matches for a given rule
                 actions - List of actions for a given rule
                 ingress - Boolean describing if the rule is an ingress or egress
                     rule. 
         '''
-        super(MatchActionLCRule, self).__init__(switch_id, cookie)
+        super(MatchActionLCRule, self).__init__(switch_id)
 
         # Validate inputs, as much as we can.
         if type(matches) != type([]):

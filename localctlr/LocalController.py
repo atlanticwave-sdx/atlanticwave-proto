@@ -144,7 +144,7 @@ class LocalController(SingletonMixin):
         self.sdx_connection = self.sdx_cm.open_outbound_connection(IPADDR, PORT)
         self.logger.debug("SDX Controller Connection - %s" % (self.sdx_connection))
         # Send name
-        self.sdx_connection.send(self.name)
+        self.sdx_connection.send_cmd(SDX_IDENTIFY, self.name)
 
         # FIXME: Credentials exchange
 
@@ -154,84 +154,6 @@ class LocalController(SingletonMixin):
     def sdx_message_callback(self):
         pass
     # Is this necessary?
-
-
-    def _translate_to_OF(self, lcrule):
-        ''' This translates from LCRules to OFRules. All the following functions 
-            are helpers for this. '''
-
-        # Verify input
-        if not isinstance(lcrule, LCRule):
-            raise TypeError("lcrule %s is not of type LCRule: %s" %
-                            (lcrule, type(lcrule)))
-
-        # Switch based on actual type
-        results = None
-        if type(lcrule) == MatchActionLCRule:
-            results = self._translate_MatchActionLCRule(lcrule)
-
-        elif type(lcrule) == VlanTunnelLCRule:
-            results = self._translate_VlanTunnelLCRule(lcrule)
-
-        # Return translated rule.
-        return results
-
-    def _translate_MatchActionLCRule(self, marule):
-        matchlist = []
-        actionlist = []
-
-        # Translate all the matches
-        xlated_match = self._translate_LCMatch(marule.get_matches(),
-                                               marule.get_ingress())
-
-        # Translate all the actions
-        xlated_actions = self._translate_LCAction(marule.get_actions(),
-                                                  marule.get_ingress())
-
-        # Build the instruction
-        instruction = instruction_APPLY_ACTIONS(xlated_actions)
-        table = None #FIXME
-        priority = None #FIXME
-        cookie = None #FIXME
-        switch_id = marule.get_switch_id()
-
-        # Build the OpenFlowRule
-        rule = OpenFlowRule(xlated_match, instruction, 
-        
-
-                
-        pass
-        
-    def _translate_VlanLCRule(self, vlanrule):
-        # Create outbound rule
-
-        # If bidirectional, create inbound rule
-
-        #FIXME: Bandwidth management stuff
-        
-
-        pass
-
-    def _translate_LCMatch(self, lcmatches, ingress):
-        # for each match:
-
-        # Augment the matches with all the prereqs
-        # If there's a prereq in conflict (i.e., user specified somethign in the 
-        # same field, there's a problem, raise an error).
-
-        
-        pass
-
-
-    def _translate_LCAction(self, lcactions, ingress):
-        # for each action:
-        
-        # translate to appropriate action type.
-        pass
-
-    def _translate_LCField(self, type, value):
-        # Figure out the correct class, and fill it in
-        pass
 
 
 if __name__ == '__main__':

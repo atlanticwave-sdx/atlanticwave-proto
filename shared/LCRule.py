@@ -11,7 +11,17 @@ class LCRuleValueError(ValueError):
 class LCRule(object):
     ''' Parent class for all Local Controller-SDX Controller rules. '''
 
-    def __init__(self, switch_id, cookie):
+    def __init__(self, switch_id, cookie=None):
+        ''' Field descriptions:
+                switch_id - Switch ID of the switch. This is context dependent:
+                    OpenFlow uses one format, P4 uses something else, Cisco 
+                    can use something else.
+                cookie - Unique identifier for the given rule. Opaque, just used
+                    for identification. Smaller is better, a number is probably
+                    best, but a string could work. For instance: 
+                        "sdonovan-756"
+                    could be the user 'sdonovan' 756th rule.
+        ''' 
         # Validate input is correct type:
         if type(cookie) != int:
             raise LCRuleTypeError("cookie is not an int: %s, %s" % 
@@ -25,3 +35,7 @@ class LCRule(object):
 
     def get_cookie(self):
         return self.cookie
+
+    def set_cookie(self, cookie):
+        # used by the RuleManager for internal tracking.
+        self.cookie = cookie

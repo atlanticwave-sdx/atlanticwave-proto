@@ -21,8 +21,6 @@ from InterRyuControllerConnectionManager import *
 import logging
 import threading
 
-ADD = "ADD"
-REMOVE = "REMOVE"
 LOCALHOST = "127.0.0.1"
 
 
@@ -49,6 +47,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                                    self.ryu_cxn_port)
 
         self.datapaths = {}
+        self.of_cookies = {}
+        self.current_of_cookie = 0
 
         # Spawn main_loop thread
         self.loop_thread = threading.Thread(target=self.main_loop)
@@ -104,28 +104,20 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 # FIXME - Need to update this for sending errors back
                 continue
                 
-            datapath = self.datapaths[event.switch_id]
-            match = self.translate_match(datapath, event.match)
+            datapath = self.datapaths[rule.switch_id]
             
-            if event_type == ADD:
-                # Convert instruction to Ryu
-                instructions = [self.translate_instruction(datapath, 
-                                                           event.instruction)]
+            if event_type == ICX_ADD:
+                # Parse event
+                #FIXME
+                # Call handling function
+                self.install_rule(datapath, rule)
+            elif event_type == ICX_REMOVE:
+                # Parse event
+                #FIXME
+                # Call handling function
+                self.remove_rule(datapath, sdx_cookie)
                 
-                self.add_flow(datapath,
-                              event.cookie,
-                              event.table,
-                              event.priority,
-                              match,
-                              instructions)
-                              # event.buffer_id)
 
-            elif event_type == REMOVE:
-                # Remove a rule.
-                self.remove_flow(datapath,
-                                 event.cookie,
-                                 event.table,
-                                 match)
             # FIXME - There may need to be more options here. This is just a start.
 
     # Handles switch connect event
@@ -204,6 +196,86 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # FIXME: The empty list is due to a bug in ofproto_v1_3_parser.py:2758
             return parser.OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS,[])
 
+
+
+
+    def _translate_to_OF(self, lcrule):
+        ''' This translates from LCRules to OFRules. All the following functions
+            are helpers for this. '''
+
+        # Verify input
+        if not isinstance(lcrule, LCRule):
+            raise TypeError("lcrule %s is not of type LCRule: %s" %
+                            (lcrule, type(lcrule)))
+
+        # Switch based on actual type
+        results = None
+        if type(lcrule) == MatchActionLCRule:
+            results = self._translate_MatchActionLCRule(lcrule)
+
+        elif type(lcrule) == VlanTunnelLCRule:
+            results = self._translate_VlanTunnelLCRule(lcrule)
+
+        # Return translated rule.
+        return results
+
+    def _translate_MatchActionLCRule(self, marule):
+        matchlist = []
+        actionlist = []
+
+        # Translate all the matches
+        xlated_match = self._translate_LCMatch(marule.get_matches(),
+                                               marule.get_ingress())
+
+        # Translate all the actions
+        xlated_actions = self._translate_LCAction(marule.get_actions(),
+                                                  marule.get_ingress())
+
+        # Build the instruction
+        instruction = instruction_APPLY_ACTIONS(xlated_actions)
+        table = None #FIXME
+        priority = None #FIXME
+        cookie = None #FIXME
+        switch_id = marule.get_switch_id()
+
+        # Build the OpenFlowRule
+        rule = OpenFlowRule(xlated_match, instruction, FIXME)
+        
+
+                
+        pass
+        
+    def _translate_VlanLCRule(self, vlanrule):
+        # Create outbound rule
+
+        # If bidirectional, create inbound rule
+
+        #FIXME: Bandwidth management stuff
+        
+
+        pass
+
+    def _translate_LCMatch(self, lcmatches, ingress):
+        # for each match:
+
+        # Augment the matches with all the prereqs
+        # If there's a prereq in conflict (i.e., user specified somethign in the 
+        # same field, there's a problem, raise an error).
+
+        
+        pass
+
+
+    def _translate_LCAction(self, lcactions, ingress):
+        # for each action:
+        
+        # translate to appropriate action type.
+        pass
+
+    def _translate_LCField(self, type, value):
+        # Figure out the correct class, and fill it in
+        pass        
+
         
                               
     def add_flow(self, datapath, cookie, table, priority, match, instruction, 
@@ -241,3 +313,96 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 match=match)
         datapath.send_msg(mod)
 
+
+    def _get_new_OF_cookie(self, sdx_cookie):
+        ''' Creates a new cookie that can be used by OpenFlow switches. 
+            Populates a local database with information so that cookie can be
+            looked up for rule removal. '''
+        if sdx_cookie in self.of_cookies.keys():
+            # FIXME: This shouldn't happen...
+            pass
+        
+        of_cookie = self.current_of_cookie
+        self.current_of_cookie += 1
+        
+        self.of_cookies[sdx_cookie] = of_cookie
+        return of_cookie
+
+    def _find_OF_cookie(self, sdx_cookie):
+        ''' Looks up OpenFlow cookie in local database based on a provided
+            sdx_cookie. '''
+        if sdx_cookie not in self.of_cookies.keys():
+            return None
+        return self.of_cookies[sdx_cookie]
+
+    def _rm_OF_cookie(self, sdx_cookie):
+        ''' Removes OpenFlow cookie based on the sdx_cookie. '''
+        if sdx_cookie not in self.of_cookies.keys():
+            # FIXME: This shouldn't happen...
+        del self.of_cookies[sdx_cookie]
+
+    def install_rule(self, datapath, rule):
+        ''' The main loop calls this to handle adding a new rule.
+            This function handles the translation from the SDX-provided rule to
+            OpenFlow rules that the switch can actually work with. '''
+
+        # FIXME: this is where translation from LC/SDX interface to the near OF
+        #interface should happen
+        # FIXME: OpenFlow Cookie generation - The rule's 
+
+        # Get a cookie based on the SDX Controller cookie
+        of_cookie = self._get_new_OF_cookie(rule.cookie)
+
+        # Convert rule into instructions for Ryu
+
+        # Save off instructions to local database.
+
+        # Send instructions to the switch.
+
+
+
+
+                
+                
+        # Convert instruction to Ryu
+        instructions = [self.translate_instruction(datapath, 
+                                                   event.instruction)]
+                
+        self.add_flow(datapath,
+                      event.cookie,
+                      event.table,
+                      event.priority,
+                      match,
+                      instructions)
+                      # event.buffer_id)
+
+        pass
+
+    def remove_rule(self, datapath, sdx_cookie):
+        ''' The main loop calls this to handle removing an existing rule.
+            This function removes the existing OpenFlow rules associated with
+            a given sdx_cookie. '''
+
+        # Remove a rule.
+        # Find the OF cookie based on the SDX Cookie
+        of_cookie = self._find_OF_cookie(rule.sdx_cookie)
+
+        # Get the Rules based on the 
+        
+        # Remove flows
+
+        # Remove OF cookie
+        self._rm_OF_cookie(rule.sdx_cookie)
+
+        # Remove rule infomation from database
+
+
+                
+
+                
+        self.remove_flow(datapath,
+                         event.cookie,
+                         event.table,
+                         match)
+        pass
+                

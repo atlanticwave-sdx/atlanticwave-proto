@@ -5,11 +5,13 @@
 from shared.ConnectionManager import ConnectionManager
 
 # Commands
+# RyuControllerInterface to RyuTranslateInterface
 ICX_ADD = "ADD"
 ICX_REMOVE = "REMOVE"
     
 
 # Responses
+# RyuTranslateInterface to RyuControllerInterface
 ICX_DATAPATHS = "DATAPATHS"
 
 

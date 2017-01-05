@@ -6,7 +6,7 @@ from ControllerInterface import *
 from InterRyuControllerConnectionManager import *
 from ryu.ofproto import ofproto_v1_3
 from shared.Singleton import Singleton
-from shared.OpenFlowRule import OpenFlowRule
+from shared.LCRule import LCRule
 from ryu.cmd.manager import main
 
 import threading
@@ -87,20 +87,20 @@ class RyuControllerInterface(ControllerInterface):
         self.inter_cm_condition.release()
 
     def send_command(self, rule):
-        if not isinstance(rule, OpenFlowRule):
-            raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + str(type(rule)) + 
+        if not isinstance(rule, LCRule):
+            raise ControllerInterfaceTypeError("rule is not of type LCRule: " + str(type(rule)) + 
                                                "\n    Value: " + str(rule))
 
         self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s" % (rule))
         self.inter_cm_cxn.send_cmd(ICX_ADD, rule)
 
-    def remove_rule(self, rule):
-        if not isinstance(rule, OpenFlowRule):
-            raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + str(type(rule)) +
-                                               "\n    Value: " + str(rule))
+    def remove_rule(self, sdxcookie):
+        if not isinstance(sdxcookie, basestring):
+            raise ControllerInterfaceTypeError("sdxcookie is not of type basestring: " + str(type(sdxcookie)) +
+                                               "\n    Value: " + str(sdxcookie))
 
-        self.logger.debug("Removing old cmd to RyuTranslateInterface: %s" % (rule))
-        self.inter_cm_cxn.send_cmd(ICX_REMOVE, rule)
+        self.logger.debug("Removing old cmd to RyuTranslateInterface: %s" % (sdxcookie))
+        self.inter_cm_cxn.send_cmd(ICX_REMOVE, sdxcookie)
 
     def _setup_logger(self):
         ''' Internal function for setting up the logger formats. '''

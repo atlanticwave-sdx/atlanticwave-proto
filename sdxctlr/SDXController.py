@@ -130,8 +130,13 @@ class SDXController(SingletonMixin):
         
     def _handle_new_connection(self, cxn):
         # Receive name from LocalController, verify that it's in the topology
-        name = cxn.recv()
         topo = self.tm.get_topology()
+        cmd,name = cxn.recv_cmd()
+
+        if cmd != SDX_IDENTIFY:
+            #FIXME: raise some sort of error here.
+            self.logger.error("LocalController not identifying correctly: %s, %s" % (cmd, name))
+            return
         
         if name not in topo.node.keys():
             self.logger.error("LocalController with name %s attempting to get in. Only known nodes: %s" % (name, topo.node.keys()))
