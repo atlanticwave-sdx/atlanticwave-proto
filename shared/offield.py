@@ -137,7 +137,7 @@ class number_field(Field):
              if len(self.others) == 0 :
                  raise FieldValueError(
                      "self.value (" + str(self.value) + ") is not between " + str(self.minval) +
-                     " and " + str(self.maxval))
+                     " and " + str(preself.maxval))
              elif self.value not in self.others:
                  raise FieldValueError(
                      "self.value is not between " + str(self.minval) +
@@ -263,13 +263,13 @@ class UDP_SRC(number_field):
     def __init__(self, value=None):
         super(UDP_SRC, self).__init__('udp_src', value=value,
                                       minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(6)])
+                                      prereq=[IP_PROTO(17)])
 
 class UDP_DST(number_field):
     def __init__(self, value=None):
         super(UDP_DST, self).__init__('udp_dst', value=value,
                                       minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(6)])
+                                      prereq=[IP_PROTO(17)])
 
 class VLAN_VID(number_field):
     # FIXME: Perhaps this should be changed from a number_field to something

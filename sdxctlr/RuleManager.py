@@ -112,13 +112,17 @@ class RuleManager(SingletonMixin):
             breakdown = self._determine_breakdown(rule)
         except Exception as e: raise
 
-        # If everything passes, set the hash and breakdown, put into database
-        rule.set_rule_hash(self._get_new_rule_number())
+        # If everything passes, set the hash, cookie, and breakdown,
+        # put into database
+        rulehash = self._get_new_rule_number()
+        rule.set_rule_hash(rulehash)
+        for entry in breakdown:
+            entry.set_cookie(rulehash)
         rule.set_breakdown(breakdown)
 
         self._add_rule_to_db(rule)
             
-        return rule.get_rule_hash()
+        return rulehash
         
 
     def test_add_rule(self, rule):

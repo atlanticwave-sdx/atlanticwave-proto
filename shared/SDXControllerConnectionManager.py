@@ -37,7 +37,8 @@ class SDXControllerConnectionManager(ConnectionManager):
         
             # Send rules
             for rule in bd.get_list_of_rules():
-                lc_cxn.send_cmd(SDX_NEW_RULE, rule)
+                switch_id = rule.get_switch_id()
+                lc_cxn.send_cmd(SDX_NEW_RULE, (switch_id, rule))
         except Exception as e: raise
 
     def send_breakdown_rule_rm(self, bd):
@@ -50,8 +51,9 @@ class SDXControllerConnectionManager(ConnectionManager):
 
             # Send rm for each rule, slightly different than adding rules
             for rule in bd.get_list_of_rules():
+                switch_id = rule.get_switch_id()
                 rule_cookie = rule.get_cookie()
-                lc_cxn.send_cmd(SDX_RM_RULE, rule_cookie)
+                lc_cxn.send_cmd(SDX_RM_RULE, (switch_id, rule_cookie))
             
         except Exception as e: raise
 

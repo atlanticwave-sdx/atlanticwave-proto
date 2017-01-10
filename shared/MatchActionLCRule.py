@@ -13,8 +13,8 @@ class MatchActionLCRule(LCRule):
 
     def __init__(self, switch_id, matches, actions, ingress=True):
         ''' Field descriptions:
-                matches - List of matches for a given rule
-                actions - List of actions for a given rule
+                matches - List of matches for a given rule (LCFields)
+                actions - List of actions for a given rule (LCAction)
                 ingress - Boolean describing if the rule is an ingress or egress
                     rule. 
         '''

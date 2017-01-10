@@ -86,21 +86,21 @@ class RyuControllerInterface(ControllerInterface):
         self.inter_cm_condition.notify()
         self.inter_cm_condition.release()
 
-    def send_command(self, rule):
+    def send_command(self, switch_id, rule):
         if not isinstance(rule, LCRule):
             raise ControllerInterfaceTypeError("rule is not of type LCRule: " + str(type(rule)) + 
                                                "\n    Value: " + str(rule))
 
-        self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s" % (rule))
-        self.inter_cm_cxn.send_cmd(ICX_ADD, rule)
+        self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s:%s" % (switch_id, rule))
+        self.inter_cm_cxn.send_cmd(ICX_ADD, (switch_id, rule))
 
-    def remove_rule(self, sdxcookie):
+    def remove_rule(self, switch_id, sdxcookie):
         if not isinstance(sdxcookie, basestring):
             raise ControllerInterfaceTypeError("sdxcookie is not of type basestring: " + str(type(sdxcookie)) +
                                                "\n    Value: " + str(sdxcookie))
 
-        self.logger.debug("Removing old cmd to RyuTranslateInterface: %s" % (sdxcookie))
-        self.inter_cm_cxn.send_cmd(ICX_REMOVE, sdxcookie)
+        self.logger.debug("Removing old cmd to RyuTranslateInterface: %s:%s" % (switch_id, sdxcookie))
+        self.inter_cm_cxn.send_cmd(ICX_REMOVE, (switch_id, sdxcookie))
 
     def _setup_logger(self):
         ''' Internal function for setting up the logger formats. '''

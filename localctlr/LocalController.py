@@ -93,11 +93,12 @@ class LocalController(SingletonMixin):
                 if entry == self.sdx_connection:
                     self.logger.debug("Receiving Command on sdx_connection")
                     cmd, data = self.sdx_connection.recv_cmd()
+                    (switch_id, cmddata) = data
                     self.logger.debug("Received : %s:%s" % (cmd, data))
                     if cmd == SDX_NEW_RULE:
-                        self.switch_connection.send_command(data)
+                        self.switch_connection.send_command(switch_id, cmddata)
                     elif cmd == SDX_RM_RULE:
-                        self.switch_connection.remove_rule(data)
+                        self.switch_connection.remove_rule(switch_id, cmddata)
                     self.logger.debug("Sent     : %s:%s" % (cmd, data))
 
                 #elif?

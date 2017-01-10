@@ -22,11 +22,17 @@ class Forward(LCAction):
         self.port = port
         super(Forward, self).__init__("Forward")
 
+    def get(self):
+        return self.port
+
 class SetField(LCAction):
     ''' Sets a field in a packet. '''
     def __init__(self, field):
         self.field = field
         super(SetField, self).__init__("SetField")
+
+    def get(self):
+        return self.field
 
 class Continue(LCAction):
     ''' Continues on to the next table. '''
@@ -44,3 +50,6 @@ class SetBandwidth(LCAction):
     def __init__(self, bw):
         self.bw = bw
         super(SetBandwidth, self).__init__("SetBandwidth")
+
+    def get(self):
+        return self.bw
