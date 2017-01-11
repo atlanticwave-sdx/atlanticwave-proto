@@ -2,9 +2,9 @@
 # AtlanticWave/SDX Project
 
 
-from shared.ofconstants import *
-from shared.offield import *
-from shared.action import OpenFlowAction
+from legacy.openflow.ofconstants import *
+from legacy.openflow.offield import *
+from legacy.openflow.action import OpenFlowAction
 
 class OpenFlowInstructionTypeError(TypeError):
     pass

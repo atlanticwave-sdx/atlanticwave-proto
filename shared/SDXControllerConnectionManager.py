@@ -17,8 +17,8 @@ SDX_IDENTIFY = "IDENTIFY"
 IPADDR = '127.0.0.1'
 PORT = 5555
 
-from shared.ConnectionManager import *
-from shared.Connection import Connection
+from lib.ConnectionManager import *
+from lib.Connection import Connection
 from shared.UserPolicy import UserPolicyBreakdown
 
 class SDXControllerConnectionManager(ConnectionManager):

@@ -2,8 +2,8 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import Singleton
-from shared.Connection import Connection
+from lib.Singleton import Singleton
+from lib.Connection import Connection
 
 import socket
 import logging

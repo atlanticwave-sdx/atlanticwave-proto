@@ -7,15 +7,10 @@ import threading
 import sys
 import json
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 from RyuControllerInterface import *
 from shared.SDXControllerConnectionManager import *
-from shared.Connection import select
-
-# Types of rules that need translation
-from shared.LCRule import *
-from shared.VlanTunnelLCRule import *
-from shared.MatchActionLCRule import *
+from lib.Connection import select
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767

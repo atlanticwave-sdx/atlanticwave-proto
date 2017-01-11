@@ -6,14 +6,11 @@ import logging
 import threading
 import dataset
 
-from shared.OpenFlowRule import OpenFlowRule
-from shared.Singleton import Singleton
-from shared.match import *
-from shared.offield import *
-from shared.action import *
-from shared.instruction import *
 from shared.MatchActionLCRule import *
 from shared.VlanTunnelLCRule import *
+from shared.LCAction import *
+from shared.LCFields import *
+from shared.LCRule import *
 from ryu import cfg
 from ryu.base import app_manager
 from ryu.controller import ofp_event
@@ -267,39 +264,39 @@ class RyuTranslateInterface(app_manager.RyuApp):
         trc = TranslatedRuleContainer(of_cookie, table, priority,
                                       match, instruction)
         return trc
-        
+
+    
     def _translate_VlanLCRule(self, datapath, table, of_cookie, vlanrule):
         ''' This translates VlanLCRules. This can generate one or two rules, 
             depending on if this is a bidirectional tunnel (the norm) or not.
         '''
         results = []
-        priority = 100 #FIXME
-        
-        # Create outbound rule
-        match = self.translate_match(datapath,
-                                     OpenFlowMatch([IN_PORT(inport),
-                                                    VLAN_VID(invlan)]))
-        actions = [action_SET_FIELD(VLAN_VID(outvlan)),
-                   action_OUTPUT(outport)]
-        instruction = self.translate_instruction(
-                          instruction_APPLY_ACTIONS(actions))
 
-        results.append(TranslatedRuleContainer(of_cookie, table, priority,
-                                               match, instruction))        
+        # Create Outbound Rule
+        # Make the equivalent MatchActionLCRule, translate it, and use these
+        # as the results. Easier translation!
+        switch_id = 0  # This is unimportant: it's never used in the translation
+        matches = [IN_PORT(vlanrule.get_inport()),
+                   VLAN_VID(vlanrule.get_vlan_in())]
+        actions = [SetField(VLAN_VID(vlanrule.get_vlan_out)),
+                   Forward(vlanrule.get_outport())]
+        marule = MatchActionLCRule(switch_id, matches, actions)
+        results.append(self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule))
         
         # If bidirectional, create inbound rule
         if vlanrule.get_bidirectional() == True:
-            match = self.translate_match(datapath,
-                                     OpenFlowMatch([IN_PORT(outport),
-                                                    VLAN_VID(outvlan)]))
-            actions = [action_SET_FIELD(VLAN_VID(invlan)),
-                       action_OUTPUT(inport)]
-            instruction = self.translate_instruction(
-                              instruction_APPLY_ACTIONS(actions))
-
-            results.append(TranslatedRuleContainer(of_cookie, table, priority,
-                                                   match, instruction))  
-            
+            matches = [IN_PORT(vlanrule.get_outport()),
+                       VLAN_VID(vlanrule.get_vlan_out())]
+            actions = [SetField(VLAN_VID(vlanrule.get_vlan_in)),
+                       Forward(vlanrule.get_inport())]
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results.append(self._translate_MatchActionLCRule(datapath,
+                                                             table,
+                                                             of_cookie,
+                                                             marule))
 
         #FIXME: Bandwidth management stuff
 

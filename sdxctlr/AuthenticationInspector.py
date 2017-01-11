@@ -3,7 +3,7 @@
 
 
 import logging
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 
 class AuthenticationInspector(SingletonMixin):
     ''' The AuthenticationInspector is responsible for determining if someone or

@@ -8,7 +8,7 @@ import cPickle as pickle
 from threading import Timer, Lock, Thread
 from datetime import datetime, timedelta
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 from AuthorizationInspector import AuthorizationInspector
 from BreakdownEngine import BreakdownEngine
 from ValidityInspector import ValidityInspector

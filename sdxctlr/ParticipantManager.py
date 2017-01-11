@@ -3,7 +3,7 @@
 
 
 import json, logging
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
 

@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 from AuthorizationInspector import AuthorizationInspector 
 from TopologyManager import TopologyManager
 

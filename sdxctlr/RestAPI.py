@@ -3,7 +3,7 @@
 # AtlanticWave/SDX Project
 # Login based on example code from https://github.com/maxcountryman/flask-login
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 from shared.L2TunnelPolicy import L2TunnelPolicy
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector

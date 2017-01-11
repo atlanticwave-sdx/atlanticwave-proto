@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from shared.ConnectionManager import ConnectionManager
+from lib.ConnectionManager import ConnectionManager
 
 # Commands
 # RyuControllerInterface to RyuTranslateInterface
