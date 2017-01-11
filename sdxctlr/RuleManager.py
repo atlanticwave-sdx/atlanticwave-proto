@@ -21,12 +21,25 @@ INACTIVE_RULE               = 2
 EXPIRED_RULE                = 3
 INSUFFICIENT_PRIVILEGES     = 4
 
+def STATE_TO_STRING(state):
+    if state == 1:
+        return "ACTIVE RULE"
+    elif state == 2:
+        return "INACTIVE RULE"
+    elif state == 3:
+        return "EXPIRED RULE"
+    elif state == 4:
+        return "INSUFFICIENT PRIVILEGES"
 
 
 
 
 class RuleManagerError(Exception):
     ''' Parent class, can be used as a catch-all for other errors '''
+    pass
+
+class RuleManagerTypeError(TypeError):
+    ''' if there's a type error. '''
     pass
 
 class RuleManagerValidationError(RuleManagerError):
@@ -70,6 +83,10 @@ class RuleManager(SingletonMixin):
         self.db = database
         self.rule_table = self.db['rules']        # All the rules live here.
         self.config_table = self.db['config']     # Key-value configuration DB
+
+        # Used for filtering.
+        self._valid_table_columns = ['hash', 'ruletype', 
+                                     'state', 'starttime', 'stoptime']
 
 
         # Setup timers and their associated locks.
@@ -143,7 +160,7 @@ class RuleManager(SingletonMixin):
         if self.rule_table.find_one(hash=rule_hash) == None:
             raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
 
-        rule = pickle.loads(self.rule_table.find_one(hash=rule_hash)['rule'])
+        rule = pickle.loads(str(self.rule_table.find_one(hash=rule_hash)['rule']))
         authorized = None
         try:
             authorized = AuthorizationInspector.instance().is_authorized(user, rule) #FIXME
@@ -152,34 +169,98 @@ class RuleManager(SingletonMixin):
         if authorized != True:
             raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s" % (user, rule_hash))
 
-        self._rm_rule_from_db(rule_hash, rule)
+        self._rm_rule_from_db(rule)
 
     def remove_all_rules(self, user):
         ''' Removes all rules. Just an alias for repeatedly calling 
             remove_rule() without needing to know all the hashes. '''
-        for rule in self.rule_table:
+        for rule in self.rule_table.find():
             self.remove_rule(rule['hash'], user)
 
+    def get_rules_search_fields(self):
+        ''' This returns fields that can be used in get_rules()'s filter.
+            Basically, this is any of the columns used in the rule_tyble.insert()
+            action. There is some variation (the rule is pickled, so not useful),
+            but it tracks most of the colunmns. '''
 
-    def get_rules(self, filter=None):
+        #FIXME: make this more general, so that it can actually search for something like "starts between 8 and 10am". Further, should be able to tell users what values are valid for particular fields. the RuleRegistry should help out here.
+
+        return self._valid_table_columns
+
+    def get_rules(self, filter={}, ordering=None):
         ''' Used for searching for rules based on a filter. The filter could be 
             based on the rule type, the user that installed the rule, the local 
-            controllers that have rules installed, or the hash_value of the rule.
-            This will be useful for both administrators and for participants for
-            debugging. This will return a list of tuples (rule_hash, rule). '''
+            controllers that have rules installed, or the hash_value of the 
+            rule. This will be useful for both administrators and for 
+            participants for debugging. This will return a list of tuples 
+            (rule_hash, json version of rule, ruletype, user, state as string). 
 
-        #FIXME: Need to define what the filters actually are.
-        pass
+            filter is a dictionary with any of the fields that belong to what is
+            returned by get_rules_search_fields(). Optional.
+
+            orderring is the field to order the results by. For reversing, 
+            adding a - to the front is valid. E.g., "hash" will return in 
+            ascending order, while "-hash" will return in decending. 
+            Optional.'''
+        #FIXME: make this more general, so that it can actually search for something like "starts between 8 and 10am".
+        
+        # Validate that the filter is valid.
+        if filter != None:
+            if type(filter) != dict:
+                raise RuleManagerTypeError("filter is not a dictionary: %s" % 
+                                           type(filter))
+            for keys in filter.keys():
+                if key not in self._valid_table_columns:
+                    raise RuleManagerValidationError("filter column %s is not a valid filtering field %s" % (key, self._valid_table_columns))
+
+        # Handle ordering, if necessary.
+        if ordering != None:
+            filter['order_by'] = ordering
+        
+        # Do the search on the table
+        results = self.rule_table.find(**filter)
+
+
+        #FIXME: need to figure out what to send back to the caller of the rules. What does the rule look like? Should it be the JSON version? I think so.
+        retval = [(x['hash'],
+                   pickle.loads(str(x['rule'])).get_json_rule(),
+                   x['ruletype'],
+                   pickle.loads(str(x['rule'])).get_user(),
+                   STATE_TO_STRING(str(x['state']))) for x in results]
+        return retval
 
     def get_rule_details(self, rule_hash):
         ''' This will return details of a rule, including the rule itself, the 
-            local controller breakdowns, the user who installed the rule, the 
-            date and time of rule installation. '''
-        return self.rule_table.find_one(hash=rule_hash)
+            local controller breakdowns, and the user who installed the rule. 
+        
+            Returns tuple (rule_hash, json version of rule, ruletype, state, 
+              user, list of text versions of breakdowns)
+        '''
+        table_entry = self.rule_table.find_one(hash=rule_hash)
+        if table_entry != None:
+            rule = pickle.loads(str(table_entry['rule']))
+            
+            # get the pieces
+            jsonrule = rule.get_json_rule()
+            ruletype = rule.get_ruletype()
+            state = STATE_TO_STRING(table_entry['state'])
+            user = rule.get_user()
+
+            breakdowns = []
+            for bd in rule.get_breakdown():
+                lc = bd.get_lc()
+                breakdowns += ["%s:%s" % (lc, str(x)) for x in 
+                               bd.get_list_of_rules()]
+            
+            # Return as a tuple
+            return (rule_hash, jsonrule, ruletype, state, user, breakdowns)
+
+        return None
 
     def _get_new_rule_number(self):
-        ''' Returns a new rule number for use. For now, it's incrementing by one,
-            but this can be a security risk, so should be a random number/hash.
+        ''' Returns a new rule number for use. For now, it's incrementing by 
+            one, but this can be a security risk, so should be a random 
+            number/hash.
             Good for 4B (or more!) rules!
         '''
         self.rule_number += 1
@@ -234,48 +315,41 @@ class RuleManager(SingletonMixin):
 
         # Should this be installed now? e.g., Is the begin time before *now*?
         # Set state based on this question.
+        # Many rules do *not* have timers associated. If so, set the 
+        # install_time to now and remove_time to None. Need to handle these
+        # cases below.
         now = datetime.now()
-        install_time = datetime.strptime(rule.get_start_time(), 
-                                         rfc3339format)
-        remove_time  = datetime.strptime(rule.get_stop_time(), 
-                                         rfc3339format)
+        install_time = now
+        remove_time = None
+        if rule.get_start_time() != None:
+            install_time = datetime.strptime(rule.get_start_time(), 
+                                             rfc3339format)
+        if rule.get_stop_time() != None:
+            remove_time  = datetime.strptime(rule.get_stop_time(), 
+                                             rfc3339format)
 
-        print "Now     : %s" % now
-        print "Install : %s" % install_time
-        print "Remove  : %s" % remove_time
+#        print "Now     : %s" % now
+#        print "Install : %s" % install_time
+#        print "Remove  : %s" % remove_time
 
-        if now >= remove_time:
+        if remove_time != None and now >= remove_time:
             state = EXPIRED_RULE
         elif now >= install_time: # implicitly, before remove_time
             state = ACTIVE_RULE
             self._install_rule(rule)
-        
-
-        # If it's in the future, is it the next rule in the future? 
-        # Update timer if so.
-        else:
-            with self.install_lock:
-                if ((self.install_next_time == None) or
-                    (install_time < datetime.strptime(self.install_next_time,
-                                                      rfc3339format))):
-
-                    self.install_next_time = install_time
-                    if self.install_timer != None:
-                        self.install_timer.cancel()
-                    delta = (datetime.strptime(self.install_next_time,
-                                               rfc3339format) - now)
-                    self.install_timer = Timer(delta.total_seconds(),
-                                               self._rule_install_timer_cb)
-                    self.install_timer.daemon = True
-                    self.install_timer.start()
 
         # Push into DB.
+        # If there are any changes here, update self._valid_table_columns.
         self.rule_table.insert({'hash':rule.get_rule_hash(), 
                                 'rule':pickle.dumps(rule),
+                                'ruletype':rule.get_ruletype(),
                                 'state':state,
                                 'starttime':rule.get_start_time(),
                                 'stoptime':rule.get_stop_time()})
 
+        # Restart install timer if it's a rule starting the future
+        if state == INACTIVE_RULE:
+            self._restart_install_timer()
 
 
     def _rm_rule_from_db(self, rule):
@@ -291,61 +365,18 @@ class RuleManager(SingletonMixin):
         # Remove from the rule_table
         self.rule_table.delete(hash=rule.get_rule_hash())
         
-        # Is the rule active? If so, remove it from the LCs.
-        # Was it the next remove timer to pop? If so, need to update timer.
+
         if state == ACTIVE_RULE:
             self._remove_rule(rule)
 
             if stoptime == self.remove_next_time:
-                with self.remove_lock:
-                    # Clean up existing remove timer
-                    if self.remove_timer != None:
-                        self.remove_timer.cancel()
-                    self.remove_timer = None
-                    self.remove_next_time = None
+                self._restart_remove_timer()
 
-                    # Pull next active rules, and reset the timer.
-                    active_rules = self.rule_table.find(state=ACTIVE_RULE,
-                                                        order_by="stoptime", 
-                                                        _limit=1)
-
-                    # If there are no new active rules, this was just be skipped
-                    for r in active_rules:
-                        now = datetime.now()
-                        self.remove_next_time = r['stoptime']
-                        delta = (datetime.strptime(self.remove_next_time,
-                                                   rfc3339format) - now)
-                        self.remove_timer = Timer(delta.total_seconds(),
-                                                  self._rule_remove_timer_cb)
-                        self.remove_timer.daemon = True
-                        self.remove_timer.start()
 
         # If inactive, 
         # Was it the next install timer to pop? If so, update timer.
         elif state == INACTIVE_RULE:
-            if starttime == self.install_next_time:
-                with self.install_lock:
-                    # Clean up existing install timer
-                    if self.install_timer != None:
-                        self.install_timer.cancel()
-                    self.install_timer = None
-                    self.install_next_time = None
-
-                    # Pull next inactive rule, and reset the timer.
-                    inactive_rules = self.rule_table.find(state=INACTIVE_RULE,
-                                                          order_by="stoptime", 
-                                                          _limit=1)
-
-                    # If there are no new active rules, this was just be skipped
-                    for r in inactive_rules:
-                        now = datetime.now()
-                        self.install_next_time = r['stoptime']
-                        delta = (datetime.strptime(self.install_next_time,
-                                                   rfc3339format) - now)
-                        self.install_timer = Timer(delta.total_seconds(),
-                                                  self._rule_install_timer_cb)
-                        self.install_timer.daemon = True
-                        self.install_timer.start()
+            self._restart_install_timer()
 
         # If Expired:
         # Nothing specific to do right now
@@ -365,6 +396,8 @@ class RuleManager(SingletonMixin):
             for bd in rule.get_breakdown():
                 self.send_user_add_rule(bd)
         except Exception as e: raise
+        self._restart_remove_timer()
+
 
     def _remove_rule(self, rule):
         ''' Helper function that remove a rule from the switch. '''
@@ -399,25 +432,12 @@ class RuleManager(SingletonMixin):
             self.rule_table.update({'hash':rule['hash'],
                                     'state':ACTIVE_RULE}, 
                                    ['hash'])
-            self._install_rule(pickle.loads(rule['rule']))
+            
+            self._install_rule(pickle.loads(str(rule['rule'])))
             
         
         # Set timer for next rule install, if necessary.
-        with self.install_lock:
-            self.install_next_time = next_install_time
-            if self.install_timer != None:
-                self.install_timer.cancel()
-
-            if self.install_next_time != None:
-                delta = (datetime.strptime(next_install_time, rfc3339format) -
-                         now)
-
-                self.install_timer=Timer(delta.total_seconds(),
-                                         self._rule_install_timer_cb)
-                self.install_timer.daemon = True
-                self.install_timer.start()
-            
-            
+        self._restart_install_timer()            
 
     def _rule_remove_timer_cb(self):
         ''' This is the timer callback for rule removal (expiring rules). Called
@@ -444,22 +464,67 @@ class RuleManager(SingletonMixin):
 
             # Remove rule and update state.
             self.rule_table.update({'hash':rule['hash'],
-                                    'state':INACTIVE_RULE}, 
+                                    'state':EXPIRED_RULE}, 
                                    ['hash'])
-            self._remove_rule(pickle.loads(rule['rule']))
+            self._remove_rule(pickle.loads(str(rule['rule'])))
             # FIXME: Recurrant rules will need to be updated on the install list potentially.
 
         # Set timer for next rule removal, if necessary
+        self._restart_remove_timer()
+
+    def _restart_remove_timer(self):
+        ''' Internal function for starting the remove timer. ''' 
+        # Is the rule active? If so, remove it from the LCs.
+        # Was it the next remove timer to pop? If so, need to update timer.
         with self.remove_lock:
-            self.remove_next_time = next_remove_time
+            # Clean up existing remove timer
             if self.remove_timer != None:
                 self.remove_timer.cancel()
+            self.remove_timer = None
+            self.remove_next_time = None
 
-            if self.remove_next_time != None:
-                delta = (datetime.strptime(next_remove_time, rfc3339format) -
-                         now)
+            # Pull next active rules, and reset the timer.
+            active_rules = self.rule_table.find(state=ACTIVE_RULE,
+                                                order_by="stoptime")
+            #, _limit=1)
 
-                self.remove_timer=Timer(delta.total_seconds(),
-                                        self._rule_remove_timer_cb)
+            # If there are no new active rules, this was just be skipped
+            for r in active_rules:
+                # If it's a rule that lasts forever, skip it
+                if r['stoptime'] == None:
+                    continue
+                # We only want the first one (the soonest to stop), so
+                # there's a break at the end of this loop.
+                now = datetime.now()
+                self.remove_next_time = r['stoptime']
+                delta = (datetime.strptime(self.remove_next_time,
+                                           rfc3339format) - now)
+                self.remove_timer = Timer(delta.total_seconds(),
+                                          self._rule_remove_timer_cb)
                 self.remove_timer.daemon = True
                 self.remove_timer.start()
+                break
+
+    def _restart_install_timer(self):
+        with self.install_lock:
+            # Clean up existing install timer
+            if self.install_timer != None:
+                self.install_timer.cancel()
+            self.install_timer = None
+            self.install_next_time = None
+
+            # Pull next inactive rule, and reset the timer.
+            inactive_rules = self.rule_table.find(state=INACTIVE_RULE,
+                                                  order_by="starttime", 
+                                                  _limit=1)
+
+            # If there are no new active rules, this was just be skipped
+            for r in inactive_rules:
+                now = datetime.now()
+                self.install_next_time = r['starttime']
+                delta = (datetime.strptime(self.install_next_time,
+                                           rfc3339format) - now)
+                self.install_timer = Timer(delta.total_seconds(),
+                                           self._rule_install_timer_cb)
+                self.install_timer.daemon = True
+                self.install_timer.start()

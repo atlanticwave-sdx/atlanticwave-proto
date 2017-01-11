@@ -27,6 +27,7 @@ class TopologyManager(SingletonMixin):
     def __init__(self, topology_file=MANIFEST_FILE):
         # Initialize topology
         self.topo = nx.Graph()
+        self.lcs = []         # This probably should end up as a list of dicts.
 
         # Initialize topology lock.
         self.topolock = Lock()
@@ -40,6 +41,10 @@ class TopologyManager(SingletonMixin):
             https://networkx.readthedocs.io/en/stable/reference/index.html '''
         return self.topo
     
+    def get_lcs(self):
+        ''' Returns the list of valid LocalControllers. '''
+        return self.lcs
+
     def register_for_topology_updates(self, callback):
         ''' callback will be called when there is a topology update. callback 
             must accept a topology as its only parameter. '''
@@ -63,21 +68,26 @@ class TopologyManager(SingletonMixin):
             with self.topolock:
                 if not self.topo.has_node(key):
                     self.topo.add_node(key)
-                self.topo.node[key]['type'] = endpoint['type']
-                self.topo.node[key]['location'] = endpoint['location']
+                self.topo.node[key]['type'] = str(endpoint['type'])
+                self.topo.node[key]['location'] = str(endpoint['location'])
                     
 
         for key in data['localcontrollers'].keys():
             # Generic per-location information that applies to all switches at
             # a location.
+            # FIXME: Everything's wrapped as a str or int because Unicode.
             entry = data['localcontrollers'][key]
-            shortname = entry['shortname']
-            location = entry['location']
-            lcip = entry['lcip']
-            org = entry['operatorinfo']['organization']
-            administrator = entry['operatorinfo']['administrator']
-            contact = entry['operatorinfo']['contact']
+            shortname = str(entry['shortname'])
+            location = str(entry['location'])
+            lcip = str(entry['lcip'])
+            org = str(entry['operatorinfo']['organization'])
+            administrator = str(entry['operatorinfo']['administrator'])
+            contact = str(entry['operatorinfo']['contact'])
             
+            # Add shortname to the list of valid LocalControllers
+            self.lcs.append(shortname)
+
+            # Fill out topology
             with self.topolock:
                 for switchinfo in entry['switchinfo']:
                     name = switchinfo['name']
@@ -87,9 +97,9 @@ class TopologyManager(SingletonMixin):
                     # Per switch info, gets added to topo
                     self.topo.node[name]['friendlyname'] = switchinfo['friendlyname']
                     self.topo.node[name]['dpid'] = int(switchinfo['dpid'])
-                    self.topo.node[name]['ip'] = switchinfo['ip']
-                    self.topo.node[name]['brand'] = switchinfo['brand']
-                    self.topo.node[name]['model'] = switchinfo['model']
+                    self.topo.node[name]['ip'] = str(switchinfo['ip'])
+                    self.topo.node[name]['brand'] = str(switchinfo['brand'])
+                    self.topo.node[name]['model'] = str(switchinfo['model'])
                     self.topo.node[name]['locationshortname'] = shortname
                     self.topo.node[name]['location'] = location
                     self.topo.node[name]['lcip'] = lcip
@@ -104,8 +114,8 @@ class TopologyManager(SingletonMixin):
                     # Add the links
                     for port in switchinfo['portinfo']:
                         portnumber = int(port['portnumber'])
-                        speed = port['speed']
-                        destination = port['destination']
+                        speed = str(port['speed'])
+                        destination = str(port['destination'])
 
                         # If link already exists
                         if not self.topo.has_edge(name, destination):

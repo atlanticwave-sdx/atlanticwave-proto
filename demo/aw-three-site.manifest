@@ -11,7 +11,13 @@
       "location":"25.755971,-80.373737"},
     "miah2": {
       "type":"host",
-      "location":"25.755971,-80.373737"}
+      "location":"25.755971,-80.373737"},
+    "gruh1": {
+      "type":"host",
+      "location":"-23.4348091,-46.4816877"},
+    "gruh2": {
+      "type":"host",
+      "location":"-23.4348091,-46.4816877"}     
   },
   "localcontrollers": {
     "atl":{
@@ -45,7 +51,7 @@
             {
               "portnumber": 3,
               "speed": 1,
-              "destination": "mia"
+              "destination": "mia-switch"
             }
           ],
           "rulesaccepted": [
@@ -74,7 +80,7 @@
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55768,
-	"openflowport": 6653
+	"openflowport": 6643
       },
       "switchinfo": [
         {
@@ -98,7 +104,65 @@
             {
               "portnumber": 3,
               "speed": 1,
-              "destination": "atl"
+              "destination": "atl-switch"
+            },
+            {
+              "portnumber": 4,
+              "speed": 1,
+              "destination": "gru-switch"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "gru":{
+      "shortname": "gru",
+      "credentials": "grupw",
+      "location": "-23.430000,-46.480000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55769,
+	"openflowport": 6653
+      },
+      "switchinfo": [
+        {
+          "name": "gru-switch",
+	  "friendlyname":"Main Sao Paulo Switch",
+          "ip": "127.0.0.1",
+          "dpid":3,
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 1,
+              "destination": "gruh1"
+            },
+            {
+              "portnumber": 2,
+              "speed": 1,
+              "destination": "gruh2"
+            },
+            {
+              "portnumber": 3,
+              "speed": 1,
+              "destination": "mia-switch"
             }
           ],
           "rulesaccepted": [

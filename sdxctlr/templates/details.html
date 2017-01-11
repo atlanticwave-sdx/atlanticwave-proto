@@ -1,0 +1,80 @@
+{% include "head.html" %}
+    <section id="rules-table">
+        <div class="container">
+            <form action="/rule/all/">
+                <br><input type="submit" class="btn btn-danger btn-lg" value="View all rules"/>
+            </form>
+
+            <table cellspacing='0'>
+
+                <thead>
+                    <tr>
+                        <th>Rule Hash</th>
+                        <th>Rule Type</th>
+                        <th>Status</th>
+                        <th>User</th>
+                        <th>Delete Rule</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>{{ detail[0] }}</td>
+                        <td>{{ detail[2] }}</td>
+                        <td>{{ detail[3] }}</td>
+                        <td>{{ detail[4] }}</td>
+                        <td><form action="/rule/{{ detail[0] }}" method="POST"><button type="submit" class="btn btn-danger btn-lg">[x]</button></form></td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+            
+            <table cellspacing='0'>
+
+                <thead>
+                    <tr>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Source Switch</th>
+                        <th>Destinaion Switch</th>
+                        <th>Source Port</th>
+                        <th>Destination Port</th>
+                        <th>Source VLAN</th>
+                        <th>Destination VLAN</th>
+                        <th>Bandwidth</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>{{ detail[1]['l2tunnel']['starttime'] }}</td>
+                        <td>{{ detail[1]['l2tunnel']['endtime'] }}</td>
+                        <td>{{ detail[1]['l2tunnel']['srcswitch'] }}</td>
+                        <td>{{ detail[1]['l2tunnel']['dstswitch'] }}</td>
+                        <td>{{ detail[1]['l2tunnel']['srcport'] }}</td>
+                        <td>{{ detail[1]['l2tunnel']['dstport'] }}</td>
+                        <td>{{ detail[1]['l2tunnel']['srcvlan'] }}</td>
+                        <td>{{ detail[1]['l2tunnel']['dstvlan'] }}</td>
+                        <td>{{ detail[1]['l2tunnel']['bandwidth'] }}</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+            <table cellspacing='0'>
+                <thead>
+                    <tr>
+                        <th>Misc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ detail[5] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+{% include "foot.html" %}

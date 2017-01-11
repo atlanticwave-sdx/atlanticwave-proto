@@ -53,7 +53,7 @@ class L2TunnelPolicy(UserPolicy):
         self.src_vlan = None
         self.dst_vlan = None
         self.bandwidth = None
-        super(L2TunnelPolicy, self).__init__(username, json_rule)
+        super(L2TunnelPolicy, self).__init__(username, "L2Tunnel", json_rule)
 
         # Anything specific here?
         pass
@@ -135,7 +135,7 @@ class L2TunnelPolicy(UserPolicy):
             outvlan = self.dst_vlan
             bandwidth = self.bandwidth
 
-            bd = UserPolicyBreakdown(shortname)
+            bd = UserPolicyBreakdown(shortname, [])
 
             rule = VlanTunnelLCRule(switch_id, inport, outport, invlan, outvlan,
                                     True, bandwidth)
@@ -162,17 +162,18 @@ class L2TunnelPolicy(UserPolicy):
             switch_id = topology.node[location]['dpid']
             bandwidth = self.bandwidth
             
-            bd = UserPolicyBreakdown(shortname)
+            bd = UserPolicyBreakdown(shortname, [])
 
             # get edge
             edge = topology.edge[location][path]
-            outport = edge[path]
+            outport = edge[location]
 
 
             rule = VlanTunnelLCRule(switch_id, inport, outport, invlan, outvlan,
                                     True, bandwidth)
 
             bd.add_to_list_of_rules(rule)
+
             self.breakdown.append(bd)
         
         
@@ -188,22 +189,24 @@ class L2TunnelPolicy(UserPolicy):
             #               action set fwd
             #  - on outbound, match on the switch, port, and intermediate VLAN
             #               action set fwd
-            shortname = topology.node[location]['locationshortname']
-            switch_id = topology.node[location]['dpid']
+            shortname = topology.node[node]['locationshortname']
+            switch_id = topology.node[node]['dpid']
             bandwidth = self.bandwidth
 
-            bd = UserPolicyBreakdown(shortname)
+            bd = UserPolicyBreakdown(shortname, [])
 
             # get edges
-            prevedge = topology.node[location][prevnode]
-            nextedge = topology.node[location][nextnode]
+            prevedge = topology.edge[prevnode][node]
+            nextedge = topology.edge[node][nextnode]
 
-            for inport, outport in [(prevedge[node], prevedge[prevnode]),
-                                    (nextedge[node], nextedge[nextnode])]:
-                rule = VlanTunnelLCRule(switch_id, inport, outport,
-                                        intermediate_vlan, intermediate_vlan,
-                                        True, bandwidth)
-                bd.add_to_list_of_rules(rule)
+            inport = prevedge[node]
+            outport = nextedge[node]
+
+            rule = VlanTunnelLCRule(switch_id, inport, outport,
+                                    intermediate_vlan, intermediate_vlan,
+                                    True, bandwidth)            
+
+            bd.add_to_list_of_rules(rule)
 
             # Add the four new rules created above to the breakdown
             self.breakdown.append(bd)
@@ -227,8 +230,8 @@ class L2TunnelPolicy(UserPolicy):
         # Make sure end is after start and after now.
         #FIXME
 
-        self.src_switch = json_rule['l2tunnel']['srcswitch']
-        self.dst_switch = json_rule['l2tunnel']['dstswitch']
+        self.src_switch = str(json_rule['l2tunnel']['srcswitch'])
+        self.dst_switch = str(json_rule['l2tunnel']['dstswitch'])
         self.src_port = int(json_rule['l2tunnel']['srcport'])
         self.dst_port = int(json_rule['l2tunnel']['dstport'])
         self.src_vlan = int(json_rule['l2tunnel']['srcvlan'])

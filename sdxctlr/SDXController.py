@@ -9,7 +9,7 @@ import Queue
 import dataset
 
 from lib.Singleton import SingletonMixin
-from lib.Connection import select
+from lib.Connection import select as cxnselect
 from shared.SDXControllerConnectionManager import *
 from shared.UserPolicy import UserPolicyBreakdown
 from AuthenticationInspector import *
@@ -48,7 +48,7 @@ class SDXController(SingletonMixin):
         itself.
         Singleton. ''' 
 
-    def __init__(self, runloop=True, mani=None, db=":memory:"):
+    def __init__(self, runloop=True, mani=None, db=":memory:", run_topo=True):
         ''' The bulk of the work happens here. This initializes nearly everything
             and starts up the main processing loop for the entire SDX
             Controller. '''
@@ -61,6 +61,9 @@ class SDXController(SingletonMixin):
         self.db = dataset.connect('sqlite:///' + db, 
                                   engine_kwargs={'connect_args':
                                                  {'check_same_thread':False}})
+
+        # self.run_topo decides whether or not to send rules.
+        self.run_topo = run_topo
 
         # Modules with potentially configurable configuration files
         if mani != None:
@@ -100,9 +103,15 @@ class SDXController(SingletonMixin):
 
 
         # Start these modules last!
-        self.rm = RuleManager.instance(self.db,
-                                       self.sdx_cm.send_breakdown_rule_add,
-                                       self.sdx_cm.send_breakdown_rule_rm)
+        if self.run_topo:
+            self.rm = RuleManager.instance(self.db,
+                                           self.sdx_cm.send_breakdown_rule_add,
+                                           self.sdx_cm.send_breakdown_rule_rm)
+        else:
+            self.rm = RuleManager.instance(self.db,
+                                           send_no_rules,
+                                           send_no_rules)
+
         self.pm = ParticipantManager.instance()      #FIXME - Filename
         self.rapi = RestAPI.instance()
 
@@ -132,7 +141,6 @@ class SDXController(SingletonMixin):
         
     def _handle_new_connection(self, cxn):
         # Receive name from LocalController, verify that it's in the topology
-        topo = self.tm.get_topology()
         cmd,name = cxn.recv_cmd()
 
         if cmd != SDX_IDENTIFY:
@@ -140,8 +148,13 @@ class SDXController(SingletonMixin):
             self.logger.error("LocalController not identifying correctly: %s, %s" % (cmd, name))
             return
         
-        if name not in topo.node.keys():
-            self.logger.error("LocalController with name %s attempting to get in. Only known nodes: %s" % (name, topo.node.keys()))
+        lcs = self.tm.get_lcs()
+
+        self.logger.info("LocalController attempting to log in with name %s." % 
+                         name)
+
+        if name not in lcs:
+            self.logger.error("LocalController with name %s attempting to get in. Only known nodes: %s" % (name, lcs))
             return
         # FIXME: Credentials exchange
 
@@ -152,8 +165,9 @@ class SDXController(SingletonMixin):
         #FIXME: Send this to the LocalControllerManager
 
         #FIXME: This is to update the Rule Manager. It seems that whenever a callback is set, it gets a static image of that function/object. That seems incorrect. This should be a workaround.
-        self.rm.set_send_add_rule(self.sdx_cm.send_breakdown_rule_add)
-        self.rm.set_send_rm_rule(self.sdx_cm.send_breakdown_rule_rm)
+        if self.run_topo:
+            self.rm.set_send_add_rule(self.sdx_cm.send_breakdown_rule_add)
+            self.rm.set_send_rm_rule(self.sdx_cm.send_breakdown_rule_rm)
         
     def _handle_connection_loss(self, cxn):
         #FIXME: Send this to the LocalControllerManager
@@ -170,7 +184,7 @@ class SDXController(SingletonMixin):
         rlist = self.connections.values()
         wlist = []
         xlist = rlist
-        timeout = .5
+        timeout = 2.0
 
         # Main loop - Have a ~500ms timer on the select call to handle cxn events
         while True:
@@ -201,12 +215,12 @@ class SDXController(SingletonMixin):
             
             # Dispatch messages as appropriate
             try: 
-                readable, writable, exceptional = select(rlist,
-                                                          wlist,
-                                                          xlist,
-                                                          timeout)
+                readable, writable, exceptional = cxnselect(rlist,
+                                                            wlist,
+                                                            xlist,
+                                                            timeout)
             except Exception as e:
-                self.logger.error("Error in select - %s" % (e))                
+                raise
 
 
             # Loop through readable
@@ -234,18 +248,34 @@ class SDXController(SingletonMixin):
                 # FIXME: Handle connection failures
                 pass
 
+def send_no_rules(param):
+    pass
 
+def usage():
+    print "USAGE: python SDXController.py manifest <db-location> <--no_topo>"
+    print "You must provide manifest files for the SDXController if running from the command line."
+    print "You can provide a database location for the sqlite database. Otherwise, uses an in-memory database for temporary storage."
+    print "--no_topo is used when not running local controllers for testing."
+    exit()
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 and len(sys.argv) != 3:
-        print "USAGE: python SDXController.py manifest <db-location>"
-        print "You must provide manifest files for the SDXController if running from the command line."
-        print "You can provide a database location for the sqlite database. Otherwise, uses an in-memory database for temporary storage."
-        exit()
+    if len(sys.argv) != 2 and len(sys.argv) != 3 and len(sys.argv) != 4:
+        usage()
     mani = sys.argv[1]
     db = ":memory:"
+    topo = True
     if len(sys.argv) == 3:
-        db = sys.argv[2]
-    sdx = SDXController(False, mani, db)
+        if sys.argv[2] == "--no_topo":
+            topo = False
+        else:
+            db = sys.argv[2]
+    if len(sys.argv) == 4:
+        if sys.argv[3] != "--no_topo":
+            usage()
+        topo = False
+        
+        
+    sdx = SDXController(False, mani, db, topo)
     sdx._main_loop()
+

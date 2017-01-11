@@ -1,0 +1,1565 @@
+{
+  "endpoints": {
+    "rshost": {
+      "type":"host",
+      "location":"33.0,-84.0"},
+    "miahost": {
+      "type":"host",
+      "location":"25.0,-80.0"},
+    "bahost": {
+      "type":"host",
+      "location": "33.0,-80.0"},
+    "achost": {
+      "type":"host",
+      "location": "33.0,-82.0"}
+  },
+  "localcontrollers":{
+    "ac":{
+      "shortname": "ac",
+      "credentials": "acpw",
+      "location": "33.0,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55001,
+	"openflowport":6601
+      },
+      "switchinfo": [
+        {
+          "name": "acsw",	
+	  "friendlyname": "AC Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 1,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"rosw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"achost"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"achost"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "al":{
+      "shortname": "al",
+      "credentials": "alpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55002,
+	"openflowport":6602
+      },
+      "switchinfo": [
+        {
+          "name": "alsw",
+	  "friendlyname": "AL Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 2,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"pesw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"sesw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "ap":{
+      "shortname": "ap",
+      "credentials": "appw",
+      "location": "33.5,-82.5",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55003,
+	"openflowport":6603
+      },
+      "switchinfo": [
+        {
+          "name": "apsw",
+	  "friendlyname": "AP Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 3,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"pasw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "am":{
+      "shortname": "am",
+      "credentials": "ampw",
+      "location": "33.5,-83.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55004,
+	"openflowport":6604
+      },
+      "switchinfo": [
+        {
+          "name": "amsw",
+	  "friendlyname": "AM Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 4,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"dfsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"pasw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"rrsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "ba":{
+      "shortname": "ba",
+      "credentials": "bapw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55005,
+	"openflowport":6605
+      },
+      "switchinfo": [
+        {
+          "name": "basw",
+	  "friendlyname": "BA Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 5,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"essw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"pesw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"sesw"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 1,
+	      "destination":"mgsw"
+	    },
+	    {
+	      "portnumber": 5,
+	      "speed": 1,
+	      "destination":"bahost"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "ce":{
+      "shortname": "ce",
+      "credentials": "cepw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55006,
+	"openflowport":6606
+      },
+      "switchinfo": [
+        {
+          "name": "cesw",
+	  "friendlyname": "CE Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 6,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"mgsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"rrsw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"spsw"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 1,
+	      "destination":"masw"
+	    },
+	    {
+	      "portnumber": 5,
+	      "speed": 1,
+	      "destination":"rnsw"
+	    },
+	    {
+	      "portnumber": 6,
+	      "speed": 1,
+	      "destination":"pesw"
+	    },
+	    {
+	      "portnumber": 7,
+	      "speed": 1,
+	      "destination":"miasw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "df":{
+      "shortname": "df",
+      "credentials": "dfpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55007,
+	"openflowport":6607
+      },
+      "switchinfo": [
+        {
+          "name": "dfsw",
+	  "friendlyname": "DF Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 7,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"rjsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"gosw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"amsw"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 1,
+	      "destination":"mgsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "es":{
+      "shortname": "es",
+      "credentials": "espw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55008,
+	"openflowport":6608
+      },
+      "switchinfo": [
+        {
+          "name": "essw",
+	  "friendlyname": "ES Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 8,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"rjsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"basw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "go":{
+      "shortname": "go",
+      "credentials": "gopw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55009,
+	"openflowport":6609
+      },
+      "switchinfo": [
+        {
+          "name": "gosw",
+	  "friendlyname": "GO Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 9,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"mtsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"tosw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"dfsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "ma":{
+      "shortname": "ma",
+      "credentials": "mapw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55010,
+	"openflowport":6610
+      },
+      "switchinfo": [
+        {
+          "name": "masw",
+	  "friendlyname": "MA Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 10,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"cesw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"pasw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "mt":{
+      "shortname": "mt",
+      "credentials": "mtpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55011,
+	"openflowport":6611
+      },
+      "switchinfo": [
+        {
+          "name": "mtsw",
+	  "friendlyname": "MT Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 11,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"rosw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"mssw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"gosw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "ms":{
+      "shortname": "ms",
+      "credentials": "mspw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55012,
+	"openflowport":6612
+      },
+      "switchinfo": [
+        {
+          "name": "mssw",
+	  "friendlyname": "MS Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 12,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"mtsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"prsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "mg":{
+      "shortname": "mg",
+      "credentials": "mgpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55013,
+	"openflowport":6613
+      },
+      "switchinfo": [
+        {
+          "name": "mgsw",
+	  "friendlyname": "MG Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 13,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"dfsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"basw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"cesw"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 1,
+	      "destination":"spsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "pa":{
+      "shortname": "pa",
+      "credentials": "papw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55014,
+	"openflowport":6614
+      },
+      "switchinfo": [
+        {
+          "name": "pasw",
+	  "friendlyname": "PA Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 14,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"tosw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"amsw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"masw"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 1,
+	      "destination":"apsw"
+	    },
+	    {
+	      "portnumber": 5,
+	      "speed": 1,
+	      "destination":"pisw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "pbj":{
+      "shortname": "pbj",
+      "credentials": "pbjpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55015,
+	"openflowport":6615
+      },
+      "switchinfo": [
+        {
+          "name": "pbjsw",
+	  "friendlyname": "PBJ Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 15,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"rnsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"pbcsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "pr":{
+      "shortname": "pr",
+      "credentials": "prpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55016,
+	"openflowport":6616
+      },
+      "switchinfo": [
+        {
+          "name": "prsw",
+	  "friendlyname": "PR Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 16,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"mssw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"rssw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"spsw"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 1,
+	      "destination":"scsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "pe":{
+      "shortname": "pe",
+      "credentials": "pepw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55017,
+	"openflowport":6617
+      },
+      "switchinfo": [
+        {
+          "name": "pesw",
+	  "friendlyname": "PE Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 17,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"basw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"alsw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"cesw"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 1,
+	      "destination":"pisw"
+	    },
+	    {
+	      "portnumber": 5,
+	      "speed": 1,
+	      "destination":"pbcsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "pi":{
+      "shortname": "pi",
+      "credentials": "pipw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55018,
+	"openflowport":6618
+      },
+      "switchinfo": [
+        {
+          "name": "pisw",
+	  "friendlyname": "PI Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 18,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"pasw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"pesw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "rj":{
+      "shortname": "rj",
+      "credentials": "rjpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55019,
+	"openflowport":6619
+      },
+      "switchinfo": [
+        {
+          "name": "rjsw",
+	  "friendlyname": "RJ Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 19,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"spsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"essw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"dfsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "rn":{
+      "shortname": "rn",
+      "credentials": "rnpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55020,
+	"openflowport":6620
+      },
+      "switchinfo": [
+        {
+          "name": "rnsw",
+	  "friendlyname": "RN Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 20,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"cesw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"pbjsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "rs":{
+      "shortname": "rs",
+      "credentials": "rspw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55021,
+	"openflowport":6621
+      },
+      "switchinfo": [
+        {
+          "name": "rssw",
+	  "friendlyname": "RS Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 21,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"prsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"scsw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"rshost"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "ro":{
+      "shortname": "ro",
+      "credentials": "ropw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55022,
+	"openflowport":6622
+      },
+      "switchinfo": [
+        {
+          "name": "rosw",
+	  "friendlyname": "RO Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 22,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"acsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"mtsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "rr":{
+      "shortname": "rr",
+      "credentials": "rrpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55023,
+	"openflowport":6623
+      },
+      "switchinfo": [
+        {
+          "name": "rrsw",
+	  "friendlyname": "RR Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 23,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"amsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"cesw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "sc":{
+      "shortname": "sc",
+      "credentials": "scpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55024,
+	"openflowport":6624
+      },
+      "switchinfo": [
+        {
+          "name": "scsw",
+	  "friendlyname": "SC Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 24,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"prsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"spsw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"rssw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "sp":{
+      "shortname": "sp",
+      "credentials": "sppw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55025,
+	"openflowport":6625
+      },
+      "switchinfo": [
+        {
+          "name": "spsw",
+	  "friendlyname": "SP Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 25,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"prsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"scsw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"rjsw"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 1,
+	      "destination":"mgsw"
+	    },
+	    {
+	      "portnumber": 5,
+	      "speed": 1,
+	      "destination":"cesw"
+	    },
+	    {
+	      "portnumber": 6,
+	      "speed": 1,
+	      "destination":"miasw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "se":{
+      "shortname": "se",
+      "credentials": "sepw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55026,
+	"openflowport":6626
+      },
+      "switchinfo": [
+        {
+          "name": "sesw",
+	  "friendlyname": "SE Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 26,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"basw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"alsw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "to":{
+      "shortname": "to",
+      "credentials": "topw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55027,
+	"openflowport":6627
+      },
+      "switchinfo": [
+        {
+          "name": "tosw",
+	  "friendlyname": "TO Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 27,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"gosw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"pasw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "pbc":{
+      "shortname": "pbc",
+      "credentials": "pbcpw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55028,
+	"openflowport":6628
+      },
+      "switchinfo": [
+        {
+          "name": "pbcsw",
+	  "friendlyname": "PBC Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 28,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"pbjsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"pesw"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "mia":{
+      "shortname": "mia",
+      "credentials": "miapw",
+      "location": "33.5,-82.0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55029,
+	"openflowport":6629
+      },
+      "switchinfo": [
+        {
+          "name": "miasw",
+	  "friendlyname": "MIA Switch",
+	  "ip": "127.0.0.1",
+	  "dpid": 29,
+	  "brand": "Open vSwitch",
+	  "model": "2.3.0",
+	  "portinfo": [
+	    {
+	      "portnumber": 1,
+	      "speed": 1,
+	      "destination":"spsw"
+	    },
+	    {
+	      "portnumber": 2,
+	      "speed": 1,
+	      "destination":"cesw"
+	    },
+	    {
+	      "portnumber": 3,
+	      "speed": 1,
+	      "destination":"miahost"
+	    }
+	  ],
+	  "rulesaccepted": [
+	    "tbd"
+	  ],
+	  "rulesnotaccepted": [
+	    "tbd"
+	  ],
+	    "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+	}
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+  }
+}
