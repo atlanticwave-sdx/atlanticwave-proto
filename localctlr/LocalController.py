@@ -8,9 +8,9 @@ import sys
 import json
 
 from lib.Singleton import SingletonMixin
+from lib.Connection import select
 from RyuControllerInterface import *
 from shared.SDXControllerConnectionManager import *
-from lib.Connection import select
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
@@ -150,7 +150,6 @@ class LocalController(SingletonMixin):
     def sdx_message_callback(self):
         pass
     # Is this necessary?
-
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:

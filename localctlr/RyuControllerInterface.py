@@ -5,9 +5,9 @@
 from ControllerInterface import *
 from InterRyuControllerConnectionManager import *
 from ryu.ofproto import ofproto_v1_3
+from ryu.cmd.manager import main
 from lib.Singleton import Singleton
 from shared.LCRule import LCRule
-from ryu.cmd.manager import main
 
 import threading
 import logging
