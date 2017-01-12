@@ -10,10 +10,8 @@ import subprocess
 from localctlr.RyuTranslateInterface import *
 from localctlr.RyuControllerInterface import *
 from localctlr.RyuQueue import *
-from shared.match import *
-from shared.action import *
-from shared.instruction import *
-from shared.offield import *
+from shared.LCAction import *
+from shared.LCFields import *
 from time import sleep
 from ryu.ofproto.ofproto_v1_3_parser import *
 

@@ -41,7 +41,7 @@ class VlanTunnelLCRule(LCRule):
         if type(bandwidth) != int or bandwidth != None:
             raise LCRuleTypeError("vlan_out is not an int or None: %s, %s" % 
                                   (vlan_out, type(vlan_out)))
-        if type(bidirectional) != type(True):
+        if type(bidirectional) != bool:
             raise LCRuleTypeError("bidirectional is not a bool: %s, %s" % 
                                   (bidirectional, type(bidirectional)))
         if (vlan_in < VLAN_MIN) or (vlan_in > VLAN_MAX):

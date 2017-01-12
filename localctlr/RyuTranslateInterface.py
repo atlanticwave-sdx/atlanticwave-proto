@@ -421,7 +421,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         ''' This installs a rule into the DB. This makes life a lot easier and
             provides a central point to handle DB interactions. '''
         # Columns for the "rules" table:
-        #   sdxcookie - The SDX rule’s provided cookie. This must be unique.
+        #   sdxcookie - The SDX rule's provided cookie. This must be unique.
         #   switchcookie - The generated switch cookie. This will be unique.
         #   sdxrule - The LCRule that the SDX sent down to be installed
         #   switchrules - A list of Ryu-formatted rules that can be sent to the
@@ -448,7 +448,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             Returns a tuple:
             (switchcookie, sdxrule, switchrules, switchtable) '''
         result = self.rule_table.find_one(sdxcookie=sdx_coookie)
-        if result = None:
+        if result == None:
             return (None, None, None, None)
         return (result['switchcookie'],
                 result['sdxrule'],

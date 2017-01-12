@@ -16,9 +16,9 @@ class LCRule(object):
                 switch_id - Switch ID of the switch. This is context dependent:
                     OpenFlow uses one format, P4 uses something else, Cisco 
                     can use something else.
-                cookie - Unique identifier for the given rule. Opaque, just used
-                    for identification. Smaller is better, a number is probably
-                    best, but a string could work. For instance: 
+                cookie - Unique identifier for the given rule. Opaque, just 
+                    used for identification. Smaller is better, a number is 
+                    probably best, but a string could work. For instance: 
                         "sdonovan-756"
                     could be the user 'sdonovan' 756th rule.
         ''' 

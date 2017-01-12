@@ -278,7 +278,7 @@ class VLAN_VID(number_field):
 # This needs to be updated whenever there are new valid fields that we will
 # accept.
 VALID_MATCH_FIELDS = [ IN_PORT, ETH_DST, ETH_SRC, ETH_TYPE, IP_PROTO, IPV4_SRC,
-                       IPV4_DST, IPV6_SRC, IPV6_DST, TCP_SRC, TCP_DST, UDP_SRC,
+                       IPV4_DST, TCP_SRC, TCP_DST, UDP_SRC,
                        UDP_DST, VLAN_VID ]
 
 
@@ -293,8 +293,8 @@ MATCH_NAME_TO_CLASS = { 'in_port': {'type':IN_PORT, 'required':None},
                         'ip_proto': {'type':IP_PROTO, 'required':None},
                         'ipv4_src': {'type':IPV4_SRC, 'required':['mask']},
                         'ipv4_dst': {'type':IPV4_DST, 'required':['mask']},
-                        'ipv6_src': {'type':IPV6_SRC, 'required':['mask']},
-                        'ipv6_dst': {'type':IPV6_DST, 'required':['mask']},
+#                        'ipv6_src': {'type':IPV6_SRC, 'required':['mask']},
+#                        'ipv6_dst': {'type':IPV6_DST, 'required':['mask']},
                         'tcp_src': {'type':TCP_SRC, 'required':None},
                         'tcp_dst': {'type':TCP_DST, 'required':None},
                         'udp_src': {'type':UDP_SRC, 'required':None},

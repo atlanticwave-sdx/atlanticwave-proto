@@ -6,7 +6,8 @@ from UserPolicy import *
 from datetime import datetime
 import networkx as nx
 
-# For building rules, may need to change in the future with a better intermediary
+# For building rules, may need to change in the future with a better
+# intermediary
 from shared.constants import *
 from shared.VlanTunnelLCRule import VlanTunnelLCRule
 
@@ -36,7 +37,7 @@ class L2TunnelPolicy(UserPolicy):
             "srcvlan":1492,
             "dstvlan":1789,
             "bandwidth":1}}
-        Times are RFC3339 formated offset from UTC, if any, is after the seconds.
+        Times are RFC3339 formated offset from UTC, if any, is after the seconds
         Bandwidth is in Mbit/sec
 
         Side effect of coming from JSON, everything's unicode. Need to handle 

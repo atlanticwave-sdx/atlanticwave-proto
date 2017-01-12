@@ -35,7 +35,7 @@ class MatchActionLCRule(LCRule):
                 raise LCRuleTypeError("action %s is not an LCAction: %s" %
                                       (action, type(action)))
 
-        if type(ingress) != type(True):
+        if type(ingress) != bool:
             raise LCRuleTypeError("ingress is not a bool: %s, %s" % 
                                   (ingress, type(ingress)))
 
