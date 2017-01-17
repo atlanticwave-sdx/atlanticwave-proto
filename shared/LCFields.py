@@ -21,7 +21,7 @@ class LCField(object):
         FCActions (defined below). It provides common structure and 
         defines descriptors for each child class. '''
     
-    def __init__(self, name, value=None, mask=False, prereqs=None):
+    def __init__(self, name, value=None, mask=False, prereqs=[]):
         ''' - name is the name of the field
             - value is the value that this particular field is initialized with
               and can be changed by setting the value.
@@ -96,7 +96,8 @@ class number_field(LCField):
             others - Optional field that is a list of other values that are
                      valid.
     '''
-    def __init__(self, name, minval, maxval, value=None, mask=False, others=[]):
+    def __init__(self, name, minval, maxval, value=None, 
+                 mask=False, others=[], prereqs=[]):
         if value is not None:
             if type(value) is not int and type(value) is not long:
                 raise LCFieldTypeError("value is not a number")
@@ -105,7 +106,8 @@ class number_field(LCField):
         self.maxval = maxval
         self.others = others
 
-        super(number_field, self).__init__(name, value)
+        super(number_field, self).__init__(name, value, 
+                                           mask=mask, prereqs=prereqs)
 
 
     def check_validity(self):
@@ -144,13 +146,13 @@ class mac_field(number_field):
 
 class ipv4_field(number_field):
     ''' Used for IPv4 addresses. '''
-    def __init__(self, name, value=None, mask=False):
+    def __init__(self, name, value=None, mask=False, prereqs=[]):
         if value is not None:
             ip = IPAddress(value)
 
         super(ipv4_field, self).__init__(name, value=int(ip),
                                          minval=0, maxval=2**32-1,
-                                         mask=mask)
+                                         mask=mask, prereqs=prereqs)
 
     def __str__(self):
         retstr = "%s:%s" % (self._name, IPAddress(self.value))
@@ -160,13 +162,13 @@ class ipv4_field(number_field):
 
 class ipv6_field(number_field):
     ''' Used for IPv6 addresses. '''
-    def __init__(self, name, value=None, mask=False):
+    def __init__(self, name, value=None, mask=False, prereqs=[]):
         if value is not None:
             ip = IPAddress(value, 6)
 
         super(ipv6_field, self).__init__(name, value=int(ip),
                                          minval=0, maxval=2**128-1,
-                                         mask=mask)
+                                         mask=mask, prereqs=prereqs)
     def __str__(self):
         retstr = "%s:%s" % (self._name, IPAddress(self.value, 6))
         return retstr
@@ -201,7 +203,7 @@ class IP_PROTO(number_field):
     def __init__(self, value=None):
         super(IP_PROTO, self).__init__('ip_proto', value=value,
                                        minval=0, maxval=2**8-1,
-                                       prereq=[ETH_TYPE(0x0800)])
+                                       prereqs=[ETH_TYPE(0x0800)])
         #FIXME: The prereq is only for IPv4. Need to figure out how to support
         # IPv6 with this.
 
@@ -209,53 +211,53 @@ class IPV4_SRC(ipv4_field):
     def __init__(self, value=None, mask=False):
         super(IPV4_SRC, self).__init__('ipv4_src', value=value,
                                        mask=mask,
-                                       prereq=[ETH_TYPE(0x0800)])
+                                       prereqs=[ETH_TYPE(0x0800)])
 
 class IPV4_DST(ipv4_field):
     def __init__(self, value=None, mask=False):
         super(IPV4_DST, self).__init__('ipv4_dst', value=value,
                                        mask=mask,
-                                       prereq=[ETH_TYPE(0x0800)])
+                                       prereqs=[ETH_TYPE(0x0800)])
         
 #class IPV6_SRC(ipv6_field):
 #    def __init__(self, value=None, mask=False):
 #        super(IPV6_SRC, self).__init__('ipv6_src', value=value,
 #                                       mask=mask,
-#                                       prereq=[ETH_TYPE(0x86dd)])
+#                                       prereqs=[ETH_TYPE(0x86dd)])
 
 #class IPV6_DST(ipv6_field):
 #    def __init__(self, value=None, mask=False):
 #        super(IPV6_DST, self).__init__('ipv6_dst', value=value,
 #                                       mask=mask,
-#                                       prereq=[ETH_TYPE(0x86dd)])
+#                                       prereqs=[ETH_TYPE(0x86dd)])
 
 class TCP_SRC(number_field):
     def __init__(self, value=None):
         super(TCP_SRC, self).__init__('tcp_src', value=value,
                                       minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(6),
-                                              ETH_TYPE(0x0800)])
+                                      prereqs=[IP_PROTO(6),
+                                               ETH_TYPE(0x0800)])
 
 class TCP_DST(number_field):
     def __init__(self, value=None):
         super(TCP_DST, self).__init__('tcp_dst', value=value,
                                       minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(6),
-                                              ETH_TYPE(0x0800)])
+                                      prereqs=[IP_PROTO(6),
+                                               ETH_TYPE(0x0800)])
 
 class UDP_SRC(number_field):
     def __init__(self, value=None):
         super(UDP_SRC, self).__init__('udp_src', value=value,
                                       minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(17),
-                                              ETH_TYPE(0x0800)])
+                                      prereqs=[IP_PROTO(17),
+                                               ETH_TYPE(0x0800)])
 
 class UDP_DST(number_field):
     def __init__(self, value=None):
         super(UDP_DST, self).__init__('udp_dst', value=value,
                                       minval=0, maxval=2**16-1,
-                                      prereq=[IP_PROTO(17),
-                                              ETH_TYPE(0x0800)])
+                                      prereqs=[IP_PROTO(17),
+                                               ETH_TYPE(0x0800)])
 
 class VLAN_VID(number_field):
     # FIXME: Perhaps this should be changed from a number_field to something

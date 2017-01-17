@@ -16,11 +16,25 @@ class LCAction(object):
     def __init__(self, name):
         self._name = name
 
+
+    def __str__(self):
+        # Default only works for boring actions.
+        retstr = "%s" % (self._name)
+        return retstr
+
+    def __repr__(self):
+        return self.__str__()
+
+
 class Forward(LCAction):
     ''' This forwards packets to a particular location. '''
     def __init__(self, port):
         self.port = port
         super(Forward, self).__init__("Forward")
+
+    def __str__(self):
+        retstr = "%s:%s" % (self._name, self.port)
+        return retstr
 
     def get(self):
         return self.port
@@ -31,18 +45,22 @@ class SetField(LCAction):
         self.field = field
         super(SetField, self).__init__("SetField")
 
+    def __str__(self):
+        retstr = "%s:%s" % (self._name, self.field)
+        return retstr
+
     def get(self):
         return self.field
 
 class Continue(LCAction):
     ''' Continues on to the next table. '''
     def __init__(self):
-        super(Continue).__init__("Continue")
+        super(Continue, self).__init__("Continue")
 
 class Drop(LCAction):
     ''' Drop the packets. '''
     def __init__(self):
-        super(Drop).__init__("Drop")
+        super(Drop, self).__init__("Drop")
 
 class SetBandwidth(LCAction):
     ''' Sets bandwidth of flows. '''
@@ -50,6 +68,10 @@ class SetBandwidth(LCAction):
     def __init__(self, bw):
         self.bw = bw
         super(SetBandwidth, self).__init__("SetBandwidth")
+
+    def __str__(self):
+        retstr = "%s:%s" % (self._name, self.bw)
+        return retstr
 
     def get(self):
         return self.bw

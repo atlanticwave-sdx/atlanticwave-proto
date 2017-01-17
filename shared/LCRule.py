@@ -22,11 +22,6 @@ class LCRule(object):
                         "sdonovan-756"
                     could be the user 'sdonovan' 756th rule.
         ''' 
-        # Validate input is correct type:
-        if type(cookie) != int:
-            raise LCRuleTypeError("cookie is not an int: %s, %s" % 
-                                  (cookie, type(cookie)))
-        
         self.switch_id = switch_id
         self.cookie = cookie
 

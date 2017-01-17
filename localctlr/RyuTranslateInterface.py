@@ -5,6 +5,7 @@
 import logging
 import threading
 import dataset
+import cPickle as pickle
 
 from shared.MatchActionLCRule import *
 from shared.VlanTunnelLCRule import *
@@ -40,28 +41,36 @@ class TranslatedRuleContainer(object):
         self.idle_timeout = idle_timeout
         self.hard_timeout = hard_timeout
 
-    def get_cookie():
+    def __str__(self):
+        return "%s:%s:%s\n%s\n%s\n%s:%s:%s" % (self.cookie, self.table,
+                                               self.priority, self.match,
+                                               self.instruction, 
+                                               self.buffer_id,
+                                               self.idle_timeout,
+                                               self.hard_timeout)
+
+    def get_cookie(self):
         return self.cookie
 
-    def get_table():
+    def get_table(self):
         return self.table
     
-    def get_priority():
+    def get_priority(self):
         return self.priority
     
-    def get_match():
+    def get_match(self):
         return self.match
     
-    def get_instruction():
+    def get_instruction(self):
         return self.instruction
     
-    def get_buffer_id():
+    def get_buffer_id(self):
         return self.buffer_id
     
-    def get_idle_timeout():
+    def get_idle_timeout(self):
         return self.idle_timeout
     
-    def get_hard_timeout():
+    def get_hard_timeout(self):
         return self.hard_timeout
 
 
@@ -92,7 +101,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                  {'check_same_thread':False}})
         # Database Tables
         self.rule_table = self.db['rules']
-        
+
         #FIXME: Do I want to mirror the RuleManager's config_table?
         
 
@@ -141,8 +150,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
 
         # First, wait till we have at least one datapath.
+        self.logger.info("Looking for datapath")
         while len(self.datapaths.keys()) == 0:
-            print "Waiting " + str(self.datapaths)
+            self.logger.info("Waiting " + str(self.datapaths))
             sleep(1)
 
         # Send message over to the Controller Interface to let it know that
@@ -173,7 +183,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
     # Handles switch connect event
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
-        print "Connection from: " + str(ev.msg.datapath.id) + " for " + str(self)
+        self.logger.warning("Connection from: " + str(ev.msg.datapath.id) + " for " + str(self))
         self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
 
     # From the Ryu mailing list: https://sourceforge.net/p/ryu/mailman/message/33584125/
@@ -188,23 +198,30 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
     def _translate_MatchActionLCRule(self, datapath, table, of_cookie, marule):
         ''' This translates MatchActionLCRules. There is only one rule generated
-            by any given MatchActionLCRule. ''' 
+            by any given MatchActionLCRule. 
+            Returns a list of TranslatedRuleContainers
+        ''' 
+        results = []
+
         priority = 100 #FIXME
         # Translate all the pieces
         match = self._translate_LCMatch(datapath,
                                         marule.get_matches())
-        instruction = self._translate_LCActions(datapath,
+        instruction = self._translate_LCAction(datapath,
                                                 marule.get_actions())
 
         # Make the TranslatedRuleContainer, and return it.
         trc = TranslatedRuleContainer(of_cookie, table, priority,
                                       match, instruction)
-        return trc
+        results.append(trc)
+
+        return results
 
     
     def _translate_VlanLCRule(self, datapath, table, of_cookie, vlanrule):
         ''' This translates VlanLCRules. This can generate one or two rules, 
             depending on if this is a bidirectional tunnel (the norm) or not.
+            Returns a list of TranslatedRuleContainers
         '''
         results = []
 
@@ -217,10 +234,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         actions = [SetField(VLAN_VID(vlanrule.get_vlan_out)),
                    Forward(vlanrule.get_outport())]
         marule = MatchActionLCRule(switch_id, matches, actions)
-        results.append(self._translate_MatchActionLCRule(datapath,
-                                                         table,
-                                                         of_cookie,
-                                                         marule))
+        results += self._translate_MatchActionLCRule(datapath,
+                                                     table,
+                                                     of_cookie,
+                                                     marule)
         
         # If bidirectional, create inbound rule
         if vlanrule.get_bidirectional() == True:
@@ -229,10 +246,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
             actions = [SetField(VLAN_VID(vlanrule.get_vlan_in)),
                        Forward(vlanrule.get_inport())]
             marule = MatchActionLCRule(switch_id, matches, actions)
-            results.append(self._translate_MatchActionLCRule(datapath,
-                                                             table,
-                                                             of_cookie,
-                                                             marule))
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule)
 
         #FIXME: Bandwidth management stuff
 
@@ -245,7 +262,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Add match to list
             args[m.get_name()] = m.get()
             # Add the prereqs to the list too
-            for prereq in m:
+            for prereq in m.get_prereqs():
                 if prereq.get_name() in args.keys():
                     pass
                 args[prereq.get_name()] = prereq.get()
@@ -260,6 +277,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             and instructions. Returns an instruction. '''
 
         parser = datapath.ofproto_parser
+        ofproto = datapath.ofproto
         results = []
         
         for action in actions:
@@ -267,8 +285,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 results.append(parser.OFPActionOutput(action.get()))
             elif isinstance(action, SetField):
                 args = {}
-                for f in action.get():
-                    args[f.get_name()] = f.get()
+                f = action.get()
+                args[f.get_name()] = f.get()
                 results.append(parser.OFPActionSetField(**args))
             elif isinstance(action, Continue):
                 #FIXME: How to "continue"?
@@ -294,14 +312,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
         ''' Ease-of-use wrapper for adding flows. ''' 
         parser = datapath.ofproto_parser
 
-        if buffer_id:
+        if rc.get_buffer_id() != None:
             mod = parser.OFPFlowMod(datapath=datapath,
                                     cookie=rc.get_cookie(),
                                     table_id=rc.get_table(),
                                     buffer_id=rc.get_buffer_id(),
                                     priority=rc.get_priority(),
                                     match=rc.get_match(),
-                                    instructions=rc.get_instruction(),
+                                    instructions=[rc.get_instruction()],
                                     idle_timeout=rc.get_idle_timeout(), 
                                     hard_timeout=rc.get_hard_timeout())
         else:
@@ -311,7 +329,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                     # No buffer
                                     priority=rc.get_priority(),
                                     match=rc.get_match(),
-                                    instructions=rc.get_instruction(),
+                                    instructions=[rc.get_instruction()],
                                     idle_timeout=rc.get_idle_timeout(), 
                                     hard_timeout=rc.get_hard_timeout())
 
@@ -373,7 +391,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             switch_rules = self._translate_MatchActionLCRule(datapath,
                                                              switch_table,
                                                              of_cookie,
-                                                             lcrule)
+                                                             sdx_rule)
             
         elif isinstance(sdx_rule, VlanTunnelLCRule):
             # VLAN rules happen before anything else. 
@@ -381,7 +399,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             switch_rules = self._translate_VlanTunnelLCRule(datapath,
                                                             switch_table,
                                                             of_cookie,
-                                                            lcrule)
+                                                            sdx_rule)
 
         if switch_rules == None or switch_table == None:
             #FIXME: This shouldn't happen...
@@ -403,7 +421,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Remove a rule.
         # Find the OF cookie based on the SDX Cookie
-        of_cookie = self._find_OF_cookie(rule.sdx_cookie)
+        of_cookie = self._find_OF_cookie(sdx_cookie)
 
         # Get the Rules based on the it.
         (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie)
@@ -432,8 +450,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         #FIXME: Checking to make sure it's not already there?
         self.rule_table.insert({'sdxcookie':sdxcookie,
                                 'switchcookie':switchcookie,
-                                'sdxrule':sdxrule,
-                                'switchrules':switchrules,
+                                'sdxrule':pickle.dumps(sdxrule),
+                                'switchrules':pickle.dumps(switchrules),
                                 'switchtable':switchtable})
 
     def _remove_rule_in_db(self, sdx_cookie):
@@ -447,12 +465,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
             provides a central point to handle DB interactions. 
             Returns a tuple:
             (switchcookie, sdxrule, switchrules, switchtable) '''
-        result = self.rule_table.find_one(sdxcookie=sdx_coookie)
+        result = self.rule_table.find_one(sdxcookie=sdx_cookie)
         if result == None:
             return (None, None, None, None)
         return (result['switchcookie'],
-                result['sdxrule'],
-                result['switchrules'],
+                pickle.loads(str(result['sdxrule'])),
+                pickle.loads(str(result['switchrules'])),
                 result['switchtable'])
         
         
