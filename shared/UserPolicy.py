@@ -107,3 +107,7 @@ class UserPolicyBreakdown(object):
 
     def add_to_list_of_rules(self, rule):
         self.rules.append(rule)
+
+    def set_cookie(self, cookie):
+        for rule in self.rules:
+            rule.set_cookie(cookie)

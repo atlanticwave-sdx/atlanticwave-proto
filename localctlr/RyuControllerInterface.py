@@ -57,7 +57,7 @@ class RyuControllerInterface(ControllerInterface):
         # strings within the list. For some reason, ryu-manager doesn't like 
         # this, thus one long string.
         self.logger.debug("About to start ryu-manager.")
-        subprocess.Popen(['ryu-manager --app-list /home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcip %s --atlanticwave-ryu-cxn-port %s' % (self.openflow_port, self.lcip, self.ryu_cxn_port)], 
+        subprocess.Popen(['ryu-manager --app-list /home/sdx/atlanticwave-proto-lcinterface/localctlr/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcip %s --atlanticwave-ryu-cxn-port %s' % (self.openflow_port, self.lcip, self.ryu_cxn_port)], 
                          shell=True)
         self.logger.debug("Started ryu-manager.")
         # Don't complete until the connection is received by inter_cm ...
@@ -91,16 +91,12 @@ class RyuControllerInterface(ControllerInterface):
             raise ControllerInterfaceTypeError("rule is not of type LCRule: " + str(type(rule)) + 
                                                "\n    Value: " + str(rule))
 
-        self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s:%s" % (switch_id, rule))
+        #self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s:%s" % (switch_id, rule))
         self.inter_cm_cxn.send_cmd(ICX_ADD, (switch_id, rule))
 
     def remove_rule(self, switch_id, sdxcookie):
-        if not isinstance(sdxcookie, basestring):
-            raise ControllerInterfaceTypeError("sdxcookie is not of type basestring: " + str(type(sdxcookie)) +
-                                               "\n    Value: " + str(sdxcookie))
-
-        self.logger.debug("Removing old cmd to RyuTranslateInterface: %s:%s" % (switch_id, sdxcookie))
-        self.inter_cm_cxn.send_cmd(ICX_REMOVE, (switch_id, sdxcookie))
+        #self.logger.debug("Removing old cmd to RyuTranslateInterface: %s:%s" % (switch_id, sdxcookie))
+        self.inter_cm_cxn.send_cmd(ICX_REMOVE, (switch_id, str(sdxcookie)))
 
     def _setup_logger(self):
         ''' Internal function for setting up the logger formats. '''

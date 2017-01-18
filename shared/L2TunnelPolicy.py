@@ -75,7 +75,7 @@ class L2TunnelPolicy(UserPolicy):
             dst_port = int(json_rule['l2tunnel']['dstport'])
             src_vlan = int(json_rule['l2tunnel']['srcvlan'])
             dst_vlan = int(json_rule['l2tunnel']['dstvlan'])
-            bandwidth = json_rule['l2tunnel']['bandwidth']
+            bandwidth = int(json_rule['l2tunnel']['bandwidth'])
 
             delta = endtime - starttime
             if delta.total_seconds() < 0:
@@ -170,7 +170,8 @@ class L2TunnelPolicy(UserPolicy):
             outport = edge[location]
 
 
-            rule = VlanTunnelLCRule(switch_id, inport, outport, invlan, outvlan,
+            rule = VlanTunnelLCRule(switch_id, inport, outport, 
+                                    invlan, intermediate_vlan,
                                     True, bandwidth)
 
             bd.add_to_list_of_rules(rule)
@@ -237,7 +238,7 @@ class L2TunnelPolicy(UserPolicy):
         self.dst_port = int(json_rule['l2tunnel']['dstport'])
         self.src_vlan = int(json_rule['l2tunnel']['srcvlan'])
         self.dst_vlan = int(json_rule['l2tunnel']['dstvlan'])
-        self.bandwidth = json_rule['l2tunnel']['bandwidth']
+        self.bandwidth = int(json_rule['l2tunnel']['bandwidth'])
 
         #FIXME: Really need some type verifications here.
     

@@ -8,7 +8,7 @@ import sys
 import json
 
 from lib.Singleton import SingletonMixin
-from lib.Connection import select
+from lib.Connection import select as cxnselect
 from RyuControllerInterface import *
 from shared.SDXControllerConnectionManager import *
 
@@ -76,7 +76,7 @@ class LocalController(SingletonMixin):
         while(True):
             # Based, in part, on https://pymotw.com/2/select/
             try:
-                readable, writable, exceptional = select(rlist,
+                readable, writable, exceptional = cxnselect(rlist,
                                                          wlist,
                                                          xlist)
             except Exception as e:

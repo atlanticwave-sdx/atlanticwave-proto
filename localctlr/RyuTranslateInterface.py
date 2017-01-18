@@ -231,7 +231,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         switch_id = 0  # This is unimportant: it's never used in the translation
         matches = [IN_PORT(vlanrule.get_inport()),
                    VLAN_VID(vlanrule.get_vlan_in())]
-        actions = [SetField(VLAN_VID(vlanrule.get_vlan_out)),
+        actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
                    Forward(vlanrule.get_outport())]
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
@@ -243,7 +243,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if vlanrule.get_bidirectional() == True:
             matches = [IN_PORT(vlanrule.get_outport()),
                        VLAN_VID(vlanrule.get_vlan_out())]
-            actions = [SetField(VLAN_VID(vlanrule.get_vlan_in)),
+            actions = [SetField(VLAN_VID(vlanrule.get_vlan_in())),
                        Forward(vlanrule.get_inport())]
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
@@ -396,10 +396,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         elif isinstance(sdx_rule, VlanTunnelLCRule):
             # VLAN rules happen before anything else. 
             switch_table = 0 #FIXME: magic number
-            switch_rules = self._translate_VlanTunnelLCRule(datapath,
-                                                            switch_table,
-                                                            of_cookie,
-                                                            sdx_rule)
+            switch_rules = self._translate_VlanLCRule(datapath,
+                                                      switch_table,
+                                                      of_cookie,
+                                                      sdx_rule)
 
         if switch_rules == None or switch_table == None:
             #FIXME: This shouldn't happen...

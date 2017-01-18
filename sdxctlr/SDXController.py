@@ -24,7 +24,7 @@ from TopologyManager import *
 from ValidityInspector import *
 
 # Known UserPolicies
-from shared.JsonUploadPolicy import *
+#FIXME: from shared.JsonUploadPolicy import *
 from shared.L2TunnelPolicy import *
 
 
@@ -77,11 +77,12 @@ class SDXController(SingletonMixin):
         self.be = BreakdownEngine.instance()
         self.rr = RuleRegistry.instance()
         self.vi = ValidityInspector.instance()
-        self.pm = ParticipantManager.instance()
 
         if mani != None:
+            self.pm = ParticipantManager.instance(mani)
             self.lcm = LocalControllerManager.instance(mani)
         else: 
+            self.pm = ParticipantManager.instance()
             self.lcm = LocalControllerManager.instance()
 
         topo = self.tm.get_topology()
@@ -98,7 +99,7 @@ class SDXController(SingletonMixin):
         self.cm_thread.start()
 
         # Register known UserPolicies
-        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
+#FIXME        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
         self.rr.add_ruletype("l2tunnel", L2TunnelPolicy)
 
 

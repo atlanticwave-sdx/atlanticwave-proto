@@ -12,7 +12,7 @@ class VlanTunnelLCRule(LCRule):
         on a switch. Connection can be unidirectional or bidirectional.'''
 
     def __init__(self, switch_id, inport, outport, vlan_in, vlan_out, 
-                 bidrectional=True, bandwidth=None):
+                 bidirectional=True, bandwidth=None):
         ''' Field descriptions:
                 inport - Physical port on the switch
                 outport - Physical port on the switch
@@ -38,9 +38,9 @@ class VlanTunnelLCRule(LCRule):
         if type(vlan_out) != int:
             raise LCRuleTypeError("vlan_out is not an int: %s, %s" % 
                                   (vlan_out, type(vlan_out)))
-        if type(bandwidth) != int or bandwidth != None:
-            raise LCRuleTypeError("vlan_out is not an int or None: %s, %s" % 
-                                  (vlan_out, type(vlan_out)))
+        if not (type(bandwidth) == int or bandwidth == None):
+            raise LCRuleTypeError("bandwidth is not an int or None: %s, %s" % 
+                                  (bandwidth, type(bandwidth)))
         if type(bidirectional) != bool:
             raise LCRuleTypeError("bidirectional is not a bool: %s, %s" % 
                                   (bidirectional, type(bidirectional)))
@@ -57,9 +57,16 @@ class VlanTunnelLCRule(LCRule):
         self.outport = outport
         self.vlan_in = vlan_in
         self.vlan_out = vlan_out
-        self.bidrectional = bidirectional
+        self.bidirectional = bidirectional
         self.bandwidth = bandwidth
         
+    def __str__(self):
+        retstr = ("VlanTunnelLCRule: switch %s, %s:%s:%s:%s:%s:%s:%s" % 
+                  (self.switch_id, self.cookie,
+                   self.inport, self.outport,
+                   self.vlan_in, self.vlan_out,
+                   self.bidirectional, self.bandwidth))
+        return retstr
 
     def get_inport(self):
         return self.inport
