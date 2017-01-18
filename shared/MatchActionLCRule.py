@@ -44,7 +44,12 @@ class MatchActionLCRule(LCRule):
         self.matches = matches
         self.actions = actions
         self.ingress = ingress
-        
+
+    def __str__(self):
+        retstr = ("MatchActionLCRule: switch%s:%s:%s\n    %s\n    %s" % 
+                  (self.switch_id, self.cookie, self.ingress,
+                   self.matches, self.actions))
+        return retstr
 
     def get_matches(self):
         return self.matches
