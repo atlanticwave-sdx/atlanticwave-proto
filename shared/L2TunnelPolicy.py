@@ -6,13 +6,10 @@ from UserPolicy import *
 from datetime import datetime
 import networkx as nx
 
-# For building rules, may need to change in the future with a better intermediary
-from shared.offield import *
-from shared.match import *
-from shared.action import *
-from shared.instruction import *
-from shared.OpenFlowRule import * 
+# For building rules, may need to change in the future with a better
+# intermediary
 from shared.constants import *
+from shared.VlanTunnelLCRule import VlanTunnelLCRule
 
 
 class L2TunnelPolicy(UserPolicy):
@@ -40,7 +37,7 @@ class L2TunnelPolicy(UserPolicy):
             "srcvlan":1492,
             "dstvlan":1789,
             "bandwidth":1}}
-        Times are RFC3339 formated offset from UTC, if any, is after the seconds.
+        Times are RFC3339 formated offset from UTC, if any, is after the seconds
         Bandwidth is in Mbit/sec
 
         Side effect of coming from JSON, everything's unicode. Need to handle 
@@ -78,7 +75,7 @@ class L2TunnelPolicy(UserPolicy):
             dst_port = int(json_rule['l2tunnel']['dstport'])
             src_vlan = int(json_rule['l2tunnel']['srcvlan'])
             dst_vlan = int(json_rule['l2tunnel']['dstvlan'])
-            bandwidth = json_rule['l2tunnel']['bandwidth']
+            bandwidth = int(json_rule['l2tunnel']['bandwidth'])
 
             delta = endtime - starttime
             if delta.total_seconds() < 0:
@@ -122,6 +119,7 @@ class L2TunnelPolicy(UserPolicy):
         
         # Get a VLAN to use
         #FIXME: how to figure this out? Do we need better access to the topology manager?
+        # Topology manager should be able to provide this for us. 
         intermediate_vlan = self.src_vlan
 
         # Special case: Single node:
@@ -136,31 +134,12 @@ class L2TunnelPolicy(UserPolicy):
             outport = self.dst_port
             invlan = self.src_vlan
             outvlan = self.dst_vlan
-
-            priority = 100 #FIXME
-            cookie = 1234 #FIXME
-            table = 0 #FIXME
+            bandwidth = self.bandwidth
 
             bd = UserPolicyBreakdown(shortname, [])
 
-            # Inbound
-            match = OpenFlowMatch([IN_PORT(inport),
-                                   VLAN_VID(invlan)])
-            actions = [action_SET_FIELD(VLAN_VID(outvlan)),
-                       action_OUTPUT(outport)]
-            instruction = instruction_APPLY_ACTIONS(actions)
-            rule = OpenFlowRule(match, instruction, table,
-                                priority, cookie, switch_id)
-            bd.add_to_list_of_rules(rule)
-
-            # Outbound
-            match = OpenFlowMatch([IN_PORT(outport),
-                                   VLAN_VID(outvlan)])
-            actions = [action_SET_FIELD(VLAN_VID(invlan)),
-                       action_OUTPUT(inport)]
-            instruction = instruction_APPLY_ACTIONS(actions)
-            rule = OpenFlowRule(match, instruction, table,
-                                priority, cookie, switch_id)
+            rule = VlanTunnelLCRule(switch_id, inport, outport, invlan, outvlan,
+                                    True, bandwidth)
             bd.add_to_list_of_rules(rule)
             self.breakdown.append(bd)
             return self.breakdown
@@ -182,34 +161,19 @@ class L2TunnelPolicy(UserPolicy):
                                                 self.dst_vlan, dstpath)]:
             shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
-            priority = 100 #FIXME
-            cookie = 1234 #FIXME
-            table = 0 #FIXME
-
+            bandwidth = self.bandwidth
+            
             bd = UserPolicyBreakdown(shortname, [])
 
             # get edge
             edge = topology.edge[location][path]
             outport = edge[location]
 
-            # Inbound
-            match = OpenFlowMatch([IN_PORT(inport),
-                                   VLAN_VID(invlan)])
-            actions = [action_SET_FIELD(VLAN_VID(intermediate_vlan)),
-                       action_OUTPUT(outport)]
-            instruction = instruction_APPLY_ACTIONS(actions)
-            rule = OpenFlowRule(match, instruction, table,
-                                priority, cookie, switch_id)
-            bd.add_to_list_of_rules(rule)
 
-            # Outbound
-            match = OpenFlowMatch([IN_PORT(outport),
-                                   VLAN_VID(intermediate_vlan)])
-            actions = [action_SET_FIELD(VLAN_VID(invlan)),
-                       action_OUTPUT(inport)]
-            instruction = instruction_APPLY_ACTIONS(actions)
-            rule = OpenFlowRule(match, instruction, table,
-                                priority, cookie, switch_id)
+            rule = VlanTunnelLCRule(switch_id, inport, outport, 
+                                    invlan, intermediate_vlan,
+                                    True, bandwidth)
+
             bd.add_to_list_of_rules(rule)
 
             self.breakdown.append(bd)
@@ -229,9 +193,7 @@ class L2TunnelPolicy(UserPolicy):
             #               action set fwd
             shortname = topology.node[node]['locationshortname']
             switch_id = topology.node[node]['dpid']
-            priority = 100 #FIXME
-            cookie = 1234 #FIXME
-            table = 0 #FIXME
+            bandwidth = self.bandwidth
 
             bd = UserPolicyBreakdown(shortname, [])
 
@@ -241,22 +203,11 @@ class L2TunnelPolicy(UserPolicy):
 
             inport = prevedge[node]
             outport = nextedge[node]
-            # Inbound
-            match = OpenFlowMatch([IN_PORT(inport),
-                                   VLAN_VID(intermediate_vlan)])
-            actions = [action_OUTPUT(outport)]
-            instruction = instruction_APPLY_ACTIONS(actions)
-            rule = OpenFlowRule(match, instruction, table,
-                                priority, cookie, switch_id)
-            bd.add_to_list_of_rules(rule)
 
-            # Outbound
-            match = OpenFlowMatch([IN_PORT(outport),
-                                   VLAN_VID(intermediate_vlan)])
-            actions = [action_OUTPUT(inport)]
-            instruction = instruction_APPLY_ACTIONS(actions)
-            rule = OpenFlowRule(match, instruction, table,
-                                priority, cookie, switch_id)
+            rule = VlanTunnelLCRule(switch_id, inport, outport,
+                                    intermediate_vlan, intermediate_vlan,
+                                    True, bandwidth)            
+
             bd.add_to_list_of_rules(rule)
 
             # Add the four new rules created above to the breakdown
@@ -287,7 +238,7 @@ class L2TunnelPolicy(UserPolicy):
         self.dst_port = int(json_rule['l2tunnel']['dstport'])
         self.src_vlan = int(json_rule['l2tunnel']['srcvlan'])
         self.dst_vlan = int(json_rule['l2tunnel']['dstvlan'])
-        self.bandwidth = json_rule['l2tunnel']['bandwidth']
+        self.bandwidth = int(json_rule['l2tunnel']['bandwidth'])
 
         #FIXME: Really need some type verifications here.
     

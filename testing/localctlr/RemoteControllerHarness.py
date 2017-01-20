@@ -3,8 +3,8 @@
 
 
 from shared.SDXControllerConnectionManager import *
-from shared.Connection import *
-from shared.Singleton import Singleton
+from lib.Connection import *
+from lib.Singleton import Singleton
 import threading
 
 from shared.OpenFlowRule import OpenFlowRule as OFR

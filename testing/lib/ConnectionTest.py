@@ -8,7 +8,7 @@ import socket
 import threading
 import cPickle as pickle
 from time import sleep
-from shared.Connection import *
+from lib.Connection import *
 
 
 class InitTest(unittest.TestCase):

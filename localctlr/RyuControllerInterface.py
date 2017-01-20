@@ -5,9 +5,9 @@
 from ControllerInterface import *
 from InterRyuControllerConnectionManager import *
 from ryu.ofproto import ofproto_v1_3
-from shared.Singleton import Singleton
-from shared.OpenFlowRule import OpenFlowRule
 from ryu.cmd.manager import main
+from lib.Singleton import Singleton
+from shared.LCRule import LCRule
 
 import threading
 import logging
@@ -57,7 +57,7 @@ class RyuControllerInterface(ControllerInterface):
         # strings within the list. For some reason, ryu-manager doesn't like 
         # this, thus one long string.
         self.logger.debug("About to start ryu-manager.")
-        subprocess.Popen(['ryu-manager --app-list /home/sdx/atlanticwave-proto/localctlr/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcip %s --atlanticwave-ryu-cxn-port %s' % (self.openflow_port, self.lcip, self.ryu_cxn_port)], 
+        subprocess.Popen(['ryu-manager --app-list /home/sdx/atlanticwave-proto-lcinterface/localctlr/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcip %s --atlanticwave-ryu-cxn-port %s' % (self.openflow_port, self.lcip, self.ryu_cxn_port)], 
                          shell=True)
         self.logger.debug("Started ryu-manager.")
         # Don't complete until the connection is received by inter_cm ...
@@ -86,21 +86,17 @@ class RyuControllerInterface(ControllerInterface):
         self.inter_cm_condition.notify()
         self.inter_cm_condition.release()
 
-    def send_command(self, rule):
-        if not isinstance(rule, OpenFlowRule):
-            raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + str(type(rule)) + 
+    def send_command(self, switch_id, rule):
+        if not isinstance(rule, LCRule):
+            raise ControllerInterfaceTypeError("rule is not of type LCRule: " + str(type(rule)) + 
                                                "\n    Value: " + str(rule))
 
-        self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s" % (rule))
-        self.inter_cm_cxn.send_cmd(ICX_ADD, rule)
+        #self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s:%s" % (switch_id, rule))
+        self.inter_cm_cxn.send_cmd(ICX_ADD, (switch_id, rule))
 
-    def remove_rule(self, rule):
-        if not isinstance(rule, OpenFlowRule):
-            raise ControllerInterfaceTypeError("rule is not of type OpenFlowRule: " + str(type(rule)) +
-                                               "\n    Value: " + str(rule))
-
-        self.logger.debug("Removing old cmd to RyuTranslateInterface: %s" % (rule))
-        self.inter_cm_cxn.send_cmd(ICX_REMOVE, rule)
+    def remove_rule(self, switch_id, sdxcookie):
+        #self.logger.debug("Removing old cmd to RyuTranslateInterface: %s:%s" % (switch_id, sdxcookie))
+        self.inter_cm_cxn.send_cmd(ICX_REMOVE, (switch_id, str(sdxcookie)))
 
     def _setup_logger(self):
         ''' Internal function for setting up the logger formats. '''

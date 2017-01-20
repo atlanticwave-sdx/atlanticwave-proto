@@ -8,9 +8,9 @@ import sys
 import Queue
 import dataset
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
+from lib.Connection import select as cxnselect
 from shared.SDXControllerConnectionManager import *
-from shared.Connection import select as cxnselect
 from shared.UserPolicy import UserPolicyBreakdown
 from AuthenticationInspector import *
 from AuthorizationInspector import *
@@ -24,7 +24,7 @@ from TopologyManager import *
 from ValidityInspector import *
 
 # Known UserPolicies
-from shared.JsonUploadPolicy import *
+#FIXME: from shared.JsonUploadPolicy import *
 from shared.L2TunnelPolicy import *
 
 
@@ -77,11 +77,12 @@ class SDXController(SingletonMixin):
         self.be = BreakdownEngine.instance()
         self.rr = RuleRegistry.instance()
         self.vi = ValidityInspector.instance()
-        self.pm = ParticipantManager.instance()
 
         if mani != None:
+            self.pm = ParticipantManager.instance(mani)
             self.lcm = LocalControllerManager.instance(mani)
         else: 
+            self.pm = ParticipantManager.instance()
             self.lcm = LocalControllerManager.instance()
 
         topo = self.tm.get_topology()
@@ -98,7 +99,7 @@ class SDXController(SingletonMixin):
         self.cm_thread.start()
 
         # Register known UserPolicies
-        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
+#FIXME        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
         self.rr.add_ruletype("l2tunnel", L2TunnelPolicy)
 
 
@@ -141,8 +142,13 @@ class SDXController(SingletonMixin):
         
     def _handle_new_connection(self, cxn):
         # Receive name from LocalController, verify that it's in the topology
-        name = cxn.recv()
-        topo = self.tm.get_topology()
+        cmd,name = cxn.recv_cmd()
+
+        if cmd != SDX_IDENTIFY:
+            #FIXME: raise some sort of error here.
+            self.logger.error("LocalController not identifying correctly: %s, %s" % (cmd, name))
+            return
+        
         lcs = self.tm.get_lcs()
 
         self.logger.info("LocalController attempting to log in with name %s." % 

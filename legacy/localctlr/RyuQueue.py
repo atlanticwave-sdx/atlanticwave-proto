@@ -3,7 +3,7 @@
 
 
 # Definition of RyuQueue
-from shared.Singleton import Singleton
+from lib.Singleton import Singleton
 import Queue
 
 class RyuQueue(object):
