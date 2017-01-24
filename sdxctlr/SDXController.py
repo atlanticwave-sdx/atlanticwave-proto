@@ -261,22 +261,20 @@ def usage():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 and len(sys.argv) != 3 and len(sys.argv) != 4:
+    from optparse import OptionParser
+    parser = OptionParser()
+
+    parser.add_option("-d", "--database", dest="database", type="string", action="store",
+                  help="Specifies the database. The default database is \":memory:\"", default=":memory:")
+    parser.add_option("-m", "--manifest", dest="manifest", type="string", action="store",
+                  help="specifies the manifest")
+    parser.add_option("-N", "--no_topo", dest="topo", default=False, action="store_false", help="Run without the topology")
+    
+    (options, args) = parser.parse_args()
+    
+    if not options.manifest:
         usage()
-    mani = sys.argv[1]
-    db = ":memory:"
-    topo = True
-    if len(sys.argv) == 3:
-        if sys.argv[2] == "--no_topo":
-            topo = False
-        else:
-            db = sys.argv[2]
-    if len(sys.argv) == 4:
-        if sys.argv[3] != "--no_topo":
-            usage()
-        topo = False
         
-        
-    sdx = SDXController(False, mani, db, topo)
+    sdx = SDXController(False, options.manifest, options.database, options.topo)
     sdx._main_loop()
 
