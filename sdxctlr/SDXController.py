@@ -268,7 +268,7 @@ if __name__ == '__main__':
                   help="Specifies the database. The default database is \":memory:\"", default=":memory:")
     parser.add_option("-m", "--manifest", dest="manifest", type="string", action="store",
                   help="specifies the manifest")
-    parser.add_option("-N", "--no_topo", dest="topo", default=False, action="store_false", help="Run without the topology")
+    parser.add_option("-N", "--no_topo", dest="topo", default=True, action="store_false", help="Run without the topology")
     
     (options, args) = parser.parse_args()
     
