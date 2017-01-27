@@ -50,6 +50,11 @@ class L2TunnelPolicy(UserPolicy):
         self.src_vlan = None
         self.dst_vlan = None
         self.bandwidth = None
+
+        # Derived values
+        self.intermediate_vlan = None
+        self.fullpath = None
+        
         super(L2TunnelPolicy, self).__init__(username, "L2Tunnel", json_rule)
 
         # Anything specific here?
@@ -106,6 +111,8 @@ class L2TunnelPolicy(UserPolicy):
         self.fullpath = tm.find_valid_path(self.src_switch,
                                            self.dst_switch,
                                            self.bandwidth)
+        if self.fullpath = None:
+            raise UserPolicyError("There is no available path between %s and %s for bandwidth %s" % (self.src_switch, self.dst_switch, self.bandwidth))
 
         #nodes = topology.nodes(data=True)
         #edges = topology.edges(data=True)
