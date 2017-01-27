@@ -59,14 +59,14 @@ def TwoSite():
 | atlh1 +----+            3  3      |1     4  3            +----+ gru1 |
 +-------+    +-----------+    +-----------+    +-----------+    +------+
              | atlswitch +----+ miaswitch +----+ gruswitch |
-+-------+    +-----------+    +-----------+    +-----------+    +------+
-| atlh2 +----+                      |2                     +----+ gru2 |
-+-------+1    2                     |                     2    1+------+
-  VLAN                              |1                            VLAN
-  2000                         +-------+ VLAN                     2200
-                               | miah2 | 2800
-                               +-------+
-
++-------+    +-----+-----+    +-----------+    +-----+-----+    +------+
+| atlh2 +----+     | 4              |2             4 |     +----+ gru2 |
++-------+1    2    |                |                |    2    1+------+
+  VLAN             |                |1               |            VLAN
+  2000             | 1         +-------+ VLAN      1 |            2200
+              +--------+       | miah2 | 2800    +--------+
+              | atldtn |       +-------+         | grudtn |
+              +--------+                         +--------+
 '''
 
 
@@ -91,6 +91,11 @@ def TwoSite():
     gruh2 = net.addHost('gruh2', mac='00:00:00:00:31:00',
                         cls=VLANHost, vlan=2200)
 
+    atldtn = net.addHost('atldtn', mac='00:00:00:10:00:00',
+                        cls=VLANHost, vlan=100)
+    miadtn = net.addHost('miadtn', mac='00:00:00:20:00:00',
+                        cls=VLANHost, vlan=200)
+
     # Wiring
     net.addLink(atlswitch, atlh1, port1=1, port2=1)
     net.addLink(atlswitch, atlh2, port1=2, port2=1)
@@ -98,6 +103,8 @@ def TwoSite():
     net.addLink(miaswitch, miah2, port1=2, port2=1)
     net.addLink(gruswitch, gruh1, port1=1, port2=1)
     net.addLink(gruswitch, gruh2, port1=2, port2=1)
+    net.addLink(atlswitch, atldtn, port1=4, port2=1)
+    net.addLink(gruswitch, grudtn, port1=4, port2=1)
 
     net.addLink(atlswitch, miaswitch, port1=3, port2=3)
     net.addLink(miaswitch, gruswitch, port1=4, port2=3)
