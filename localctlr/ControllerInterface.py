@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 
 class ControllerInterfaceTypeError(TypeError):
     pass
@@ -21,11 +21,11 @@ class ControllerInterface(SingletonMixin):
     def __init__(self):
         pass
     
-    def send_command(self, rule):
+    def send_command(self, switch_id, rule):
         ''' Takes an OpenFlowRule and pushes it to the switch. '''
         raise NotImplementedError("Subclasses must implement this.")
 
-    def remove_rule(self, rule):
+    def remove_rule(self, switch_id, rule):
         ''' Removes a rule based on cookie number. '''
         raise NotImplementedError("Subclasses must implement this.")
 

@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 from threading import Lock
 import networkx as nx
 import json
@@ -68,8 +68,10 @@ class TopologyManager(SingletonMixin):
             with self.topolock:
                 if not self.topo.has_node(key):
                     self.topo.add_node(key)
-                self.topo.node[key]['type'] = str(endpoint['type'])
-                self.topo.node[key]['location'] = str(endpoint['location'])
+                for k in endpoint:
+                    if type(endpoint[k]) == int:
+                        self.topo.node[key][k] = int(endpoint[k])
+                    self.topo.node[key][k] = str(endpoint[k])
                     
 
         for key in data['localcontrollers'].keys():
@@ -128,6 +130,7 @@ class TopologyManager(SingletonMixin):
 
                         # Other fields that may be of use
                         self.topo.edge[name][destination]['vlans_in_use'] = []
+                        self.topo.edge[name][destination]['bw_in_use'] = 0
                         
                     
 
@@ -166,8 +169,11 @@ class TopologyManager(SingletonMixin):
     
     def reserve_vlan_on_path(self, path, vlan):
         ''' Marks a VLAN in use on a provided path. Raises an error if the VLAN
-            is in use at the time at any location. 
-            FIXME: This probably has some issues with concurrency. '''
+            is in use at the time at any location. '''
+        #FIXME: Should there be some more accounting on this? Reference to the
+        #structure reserving the vlan?
+        # FIXME: This probably has some issues with concurrency.
+
         with self.topolock:
             # Make sure the path is clear -> very similar to find_vlan_on_path
             for point in path:
@@ -185,6 +191,94 @@ class TopologyManager(SingletonMixin):
             # Walk through the edges and reserve it
             for (node, nextnode) in zip(path[0:-1], path[1:]):
                 self.topo.edge[node][nextnode]['vlans_in_use'].append(vlan)
+
+    def unreserve_vlan_on_path(self, path, vlan):
+        ''' Removes reservations on a given path for a given VLAN. '''
+        with self.topolock:
+            # Make sure it's already reserved on the given path:
+            for point in path:
+                if vlan not in self.topo.node[point]['vlans_in_use']:
+                    raise TopologyManagerError("VLAN %d is not reserved on node %s" % (vlan, point))
+
+            for (node, nextnode) in zip(path[0:-1], path[1:]):
+                if vlan not in self.topo.edge[node][nextnode]['vlans_in_use']:
+                    raise TopologyManagerError("VLAN %d is not reserved on path %s:%s" % (vlan, node, nextnode))
+
+            # Walk through teh points and unreserve it
+            for point in path:
+                self.topo.node[point]['vlans_in_use'].remove(vlan)
+
+            # Walk through the edges and unreserve it
+            for (node, nextnode) in zip(path[0:-1], path[1:]):
+                self.topo.edge[node][nextnode]['vlans_in_use'].remove(vlan)
                 
+        pass
+
+    def reserve_bw_on_path(self, path, bw):
+        ''' Reserves a specified amount of bandwidth on a given path. Raises an
+            error if the bandwidth is not available at any part of the path. '''
+        #FIXME: Should there be some more accounting on this? Reference to the
+        #structure reserving the bw?
+
+        with self.topolock:
+            # Check to see if we're going to go over the bandwidth of the edge
+            for (node, nextnode) in zip(path[0:-1], path[1:]):
+                bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
+                bw_available = int(self.topo.edge[node][nextnode]['weight'])
+
+                if (bw_in_use + bw) > bw_available:
+                    raise TopologyManagerError("BW available on path %s:%s is %s. In use %s, new reservation of %s" % (node, nextnode, bw_available, bw_in_use, bw))
+
+            # Add bandwidth reservation
+            for (node, nextnode) in zip(path[0:-1], path[1:]):
+                self.topo.edge[node][nextnode]['bw_in_use'] += bw
+
+    def unreserve_bw_on_path(self, path, bw):
+        ''' Removes reservations on a given path for a given amount of
+            bandwidth. '''
+        with self.topolock:
+            # Check to see if we've removed too much
+            for (node, nextnode) in zip(path[0:-1], path[1:]):
+                bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
+
+                if bw > bw_in_use:
+                    raise TopologyManagerError("BW in use on path %s:%s is %s. Trying to remove %s" % (node, nextnode, bw_in_use, bw))
+
+            # Remove bw from path
+            for (node, nextnode) in zip(path[0:-1], path[1:]):
+                self.topo.edge[node][nextnode]['bw_in_use'] -= bw
+
+
+    def find_valid_path(self, src, dst, bw=None):
+        ''' Find a path that is currently valid based on a contstraint. 
+            Right now, the only constraint is bandwidth. '''
+
+        # Get possible paths
+        #FIXME: NetworkX has multiple methods for getting paths. Shortest and
+        # all possible paths:
+        # https://networkx.readthedocs.io/en/stable/reference/generated/networkx.algorithms.shortest_paths.generic.all_shortest_paths.html
+        # https://networkx.readthedocs.io/en/stable/reference/generated/networkx.algorithms.simple_paths.all_simple_paths.html
+        # May need to use *both* algorithms. Starting with shortest paths now.
+        list_of_paths = nx.all_shortest_paths(self.topo,
+                                              source=src,
+                                              target=dst)
+
+        for path in list_of_paths:
+            # For each path, check that a VLAN is available
+            vlan = self.find_vlan_on_path(path)
+            if vlan == None:
+                continue
+
+            enough_bw = True
+            for (node, nextnode) in zip(path[0:-1], path[1:]):
+                # For each edge on the path, check that bw is available.
+                bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
+                bw_available = int(self.topo.edge[node][nextnode]['weight'])
+
+                if (bw_in_use + bw) > bw_available:
+                    enough_bw = False
+                    break
                 
-    
+            # If all's good, return the path to the caller
+            if enough_bw:
+                return path

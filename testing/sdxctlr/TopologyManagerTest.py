@@ -31,7 +31,11 @@ class VerifyTopoTest(unittest.TestCase):
         topo = man.get_topology()
 
         # Should contain: atl-switch, mia-switch, Georgia Tech, FIU
-        expected_nodes = ['atl-switch', 'mia-switch', 'Georgia Tech', 'FIU']
+        expected_nodes = ['atl-switch', 'mia-switch', 'gru-switch',
+                          'atlh1', 'atlh2', 'atldtn',
+                          'miah1', 'miah2',
+                          'gruh1', 'gruh2', 'grudtn'
+                          ]
         nodes = topo.nodes()
         self.failUnless(len(nodes) == len(expected_nodes))
         for node in expected_nodes:
@@ -40,10 +44,18 @@ class VerifyTopoTest(unittest.TestCase):
         #FIXME: Need to look at details! In the future, anyway.
 
         # Should contain
-        expected_edges = [('Georgia Tech', 'atl-switch'),
-                          ('atl-switch', 'mia-switch'),
-                          ('mia-switch', 'FIU')]
+        expected_edges = [('atl-switch', 'mia-switch'),
+                          ('mia-switch', 'gru-switch'),
+                          ('atl-switch', 'atlh1'),
+                          ('atl-switch', 'atlh2'),
+                          ('atl-switch', 'atldtn'),
+                          ('mia-switch', 'miah1'),
+                          ('mia-switch', 'miah2'),
+                          ('gru-switch', 'gruh1'),
+                          ('gru-switch', 'gruh2'),
+                          ('gru-switch', 'grudtn')]
         edges = topo.edges()
+
         self.failUnless(len(edges) == len(expected_edges))
         for edge in expected_edges:
             (a, b) = edge
@@ -169,6 +181,90 @@ class VLANTopoTest(unittest.TestCase):
         # Reserve path on VLAN 1
         self.failUnlessRaises(Exception, man.reserve_vlan_on_path, path, 1)
         # Should throw an exception
+
+    def test_unreserve_vlan(self):
+        # Get a path
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        
+        # Reserve path on VLAN 1
+        man.reserve_vlan_on_path(path, 1)
+
+        # Reserve path on VLAN 1
+        self.failUnlessRaises(Exception, man.reserve_vlan_on_path, path, 1)
+        # Should throw an exception
+
+        # Unreserve path
+        man.unreserve_vlan_on_path(path, 1)
+
+        # THis should pass:
+        man.reserve_vlan_on_path(path, 1)
+
+
+class BWTopoTest(unittest.TestCase):
+
+    def test_valid_reservation(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        man.reserve_bw_on_path(path, 100)
+        man.reserve_bw_on_path(path, 100)
+        man.reserve_bw_on_path(path, 100)
+        
+    def test_reserve_maximum(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        man.reserve_bw_on_path(path, 1000) 
+
+    def test_reserve_too_much(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        self.failUnlessRaises(Exception, man.reserve_bw_on_path, path, 1001)
+
+    def test_unreserve_reservation(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        man.reserve_bw_on_path(path, 100)
+        man.reserve_bw_on_path(path, 100)
+        man.reserve_bw_on_path(path, 100)
+
+        man.unreserve_bw_on_path(path, 100)
+        man.unreserve_bw_on_path(path, 100)
+        man.unreserve_bw_on_path(path, 100)
+
+    def test_unreserve_too_much(self):
+        man = TopologyManager(CONFIG_FILE)
+        topo = man.get_topology()
+
+        # Get a path
+        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+
+        man.reserve_bw_on_path(path, 100)
+        man.unreserve_bw_on_path(path, 100)
+        
+        self.failUnlessRaises(Exception, man.unreserve_bw_on_path, path, 100)
+
+        man.reserve_bw_on_path(path, 100)
+        self.failUnlessRaises(Exception, man.unreserve_bw_on_path, path, 200)
+
     
 if __name__ == '__main__':
     unittest.main()

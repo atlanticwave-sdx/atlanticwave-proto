@@ -8,9 +8,9 @@ import sys
 import Queue
 import dataset
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
+from lib.Connection import select as cxnselect
 from shared.SDXControllerConnectionManager import *
-from shared.Connection import select as cxnselect
 from shared.UserPolicy import UserPolicyBreakdown
 from AuthenticationInspector import *
 from AuthorizationInspector import *
@@ -24,8 +24,9 @@ from TopologyManager import *
 from ValidityInspector import *
 
 # Known UserPolicies
-from shared.JsonUploadPolicy import *
+#FIXME: from shared.JsonUploadPolicy import *
 from shared.L2TunnelPolicy import *
+from shared.EndpointConnectionPolicy import *
 
 
 # Connection Queue actions defininition
@@ -77,11 +78,12 @@ class SDXController(SingletonMixin):
         self.be = BreakdownEngine.instance()
         self.rr = RuleRegistry.instance()
         self.vi = ValidityInspector.instance()
-        self.pm = ParticipantManager.instance()
 
         if mani != None:
+            self.pm = ParticipantManager.instance(mani)
             self.lcm = LocalControllerManager.instance(mani)
         else: 
+            self.pm = ParticipantManager.instance()
             self.lcm = LocalControllerManager.instance()
 
         topo = self.tm.get_topology()
@@ -98,8 +100,9 @@ class SDXController(SingletonMixin):
         self.cm_thread.start()
 
         # Register known UserPolicies
-        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
+#FIXME        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
         self.rr.add_ruletype("l2tunnel", L2TunnelPolicy)
+        self.rr.add_ruletype("endpointcxn", EndpointConnectionPolicy)
 
 
         # Start these modules last!
@@ -141,8 +144,13 @@ class SDXController(SingletonMixin):
         
     def _handle_new_connection(self, cxn):
         # Receive name from LocalController, verify that it's in the topology
-        name = cxn.recv()
-        topo = self.tm.get_topology()
+        cmd,name = cxn.recv_cmd()
+
+        if cmd != SDX_IDENTIFY:
+            #FIXME: raise some sort of error here.
+            self.logger.error("LocalController not identifying correctly: %s, %s" % (cmd, name))
+            return
+        
         lcs = self.tm.get_lcs()
 
         self.logger.info("LocalController attempting to log in with name %s." % 
@@ -246,31 +254,23 @@ class SDXController(SingletonMixin):
 def send_no_rules(param):
     pass
 
-def usage():
-    print "USAGE: python SDXController.py manifest <db-location> <--no_topo>"
-    print "You must provide manifest files for the SDXController if running from the command line."
-    print "You can provide a database location for the sqlite database. Otherwise, uses an in-memory database for temporary storage."
-    print "--no_topo is used when not running local controllers for testing."
-    exit()
-
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 and len(sys.argv) != 3 and len(sys.argv) != 4:
-        usage()
-    mani = sys.argv[1]
-    db = ":memory:"
-    topo = True
-    if len(sys.argv) == 3:
-        if sys.argv[2] == "--no_topo":
-            topo = False
-        else:
-            db = sys.argv[2]
-    if len(sys.argv) == 4:
-        if sys.argv[3] != "--no_topo":
-            usage()
-        topo = False
+    from optparse import OptionParser
+    parser = OptionParser()
+
+    parser.add_option("-d", "--database", dest="database", type="string", action="store",
+                  help="Specifies the database. The default database is \":memory:\"", default=":memory:")
+    parser.add_option("-m", "--manifest", dest="manifest", type="string", action="store",
+                  help="specifies the manifest")
+    parser.add_option("-N", "--no_topo", dest="topo", default=True, action="store_false", help="Run without the topology")
+    
+    (options, args) = parser.parse_args()
+    
+    if not options.manifest:
+        parser.print_help()
+        exit()
         
-        
-    sdx = SDXController(False, mani, db, topo)
+    sdx = SDXController(False, options.manifest, options.database, options.topo)
     sdx._main_loop()
 

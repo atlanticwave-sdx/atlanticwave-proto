@@ -6,8 +6,8 @@
 import unittest
 import threading
 from time import sleep
-from shared.ConnectionManager import *
-from shared.Connection import *
+from lib.ConnectionManager import *
+from lib.Connection import *
 
 class InitTest(unittest.TestCase):
     def test_singleton(self):

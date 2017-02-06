@@ -3,31 +3,12 @@
     "atlh1": {
       "type":"host",
       "location":"33.772080,-84.392869"},
-    "atlh2": {
-      "type":"host",
-      "location":"33.772080,-84.392869"},
     "miah1": {
-      "type":"host",
-      "location":"25.755971,-80.373737"},
-    "miah2": {
       "type":"host",
       "location":"25.755971,-80.373737"},
     "gruh1": {
       "type":"host",
-      "location":"-23.4348091,-46.4816877"},
-    "gruh2": {
-      "type":"host",
-      "location":"-23.4348091,-46.4816877"},
-    "atldtn": {
-      "type":"dtn",
-      "location":"33.772080,-84.392869",
-      "ip":"10.0.0.101",
-      "vlan":100},
-    "grudtn": {
-      "type":"dtn",
-      "location":"-23.4348091,-46.4816877",
-      "ip":"10.0.0.102",
-      "vlan":200}
+      "location":"-23.4348091,-46.4816877"}
   },
   "localcontrollers": {
     "atl":{
@@ -43,7 +24,7 @@
         {
           "name": "atl-switch",
 	  "friendlyname":"Main Atlanta Switch",
-          "ip": "127.0.0.1",
+          "ip": "128.61.159.153",
           "dpid":1,
           "brand": "Open vSwitch",
           "model": "2.3.0",
@@ -56,18 +37,8 @@
             {
               "portnumber": 2,
               "speed": 1000,
-              "destination": "atlh2"
-            },
-            {
-              "portnumber": 3,
-              "speed": 1000,
               "destination": "mia-switch"
-            },
-            {
-              "portnumber": 4,
-              "speed": 1000,
-              "destination": "atldtn"
-            }            
+            }
           ],
           "rulesaccepted": [
             "tbd"
@@ -101,7 +72,7 @@
         {
           "name": "mia-switch",
 	  "friendlyname":"Main Miami Switch",
-          "ip": "127.0.0.1",
+          "ip": "128.61.159.153",
           "dpid":2,
           "brand": "Open vSwitch",
           "model": "2.3.0",
@@ -109,20 +80,15 @@
             {
               "portnumber": 1,
               "speed": 1000,
-              "destination": "miah1"
+              "destination": "atl-switch"
             },
             {
               "portnumber": 2,
               "speed": 1000,
-              "destination": "miah2"
+              "destination": "miah1"
             },
             {
               "portnumber": 3,
-              "speed": 1000,
-              "destination": "atl-switch"
-            },
-            {
-              "portnumber": 4,
               "speed": 1000,
               "destination": "gru-switch"
             }
@@ -159,7 +125,7 @@
         {
           "name": "gru-switch",
 	  "friendlyname":"Main Sao Paulo Switch",
-          "ip": "127.0.0.1",
+          "ip": "128.61.159.153",
           "dpid":3,
           "brand": "Open vSwitch",
           "model": "2.3.0",
@@ -167,22 +133,12 @@
             {
               "portnumber": 1,
               "speed": 1000,
-              "destination": "gruh1"
+              "destination": "mia-switch"
             },
             {
               "portnumber": 2,
               "speed": 1000,
-              "destination": "gruh2"
-            },
-            {
-              "portnumber": 3,
-              "speed": 1000,
-              "destination": "mia-switch"
-            },
-            {
-              "portnumber": 4,
-              "speed": 1000,
-              "destination": "grudtn"
+              "destination": "gruh1"
             }
           ],
           "rulesaccepted": [

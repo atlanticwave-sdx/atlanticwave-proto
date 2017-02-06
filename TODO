@@ -51,3 +51,66 @@ RULE MANAGER
 - Needs some sort of tracking mechanism for recurrant rules. This may be related to the states discussed above.
 
 - Need to handle constraints (bandwidth, for instance). Need to handle adjusting constraints as well! 
+
+
+SDX-LC INTERFACE CHANGES
+
+Parent class:
+LCRule 		- This is the local controller rule. Simple parent class.
+ - cookie		- This is a tracking numberI
+
+Children:
+VlanLCRule	- Handles all NSI-style rules
+- inport		- Physical in port
+- outport		- Physical out port
+- vlan_in		- VLAN coming from the inport (for matching/setting)
+- vlan_out	- VLAN go to the outport
+- bidirectional	- Boolean, likely True, but there are cases where a path is unidirectional
+
+SDXLCRule	- Everything else, for now. This will likely need to be extended
+- match		- List of fields to match
+- action		- List of actions to take
+- ingress		- Boolean, True if an Ingress rule, False if egress rule
+
+
+The VlanLCRule class is pretty simple: there's nothing unsurprising in the fields there. There will likely be some restrictions on the VLANs that can be used. This may need to be converted into some other encapsulation protocol (MPLS, for instance) in the future, and possible have something that converts one encapsulation protocol to another (e.g., VLANs at the endpoints, MPLS through the middle). 
+
+SDXLCRule has too many capital letters. The ingress boolean should be reasonably straight forward: it basically selects which table to put it in (in a multi-table LC). The match and action fields are far more interesting, and challenging. These will need a class hierarchy of their own, not dissimilar to the OF fields that I've already created (perhaps ripped off of those classes....).
+
+Matches should have full OF capabilities, at a minimum. They may not have all the details that a match would have, but they will need to be able to manipulate based on headers. Remember, the User-level interface will be more abstract, so having a semi-abstract interface at this layer is reasonable.
+
+Actions - Fwd, modify headers, add headers (encapsulation headers, like VLANs and MPLS). The usual.
+
+
+
+The VlanLCRule is optionally bidirectional, while SDXLCRules are necessarily unidirectional as you are only able to control your own traffic.
+
+Translation at the Local controller is reasonably easy, assuming you can support multiple tables (with single table, there's the mess of cross multiplication), but more difficult than it currently is. There should be some abstraction here, but not the level that the users should be experiencing. 
+
+
+
+TABLE Allocations
+
+Right now, I'm waffling between 3 and 4 tables being used. Below are the responsibilities that I see, but there are some embedded questions. This is only somewhat related to the interface question, but does inform what the interfaces are responsible for.
+
+Table 0 
+- REN/VLAN fowarding
+- For boring non-SDX style rules
+- Can directly forward to an outbound port
+- Fall through to table 1
+
+
+Table 1 
+- Egress rules - any modifications to packets exiting a network go here
+- Any modification rule MUST send flow to Table 2 after
+- Fall through two table 2 (any packets that don't have Egress rules associated
+
+
+Table 2
+- Ingress rules
+- Should this be keyed off of IPs or MACs? Something else?
+- How to handle spanning tree/learning switch functionality?
+
+Table 3
+- Forwarding based on learning switch (either L2 or L3) or pre-programmed forwarding 
+- Should this be part of Table 2?

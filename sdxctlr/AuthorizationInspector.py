@@ -3,7 +3,7 @@
 
 
 import logging
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 
 
 class AuthorizationInspectorError(Exception):

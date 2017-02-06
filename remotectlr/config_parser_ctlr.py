@@ -5,7 +5,7 @@
 import logging
 import threading
 import sys
-from shared.Singleton import Singleton
+from lib.Singleton import Singleton
 from shared.SDXControllerConnectionManager import *
 from config_parser.config_parser import *
 

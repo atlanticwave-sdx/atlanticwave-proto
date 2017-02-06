@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
 from AuthorizationInspector import AuthorizationInspector
 from TopologyManager import TopologyManager
 
@@ -24,8 +24,9 @@ class BreakdownEngine(SingletonMixin):
             rules (e.g., if a user cannot create paths through a particular LC, 
             reroute around that LC). '''
         try:
-            return rule.breakdown_rule(TopologyManager.instance().get_topology(),
-                                       AuthorizationInspector.instance().is_authorized)
+            tm = TopologyManager.instance()
+            ai = AuthorizationInspector.instance()
+            return rule.breakdown_rule(tm, ai)
         except Exception as e:
             raise
     

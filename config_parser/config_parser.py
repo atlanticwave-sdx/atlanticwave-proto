@@ -3,11 +3,11 @@
 
 
 import json
-from shared.offield import *
-from shared.match import *
-from shared.action import *
-from shared.instruction import *
-from shared.OpenFlowRule import * 
+from legacy.openflow.offield import *
+from legacy.openflow.match import *
+from legacy.openflow.action import *
+from legacy.openflow.instruction import *
+from legacy.openflow.OpenFlowRule import * 
 
 class ConfigurationParserTypeError(TypeError):
     pass

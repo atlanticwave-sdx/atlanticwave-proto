@@ -7,10 +7,10 @@ import threading
 import sys
 import json
 
-from shared.Singleton import SingletonMixin
+from lib.Singleton import SingletonMixin
+from lib.Connection import select as cxnselect
 from RyuControllerInterface import *
 from shared.SDXControllerConnectionManager import *
-from shared.Connection import select
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
@@ -76,7 +76,7 @@ class LocalController(SingletonMixin):
         while(True):
             # Based, in part, on https://pymotw.com/2/select/
             try:
-                readable, writable, exceptional = select(rlist,
+                readable, writable, exceptional = cxnselect(rlist,
                                                          wlist,
                                                          xlist)
             except Exception as e:
@@ -88,11 +88,12 @@ class LocalController(SingletonMixin):
                 if entry == self.sdx_connection:
                     self.logger.debug("Receiving Command on sdx_connection")
                     cmd, data = self.sdx_connection.recv_cmd()
+                    (switch_id, cmddata) = data
                     self.logger.debug("Received : %s:%s" % (cmd, data))
                     if cmd == SDX_NEW_RULE:
-                        self.switch_connection.send_command(data)
+                        self.switch_connection.send_command(switch_id, cmddata)
                     elif cmd == SDX_RM_RULE:
-                        self.switch_connection.remove_rule(data)
+                        self.switch_connection.remove_rule(switch_id, cmddata)
                     self.logger.debug("Sent     : %s:%s" % (cmd, data))
 
                 #elif?
@@ -139,7 +140,7 @@ class LocalController(SingletonMixin):
         self.sdx_connection = self.sdx_cm.open_outbound_connection(IPADDR, PORT)
         self.logger.debug("SDX Controller Connection - %s" % (self.sdx_connection))
         # Send name
-        self.sdx_connection.send(self.name)
+        self.sdx_connection.send_cmd(SDX_IDENTIFY, self.name)
 
         # FIXME: Credentials exchange
 

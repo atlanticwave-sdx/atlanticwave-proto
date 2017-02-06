@@ -9,14 +9,13 @@ import mock
 import subprocess
 from localctlr.RyuTranslateInterface import *
 from localctlr.RyuControllerInterface import *
-from localctlr.RyuQueue import *
-from shared.match import *
-from shared.action import *
-from shared.instruction import *
-from shared.offield import *
+
+from shared.LCAction import *
+from shared.LCFields import *
 from time import sleep
 from ryu.ofproto.ofproto_v1_3_parser import *
 
+DEFAULT_SLEEP_TIME=0.1
 
 class RyuTranslateInit(unittest.TestCase):
     
@@ -29,220 +28,187 @@ class RyuTranslateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Setup RyuControllerInterface, which sets up RyuTranslateInterface
-        cls.ctlrint = RyuControllerInterface()
-        cls.trans = None
-        cp = RyuCrossPollinate()
-        while(cp.TranslateInterface == None):
-            # Wait for cross pollination
-            print "Waiting for cross pollination" 
-            sleep(1)
-        cls.trans = cp.TranslateInterface
-
         # Setup the virtual switch
-        subprocess.call(['ovs-vsctl', 'add-br', 'br_ovs'])
-        subprocess.call(['ovs-vsctl', 'add-port', 'br_ovs', 'vi0', '--', 'set', 'Interface', 'vi0', 'type=internal'])
-        subprocess.call(['ovs-vsctl', 'set', 'bridge', 'br_ovs', 'other-config:datapath-id=0000000000000001'])
-        subprocess.call(['ovs-vsctl', 'set-controller', 'br_ovs', 'tcp:127.0.0.1:6633'])
+        subprocess.check_call(['mn', '-c'])
+        subprocess.call(['fuser', '-k', '55767/tcp'])
+        subprocess.call(['fuser', '-k', '55767/tcp'])
+        subprocess.check_call(['ovs-vsctl', 'add-br', 'br_ovs'])
+        subprocess.check_call(['ovs-vsctl', 'add-port', 'br_ovs', 'vi0', '--', 'set', 'Interface', 'vi0', 'type=internal'])
+        subprocess.check_call(['ovs-vsctl', 'set', 'bridge', 'br_ovs', 'other-config:datapath-id=0000000000000001'])
+        subprocess.check_call(['ovs-vsctl', 'set-controller', 'br_ovs', 'tcp:127.0.0.1:6633'])
 
 
-        # Wait for switch to connect to controller
-        while(len(cls.trans.datapaths.keys()) == 0):
-            print "Waiting " + str(cls.trans.datapaths)
-            sleep(1)
-
-        print "Datapaths: " + str(cls.trans.datapaths.keys())
-        cls.datapath = cls.trans.datapaths[cls.trans.datapaths.keys()[0]]
+        # Setup RyuControllerInterface, which sets up RyuTranslateInterface
+        # Only returns once RyuTranslateInterface has a datapath.
+        cls.ctlrint = RyuControllerInterface("127.0.0.1",
+                                             55767,
+                                             6633)
+        cls.switch_id = 1
+        cls.cookie = "1234"
 
     @classmethod
     def tearDownClass(cls):
-        # Delete virtual switch
-        subprocess.call(['ovs-vsctl', 'del-br', 'br_ovs'])
+        cls.ctlrint.inter_cm_cxn.close()
+        cls.ctlrint.inter_cm.close_listening_port()
+        subprocess.call(['fuser', '-k', '55767/tcp'])
 
     ######################## TRANSLATE MATCH TESTS #########################
-    def trans_test(self, ofm, ofpm):
-        match_to_translate = OpenFlowMatch([ofm])
-        translated_match = self.trans.translate_match(self.datapath, match_to_translate)
-        prototype_match = OFPMatch(**ofpm)
+    def trans_match_test(self, ofm, ofpm):
+        pass
+        if type(ofm) != type([]):
+            matches = [ofm]
+        else:
+            matches = ofm
+        actions = [SetField(ETH_DST("00:00:00:00:00:02"))]
+        rule = MatchActionLCRule(self.switch_id, matches, actions)
+        rule.set_cookie(self.cookie)
 
-        self.failUnlessEqual(str(translated_match), str(prototype_match))        
+        self.ctlrint.send_command(self.switch_id, rule)
+        sleep(DEFAULT_SLEEP_TIME)
+
+        output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
+        match = output.split("priority=100,")[1].split(" ")[0]
+        #print "Installation: %s" % output
+        #print "\n    ofm:   %s" % str(ofm)
+        #print "    match: %s" % match
+
+
+        self.ctlrint.remove_rule(self.switch_id, self.cookie)
+        sleep(DEFAULT_SLEEP_TIME)
+        output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
+#        print "Removal: %s" % output
+        lines = output.split('\n')
+        postremoval = lines[1].strip()
+        
+        # ''
+        self.failUnlessEqual(postremoval, "") # Removal Failure
+        self.failUnlessEqual(match, ofpm)  # Installation failure
+
+
+        
+
 
     def test_trans_match_IN_PORT(self):
-        self.trans_test(IN_PORT(1), {'in_port':1})
+        self.trans_match_test(IN_PORT(1), "in_port=1")
 
     def test_trans_match_ETH_DST(self):
-        self.trans_test(ETH_DST("00:00:00:00:00:01"), {'eth_dst':"00:00:00:00:00:01"})
+        self.trans_match_test(ETH_DST("00:00:00:00:00:01"), 
+                              "dl_dst=00:00:00:00:00:01")
 
     def test_trans_match_ETH_SRC(self):
-        self.trans_test(ETH_SRC("00:00:00:00:00:02"), {'eth_src':"00:00:00:00:00:02"})
+        self.trans_match_test(ETH_SRC("00:00:00:00:00:02"), 
+                              "dl_src=00:00:00:00:00:02")
 
     def test_trans_match_IP_PROTO(self):
-        self.trans_test(IP_PROTO(6), {'ip_proto':6})
+        self.trans_match_test(IP_PROTO(6), "tcp")
+        self.trans_match_test(IP_PROTO(17), "udp")
+        self.trans_match_test(IP_PROTO(22), "ip,nw_proto=22")
 
     def test_trans_match_IPV4_SRC(self):
-        self.trans_test(IPV4_SRC("1.2.3.4"), {'ipv4_src':"1.2.3.4"})
+        self.trans_match_test(IPV4_SRC("1.2.3.4"), "ip,nw_src=1.2.3.4")
 
     def test_trans_match_IPV4_DST(self):
-        self.trans_test(IPV4_DST("2.3.4.5"), {'ipv4_dst':"2.3.4.5"})
+        self.trans_match_test(IPV4_DST("2.3.4.5"), "ip,nw_dst=2.3.4.5")
 
-    def test_trans_match_IPV6_SRC(self):
-        self.trans_test(IPV6_SRC("2001:0db8:0000:0042:0000:8a2e:0370:7334"), 
-                        {'ipv6_src':"2001:0db8:0000:0042:0000:8a2e:0370:7334"})
+#    def test_trans_match_IPV6_SRC(self):
+#        self.trans_match_test(IPV6_SRC("2001:0db8:0000:0042:0000:8a2e:0370:7334"), 
+#                        {'ipv6_src':"2001:0db8:0000:0042:0000:8a2e:0370:7334"})
 
-    def test_trans_match_IPV6_DST(self):
-        self.trans_test(IPV6_DST("2001:0db8:0000:0042:0000:8a2e:0370:7335"), 
-                        {'ipv6_dst':"2001:0db8:0000:0042:0000:8a2e:0370:7335"})
+#    def test_trans_match_IPV6_DST(self):
+#        self.trans_match_test(IPV6_DST("2001:0db8:0000:0042:0000:8a2e:0370:7335"), 
+#                        {'ipv6_dst':"2001:0db8:0000:0042:0000:8a2e:0370:7335"})
 
     def test_trans_match_TCP_SRC(self):
-        self.trans_test(TCP_SRC(6), {'tcp_src':6})
+        self.trans_match_test(TCP_SRC(6), "tcp,tp_src=6")
 
     def test_trans_match_TCP_DST(self):
-        self.trans_test(TCP_DST(7), {'tcp_dst':7})
+        self.trans_match_test(TCP_DST(7), "tcp,tp_dst=7")
 
     def test_trans_match_UDP_SRC(self):
-        self.trans_test(UDP_SRC(8), {'udp_src':8})
+        self.trans_match_test(UDP_SRC(8), "udp,tp_src=8")
 
     def test_trans_match_UDP_DST(self):
-        self.trans_test(UDP_DST(9), {'udp_dst':9})
+        self.trans_match_test(UDP_DST(9), "udp,tp_dst=9")
+
+    def test_trans_match_multi(self):
+         #ip not needed in the check string, as tcp implies ip
+        self.trans_match_test([IPV4_SRC("4.5.6.7"), TCP_DST(3456)],
+                              "tcp,nw_src=4.5.6.7,tp_dst=3456")
+        self.trans_match_test([IPV4_DST("6.4.5.6"), UDP_SRC(456),IN_PORT(3)],
+                              "udp,in_port=3,nw_dst=6.4.5.6,tp_src=456")
 
 
-    def trans_bad_test(self, ofm, ofpm):
-        match_to_translate = OpenFlowMatch([ofm])
-        translated_match = self.trans.translate_match(self.datapath, match_to_translate)
-        prototype_match = OFPMatch(**ofpm)
-
-        self.failIfEqual(str(translated_match), str(prototype_match))        
-
-    def test_trans_match_bad_IN_PORT(self):
-        self.trans_bad_test(IN_PORT(1), {'in_port':2})
-
-    def test_trans_match_bad_ETH_DST(self):
-        self.trans_bad_test(ETH_DST("00:00:00:00:00:01"), {'eth_dst':"00:00:00:00:00:02"})
-
-    def test_trans_match_bad_ETH_SRC(self):
-        self.trans_bad_test(ETH_SRC(0x000000000002), {'eth_src':"00:00:00:00:00:01"})
-
-    def test_trans_match_bad_IP_PROTO(self):
-        self.trans_bad_test(IP_PROTO(6), {'ip_proto':7})
-
-    def test_trans_match_bad_IPV4_SRC(self):
-        self.trans_bad_test(IPV4_SRC("1.2.3.4"), {'ipv4_src':"1.2.3.5"})
-
-    def test_trans_match_bad_IPV4_DST(self):
-        self.trans_bad_test(IPV4_DST("2.3.4.5"), {'ipv4_dst':"2.3.4.4"})
-
-    def test_trans_match_bad_IPV6_SRC(self):
-        self.trans_bad_test(IPV6_SRC("2001:0db8:0000:0042:0000:8a2e:0370:7334"), 
-                            {'ipv6_src':"2001:0db8:0000:0042:0000:8a2e:0370:7335"})
-
-    def test_trans_match_bad_IPV6_DST(self):
-        self.trans_bad_test(IPV6_DST("2001:0db8:0000:0042:0000:8a2e:0370:7335"), 
-                            {'ipv6_dst':"2001:0db8:0000:0042:0000:8a2e:0370:7334"})
-
-    def test_trans_match_bad_TCP_SRC(self):
-        self.trans_bad_test(TCP_SRC(6), {'tcp_src':7})
-
-    def test_trans_match_bad_TCP_DST(self):
-        self.trans_bad_test(TCP_DST(7), {'tcp_dst':8})
-
-    def test_trans_match_bad_UDP_SRC(self):
-        self.trans_bad_test(UDP_SRC(8), {'udp_src':9})
-
-    def test_trans_match_bad_UDP_DST(self):
-        self.trans_bad_test(UDP_DST(9), {'udp_dst':6})
-
-
-    def trans_test_multi(self, ofm, ofpm):
-        match_to_translate = OpenFlowMatch(ofm)
-        translated_match = self.trans.translate_match(self.datapath, match_to_translate)
-        prototype_match = OFPMatch(**ofpm)
-
-        self.failUnlessEqual(str(translated_match), str(prototype_match))  
-
-    def test_trans_double_match(self):
-        self.trans_test_multi([IP_PROTO(6), TCP_SRC(1234)], {'ip_proto':6, 'tcp_src':1234})
-
-
-    def trans_bad_test_multi(self, ofm, ofpm):
-        match_to_translate = OpenFlowMatch(ofm)
-        translated_match = self.trans.translate_match(self.datapath, match_to_translate)
-        prototype_match = OFPMatch(**ofpm)
-
-        self.failIfEqual(str(translated_match), str(prototype_match))       
-
-    def test_trans_bad_double_match1(self):
-        self.trans_bad_test_multi([IP_PROTO(6), TCP_SRC(1234)], {'ip_proto':5, 'tcp_src':1234})
-
-    def test_trans_bad_double_match2(self):
-        self.trans_bad_test_multi([IP_PROTO(6), TCP_SRC(1234)], {'ip_proto':6, 'tcp_src':1235})
-
-    def test_trans_bad_double_match3(self):
-        self.trans_bad_test_multi([IP_PROTO(6), TCP_SRC(1234)], {'ip_proto':5, 'tcp_src':1235})
 
 
     ######################## TRANSLATE ACTION TESTS #########################
 
-    def test_trans_action_output_test(self):
-        action_to_translate = action_OUTPUT(1)
-        translated_action = self.trans.translate_action(self.datapath, action_to_translate)
-        prototype_action = OFPActionOutput(1)
+    def trans_action_test(self, ofa, ofpa):
+        matches = [IPV4_DST("6.4.5.6"), UDP_SRC(456),IN_PORT(3)]
+        if type(ofa) != type([]):
+            actions = [ofa]
+        else:
+            actions = ofa
+        rule = MatchActionLCRule(self.switch_id, matches, actions)
+        rule.set_cookie(self.cookie)
 
-        self.failUnlessEqual(str(translated_action), str(prototype_action))
+        self.ctlrint.send_command(self.switch_id, rule)
+        sleep(DEFAULT_SLEEP_TIME)
 
-    def test_trans_action_set_field_test(self):
-        action_to_translate = action_SET_FIELD(IP_PROTO(6))
-        translated_action = self.trans.translate_action(self.datapath, action_to_translate)
-        prototype_action = OFPActionSetField(ip_proto=6)
+        output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
+        action = output.split("actions=")[1].strip()#.split(" ")[0]
+        #print "Installation: %s" % output
+        #print "\n    ofa:    %s" % str(ofa)
+        #print "    action: %s" % action
 
-        self.failUnlessEqual(str(translated_action), str(prototype_action))
 
-    #FIXME - need action tests
-    
-    ######################## TRANSLATE INSTRUCTION TESTS #########################
-    
-    def test_trans_instruction_GOTO_TABLE_test(self):
-        instruction_to_translate = instruction_GOTO_TABLE(2)
-        translated_instruction = self.trans.translate_instruction(self.datapath, instruction_to_translate)
-        prototype_instruction = OFPInstructionGotoTable(2)
+        self.ctlrint.remove_rule(self.switch_id, self.cookie)
+        sleep(DEFAULT_SLEEP_TIME)
+        output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
+#        print "Removal: %s" % output
+        lines = output.split('\n')
+        postremoval = lines[1].strip()
+        
+        # ''
+        self.failUnlessEqual(postremoval, "") # Removal Failure
+        self.failUnlessEqual(action, ofpa)  # Installation failure
 
-        self.failUnlessEqual(str(translated_instruction), str(prototype_instruction))
 
-    def test_trans_instruction_WRITE_METADATA_test(self):
-        instruction_to_translate = instruction_WRITE_METADATA(12345)
-        translated_instruction = self.trans.translate_instruction(self.datapath, instruction_to_translate)
-        prototype_instruction = OFPInstructionWriteMetadata(12345, 0xffffffffffffffff)
 
-        self.failUnlessEqual(str(translated_instruction), str(prototype_instruction))
+    def test_trans_action_SetField(self):
+        self.trans_action_test(SetField(ETH_DST("00:00:00:00:00:02")),
+                               "mod_dl_dst:00:00:00:00:00:02")
+        self.trans_action_test(SetField(UDP_SRC(3456)),
+                               "mod_tp_src:3456")
 
-    def test_trans_instruction_WRITE_ACTIONS_test(self):
-        actionlist = [action_SET_FIELD(IP_PROTO(6)),
-                      action_OUTPUT(3)]
-        instruction_to_translate = instruction_WRITE_ACTIONS(actionlist)
-        translated_instruction = self.trans.translate_instruction(self.datapath, instruction_to_translate)
-        prototype_instruction = OFPInstructionActions(ofproto.OFPIT_WRITE_ACTIONS,
-                                                      [OFPActionSetField(ip_proto=6),
-                                                       OFPActionOutput(3)])
+        self.trans_action_test([SetField(ETH_DST("00:00:00:00:00:02")),
+                                SetField(UDP_SRC(3456))],
+                               "mod_dl_dst:00:00:00:00:00:02,mod_tp_src:3456")
 
-        self.failUnlessEqual(str(translated_instruction), str(prototype_instruction))
+    def test_trans_action_Forward(self):
+        self.trans_action_test(Forward(3),
+                               "output:3")
+        self.trans_action_test(Forward(5),
+                               "output:5")
+        self.trans_action_test([Forward(5),Forward(1)],
+                               "output:5,output:1")
 
-    def test_trans_instruction_APPLY_ACTIONS_test(self):
-        actionlist = [action_SET_FIELD(IP_PROTO(6)),
-                      action_OUTPUT(3)]
-        instruction_to_translate = instruction_APPLY_ACTIONS(actionlist)
-        translated_instruction = self.trans.translate_instruction(self.datapath, instruction_to_translate)
-        prototype_instruction = OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
-                                                      [OFPActionSetField(ip_proto=6),
-                                                       OFPActionOutput(3)])
+    def REMOVED_test_trans_action_Continue(self):
+        #FIXME - Continue is not implemented.
+        self.trans_action_test(Continue(),
+                               "")
 
-        self.failUnlessEqual(str(translated_instruction), str(prototype_instruction))
+    def test_trans_action_Drop(self):
+        self.trans_action_test(Drop(),
+                               "drop")
 
-    def test_trans_instruction_CLEAR_ACTIONS_test(self):
-        instruction_to_translate = instruction_CLEAR_ACTIONS()
-        translated_instruction = self.trans.translate_instruction(self.datapath, instruction_to_translate)
-        # The empty list is due to a bug in ofproto_v1_3_parser.py:2758
-        prototype_instruction = OFPInstructionActions(ofproto.OFPIT_CLEAR_ACTIONS,[]) 
+    def REMOVED_test_trans_action_SetBandwidth(self):
+        #FIXME - SetBandwidth is not implemented.
+        self.trans_action_test(SetBandwidth(1000),
+                               "")
+                               
 
-        self.failUnlessEqual(str(translated_instruction), str(prototype_instruction))
+
+
 
 if __name__ == '__main__':
     unittest.main()
