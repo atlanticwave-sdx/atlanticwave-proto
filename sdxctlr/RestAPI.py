@@ -19,7 +19,7 @@ from flask import Flask, session, redirect, request, url_for, send_from_director
 import flask_login
 from flask_login import LoginManager
 
-from flask_sso import SSO
+from flask_sso import *
 
 #Topology json stuff
 import networkx as nx
@@ -46,6 +46,7 @@ from dateutil.parser import parse as pd
 #Constants
 from shared.constants import *
 
+
 class RestAPI(SingletonMixin):
     ''' The REST API will be the main interface for participants to use to push 
         rules (eventually) down to switches. It will gather authentication 
@@ -60,6 +61,8 @@ class RestAPI(SingletonMixin):
     global User, app, login_manager, sso
 
     app = Flask(__name__, static_url_path='', static_folder='')
+    sso = SSO(app=app)
+
     #FIXME: This should be more secure.
     app.secret_key = 'ChkaChka.....Boo, Ohhh Yeahh!'
 
@@ -75,9 +78,7 @@ class RestAPI(SingletonMixin):
     }
 
     app.config['SSO_ATTRIBUTE_MAP'] = SSO_ATTRIBUTE_MAP
-
-    sso = SSO(app=app)
-
+    
     login_manager = LoginManager()
 
     def api_process(self):
@@ -111,22 +112,18 @@ class RestAPI(SingletonMixin):
     class User(flask_login.UserMixin):
         pass
 
-    #This is for shibboleth loggin
     @staticmethod
     @sso.login_handler
     def login_callback(user_info):
         """Store information in session."""
         session['user'] = user_info
 
-    # This is a test endpoint for shibboleth
+    # This builds a shibboleth session
     @staticmethod
-    @app.route('/shibboleth/')
-    def index():
-        """Display user information or force login."""
-        if 'user' in session:
-            return 'Welcome {name}'.format(name=session['user']['nickname'])
-        return redirect(app.config['SSO_LOGIN_URL'])
-
+    @app.route('/build_session')
+    def build_session():
+        login_session = request.args.get('login_session')
+        return login_session
  
     # This maintains the state of a logged in user.
     @staticmethod
