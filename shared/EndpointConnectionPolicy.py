@@ -95,7 +95,11 @@ class EndpointConnectionPolicy(UserPolicy):
         
         # First, find out the bandwidth requirements
         total_time = (self.deadline - datetime.now()).total_seconds()
-        self.bandwidth = max(data/(total_time + buffer_time_sec),
+        if total_time == buffer_time_sec or total_time == 0:
+            # This adjustment is to prevent 0 denominators in the next formulas
+            total_time += 1
+            
+        self.bandwidth = max(data/(total_time - buffer_time_sec),
                              (data/total_time)*buffer_bw_percent)
 
         # Second, get the path, and reserve bw and a VLAN on it

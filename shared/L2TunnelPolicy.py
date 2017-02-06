@@ -111,7 +111,7 @@ class L2TunnelPolicy(UserPolicy):
         self.fullpath = tm.find_valid_path(self.src_switch,
                                            self.dst_switch,
                                            self.bandwidth)
-        if self.fullpath = None:
+        if self.fullpath == None:
             raise UserPolicyError("There is no available path between %s and %s for bandwidth %s" % (self.src_switch, self.dst_switch, self.bandwidth))
 
         #nodes = topology.nodes(data=True)
