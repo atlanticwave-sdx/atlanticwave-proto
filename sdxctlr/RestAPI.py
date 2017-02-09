@@ -83,11 +83,15 @@ class RestAPI(SingletonMixin):
 
     def api_process(self):
         login_manager.init_app(app)
-        app.run(host='0.0.0.0')
+        app.run(host=self.host, port=self.port)
 
-    def __init__(self):
+    def __init__(self,host='0.0.0.0',port=5000):
         #FIXME: Creating user only for testing purposes
         AuthenticationInspector.instance().add_user('sdonovan','1234')
+
+        self.host=host
+        self.port=port
+
         p = Thread(target=self.api_process)
         p.daemon = True
         p.start()
