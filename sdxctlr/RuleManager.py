@@ -12,6 +12,7 @@ from lib.Singleton import SingletonMixin
 from AuthorizationInspector import AuthorizationInspector
 from BreakdownEngine import BreakdownEngine
 from ValidityInspector import ValidityInspector
+from TopologyManager import TopologyManager
 
 from shared.constants import *
 
@@ -137,6 +138,8 @@ class RuleManager(SingletonMixin):
             entry.set_cookie(rulehash)
         rule.set_breakdown(breakdown)
 
+        rule.pre_add_callback(TopologyManager.instance(),
+                              AuthorizationInspector.instance())
         self._add_rule_to_db(rule)
             
         return rulehash
@@ -169,6 +172,8 @@ class RuleManager(SingletonMixin):
         if authorized != True:
             raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s" % (user, rule_hash))
 
+        rule.pre_remove_callback(TopologyManager.instance(),
+                                 AuthorizationInspector.instance())
         self._rm_rule_from_db(rule)
 
     def remove_all_rules(self, user):

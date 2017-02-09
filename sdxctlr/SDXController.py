@@ -26,6 +26,7 @@ from ValidityInspector import *
 # Known UserPolicies
 #FIXME: from shared.JsonUploadPolicy import *
 from shared.L2TunnelPolicy import *
+from shared.EndpointConnectionPolicy import *
 
 
 # Connection Queue actions defininition
@@ -101,6 +102,7 @@ class SDXController(SingletonMixin):
         # Register known UserPolicies
 #FIXME        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
         self.rr.add_ruletype("l2tunnel", L2TunnelPolicy)
+        self.rr.add_ruletype("endpointcxn", EndpointConnectionPolicy)
 
 
         # Start these modules last!
@@ -252,13 +254,6 @@ class SDXController(SingletonMixin):
 def send_no_rules(param):
     pass
 
-def usage():
-    print "USAGE: python SDXController.py manifest <db-location> <--no_topo>"
-    print "You must provide manifest files for the SDXController if running from the command line."
-    print "You can provide a database location for the sqlite database. Otherwise, uses an in-memory database for temporary storage."
-    print "--no_topo is used when not running local controllers for testing."
-    exit()
-
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -273,7 +268,8 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     
     if not options.manifest:
-        usage()
+        parser.print_help()
+        exit()
         
     sdx = SDXController(False, options.manifest, options.database, options.topo)
     sdx._main_loop()

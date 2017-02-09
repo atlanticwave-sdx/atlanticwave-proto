@@ -39,20 +39,35 @@ class UserPolicy(object):
             Must be implemented by child classes. '''
         raise NotImplementedError("Subclasses must implement this.")
 
-    def breakdown_rule(self, topology, authorization_func):
+    def breakdown_rule(self, tm, ai):
         ''' Called by the BreakdownEngine to break a user rule apart. Should
             only be called by the BreakdownEngine, which passes the topology
             and authorization_func to it.
+            This recieves TopologyManager and AuthorizationEngine references
+            to perform topology manipulations and verify authorization for
+            specific actions.
             Returns a list of UserPolicyBreakdown objects.
             Must be implemented by child classes. '''
         raise NotImplementedError("Subclasses must implement this.")
 
-    def check_validity(self, topology, authorization_func):
+    def check_validity(self, tm, ai):
         ''' Called by the ValidityInspector to check if the particular object is
             valid. Should only be called by the ValidityInspector, which passes
             the topology and authorization_func to it. ''' 
         raise NotImplementedError("Subclasses must implement this.")
 
+    def pre_add_callback(self, tm, ai):
+        ''' This is called before a rule is added to the database. For instance,
+            if certain resources need to be locked down or rules authorized,
+            this can do it. May not need to be implemented. '''
+        pass
+
+    def pre_remove_callback(self, tm, ai):
+        ''' This is called before a rule is removed from the database. For 
+            instance, if certain resources need to be released, this can do it.
+            May not need to be implemented. '''
+        pass
+    
     def set_breakdown(self, breakdown):
         self.breakdown = breakdown
 
@@ -86,6 +101,8 @@ class UserPolicy(object):
         ''' Actually does parsing. 
             Must be implemented by child classes. '''
         raise NotImplementedError("Subclasses must implement this.")
+
+            
 
 
         

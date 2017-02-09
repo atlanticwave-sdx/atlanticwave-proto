@@ -11,7 +11,23 @@
       "location":"25.755971,-80.373737"},
     "miah2": {
       "type":"host",
-      "location":"25.755971,-80.373737"}
+      "location":"25.755971,-80.373737"},
+    "gruh1": {
+      "type":"host",
+      "location":"-23.4348091,-46.4816877"},
+    "gruh2": {
+      "type":"host",
+      "location":"-23.4348091,-46.4816877"},
+    "atldtn": {
+      "type":"dtn",
+      "location":"33.772080,-84.392869",
+      "ip":"10.0.0.101",
+      "vlan":100},
+    "grudtn": {
+      "type":"dtn",
+      "location":"-23.4348091,-46.4816877",
+      "ip":"10.0.0.102",
+      "vlan":200}
   },
   "localcontrollers": {
     "atl":{
@@ -34,19 +50,24 @@
           "portinfo": [
             {
               "portnumber": 1,
-              "speed": 1,
+              "speed": 1000,
               "destination": "atlh1"
             },
             {
               "portnumber": 2,
-              "speed": 1,
+              "speed": 1000,
               "destination": "atlh2"
             },
             {
               "portnumber": 3,
-              "speed": 1,
-              "destination": "mia"
-            }
+              "speed": 1000,
+              "destination": "mia-switch"
+            },
+            {
+              "portnumber": 4,
+              "speed": 1000,
+              "destination": "atldtn"
+            }            
           ],
           "rulesaccepted": [
             "tbd"
@@ -74,7 +95,7 @@
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55768,
-	"openflowport": 6653
+	"openflowport": 6643
       },
       "switchinfo": [
         {
@@ -87,18 +108,23 @@
           "portinfo": [
             {
               "portnumber": 1,
-              "speed": 1,
+              "speed": 1000,
               "destination": "miah1"
             },
             {
               "portnumber": 2,
-              "speed": 1,
+              "speed": 1000,
               "destination": "miah2"
             },
             {
               "portnumber": 3,
-              "speed": 1,
-              "destination": "atl"
+              "speed": 1000,
+              "destination": "atl-switch"
+            },
+            {
+              "portnumber": 4,
+              "speed": 1000,
+              "destination": "gru-switch"
             }
           ],
           "rulesaccepted": [
@@ -119,6 +145,77 @@
         "administrator": "Sean Donovan",
         "contact": "sdonovan@gatech.edu"
       }
+    },
+    "gru":{
+      "shortname": "gru",
+      "credentials": "grupw",
+      "location": "-23.430000,-46.480000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55769,
+	"openflowport": 6653
+      },
+      "switchinfo": [
+        {
+          "name": "gru-switch",
+	  "friendlyname":"Main Sao Paulo Switch",
+          "ip": "127.0.0.1",
+          "dpid":3,
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 1000,
+              "destination": "gruh1"
+            },
+            {
+              "portnumber": 2,
+              "speed": 1000,
+              "destination": "gruh2"
+            },
+            {
+              "portnumber": 3,
+              "speed": 1000,
+              "destination": "mia-switch"
+            },
+            {
+              "portnumber": 4,
+              "speed": 1000,
+              "destination": "grudtn"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+  },
+  "participants": {
+    "sdonovan": {
+      "credentials": "1234",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "sdonovan@gatech.edu",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
     }
   }
 }
