@@ -5,6 +5,7 @@
 
 from lib.Singleton import SingletonMixin
 from shared.L2TunnelPolicy import L2TunnelPolicy
+from shared.EndpointConnectionPolicy import EndpointConnectionPolicy
 from shared.SDXControllerConnectionManager import *
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
@@ -82,11 +83,15 @@ class RestAPI(SingletonMixin):
 
     def api_process(self):
         login_manager.init_app(app)
-        app.run(host='0.0.0.0')
+        app.run(host=self.host, port=self.port)
 
-    def __init__(self):
+    def __init__(self,host='0.0.0.0',port=5000):
         #FIXME: Creating user only for testing purposes
         AuthenticationInspector.instance().add_user('sdonovan','1234')
+
+        self.host=host
+        self.port=port
+
         p = Thread(target=self.api_process)
         p.daemon = True
         p.start()
@@ -153,6 +158,8 @@ class RestAPI(SingletonMixin):
             for i in  data['nodes']:
                 if 'id' in i and 'org' in i:
                     points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['friendlyname'])))
+            for i in data['nodes']:
+                print i
             
             # Pass to flask to render a template
             return flask.render_template('index.html',points=points,current_user=flask_login.current_user)
@@ -301,6 +308,7 @@ class RestAPI(SingletonMixin):
             pass
 
         #TODO: YUUUGGGGGEEEE security hole here. Patch after demo.
+        policy = None
         try:
             print theID
             print request.form['startdate']
@@ -326,24 +334,18 @@ class RestAPI(SingletonMixin):
             
             policy = L2TunnelPolicy(theID, data)
 
-            # I am really not sure what to pass through RuleManager as args
-            rule_hash = RuleManager.instance().add_rule(policy)
-
-            return flask.redirect('/rule/' + str(rule_hash))
-
-            #Just going to save this for later
-            return '<pre>%s</pre>'%json.dumps(data, indent=2)
-
-            # I plan on making this redirect to a page for the rulehash, but currently this is not ready
-            return rule_hash
         except:
             data =  {"endpointconnection":{
             "deadline":request.form['deadline'],
             "srcendpoint":request.form['source'],
             "dstendpoint":request.form['dest'],
             "dataquantity":int(request.form['size'])*int(request.form['unit'])}}
+            policy = EndpointConnectionPolicy(flask_login.current_user, data)
+            rule_hash = RuleManager.instance().add_rule(policy)
 
-            return str(data)
+        rule_hash = RuleManager.instance().add_rule(policy)
+        return flask.redirect('/rule/' + str(rule_hash))
+
     # Get information about a specific rule IDed by hash.
     @staticmethod
     @app.route('/rule/<rule_hash>',methods=['GET','POST'])

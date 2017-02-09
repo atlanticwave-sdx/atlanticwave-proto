@@ -49,12 +49,16 @@ class SDXController(SingletonMixin):
         itself.
         Singleton. ''' 
 
-    def __init__(self, runloop=True, mani=None, db=":memory:", run_topo=True):
+    def __init__(self, runloop=True, options=None):
         ''' The bulk of the work happens here. This initializes nearly everything
             and starts up the main processing loop for the entire SDX
             Controller. '''
 
         self._setup_logger()
+
+        mani=options.manifest
+        db = options.database
+        run_topo=options.topo
 
         # Start DB connection. Used by other modules. details on the setup:
         # https://dataset.readthedocs.io/en/latest/api.html
@@ -116,7 +120,7 @@ class SDXController(SingletonMixin):
                                            send_no_rules)
 
         self.pm = ParticipantManager.instance()      #FIXME - Filename
-        self.rapi = RestAPI.instance()
+        self.rapi = RestAPI.instance(options.host,options.port)
 
         # Go to main loop 
         if runloop:
@@ -265,12 +269,16 @@ if __name__ == '__main__':
                   help="specifies the manifest")
     parser.add_option("-N", "--no_topo", dest="topo", default=True, action="store_false", help="Run without the topology")
     
+    parser.add_option("-H", "--host", dest="host", default='0.0.0.0', action="store", type="string", help="Choose a host address")
+
+    parser.add_option("-p", "--port", dest="port", default=5000, action="store", type="int", help="Run without the topology")
+
     (options, args) = parser.parse_args()
     
     if not options.manifest:
         parser.print_help()
         exit()
         
-    sdx = SDXController(False, options.manifest, options.database, options.topo)
+    sdx = SDXController(False, options)
     sdx._main_loop()
 
