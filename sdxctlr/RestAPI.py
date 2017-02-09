@@ -301,8 +301,7 @@ class RestAPI(SingletonMixin):
             pass
 
         #TODO: YUUUGGGGGEEEE security hole here. Patch after demo.
-        if True:
-
+        try:
             print theID
             print request.form['startdate']
             print request.form['starttime']
@@ -313,10 +312,6 @@ class RestAPI(SingletonMixin):
             starttime = datetime.strptime(str(pd(request.form['startdate'] + ' ' + request.form['starttime'])), '%Y-%m-%d %H:%M:%S')
             endtime = datetime.strptime(str(pd(request.form['enddate'] + ' ' + request.form['endtime'])), '%Y-%m-%d %H:%M:%S')
 
-            try:
-                arb = request.form['sv']
-            except:
-                return "Scientists Portal has not yet been implemented!"
     
             # The Object to pass into L2TunnelPolicy
             data = {"l2tunnel":{"starttime":str(starttime.strftime(rfc3339format)),
@@ -341,7 +336,14 @@ class RestAPI(SingletonMixin):
 
             # I plan on making this redirect to a page for the rulehash, but currently this is not ready
             return rule_hash
+        except:
+            data =  {"endpointconnection":{
+            "deadline":request.form['deadline'],
+            "srcendpoint":request.form['source'],
+            "dstendpoint":request.form['dest'],
+            "dataquantity":int(request.form['size'])*int(request.form['unit'])}}
 
+            return str(data)
     # Get information about a specific rule IDed by hash.
     @staticmethod
     @app.route('/rule/<rule_hash>',methods=['GET','POST'])

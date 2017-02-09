@@ -153,7 +153,7 @@
                                 {{ item }}{% endfor %}
                             </select> </p>
                       </div>
-
+                      
                       <div class="row" align="center">
                           <button type="test" class="btn btn-danger btn-lg" align="middle">Preview</button>
                           <button type="submit" class="btn btn-danger btn-lg" align="middle">Submit</button>
@@ -161,24 +161,33 @@
                     </form>
 
                     <form action="rule" method="POST" id="Scientist" class="tabcontent">
+                      <div class="col-sm-4"></div>
                       <div class="col-sm-4">
-                        <p>Enter the start date: <input type="text" class="form-control" required="required" id="startdate" name="startdate"> </p> 
-                        <p>Enter the start time: <input type="time" class="form-control" required="required" id="starttime" name="starttime"> </p> 
+                        <p>Source:  
+                            <select class="form-control" required="required" id="source" name="source">{% for item in points %}
+                                {{ item }}{% endfor %}
+                            </select>
+                        </p>
+                        <p>Destination:  
+                            <select class="form-control" required="required" id="dest" name="dest">{% for item in points %}
+                                {{ item }}{% endfor %}
+                            </select>
+                        </p>
+                        <p>Deadline:
+                            <input type="datetime-local" class="form-control" id="deadline" name="deadline" required="required">
+                        </p>
+                        <p>Size:
+                            <input type="number" class="form-control" required="required" id="size" name="size" size=8>
+                            <select class="form-control" required="required" id="unit" name="unit">
+                                <option value="1">bytes</option> 
+                                <option value="1000">Kb</option>
+                                <option value="1000000">Mb</option>
+                                <option value="1000000000">Gb</option>
+                                <option value="1000000000000">Tb</option>
+                            </select>
+                        </p>
                       </div>
-
-                      <div class="col-sm-4">
-                        <p>Enter the end date: <input type="text" class="form-control" required="required" id="enddate" name="enddate"> </p> 
-                        <p>Enter the end time: <input type="time" class="form-control" required="required" id="endtime" name="endtime"> </p>
-                      </div>
-
-                      <div class="col-sm-4">
-                        <p>Enter the desired bandwidth: <input type="number" class="form-control" required="required" placeholder="Bandwidth in GB" id="bw" name="bw" min="1" max="100"> </p>
-                        <p>Enter the source node:
-                        <input type="number" class="form-control" required="required" placeholder="Source Node#" id="sn" name="sn"> </p>
-                        <p>Enter the destination node:</p>
-                        <input type="number" class="form-control" required="required" placeholder="Destination Node#" id="dn" name="dn"> </p>
-                      </div>
-
+                      <div class="col-sm-4"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>
                       <div class="row" align="center">
                         <br><br><br><button type="test" class="btn btn-danger btn-lg" align="middle">Preview</button>
                         <button type="submit" class="btn btn-danger btn-lg" align="middle">Submit</button>
