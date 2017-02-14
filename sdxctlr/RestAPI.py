@@ -336,7 +336,7 @@ class RestAPI(SingletonMixin):
 
         except:
             data =  {"endpointconnection":{
-            "deadline":request.form['deadline'],
+            "deadline":request.form['deadline']+':00',
             "srcendpoint":request.form['source'],
             "dstendpoint":request.form['dest'],
             "dataquantity":int(request.form['size'])*int(request.form['unit'])}}
