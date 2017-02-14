@@ -66,18 +66,24 @@ class EndpointConnectionPolicy(UserPolicy):
                                                        "EndpointConnection",
                                                        json_rule)
 
-        
+        print "Passed: %s:%s:%s:%s:%s:%s:%s" % (self.deadline,
+                                                self.src,
+                                                self.dst,
+                                                self.data,
+                                                self.bandwidth,
+                                                self.intermediate_vlan,
+                                                self.fullpath)
         # Second
         pass
 
     @staticmethod
     def check_syntax(json_rule):
         try:
-            deadline = datetime.strptime(json_rule[rulename]['deadline'],
+            deadline = datetime.strptime(json_rule[EndpointConnectionPolicy.rulename]['deadline'],
                                          rfc3339format)
-            src = json_rule[rulename]['srcendpoint']
-            dst = json_rule[rulename]['dstendpoint']
-            data = json_rule[rulename]['dataquantity']
+            src = json_rule[EndpointConnectionPolicy.rulename]['srcendpoint']
+            dst = json_rule[EndpointConnectionPolicy.rulename]['dstendpoint']
+            data = json_rule[EndpointConnectionPolicy.rulename]['dataquantity']
 
             if type(data) != int:
                 raise UserPolicyTypeError("data is not an int: %s:%s" %
@@ -95,12 +101,12 @@ class EndpointConnectionPolicy(UserPolicy):
         
         # First, find out the bandwidth requirements
         total_time = (self.deadline - datetime.now()).total_seconds()
-        if total_time == buffer_time_sec or total_time == 0:
+        if total_time == EndpointConnectionPolicy.buffer_time_sec or total_time == 0:
             # This adjustment is to prevent 0 denominators in the next formulas
             total_time += 1
             
-        self.bandwidth = max(data/(total_time - buffer_time_sec),
-                             (data/total_time)*buffer_bw_percent)
+        self.bandwidth = max(data/(total_time - EndpointConnectionPolicy.buffer_time_sec),
+                             (data/total_time)*EndpointConnectionPolicy.buffer_bw_percent)
 
         # Second, get the path, and reserve bw and a VLAN on it
         self.fullpath = tm.find_valid_path(self.src, self.dst, self.bandwidth)
@@ -217,13 +223,13 @@ class EndpointConnectionPolicy(UserPolicy):
     def _parse_json(self, json_rule):
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if rulename not in json_rule.keys():
+        if EndpointConnectionPolicy.rulename not in json_rule.keys():
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
-        self.deadline = str(json_rule[rulename]['deadline'])
-        self.src = str(json_rule[rulename]['srcendpoint'])
-        self.dst = str(json_rule[rulename]['dstendpoint'])
-        self.data = int(json_rule[rulename]['dataquantity'])
+        self.deadline = str(json_rule[EndpointConnectionPolicy.rulename]['deadline'])
+        self.src = str(json_rule[EndpointConnectionPolicy.rulename]['srcendpoint'])
+        self.dst = str(json_rule[EndpointConnectionPolicy.rulename]['dstendpoint'])
+        self.data = int(json_rule[EndpointConnectionPolicy.rulename]['dataquantity'])
 
 
 
