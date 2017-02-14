@@ -120,7 +120,7 @@ class SDXController(SingletonMixin):
                                            send_no_rules)
 
         self.pm = ParticipantManager.instance()      #FIXME - Filename
-        self.rapi = RestAPI.instance(options.host,options.port)
+        self.rapi = RestAPI.instance(options.host,options.port,options.shib)
 
         # Go to main loop 
         if runloop:
@@ -267,8 +267,9 @@ if __name__ == '__main__':
                   help="Specifies the database. The default database is \":memory:\"", default=":memory:")
     parser.add_option("-m", "--manifest", dest="manifest", type="string", action="store",
                   help="specifies the manifest")
-    parser.add_option("-N", "--no_topo", dest="topo", default=True, action="store_false", help="Run without the topology")
     
+    parser.add_option("-N", "--no_topo", dest="topo", default=True, action="store_false", help="Run without the topology")
+    parser.add_option("-s", "--shibboleth", dest="shib", default=False, action="store_true", help="Run with Shibboleth for authentication")
     parser.add_option("-H", "--host", dest="host", default='0.0.0.0', action="store", type="string", help="Choose a host address")
 
     parser.add_option("-p", "--port", dest="port", default=5000, action="store", type="int", help="Run without the topology")

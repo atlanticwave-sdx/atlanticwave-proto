@@ -20,7 +20,7 @@ from flask import Flask, session, redirect, request, url_for, send_from_director
 import flask_login
 from flask_login import LoginManager
 
-from flask_sso import *
+#from flask_sso import *
 
 #Topology json stuff
 import networkx as nx
@@ -59,15 +59,16 @@ class RestAPI(SingletonMixin):
         specifically for the libraries that register with the RuleRegistry. 
         Singleton. '''
 
-    global User, app, login_manager, sso
+    global User, app, login_manager, shibboleth
 
     app = Flask(__name__, static_url_path='', static_folder='')
-    sso = SSO(app=app)
+    #sso = SSO(app=app)
 
     #FIXME: This should be more secure.
     app.secret_key = 'ChkaChka.....Boo, Ohhh Yeahh!'
 
     #: Default attribute map
+    '''
     SSO_ATTRIBUTE_MAP = {
         'ADFS_AUTHLEVEL': (False, 'authlevel'),
         'ADFS_GROUP': (True, 'group'),
@@ -79,24 +80,27 @@ class RestAPI(SingletonMixin):
     }
 
     app.config['SSO_ATTRIBUTE_MAP'] = SSO_ATTRIBUTE_MAP
-    
+    '''
     login_manager = LoginManager()
 
     def api_process(self):
         login_manager.init_app(app)
         app.run(host=self.host, port=self.port)
 
-    def __init__(self,host='0.0.0.0',port=5000):
+    def __init__(self,host='0.0.0.0',port=5000, shib=False):
         #FIXME: Creating user only for testing purposes
         AuthenticationInspector.instance().add_user('sdonovan','1234')
 
+        global shibboleth
+        shibboleth = shib
+
         self.host=host
         self.port=port
-
+        
         p = Thread(target=self.api_process)
         p.daemon = True
         p.start()
-        print RuleManager.instance()
+        #app.config['SSO_LOGIN_URL'] = 'http://aw.cloud.rnoc.gatech.edu/secure/login2.cgi'
         pass
 
     def _setup_logger(self):
@@ -117,19 +121,17 @@ class RestAPI(SingletonMixin):
     class User(flask_login.UserMixin):
         pass
 
-    @staticmethod
-    @sso.login_handler
-    def login_callback(user_info):
-        """Store information in session."""
-        session['user'] = user_info
-
     # This builds a shibboleth session
     @staticmethod
     @app.route('/build_session')
     def build_session():
         login_session = request.args.get('login_session')
-        return login_session
- 
+        user = User()
+        print "remote user:",request.args.get('remote_user')
+        user.id = request.args.get('remote_user')
+        flask_login.login_user(user)
+        return flask.redirect(flask.url_for('home'))
+
     # This maintains the state of a logged in user.
     @staticmethod
     @login_manager.user_loader
@@ -139,10 +141,15 @@ class RestAPI(SingletonMixin):
         return user
 
     # Preset the login form to the user and request to log user in
-    @staticmethod
+    #@staticmethod
     @app.route('/', methods=['GET'])
     def home():
+        print "USER ID:",flask_login.current_user.get_id()
         if flask_login.current_user.get_id() == None:
+            print shibboleth
+            if shibboleth:
+                print "doing it"
+                return app.send_static_file('static/index_shibboleth.html')
             return app.send_static_file('static/index.html')
  
         else: 
