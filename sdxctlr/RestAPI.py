@@ -144,11 +144,8 @@ class RestAPI(SingletonMixin):
     #@staticmethod
     @app.route('/', methods=['GET'])
     def home():
-        print "USER ID:",flask_login.current_user.get_id()
         if flask_login.current_user.get_id() == None:
-            print shibboleth
             if shibboleth:
-                print "doing it"
                 return app.send_static_file('static/index_shibboleth.html')
             return app.send_static_file('static/index.html')
  
