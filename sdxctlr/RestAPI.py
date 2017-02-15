@@ -127,10 +127,13 @@ class RestAPI(SingletonMixin):
     def build_session():
         login_session = request.args.get('login_session')
         user = User()
-        print "remote user:",request.args.get('remote_user')
-        user.id = request.args.get('remote_user')
-        flask_login.login_user(user)
-        return flask.redirect(flask.url_for('home'))
+        with open('../../login_sessions/'+login_session,'r') as session:
+            user.id = session.read()
+             
+        if request.args.get('remote_user').strip()==user.id.strip():
+            flask_login.login_user(user)
+            return flask.redirect(flask.url_for('home'))
+        return "Invalid Login"
 
     # This maintains the state of a logged in user.
     @staticmethod
@@ -159,8 +162,6 @@ class RestAPI(SingletonMixin):
             for i in  data['nodes']:
                 if 'id' in i and 'org' in i:
                     points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['friendlyname'])))
-            for i in data['nodes']:
-                print i
             
             # Pass to flask to render a template
             return flask.render_template('index.html',points=points,current_user=flask_login.current_user)
