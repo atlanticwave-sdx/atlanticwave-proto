@@ -260,22 +260,31 @@ def send_no_rules(param):
 
 
 if __name__ == '__main__':
-    from optparse import OptionParser
-    parser = OptionParser()
+    #from optparse import OptionParser
+    #parser = OptionParser()
 
-    parser.add_option("-d", "--database", dest="database", type="string", action="store",
-                  help="Specifies the database. The default database is \":memory:\"", default=":memory:")
-    parser.add_option("-m", "--manifest", dest="manifest", type="string", action="store",
-                  help="specifies the manifest")
-    
-    parser.add_option("-N", "--no_topo", dest="topo", default=True, action="store_false", help="Run without the topology")
-    parser.add_option("-s", "--shibboleth", dest="shib", default=False, action="store_true", help="Run with Shibboleth for authentication")
-    parser.add_option("-H", "--host", dest="host", default='0.0.0.0', action="store", type="string", help="Choose a host address")
+    import argparse
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_option("-p", "--port", dest="port", default=5000, action="store", type="int", help="Run without the topology")
+    parser.add_argument("-d", "--database", dest="database", type=str, 
+                        action="store", help="Specifies the database ", 
+                        default=":memory:")
+    parser.add_argument("-m", "--manifest", dest="manifest", type=str, 
+                        action="store", help="specifies the manifest")    
+    parser.add_argument("-s", "--shibboleth", dest="shib", default=False, 
+                        action="store_true", help="Run with Shibboleth for authentication")
 
-    (options, args) = parser.parse_args()
-    
+    parser.add_argument("-N", "--no_topo", dest="topo", default=True, 
+                        action="store_false", help="Run without the topology")
+
+    parser.add_argument("-H", "--host", dest="host", default='0.0.0.0', 
+                        action="store", type=str, help="Choose a host address ")
+    parser.add_argument("-p", "--port", dest="port", default=5000, 
+                        action="store", type=int, help="Specify a port number ")
+
+    options = parser.parse_args()
+    print options
+ 
     if not options.manifest:
         parser.print_help()
         exit()
