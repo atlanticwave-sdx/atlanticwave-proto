@@ -49,12 +49,16 @@ class SDXController(SingletonMixin):
         itself.
         Singleton. ''' 
 
-    def __init__(self, runloop=True, mani=None, db=":memory:", run_topo=True):
+    def __init__(self, runloop=True, options=None):
         ''' The bulk of the work happens here. This initializes nearly everything
             and starts up the main processing loop for the entire SDX
             Controller. '''
 
         self._setup_logger()
+
+        mani=options.manifest
+        db = options.database
+        run_topo=options.topo
 
         # Start DB connection. Used by other modules. details on the setup:
         # https://dataset.readthedocs.io/en/latest/api.html
@@ -116,7 +120,7 @@ class SDXController(SingletonMixin):
                                            send_no_rules)
 
         self.pm = ParticipantManager.instance()      #FIXME - Filename
-        self.rapi = RestAPI.instance()
+        self.rapi = RestAPI.instance(options.host,options.port,options.shib)
 
         # Go to main loop 
         if runloop:
@@ -256,21 +260,35 @@ def send_no_rules(param):
 
 
 if __name__ == '__main__':
-    from optparse import OptionParser
-    parser = OptionParser()
+    #from optparse import OptionParser
+    #parser = OptionParser()
 
-    parser.add_option("-d", "--database", dest="database", type="string", action="store",
-                  help="Specifies the database. The default database is \":memory:\"", default=":memory:")
-    parser.add_option("-m", "--manifest", dest="manifest", type="string", action="store",
-                  help="specifies the manifest")
-    parser.add_option("-N", "--no_topo", dest="topo", default=True, action="store_false", help="Run without the topology")
-    
-    (options, args) = parser.parse_args()
-    
+    import argparse
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument("-d", "--database", dest="database", type=str, 
+                        action="store", help="Specifies the database ", 
+                        default=":memory:")
+    parser.add_argument("-m", "--manifest", dest="manifest", type=str, 
+                        action="store", help="specifies the manifest")    
+    parser.add_argument("-s", "--shibboleth", dest="shib", default=False, 
+                        action="store_true", help="Run with Shibboleth for authentication")
+
+    parser.add_argument("-N", "--no_topo", dest="topo", default=True, 
+                        action="store_false", help="Run without the topology")
+
+    parser.add_argument("-H", "--host", dest="host", default='0.0.0.0', 
+                        action="store", type=str, help="Choose a host address ")
+    parser.add_argument("-p", "--port", dest="port", default=5000, 
+                        action="store", type=int, help="Specify a port number ")
+
+    options = parser.parse_args()
+    print options
+ 
     if not options.manifest:
         parser.print_help()
         exit()
         
-    sdx = SDXController(False, options.manifest, options.database, options.topo)
+    sdx = SDXController(False, options)
     sdx._main_loop()
 

@@ -5,6 +5,7 @@
 
 from lib.Singleton import SingletonMixin
 from shared.L2TunnelPolicy import L2TunnelPolicy
+from shared.EndpointConnectionPolicy import EndpointConnectionPolicy
 from shared.SDXControllerConnectionManager import *
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
@@ -19,7 +20,7 @@ from flask import Flask, session, redirect, request, url_for, send_from_director
 import flask_login
 from flask_login import LoginManager
 
-from flask_sso import SSO
+#from flask_sso import *
 
 #Topology json stuff
 import networkx as nx
@@ -46,6 +47,7 @@ from dateutil.parser import parse as pd
 #Constants
 from shared.constants import *
 
+
 class RestAPI(SingletonMixin):
     ''' The REST API will be the main interface for participants to use to push 
         rules (eventually) down to switches. It will gather authentication 
@@ -57,13 +59,16 @@ class RestAPI(SingletonMixin):
         specifically for the libraries that register with the RuleRegistry. 
         Singleton. '''
 
-    global User, app, login_manager, sso
+    global User, app, login_manager, shibboleth
 
     app = Flask(__name__, static_url_path='', static_folder='')
+    #sso = SSO(app=app)
+
     #FIXME: This should be more secure.
     app.secret_key = 'ChkaChka.....Boo, Ohhh Yeahh!'
 
     #: Default attribute map
+    '''
     SSO_ATTRIBUTE_MAP = {
         'ADFS_AUTHLEVEL': (False, 'authlevel'),
         'ADFS_GROUP': (True, 'group'),
@@ -75,22 +80,27 @@ class RestAPI(SingletonMixin):
     }
 
     app.config['SSO_ATTRIBUTE_MAP'] = SSO_ATTRIBUTE_MAP
-
-    sso = SSO(app=app)
-
+    '''
     login_manager = LoginManager()
 
     def api_process(self):
         login_manager.init_app(app)
-        app.run(host='0.0.0.0')
+        app.run(host=self.host, port=self.port)
 
-    def __init__(self):
+    def __init__(self,host='0.0.0.0',port=5000, shib=False):
         #FIXME: Creating user only for testing purposes
         AuthenticationInspector.instance().add_user('sdonovan','1234')
+
+        global shibboleth
+        shibboleth = shib
+
+        self.host=host
+        self.port=port
+        
         p = Thread(target=self.api_process)
         p.daemon = True
         p.start()
-        print RuleManager.instance()
+        #app.config['SSO_LOGIN_URL'] = 'http://aw.cloud.rnoc.gatech.edu/secure/login2.cgi'
         pass
 
     def _setup_logger(self):
@@ -111,23 +121,20 @@ class RestAPI(SingletonMixin):
     class User(flask_login.UserMixin):
         pass
 
-    #This is for shibboleth loggin
+    # This builds a shibboleth session
     @staticmethod
-    @sso.login_handler
-    def login_callback(user_info):
-        """Store information in session."""
-        session['user'] = user_info
+    @app.route('/build_session')
+    def build_session():
+        login_session = request.args.get('login_session')
+        user = User()
+        with open('../../login_sessions/'+login_session,'r') as session:
+            user.id = session.read()
+             
+        if request.args.get('remote_user').strip()==user.id.strip():
+            flask_login.login_user(user)
+            return flask.redirect(flask.url_for('home'))
+        return "Invalid Login"
 
-    # This is a test endpoint for shibboleth
-    @staticmethod
-    @app.route('/shibboleth/')
-    def index():
-        """Display user information or force login."""
-        if 'user' in session:
-            return 'Welcome {name}'.format(name=session['user']['nickname'])
-        return redirect(app.config['SSO_LOGIN_URL'])
-
- 
     # This maintains the state of a logged in user.
     @staticmethod
     @login_manager.user_loader
@@ -137,10 +144,12 @@ class RestAPI(SingletonMixin):
         return user
 
     # Preset the login form to the user and request to log user in
-    @staticmethod
+    #@staticmethod
     @app.route('/', methods=['GET'])
     def home():
         if flask_login.current_user.get_id() == None:
+            if shibboleth:
+                return app.send_static_file('static/index_shibboleth.html')
             return app.send_static_file('static/index.html')
  
         else: 
@@ -301,6 +310,7 @@ class RestAPI(SingletonMixin):
             pass
 
         #TODO: YUUUGGGGGEEEE security hole here. Patch after demo.
+        policy = None
         try:
             print theID
             print request.form['startdate']
@@ -326,24 +336,18 @@ class RestAPI(SingletonMixin):
             
             policy = L2TunnelPolicy(theID, data)
 
-            # I am really not sure what to pass through RuleManager as args
-            rule_hash = RuleManager.instance().add_rule(policy)
-
-            return flask.redirect('/rule/' + str(rule_hash))
-
-            #Just going to save this for later
-            return '<pre>%s</pre>'%json.dumps(data, indent=2)
-
-            # I plan on making this redirect to a page for the rulehash, but currently this is not ready
-            return rule_hash
         except:
             data =  {"endpointconnection":{
-            "deadline":request.form['deadline'],
+            "deadline":request.form['deadline']+':00',
             "srcendpoint":request.form['source'],
             "dstendpoint":request.form['dest'],
             "dataquantity":int(request.form['size'])*int(request.form['unit'])}}
+            policy = EndpointConnectionPolicy(flask_login.current_user, data)
+            rule_hash = RuleManager.instance().add_rule(policy)
 
-            return str(data)
+        rule_hash = RuleManager.instance().add_rule(policy)
+        return flask.redirect('/rule/' + str(rule_hash))
+
     # Get information about a specific rule IDed by hash.
     @staticmethod
     @app.route('/rule/<rule_hash>',methods=['GET','POST'])
