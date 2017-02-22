@@ -155,16 +155,22 @@ class RestAPI(SingletonMixin):
         else: 
             # Get the Topo for dynamic list gen
             G = TopologyManager.instance().get_topology()            
-            data = json_graph.node_link_data(G)
-            points=[]
 
-            # Go through the topo and get the nodes of interest.
-            for i in  data['nodes']:
-                if 'id' in i and 'org' in i:
-                    points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['friendlyname'])))
-            
+            switches=[]
+            dtns=[]
+
+            # Creating all of the HTML Tags for drop down lists
+            for node_id in G.nodes():
+                node = G.node[node_id]
+                if "friendlyname" in node and "type" in node:
+                    fname = node["friendlyname"]
+                    if node["type"]=="dtn":
+                        dtns.append(Markup('<option value="{}">{}</option>'.format(node_id,fname)))
+                    if node["type"]=="switch":
+                        switches.append(Markup('<option value="{}">{}</option>'.format(node_id,fname)))
+               
             # Pass to flask to render a template
-            return flask.render_template('index.html',points=points,current_user=flask_login.current_user)
+            return flask.render_template('index.html',switches=switches, dtns=dtns, current_user=flask_login.current_user)
     
     # Preset the login form to the user and request to log user in
     @staticmethod
@@ -312,11 +318,6 @@ class RestAPI(SingletonMixin):
         #TODO: YUUUGGGGGEEEE security hole here. Patch after demo.
         policy = None
         try:
-            print theID
-            print request.form['startdate']
-            print request.form['starttime']
-            print request.form['enddate']
-            print request.form['endtime']
 
             # Just making sure the datetimes are okay
             starttime = datetime.strptime(str(pd(request.form['startdate'] + ' ' + request.form['starttime'])), '%Y-%m-%d %H:%M:%S')
