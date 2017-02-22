@@ -2,29 +2,37 @@
   "endpoints": {
     "atlh1": {
       "type":"host",
+      "friendlyname":"atlh1-host",
       "location":"33.772080,-84.392869"},
     "atlh2": {
       "type":"host",
+      "friendlyname":"htlh2-host",
       "location":"33.772080,-84.392869"},
     "miah1": {
       "type":"host",
+      "friendlyname":"miah1-host",
       "location":"25.755971,-80.373737"},
     "miah2": {
       "type":"host",
+      "friendlyname":"miah2-host",
       "location":"25.755971,-80.373737"},
     "gruh1": {
       "type":"host",
+      "friendlyname":"gruh1-host",
       "location":"-23.4348091,-46.4816877"},
     "gruh2": {
       "type":"host",
+      "friendlyname":"gruh2-host",
       "location":"-23.4348091,-46.4816877"},
     "atldtn": {
       "type":"dtn",
+      "friendlyname":"atldtn-dtn",
       "location":"33.772080,-84.392869",
       "ip":"10.0.0.101",
       "vlan":100},
     "grudtn": {
       "type":"dtn",
+      "friendlyname":"grudtn-dtn",
       "location":"-23.4348091,-46.4816877",
       "ip":"10.0.0.102",
       "vlan":200}
