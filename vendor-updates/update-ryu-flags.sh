@@ -12,4 +12,4 @@ echo "    cfg.IntOpt('ryu-cxn-port', default=55767, help='Port for RYU controlle
 echo "], group='atlanticwave')" >> $1/ryu/flags.py
 
 # Saved a backup of __init__.py, just in case.
-sed -i.bak 's/)/, dns)/' $1/ryu/lib/packet/__init__.py
+#sed -i.bak 's/)/, dns)/' $1/ryu/lib/packet/__init__.py
