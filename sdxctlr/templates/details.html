@@ -34,6 +34,7 @@
 
                 <thead>
                     <tr>
+                        {% if detail[1]['l2tunnel'] %}
                         <th>Start Time</th>
                         <th>End Time</th>
                         <th>Source Switch</th>
@@ -43,11 +44,20 @@
                         <th>Source VLAN</th>
                         <th>Destination VLAN</th>
                         <th>Bandwidth</th>
+                        {% endif %}
+                        {% if detail[1]['endpointconnection'] %}
+<!-- (u'2', {'endpointconnection': {'dstendpoint': u'miadtn', 'srcendpoint': u'grudtn', 'dataquantity': 2134, 'deadline': u'2018-11-11T11:11:00'}}, 'endpointconnection', 'ACTIVE RULE', u'sdonovan', ['gru:VlanTunnelLCRule: switch 3, 2:4:3:300:1:True:1', 'mia:VlanTunnelLCRule: switch 2, 2:5:4:200:1:True:1']) -->
+                        <th>Deadline</th>
+                        <th>Source Endpoint</th>
+                        <th>Destination Endpoint</th>
+                        <th>Data Quanity</th>
+                        {% endif %}
                     </tr>
                 </thead>
 
                 <tbody>
                     <tr>
+                        {% if detail[1]['l2tunnel'] %}
                         <td>{{ detail[1]['l2tunnel']['starttime'] }}</td>
                         <td>{{ detail[1]['l2tunnel']['endtime'] }}</td>
                         <td>{{ detail[1]['l2tunnel']['srcswitch'] }}</td>
@@ -57,6 +67,13 @@
                         <td>{{ detail[1]['l2tunnel']['srcvlan'] }}</td>
                         <td>{{ detail[1]['l2tunnel']['dstvlan'] }}</td>
                         <td>{{ detail[1]['l2tunnel']['bandwidth'] }}</td>
+                        {% endif %}
+                        {% if detail[1]['endpointconnection'] %}
+                        <th>{{ detail[1]['endpointconnection']['deadline'] }}</th>
+                        <th>{{ detail[1]['endpointconnection']['srcendpoint'] }}</th>
+                        <th>{{ detail[1]['endpointconnection']['dstendpoint'] }}</th>
+                        <th>{{ detail[1]['endpointconnection']['dataquantity'] }}</th>
+                        {% endif %}
                     </tr>
                 </tbody>
 

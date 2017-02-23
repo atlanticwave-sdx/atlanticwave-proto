@@ -336,7 +336,7 @@ class RestAPI(SingletonMixin):
                                             "bandwidth":request.form['bw']}}
             
             policy = L2TunnelPolicy(theID, data)
-
+            rule_hash = RuleManager.instance().add_rule(policy)
         except:
             data =  {"endpointconnection":{
             "deadline":request.form['deadline']+':00',
@@ -346,7 +346,7 @@ class RestAPI(SingletonMixin):
             policy = EndpointConnectionPolicy(theID, data)
             rule_hash = RuleManager.instance().add_rule(policy)
 
-        rule_hash = RuleManager.instance().add_rule(policy)
+        print rule_hash
         return flask.redirect('/rule/' + str(rule_hash))
 
     # Get information about a specific rule IDed by hash.
@@ -358,8 +358,11 @@ class RestAPI(SingletonMixin):
             # Shows info for rule
             if request.method == 'GET':
                 try:
-                    return  flask.render_template('details.html', detail=RuleManager.instance().get_rule_details(rule_hash))
-                except:
+                    detail=RuleManager.instance().get_rule_details(rule_hash)
+                    print detail
+                    return  flask.render_template('details.html', detail=detail)
+                except Exception as e:
+                    print e
                     return "Invalid rule hash"
 
             # Deletes Rules : POST because HTML does not support DELETE Requests

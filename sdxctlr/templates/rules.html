@@ -3,6 +3,8 @@
         <div class="container">
             <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
                 <!-- Table Header -->
+                <br>
+                <center><h1 style="color:white;">Network Engineer Rules</h1></center>
                 <thead>
                     <tr>
                         <th>Rule#</th>
@@ -22,7 +24,7 @@
 
                 <!-- Table Body -->
                 <tbody>
-                    {% for rule in rules %}
+                    {% for rule in rules %}{% if rule[1]['l2tunnel'] %}
                     <tr>
                         <td><a href="/rule/{{ rule[0]}}">{{ rule[0]}}</a></td>
                         <td>{{ rule[1]['l2tunnel']['starttime'] }}</td>
@@ -37,11 +39,46 @@
                         <td>{{ rule[3] }}</td>
                         <td><form action="/rule/{{ rule[0] }}" method="POST"><button type="submit" class="btn btn-danger btn-lg">[x]</button></form></td>
                     </tr>
-                    {% endfor %}
+                    {% endif %}{% endfor %}
+                </tbody>
+                <!-- Table Body -->
+            </table>
+
+            <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+                <br>
+                <center><h1 style="color:white;">Scientist Rules</h1></center>
+                <!-- Table Header -->
+                <thead>
+                    <tr>
+                        <th>Rule#</th>
+                        <th>Deadline</th>
+                        <th>Source Endpoint</th>
+                        <th>Destination Endpoint</th>
+                        <th>Data Quantity</th>
+                        <th>Creator</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+
+                <!-- Table Body -->
+                <tbody>
+                    {% for rule in rules %}{% if rule[1]['endpointconnection'] %}
+                    <tr>
+                        <td><a href="/rule/{{ rule[0]}}">{{ rule[0]}}</a></td>
+                        <td>{{ rule[1]['endpointconnection']['deadline'] }}</td>
+                        <td>{{ rule[1]['endpointconnection']['srcendpoint'] }}</td>
+                        <td>{{ rule[1]['endpointconnection']['dstendpoint'] }}</td>
+                        <td>{{ rule[1]['endpointconnection']['dataquantity'] }}</td>
+                        <td>{{ rule[3] }}</td>
+                        <td><form action="/rule/{{ rule[0] }}" method="POST"><button type="submit" class="btn btn-danger btn-lg">[x]</button></form></td>
+                    </tr>
+                    {% endif %}{% endfor %}
                 </tbody>
                 <!-- Table Body -->
 
             </table>
+ 
+
             <form action="/rule/all/" method="POST" onsubmit="return confirm('Are you sure you want to delete all rules?');">
                 <button type="submit" class="btn btn-danger btn-lg" align="center">Delete All Rules</button>
             </form>
