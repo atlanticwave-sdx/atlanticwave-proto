@@ -7,6 +7,7 @@ from L2TunnelPolicy import *
 from datetime import datetime
 import networkx as nx
 from shared.constants import *
+from math import ceil
 
 
 class EndpointConnectionPolicy(UserPolicy):
@@ -106,13 +107,13 @@ class EndpointConnectionPolicy(UserPolicy):
             # This adjustment is to prevent 0 denominators in the next formulas
             total_time += 1
             
-        self.bandwidth = max(self.data/(total_time - EndpointConnectionPolicy.buffer_time_sec),
-                             (self.data/total_time)*EndpointConnectionPolicy.buffer_bw_percent)
+        self.bandwidth = int(ceil(max(self.data/(total_time - EndpointConnectionPolicy.buffer_time_sec),
+                                      (self.data/total_time)*EndpointConnectionPolicy.buffer_bw_percent)))
 
         # Second, get the path, and reserve bw and a VLAN on it
         self.fullpath = tm.find_valid_path(self.src, self.dst, self.bandwidth)
         if self.fullpath == None:
-            raise UserPolicyError("There is no available path between %s and %s for bandwidth %s" % (self.src_switch, self.dst_switch, self.bandwidth))
+            raise UserPolicyError("There is no available path between %s and %s for bandwidth %s" % (self.src, self.dst, self.bandwidth))
         # Switchpath is the path between endpoint switches. self.src and
         # self.dst are hosts, not switches, so they're not useful for certain
         # things.
@@ -161,8 +162,8 @@ class EndpointConnectionPolicy(UserPolicy):
         dst_edge = topology.edge[dst_switch][self.dst]
         src_port = src_edge[src_switch]
         dst_port = dst_edge[dst_switch]
-        src_vlan = topology.node[self.src]['vlan']
-        dst_vlan = topology.node[self.dst]['vlan']
+        src_vlan = int(topology.node[self.src]['vlan'])
+        dst_vlan = int(topology.node[self.dst]['vlan'])
         srcpath = self.switchpath[1]
         dstpath = self.switchpath[-2]
         for location, inport, invlan, path in [(src_switch, src_port,
@@ -215,6 +216,9 @@ class EndpointConnectionPolicy(UserPolicy):
 
             # Add the four new rules created above to the breakdown
             self.breakdown.append(bd)
+        
+        # Return the breakdown, now that we've finished.
+        return self.breakdown
 
 
     def check_validity(self, topology, authorization_func):

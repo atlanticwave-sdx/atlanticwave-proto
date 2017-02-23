@@ -343,7 +343,7 @@ class RestAPI(SingletonMixin):
             "srcendpoint":request.form['source'],
             "dstendpoint":request.form['dest'],
             "dataquantity":int(request.form['size'])*int(request.form['unit'])}}
-            policy = EndpointConnectionPolicy(flask_login.current_user, data)
+            policy = EndpointConnectionPolicy(theID, data)
             rule_hash = RuleManager.instance().add_rule(policy)
 
         rule_hash = RuleManager.instance().add_rule(policy)

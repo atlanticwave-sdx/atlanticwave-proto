@@ -145,9 +145,10 @@ class TopologyManager(SingletonMixin):
                 # Check each point on the path
                 on_path = False
                 for point in path:
-                    if vlan in self.topo.node[point]['vlans_in_use']:
-                        on_path = True
-                        break
+                    if self.topo.node[point]["type"] == "switch":
+                        if vlan in self.topo.node[point]['vlans_in_use']:
+                            on_path = True
+                            break
                     
                 if on_path:
                     continue
@@ -282,3 +283,6 @@ class TopologyManager(SingletonMixin):
             # If all's good, return the path to the caller
             if enough_bw:
                 return path
+        
+        # No path return
+        return None
