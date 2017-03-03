@@ -98,7 +98,7 @@ class TopologyManager(SingletonMixin):
                         self.topo.add_node(name)
                     # Per switch info, gets added to topo
                     self.topo.node[name]['friendlyname'] = switchinfo['friendlyname']
-                    self.topo.node[name]['dpid'] = int(switchinfo['dpid'])
+                    self.topo.node[name]['dpid'] = int(switchinfo['dpid'], 0) #0 guesses base.
                     self.topo.node[name]['ip'] = str(switchinfo['ip'])
                     self.topo.node[name]['brand'] = str(switchinfo['brand'])
                     self.topo.node[name]['model'] = str(switchinfo['model'])
