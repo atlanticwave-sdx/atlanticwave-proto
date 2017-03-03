@@ -1,0 +1,81 @@
+{
+  "endpoints": {
+    "SoXJuniper": {
+      "type":"host",
+      "location":"33.772080,-84.392869"},
+    "UCSTestServer": {
+      "type":"host",
+      "location":"33.772080,-84.392869"},
+    "GENIRack": {
+      "type":"host",
+      "location":"25.755971,-80.373737"}
+  },
+  "localcontrollers": {
+    "atl":{
+      "shortname": "atl",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6653
+      },
+      "switchinfo": [
+        {
+          "name": "atl-switch",
+	  "friendlyname":"Main Atlanta Switch",
+          "ip": "143.215.216.3",
+          "dpid":0x0000eafdc75b2340,
+          "brand": "Corsa",
+          "model": "DP2400",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 10000,
+              "destination": "SoXJuniper"
+            },
+            {
+              "portnumber": 2,
+              "speed": 10000,
+              "destination": "UCSTestServer"
+            },
+            {
+              "portnumber": 3,
+              "speed": 1000,
+              "destination": "GENIRack"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+  },
+  "participants": {
+    "sdonovan": {
+      "credentials": "1234",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "sdonovan@gatech.edu",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    }
+  }
+}
