@@ -25,7 +25,7 @@
           "name": "atl-switch",
 	  "friendlyname":"Main Atlanta Switch",
           "ip": "143.215.216.3",
-          "dpid":0x0000eafdc75b2340,
+          "dpid":"0x0000eafdc75b2340",
           "brand": "Corsa",
           "model": "DP2400",
           "portinfo": [
