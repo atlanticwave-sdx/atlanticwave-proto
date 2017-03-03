@@ -155,16 +155,22 @@ class RestAPI(SingletonMixin):
         else: 
             # Get the Topo for dynamic list gen
             G = TopologyManager.instance().get_topology()            
-            data = json_graph.node_link_data(G)
-            points=[]
 
-            # Go through the topo and get the nodes of interest.
-            for i in  data['nodes']:
-                if 'id' in i and 'org' in i:
-                    points.append(Markup('<option value="{}">{}</option>'.format(i['id'],i['friendlyname'])))
-            
+            switches=[]
+            dtns=[]
+
+            # Creating all of the HTML Tags for drop down lists
+            for node_id in G.nodes():
+                node = G.node[node_id]
+                if "friendlyname" in node and "type" in node:
+                    fname = node["friendlyname"]
+                    if node["type"]=="dtn":
+                        dtns.append(Markup('<option value="{}">{}</option>'.format(node_id,fname)))
+                    if node["type"]=="switch":
+                        switches.append(Markup('<option value="{}">{}</option>'.format(node_id,fname)))
+               
             # Pass to flask to render a template
-            return flask.render_template('index.html',points=points,current_user=flask_login.current_user)
+            return flask.render_template('index.html',switches=switches, dtns=dtns, current_user=flask_login.current_user)
     
     # Preset the login form to the user and request to log user in
     @staticmethod
@@ -312,11 +318,6 @@ class RestAPI(SingletonMixin):
         #TODO: YUUUGGGGGEEEE security hole here. Patch after demo.
         policy = None
         try:
-            print theID
-            print request.form['startdate']
-            print request.form['starttime']
-            print request.form['enddate']
-            print request.form['endtime']
 
             # Just making sure the datetimes are okay
             starttime = datetime.strptime(str(pd(request.form['startdate'] + ' ' + request.form['starttime'])), '%Y-%m-%d %H:%M:%S')
@@ -335,17 +336,17 @@ class RestAPI(SingletonMixin):
                                             "bandwidth":request.form['bw']}}
             
             policy = L2TunnelPolicy(theID, data)
-
+            rule_hash = RuleManager.instance().add_rule(policy)
         except:
             data =  {"endpointconnection":{
             "deadline":request.form['deadline']+':00',
             "srcendpoint":request.form['source'],
             "dstendpoint":request.form['dest'],
             "dataquantity":int(request.form['size'])*int(request.form['unit'])}}
-            policy = EndpointConnectionPolicy(flask_login.current_user, data)
+            policy = EndpointConnectionPolicy(theID, data)
             rule_hash = RuleManager.instance().add_rule(policy)
 
-        rule_hash = RuleManager.instance().add_rule(policy)
+        print rule_hash
         return flask.redirect('/rule/' + str(rule_hash))
 
     # Get information about a specific rule IDed by hash.
@@ -357,8 +358,11 @@ class RestAPI(SingletonMixin):
             # Shows info for rule
             if request.method == 'GET':
                 try:
-                    return  flask.render_template('details.html', detail=RuleManager.instance().get_rule_details(rule_hash))
-                except:
+                    detail=RuleManager.instance().get_rule_details(rule_hash)
+                    print detail
+                    return  flask.render_template('details.html', detail=detail)
+                except Exception as e:
+                    print e
                     return "Invalid rule hash"
 
             # Deletes Rules : POST because HTML does not support DELETE Requests

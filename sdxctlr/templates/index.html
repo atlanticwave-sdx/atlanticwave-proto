@@ -145,11 +145,11 @@
                       </div>
                       <div class="col-sm-4">
                         <p>Select source: 
-                        <select class="form-control" required="required" id="source" name="source">{% for item in points %}
+                        <select class="form-control" required="required" id="source" name="source">{% for item in switches %}
                             {{ item }}{% endfor %}
                         </select> </p>
                         <p>Select destination: 
-                            <select class="form-control" id="dest" name="dest" required="required">{% for item in points %}
+                            <select class="form-control" id="dest" name="dest" required="required">{% for item in switches %}
                                 {{ item }}{% endfor %}
                             </select> </p>
                       </div>
@@ -164,12 +164,12 @@
                       <div class="col-sm-4"></div>
                       <div class="col-sm-4">
                         <p>Source:  
-                            <select class="form-control" required="required" id="source" name="source">{% for item in points %}
+                            <select class="form-control" required="required" id="source" name="source">{% for item in dtns %}
                                 {{ item }}{% endfor %}
                             </select>
                         </p>
                         <p>Destination:  
-                            <select class="form-control" required="required" id="dest" name="dest">{% for item in points %}
+                            <select class="form-control" required="required" id="dest" name="dest">{% for item in dtns %}
                                 {{ item }}{% endfor %}
                             </select>
                         </p>

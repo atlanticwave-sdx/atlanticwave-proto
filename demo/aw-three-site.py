@@ -95,6 +95,8 @@ def TwoSite():
                         cls=VLANHost, vlan=100)
     miadtn = net.addHost('miadtn', mac='00:00:00:20:00:00',
                         cls=VLANHost, vlan=200)
+    grudtn = net.addHost('grudtn', mac='00:00:00:20:00:00',
+                        cls=VLANHost, vlan=300)
 
     # Wiring
     net.addLink(atlswitch, atlh1, port1=1, port2=1)
@@ -104,6 +106,7 @@ def TwoSite():
     net.addLink(gruswitch, gruh1, port1=1, port2=1)
     net.addLink(gruswitch, gruh2, port1=2, port2=1)
     net.addLink(atlswitch, atldtn, port1=4, port2=1)
+    net.addLink(miaswitch, miadtn, port1=5, port2=1)
     net.addLink(gruswitch, grudtn, port1=4, port2=1)
 
     net.addLink(atlswitch, miaswitch, port1=3, port2=3)

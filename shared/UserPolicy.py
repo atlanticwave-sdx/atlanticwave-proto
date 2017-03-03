@@ -1,6 +1,8 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
+class UserPolicyError(Exception):
+    pass
 
 class UserPolicyTypeError(TypeError):
     pass
