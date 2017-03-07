@@ -285,7 +285,7 @@ if __name__ == '__main__':
                         help="Port number of web interface")
     parser.add_argument("-l", "--lcport", dest="lcport", default=PORT,
                         action="store", type=int,
-                        help="Port number for LCs to connect to"
+                        help="Port number for LCs to connect to")
 
     options = parser.parse_args()
     print options
