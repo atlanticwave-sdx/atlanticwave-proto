@@ -23,7 +23,7 @@ class LocalController(SingletonMixin):
         controller and switch(es).
         Singleton. ''' 
 
-    def __init__(self, runloop=False, options):
+    def __init__(self, runloop=False, options=None):
         # Setup logger
         self._setup_logger()
         self.name = options.name
