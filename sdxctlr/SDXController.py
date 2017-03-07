@@ -56,9 +56,10 @@ class SDXController(SingletonMixin):
 
         self._setup_logger()
 
-        mani=options.manifest
+        mani = options.manifest
         db = options.database
-        run_topo=options.topo
+        run_topo = options.topo
+
 
         # Start DB connection. Used by other modules. details on the setup:
         # https://dataset.readthedocs.io/en/latest/api.html
@@ -94,8 +95,8 @@ class SDXController(SingletonMixin):
 
 
         # Set up the connection-related nonsense - Have a connection event queue
-        self.ip = IPADDR        # from share.SDXControllerConnectionManager
-        self.port = PORT
+        self.ip = options.host
+        self.port = options.lcport
         self.cxn_q = Queue.Queue()
         self.connections = {}
         self.sdx_cm = SDXControllerConnectionManager()
@@ -280,7 +281,11 @@ if __name__ == '__main__':
     parser.add_argument("-H", "--host", dest="host", default='0.0.0.0', 
                         action="store", type=str, help="Choose a host address ")
     parser.add_argument("-p", "--port", dest="port", default=5000, 
-                        action="store", type=int, help="Specify a port number ")
+                        action="store", type=int, 
+                        help="Port number of web interface")
+    parser.add_argument("-l", "--lcport", dest="lcport", default=PORT,
+                        action="store", type=int,
+                        help="Port number for LCs to connect to"
 
     options = parser.parse_args()
     print options

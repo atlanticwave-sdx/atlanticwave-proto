@@ -23,18 +23,23 @@ class LocalController(SingletonMixin):
         controller and switch(es).
         Singleton. ''' 
 
-    def __init__(self, runloop=False, name=None, manifest_filename=None):
+    def __init__(self, runloop=False, options):
         # Setup logger
         self._setup_logger()
-        self.name = name
+        self.name = options.name
         self.logger.info("LocalController %s starting", self.name)
 
+        # Parse out the options
         # Import configuration information
+        self.manifest = options.manifest
+        self.sdxip = options.host
+        self.sdxport = options.sdxport
+
         self.lcip = LOCALHOST
         self.ryu_cxn_port = DEFAULT_RYU_CXN_PORT
         self.openflow_port = DEFAULT_OPENFLOW_PORT
-        if manifest_filename != None:
-            self._import_configuration(manifest_filename)
+        if self.manifest != None:
+            self._import_configuration()
 
         # Setup switch
         self.switch_connection = RyuControllerInterface(self.lcip,
@@ -125,8 +130,8 @@ class LocalController(SingletonMixin):
         self.logger.addHandler(console)
         self.logger.addHandler(logfile) 
 
-    def _import_configuration(self, manifest_filename):
-        with open(manifest_filename) as data_file:
+    def _import_configuration(self):
+        with open(self.manifest) as data_file:
             data = json.load(data_file)
 
         # Look at information under the self.name entry
@@ -136,9 +141,12 @@ class LocalController(SingletonMixin):
         self.openflow_port = lcdata['internalconfig']['openflowport']
 
     def start_sdx_controller_connection(self):
-        self.logger.debug("About to open SDX Controller Connection to %s:%s" % (IPADDR, PORT))
-        self.sdx_connection = self.sdx_cm.open_outbound_connection(IPADDR, PORT)
-        self.logger.debug("SDX Controller Connection - %s" % (self.sdx_connection))
+        self.logger.debug("About to open SDX Controller Connection to %s:%s" % 
+                          (self.sdxip, self.sdxport))
+        self.sdx_connection = self.sdx_cm.open_outbound_connection(self.sdxip, 
+                                                                   self.sdxport)
+        self.logger.debug("SDX Controller Connection - %s" % 
+                          (self.sdx_connection))
         # Send name
         self.sdx_connection.send_cmd(SDX_IDENTIFY, self.name)
 
@@ -152,12 +160,28 @@ class LocalController(SingletonMixin):
     # Is this necessary?
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print "USAGE: python LocalController.py LCName manifest_file"
-        print "The local controller must be given a name if running from the command line."
-        print "The local controller must be given a manifest file for configuration information if running from the command line."
+
+    import argparse
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultshelpFormatter)
+
+    parser.add_argument("-m", "--manifest", dest="manifest", type=str,
+                        action="store", help="specifies the manifest")
+    parser.add_argument("-n", "--name", dest="name", type=str,
+                        action="store", help="Specify the name of the LC")
+    parser.add_argument("-H", "--host", dest="host", default=IPADDR,
+                        action="store", type=str, 
+                        help="IP address of SDX Controller")
+    parser.add_argument("-p", "--port", dest="sdxport", default=PORT, 
+                        action="store", type=int, 
+                        help="Port number of SDX Controller")
+
+    options = parser.parse_args()
+    print options
+
+    if not options.manifest or not options.name:
+        parser.print_help()
         exit()
-    name = sys.argv[1]
-    manifest = sys.argv[2]
-    lc = LocalController(False, name, manifest)
+
+    lc = LocalController(False, options)
     lc._main_loop()
+
