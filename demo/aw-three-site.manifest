@@ -58,7 +58,7 @@
           "name": "atl-switch",
 	  "friendlyname":"Main Atlanta Switch",
           "ip": "127.0.0.1",
-          "dpid":1,
+          "dpid":"1",
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -116,7 +116,7 @@
           "name": "mia-switch",
 	  "friendlyname":"Main Miami Switch",
           "ip": "127.0.0.1",
-          "dpid":2,
+          "dpid":"2",
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -179,7 +179,7 @@
           "name": "gru-switch",
 	  "friendlyname":"Main Sao Paulo Switch",
           "ip": "127.0.0.1",
-          "dpid":3,
+          "dpid":"3",
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [

@@ -2,25 +2,31 @@
   "endpoints": {
     "atlh1": {
       "type":"host",
+      "friendlyname":"Atlanta Host 1",
       "location":"33.772080,-84.392869"},
     "miah1": {
       "type":"host",
+      "friendlyname":"Miami Host 1",
       "location":"25.755971,-80.373737"},
     "gruh1": {
       "type":"host",
+      "friendlyname":"Sao Paulo Host 1",
       "location":"-23.4348091,-46.4816877"},
     "atldtn11": {
       "type":"dtn",
+      "friendlyname":"Atlanta DTN 1",
       "location":"33.772080,-84.392869",
       "ip":"10.10.10.11",
       "vlan":11},
     "miadtn21": {
       "type":"dtn",
+      "friendlyname":"Miami DTN 1",
       "location":"25.755971,-80.373737",
       "ip":"10.10.10.21",
       "vlan":21},       
     "grudtn31": {
       "type":"dtn",
+      "friendlyname":"Sao Paulo DTN 1",
       "location":"-23.4348091,-46.4816877",
       "ip":"10.10.10.31",
       "vlan":31}       
