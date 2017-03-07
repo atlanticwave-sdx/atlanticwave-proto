@@ -162,7 +162,7 @@ class LocalController(SingletonMixin):
 if __name__ == '__main__':
 
     import argparse
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultshelpFormatter)
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument("-m", "--manifest", dest="manifest", type=str,
                         action="store", help="specifies the manifest")
