@@ -52,12 +52,17 @@
           "portinfo": [
             {
               "portnumber": 1,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "atlh1"
             },
             {
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "atldtn11"
+            },
+            {
               "portnumber": 2,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "mia-switch"
             }
           ],
@@ -100,17 +105,22 @@
           "portinfo": [
             {
               "portnumber": 1,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "atl-switch"
             },
             {
               "portnumber": 2,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "miah1"
             },
             {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "miadtn21"
+            },
+            {
               "portnumber": 3,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "gru-switch"
             }
           ],
@@ -153,13 +163,18 @@
           "portinfo": [
             {
               "portnumber": 1,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "mia-switch"
             },
             {
               "portnumber": 2,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "gruh1"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "grudtn31"
             }
           ],
           "rulesaccepted": [
