@@ -1,0 +1,41 @@
+    lc_container/
+In this directory, build the container with the following command
+  docker build -t lc_container .
+This is create a docker container that can be used to run the 
+Local Controller. example-awave-three-site.sh has details on how to
+run the container.
+To update the AtlanticWave/SDX code, the container must be rebuilt. 
+Unfortunately, means rebuilding from scratch:
+  docker build --no-cache -t lc_container .
+
+
+    sdx_container/
+In this directory, build the container with the following command
+  docker build -t sdx_container .
+This is create a docker container that can be used to run the 
+SDX Controller. example-awave-three-site.sh has details on how to
+run the container.
+To update the AtlanticWave/SDX code, the container must be rebuilt. 
+Unfortunately, means rebuilding from scratch:
+  docker build --no-cache -t sdx_container .
+
+
+    nettest/
+This is a helper container that can be used to create containers
+to peform pings and iperfs. Used in conjunction with pipework
+(https://github.com/jpetazzo/pipework), it make life a lot easier. See 
+https://github.com/jpetazzo/pipework#connect-a-container-to-a-local-physical-interface
+for details. Further, using the 8021q driver, one can create VLANs
+easily. See example-nettest-setup.sh for more details.
+This container can be built form the directory with:
+  docker build -t nettest .
+
+
+    example-awave-three-site.sh
+This is an example of how to run three local controllers and a 
+single SDX controller. 
+
+
+    example-nettest-setup.sh
+This is an example of how to create VLANs on physical interfaces,
+and assign them to containers using pipework.
