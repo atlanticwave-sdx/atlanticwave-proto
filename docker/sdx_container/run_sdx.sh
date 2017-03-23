@@ -24,7 +24,9 @@ then
 fi
 echo "LC Port: $LCPORT"
 
+cd atlanticwave-proto/
+git pull
 
-cd atlanticwave-proto/sdxctlr/
+cd sdxctlr/
 python SDXController.py -m $MANIFEST -H $IPADDR -p $PORT -l $LCPORT
 

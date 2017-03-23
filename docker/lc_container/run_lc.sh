@@ -19,7 +19,9 @@ then
 fi
 echo "SDXIP: $SDXIP"
 
+cd atlanticwave-proto/
+git pull
 
-cd atlanticwave-proto/localctlr/
+cd localctlr/
 python LocalController.py -n $SITE -m $MANIFEST -H $SDXIP
 
