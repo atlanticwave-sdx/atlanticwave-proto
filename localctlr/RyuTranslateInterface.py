@@ -7,6 +7,7 @@ import threading
 import dataset
 import cPickle as pickle
 import requests
+import json
 
 from shared.MatchActionLCRule import *
 from shared.VlanTunnelLCRule import *
@@ -191,7 +192,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.lcip = lcdata['lcip']
         
         ofdata = lcdata['internalconfig']
-        self.ryu_cxn_port = ofdata['ryu_cxn_port']
+        self.ryu_cxn_port = ofdata['ryucxninternalport']
         self.corsa_url = ofdata['corsaurl']
         self.corsa_token = ofdata['corsatoken']
         self.corsa_bridge = ofdata['corsabridge']

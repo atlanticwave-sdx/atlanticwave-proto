@@ -28,13 +28,15 @@ class RyuControllerInterface(ControllerInterface):
     '''
 
 
-    def __init__(self, lcname, conffile, openflow_port):
+    def __init__(self, lcname, conffile, lcip, ryu_cxn_port, openflow_port):
         super(RyuControllerInterface, self).__init__()
 
         self._setup_logger()
 
         self.lcname = lcname
         self.conffile = conffile
+        self.lcip = lcip
+        self.ryu_cxn_port = ryu_cxn_port
         self.openflow_port = openflow_port
 
         # Set up server connection for RyuTranslateInterface to connect to.
