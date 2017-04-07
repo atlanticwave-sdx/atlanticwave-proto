@@ -42,9 +42,11 @@
         "openflowport": 6633,
         "corsaurl": "",
         "corsatoken": "",
-	"corsabridge": "",
+        "corsabridge": "",
         "corsabwin":0,
-        "corsabwout":0
+        "corsabwout":0,
+        "corsaratelimiterbridge":0,
+        "corsaratelimiterports":[0,0]
       },
       "switchinfo": [
         {
@@ -100,9 +102,11 @@
         "openflowport": 6643,
         "corsaurl": "",
         "corsatoken": "",
-	"corsabridge": "",
+        "corsabridge": "",
         "corsabwin":0,
-        "corsabwout":0
+        "corsabwout":0,
+        "corsaratelimiterbridge":0,
+        "corsaratelimiterports":[0,0]
       },
       "switchinfo": [
         {
@@ -163,9 +167,11 @@
         "openflowport": 6653,
         "corsaurl": "",
         "corsatoken": "",
-	"corsabridge": "", 
+        "corsabridge": "", 
         "corsabwin":0,
-        "corsabwout":0
+        "corsabwout":0,
+        "corsaratelimiterbridge":0,
+        "corsaratelimiterports":[0,0]
         },
       "switchinfo": [
         {

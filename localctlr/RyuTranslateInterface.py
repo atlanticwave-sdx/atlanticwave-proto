@@ -198,7 +198,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.corsa_bridge = ofdata['corsabridge']
         self.corsa_bw_in = int(ofdata['corsabwin'])
         self.corsa_bw_out = int(ofdata['corsabwout'])
-
+        self.corsa_rate_limit_ports = ofdata['corsaratelimiterports']
         
 
     def main_loop(self):
@@ -371,25 +371,32 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule)
 
 
-            # Bandwidth REST rules rely on some major assumptions right now:
-            #   - tunnel/37 is the tunnel for VLAN 37
-            #   - vlanrule.get_vlan_out() will be unique
-            # These probably should be resolved (reservations for tunnels, for
-            # instance).
-
+            # Bandwidth REST rules rely on the REST API. If it changes, then
+            # this may need to be modified.
             bridge = self.corsa_bridge
             vlan = str(vlanrule.get_vlan_out())
             bandwidth = vlanrule.get_bandwidth()
-            request_url = (self.corsa_url + "api/v1/bridges/" + bridge +
-                           "/tunnels/" + vlan)
-            json = [{'op':'replace', 'path':'/meter/cir', 'value':bandwidth}],
-            valid_responses = [204]
 
-            results += TranslatedCorsaRuleContainer("patch",
-                                                    request_url,
-                                                    json,
-                                                    self.token,
-                                                    valid_responses)
+            #Find out the request_url
+            rest_return = requests.get((self.corsa_url + "api/v1/bridges/" +
+                                        bridge + "/tunnels/?list=true"),
+                                       headers={'Authorization':self.token},
+                                       verify=False) #FIXME: HARDCODED
+            for entry in rest_return.json()['list']:
+                if (entry['vlan-id'] == vlan and
+                    int(entry['port']) in self.corsa_rate_limit_ports):
+
+                    request_url = entry['links']['self']['href']
+                    json = [{'op':'replace',
+                             'path':'/meter/cir',
+                             'value':bandwidth}],
+                    valid_responses = [204]
+
+                    results += TranslatedCorsaRuleContainer("patch",
+                                                            request_url,
+                                                            json,
+                                                            self.token,
+                                                            valid_responses)
         
         # Return results to be used.
         return results
