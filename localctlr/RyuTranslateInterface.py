@@ -198,6 +198,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.corsa_bridge = ofdata['corsabridge']
         self.corsa_bw_in = int(ofdata['corsabwin'])
         self.corsa_bw_out = int(ofdata['corsabwout'])
+        self.corsa_rate_limit_bridge = ofdata['corsaratelimiterbridge']
         self.corsa_rate_limit_ports = ofdata['corsaratelimiterports']
         
 
@@ -373,7 +374,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # Bandwidth REST rules rely on the REST API. If it changes, then
             # this may need to be modified.
-            bridge = self.corsa_bridge
+            bridge = self.corsa_rate_limit_bridge
             vlan = str(vlanrule.get_vlan_out())
             bandwidth = vlanrule.get_bandwidth()
 
