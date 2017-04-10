@@ -396,6 +396,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                              'value':bandwidth}],
                     valid_responses = [204]
 
+                    print "Patching %s:%s" % (request_url, json)
                     results += TranslatedCorsaRuleContainer("patch",
                                                             request_url,
                                                             json,
