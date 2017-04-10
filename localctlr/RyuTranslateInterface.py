@@ -389,6 +389,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             print "Looking for %s on ports %s" % (vlan, self.corsa_rate_limit_ports)
             print "type of corsa_rate_limit_ports: %s" % type(self.corsa_rate_limit_ports)
+            for e in self.corsa_rate_limit_ports:
+                print "  type of %s: %s" % (e, type(e))
+                
             for entry in rest_return.json()['list']:
                 print "Looking at %s:%s" % (entry['vlan-id'], entry['port'])
                 if (entry['vlan-id'] == vlan and
