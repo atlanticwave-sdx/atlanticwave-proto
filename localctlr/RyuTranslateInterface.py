@@ -388,7 +388,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                        verify=False) #FIXME: HARDCODED
 
             print "Looking for %s on ports %s" % (vlan, self.corsa_rate_limit_ports)
-            print "type of corsa_rate_limit_ports: %s" % type(self.corsa_rate_limit_ports)
+            print "type of vlan: %s corsa_rate_limit_ports: %s" % (type(vlan), type(self.corsa_rate_limit_ports))
             for e in self.corsa_rate_limit_ports:
                 print "  type of %s: %s" % (e, type(e))
                 
