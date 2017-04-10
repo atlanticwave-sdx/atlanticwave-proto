@@ -401,7 +401,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     valid_responses = [204]
 
                     print "Patching %s:%s" % (request_url, json)
-                    results += TranslatedCorsaRuleContainer("patch",
+                    results.append(TranslatedCorsaRuleContainer("patch",
                                                             request_url,
                                                             json,
                                                             self.corsa_token,
