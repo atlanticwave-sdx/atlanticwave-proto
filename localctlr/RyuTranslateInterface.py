@@ -388,8 +388,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                        verify=False) #FIXME: HARDCODED
 
             print "Looking for %s on ports %s" % (vlan, self.corsa_rate_limit_ports)
+            print "type of corsa_rate_limit_ports: %s" % type(self.corsa_rate_limit_ports)
             for entry in rest_return.json()['list']:
                 print "Looking at %s:%s" % (entry['vlan-id'], entry['port'])
+                if entry['vlan-id'] == 1 and int(entry['port']) in [22, 23]:
                 if (entry['vlan-id'] == vlan and
                     int(entry['port']) in self.corsa_rate_limit_ports):
                     print "  FOUND ONE"
