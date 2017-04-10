@@ -468,17 +468,17 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if rc.get_function() == "get":
             response = requests.get(rc.get_url(),
                                     json=rc.get_json(),
-                                    headers={'Authorization':rc.get_token},
+                                    headers={'Authorization':rc.get_token()},
                                     verify=verify)
         elif rc.get_function() == "post":
             response = requests.post(rc.get_url(),
                                       json=rc.get_json(),
-                                      headers={'Authorization':rc.get_token},
+                                      headers={'Authorization':rc.get_token()},
                                       verify=verify)
         elif rc.get_function() == "patch":
             response = requests.patch(rc.get_url(),
                                       json=rc.get_json(),
-                                      headers={'Authorization':rc.get_token},
+                                      headers={'Authorization':rc.get_token()},
                                       verify=verify)
         else:
             raise ValueError("Function not valid: %s:%s" %
