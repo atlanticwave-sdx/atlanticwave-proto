@@ -486,7 +486,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                          rc.get_json()))
 
         if response.status_code not in rc.get_valid_responses():
-            raise Error("REST command failed %s:%s\n    %s\n    %s" %
+            raise Exception("REST command failed %s:%s\n    %s\n    %s" %
                         (rc.get_function(),
                          rc.get_json(),
                          response.status_code,
