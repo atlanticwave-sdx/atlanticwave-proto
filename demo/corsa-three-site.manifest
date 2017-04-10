@@ -45,7 +45,7 @@
         "corsabridge": "",
         "corsabwin":0,
         "corsabwout":0,
-        "corsaratelimiterbridge":0,
+        "corsaratelimiterbridge":"br0",
         "corsaratelimiterports":[0,0]
       },
       "switchinfo": [
@@ -105,7 +105,7 @@
         "corsabridge": "",
         "corsabwin":0,
         "corsabwout":0,
-        "corsaratelimiterbridge":0,
+        "corsaratelimiterbridge":"br0",
         "corsaratelimiterports":[0,0]
       },
       "switchinfo": [
@@ -170,7 +170,7 @@
         "corsabridge": "", 
         "corsabwin":0,
         "corsabwout":0,
-        "corsaratelimiterbridge":0,
+        "corsaratelimiterbridge":"br0",
         "corsaratelimiterports":[0,0]
         },
       "switchinfo": [
