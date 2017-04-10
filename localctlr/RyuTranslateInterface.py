@@ -405,7 +405,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                             request_url,
                                                             json,
                                                             self.corsa_token,
-                                                            valid_responses)
+                                                            valid_responses))
         
         # Return results to be used.
         return results
