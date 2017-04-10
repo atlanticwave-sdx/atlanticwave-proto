@@ -475,7 +475,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                       json=rc.get_json(),
                                       headers={'Authorization':rc.get_token},
                                       verify=verify)
-        elif rc.get_function() == "get":
+        elif rc.get_function() == "patch":
             response = requests.patch(rc.get_url(),
                                       json=rc.get_json(),
                                       headers={'Authorization':rc.get_token},
