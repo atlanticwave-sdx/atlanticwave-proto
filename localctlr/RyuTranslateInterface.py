@@ -397,6 +397,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     request_url = entry['links']['self']['href']
                     jsonval = [{'op':'replace',
                                 'path':'/meter/cir',
+                                'value':bandwidth},
+                               {'op':'replace',
+                                'path':'/meter/eir',
                                 'value':bandwidth}]
                     valid_responses = [204]
 
