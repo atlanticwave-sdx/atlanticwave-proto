@@ -375,7 +375,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Bandwidth REST rules rely on the REST API. If it changes, then
             # this may need to be modified.
             bridge = self.corsa_rate_limit_bridge
-            vlan = str(vlanrule.get_vlan_out())
+            vlan = vlanrule.get_vlan_out()
             bandwidth = vlanrule.get_bandwidth()
 
             #Find out the request_url
