@@ -395,15 +395,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     int(entry['port']) in self.corsa_rate_limit_ports):
 
                     request_url = entry['links']['self']['href']
-                    json = [{'op':'replace',
+                    jsonval = json.dumps([{'op':'replace',
                              'path':'/meter/cir',
-                             'value':bandwidth}],
+                             'value':bandwidth}])
                     valid_responses = [204]
 
                     print "Patching %s:%s" % (request_url, json)
                     results.append(TranslatedCorsaRuleContainer("patch",
                                                             request_url,
-                                                            json,
+                                                            jsonval,
                                                             self.corsa_token,
                                                             valid_responses))
         
