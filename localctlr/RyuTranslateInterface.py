@@ -392,6 +392,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 print "Looking at %s:%s" % (entry['vlan-id'], entry['port'])
                 if (entry['vlan-id'] == vlan and
                     int(entry['port']) in self.corsa_rate_limit_ports):
+                    print "  FOUND ONE"
 
                     request_url = entry['links']['self']['href']
                     json = [{'op':'replace',
