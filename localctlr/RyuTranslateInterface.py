@@ -83,7 +83,8 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
 class TranslatedCorsaRuleContainer(TranslatedRuleContainer):
     ''' Used by RyuTranslateInterface to track translations of Corsa Rules.
         Contains what is needed to make a REST request. '''
-    def __init__(self, url, json, token, list_of_valid_responses):
+    def __init__(self, function, url, json, token, list_of_valid_responses):
+        self.function = function
         self.url = url
         self.json = json
         self.token = token
@@ -388,15 +389,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                        verify=False) #FIXME: HARDCODED
 
             print "Looking for %s on ports %s" % (vlan, self.corsa_rate_limit_ports)
-            print "type of vlan: %s corsa_rate_limit_ports: %s" % (type(vlan), type(self.corsa_rate_limit_ports))
-            for e in self.corsa_rate_limit_ports:
-                print "  type of %s: %s" % (e, type(e))
                 
             for entry in rest_return.json()['list']:
-                print "Looking at %s:%s" % (entry['vlan-id'], entry['port'])
                 if (entry['vlan-id'] == vlan and
                     int(entry['port']) in self.corsa_rate_limit_ports):
-                    print "  FOUND ONE"
 
                     request_url = entry['links']['self']['href']
                     json = [{'op':'replace',
