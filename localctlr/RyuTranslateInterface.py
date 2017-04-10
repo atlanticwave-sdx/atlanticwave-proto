@@ -379,8 +379,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
             bandwidth = vlanrule.get_bandwidth()
 
             #Find out the request_url
-            rest_return = requests.get((self.corsa_url + "api/v1/bridges/" +
-                                        bridge + "/tunnels/?list=true"),
+            tunnel_url = (self.corsa_url + "api/v1/bridges/" +
+                          bridge + "/tunnels/?list=true")
+            print "Requesting tunnels from %s" % tunnel_url
+            rest_return = requests.get(tunnel_url,
                                        headers={'Authorization':
                                                 self.corsa_token},
                                        verify=False) #FIXME: HARDCODED
