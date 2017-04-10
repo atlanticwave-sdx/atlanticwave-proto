@@ -381,7 +381,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
             #Find out the request_url
             rest_return = requests.get((self.corsa_url + "api/v1/bridges/" +
                                         bridge + "/tunnels/?list=true"),
-                                       headers={'Authorization':self.token},
+                                       headers={'Authorization':
+                                                self.corsa_token},
                                        verify=False) #FIXME: HARDCODED
             for entry in rest_return.json()['list']:
                 if (entry['vlan-id'] == vlan and
@@ -396,7 +397,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     results += TranslatedCorsaRuleContainer("patch",
                                                             request_url,
                                                             json,
-                                                            self.token,
+                                                            self.corsa_token,
                                                             valid_responses)
         
         # Return results to be used.
