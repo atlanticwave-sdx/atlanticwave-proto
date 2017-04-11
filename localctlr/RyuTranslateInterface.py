@@ -83,7 +83,8 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
 class TranslatedCorsaRuleContainer(TranslatedRuleContainer):
     ''' Used by RyuTranslateInterface to track translations of Corsa Rules.
         Contains what is needed to make a REST request. '''
-    def __init__(self, url, json, token, list_of_valid_responses):
+    def __init__(self, function, url, json, token, list_of_valid_responses):
+        self.function = function
         self.url = url
         self.json = json
         self.token = token
@@ -375,29 +376,39 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Bandwidth REST rules rely on the REST API. If it changes, then
             # this may need to be modified.
             bridge = self.corsa_rate_limit_bridge
-            vlan = str(vlanrule.get_vlan_out())
+            vlan = vlanrule.get_vlan_out()
             bandwidth = vlanrule.get_bandwidth()
 
             #Find out the request_url
-            rest_return = requests.get((self.corsa_url + "api/v1/bridges/" +
-                                        bridge + "/tunnels/?list=true"),
-                                       headers={'Authorization':self.token},
+            tunnel_url = (self.corsa_url + "api/v1/bridges/" +
+                          bridge + "/tunnels?list=true")
+            print "Requesting tunnels from %s" % tunnel_url
+            rest_return = requests.get(tunnel_url,
+                                       headers={'Authorization':
+                                                self.corsa_token},
                                        verify=False) #FIXME: HARDCODED
+
+            print "Looking for %s on ports %s" % (vlan, self.corsa_rate_limit_ports)
+                
             for entry in rest_return.json()['list']:
                 if (entry['vlan-id'] == vlan and
                     int(entry['port']) in self.corsa_rate_limit_ports):
 
                     request_url = entry['links']['self']['href']
-                    json = [{'op':'replace',
-                             'path':'/meter/cir',
-                             'value':bandwidth}],
+                    jsonval = [{'op':'replace',
+                                'path':'/meter/cir',
+                                'value':bandwidth},
+                               {'op':'replace',
+                                'path':'/meter/eir',
+                                'value':bandwidth}]
                     valid_responses = [204]
 
-                    results += TranslatedCorsaRuleContainer("patch",
+                    print "Patching %s:%s" % (request_url, json)
+                    results.append(TranslatedCorsaRuleContainer("patch",
                                                             request_url,
-                                                            json,
-                                                            self.token,
-                                                            valid_responses)
+                                                            jsonval,
+                                                            self.corsa_token,
+                                                            valid_responses))
         
         # Return results to be used.
         return results
@@ -460,17 +471,17 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if rc.get_function() == "get":
             response = requests.get(rc.get_url(),
                                     json=rc.get_json(),
-                                    headers={'Authorization':rc.get_token},
+                                    headers={'Authorization':rc.get_token()},
                                     verify=verify)
         elif rc.get_function() == "post":
             response = requests.post(rc.get_url(),
                                       json=rc.get_json(),
-                                      headers={'Authorization':rc.get_token},
+                                      headers={'Authorization':rc.get_token()},
                                       verify=verify)
-        elif rc.get_function() == "get":
+        elif rc.get_function() == "patch":
             response = requests.patch(rc.get_url(),
                                       json=rc.get_json(),
-                                      headers={'Authorization':rc.get_token},
+                                      headers={'Authorization':rc.get_token()},
                                       verify=verify)
         else:
             raise ValueError("Function not valid: %s:%s" %
@@ -478,7 +489,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                          rc.get_json()))
 
         if response.status_code not in rc.get_valid_responses():
-            raise Error("REST command failed %s:%s\n    %s\n    %s" %
+            raise Exception("REST command failed %s:%s\n    %s\n    %s" %
                         (rc.get_function(),
                          rc.get_json(),
                          response.status_code,
