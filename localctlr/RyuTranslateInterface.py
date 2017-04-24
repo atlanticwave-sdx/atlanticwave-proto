@@ -9,9 +9,13 @@ import cPickle as pickle
 
 from shared.MatchActionLCRule import *
 from shared.VlanTunnelLCRule import *
+from shared.LearnedDestinationLCRule import *
+from shared.EdgePortLCRule import *
 from shared.LCAction import *
 from shared.LCFields import *
 from shared.LCRule import *
+from shared.ofconstants import *
+from oftables import *
 from ryu import cfg
 from ryu.base import app_manager
 from ryu.controller import ofp_event
@@ -121,6 +125,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Start up the connection to switch?
 
+        # PacketIn callback structure setup
+        self.packet_in_cbs = {}
+
 
         # TODO: Reestablish connection? Do I have to do anything?
         
@@ -186,6 +193,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.logger.warning("Connection from: " + str(ev.msg.datapath.id) + " for " + str(self))
         self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
 
+        # Call bootstrapping for switch functions
+        self._new_switch_bootstrapping(ev)
+
     # From the Ryu mailing list: https://sourceforge.net/p/ryu/mailman/message/33584125/
     @set_ev_cls(ofp_event.EventOFPErrorMsg,
                 [CONFIG_DISPATCHER, MAIN_DISPATCHER])
@@ -195,15 +205,63 @@ class RyuTranslateInterface(app_manager.RyuApp):
                           'message=%s',
                           msg.type, msg.code, hex_array(msg.data))
 
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def packet_in_handler(self, ev):
+        # Look through the packet_in_cbs's dictionary and send it onwards.
+        cookie = ev.msg.cookie
+        if cookie in self.packet_in_cbs:
+            cb = self.packet_in_cbs[cookie]
+            cb(ev)
+        else:
+            self.logger.error('Packet-in with cookie %s has no callback.',
+                              cookie)
 
-    def _translate_MatchActionLCRule(self, datapath, table, of_cookie, marule):
+
+    def _new_switch_bootstrapping(self, ev):
+        ''' This bootstraps new switches when they come online. '''
+        # Install default rules on all tables
+        # For ALL tables except the last table:
+        #   - Create a MatchActionLCRule to send to next table. Priority 0
+        datapath = ev.msg.datapath.id
+        of_cookie = self._get_new_OF_cookie(-1) #FIXME: magic number
+        results = []
+        for table in ALL_TABLES_EXCEPT_LAST:
+            matches = [] # FIXME: what's the equivalent of match(*)?
+            actions = [Continue()]
+            priority = 0
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+
+        # For last table
+        #   - Create a default drop rule (if necessary needed). Priority 0
+        matches = []
+        actions = [Drop()]
+        priorty = 0
+        marule = MatchActionLCRule(switch_id, matches, actions)
+        results += self._translate_MatchActionLCRule(datapath,
+                                                     table,
+                                                     of_cookie,
+                                                     marule,
+                                                     priority)
+        # Install default rules
+        for rule in results:
+            self.add_flow(datapath, rule)
+                            
+        
+        #FIXME: in-band communication
+    
+    def _translate_MatchActionLCRule(self, datapath, table,
+                                     of_cookie, marule, priority=100):
         ''' This translates MatchActionLCRules. There is only one rule generated
             by any given MatchActionLCRule. 
             Returns a list of TranslatedRuleContainers
         ''' 
         results = []
 
-        priority = 100 #FIXME
         # Translate all the pieces
         match = self._translate_LCMatch(datapath,
                                         marule.get_matches())
@@ -256,6 +314,42 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Return results to be used.
         return results
 
+    def _translate_LearnedDestinationLCRule(self, datapath, switch_table,
+                                            of_cookie, ldrule):
+        ''' This translates LearnedDestinationLCRules. This will generate a 
+            single rule.
+            Returns a list of TranslatedRuleContainers
+        '''
+        results = []
+        switch_id = 0 # This is unimportant: it's never used int eh translation
+        matches = [ETH_DST=(ldrule.get_dst_address())]
+        actions = [Forward(ldrule.get_outport())]
+        marule = MatchActionLCRule(switch_id, matches, actions)
+        results += self._translate_MatchActionLCRule(datapath,
+                                                     table,
+                                                     of_cookie,
+                                                     marule)
+        return results
+
+    def _translate_EdgePortLCRule(self, datapath, switch_table,
+                                  ofcookie, eprule):
+        ''' This translates EdgePortLCRules. This will generate a single rule.
+            Returns a list of TranslatedRuleContainers
+        '''
+        results = []
+        switch_id = 0 # This is unimportant: it's never used int eh translation
+        matches = []  # FIXME: what's the equivalent of match(*)?
+        actions = [Continue(), Forward(OFPP_CONTROLLER)]
+        priority = 1
+        marule = MatchActionLCRule(switch_id, matches, actions)
+        results += self._translate_MatchActionLCRule(datapath,
+                                                     table,
+                                                     of_cookie,
+                                                     marule,
+                                                     priority)
+        return results
+                                   
+        
     def _translate_LCMatch(self, datapath, matches):
         args = {}
         for m in matches:
@@ -382,11 +476,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
             if sdx_rule.get_ingress == True:
                 # Ingress rules are applied right before being sent to the
                 # destination network.
-                switch_table = 2 #FIXME: magic number
+                switch_table = SDXINGRESSRULETABLE
             else:
                 # Egress rules are applied immediately after leaving the source
                 # network.
-                switch_table = 1 #FIXME: magic number
+                switch_table = SDXEGRESSRULETABLE
 
             switch_rules = self._translate_MatchActionLCRule(datapath,
                                                              switch_table,
@@ -395,11 +489,29 @@ class RyuTranslateInterface(app_manager.RyuApp):
             
         elif isinstance(sdx_rule, VlanTunnelLCRule):
             # VLAN rules happen before anything else. 
-            switch_table = 0 #FIXME: magic number
+            switch_table = L2TUNNELTABLE
             switch_rules = self._translate_VlanLCRule(datapath,
                                                       switch_table,
                                                       of_cookie,
                                                       sdx_rule)
+
+        elif isinstance(sdx_rule, LearnedDestinationLCRule):
+            # Learning switch forwarding rules happen as a fallback at the end
+            switch_table = FORWARDINGTABLE
+            switch_rules = self._translate_LearnedDestinationLCRule(datapath,
+                                                                    switch_table,
+                                                                    of_cookie,
+                                                                    sdx_rule)
+        elif isinstance(sdx_rule, EdgePortLCRule):
+            # For bootstrapping for learning. Needs to register a CB as well.
+            switch_table = LEARNINGTABLE
+            switch_rules = self._translate_EdgePortLCRule(datapath,
+                                                          switch_table,
+                                                          of_cookie,
+                                                          sdx_rule)
+            self._register_packet_in_cb(of_cookie, self.unknown_source_cb)
+        
+            
 
         if switch_rules == None or switch_table == None:
             #FIXME: This shouldn't happen...
@@ -495,3 +607,24 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if result == None:
             return None
         return result['switchcookie']
+
+    def _register_packet_in_cb(self, cookie_id, function):
+        ''' Used for registering cookies for packet_in callbacks. Function is 
+            called with the packet_in event. '''
+        self.packet_in_cbs[cookie_id] = function
+
+    def _deregister_packet_in_cb(self, cookie_id):
+        ''' Used for deregistering cookies for packet_in callbacks. '''
+        del self.packet_in_cbs[cookie_id]
+
+        
+    def unknown_source_cb(self, ev):
+        ''' Handles new unknown source callbacks. This does two things upon
+            receipt of a packet:
+              - Sends info to  RyuControllerInterface to eventually send to SDX 
+                controller with sdx_cm.send_new_host_port_mapping()
+              - Creates new rule to skip forwarding that source address to ctlr
+        '''
+        
+        spdspdspd
+        pass
