@@ -6,6 +6,8 @@ import logging
 import threading
 import dataset
 import cPickle as pickle
+import requests
+import json
 
 from shared.MatchActionLCRule import *
 from shared.VlanTunnelLCRule import *
@@ -32,6 +34,10 @@ LOCALHOST = "127.0.0.1"
 CONF = cfg.CONF
 
 class TranslatedRuleContainer(object):
+    ''' Parent class for holding both LC and Corsa rules '''
+    pass
+
+class TranslatedLCRuleContainer(TranslatedRuleContainer):
     ''' Used by RyuTranslateInterface to track translations of LCRules. Contains
         Ryu-friendly objects. Not for use outside RyuTranslateInterface. '''
     def __init__(self, cookie, table, priority, match, instruction,
@@ -77,6 +83,37 @@ class TranslatedRuleContainer(object):
     def get_hard_timeout(self):
         return self.hard_timeout
 
+    
+class TranslatedCorsaRuleContainer(TranslatedRuleContainer):
+    ''' Used by RyuTranslateInterface to track translations of Corsa Rules.
+        Contains what is needed to make a REST request. '''
+    def __init__(self, function, url, json, token, list_of_valid_responses):
+        self.function = function
+        self.url = url
+        self.json = json
+        self.token = token
+        self.valid_responses = list_of_valid_responses
+
+    def __str__(self):
+        return "%s:%s:%s:%s" % (self.url, self.json,
+                                self.valid_responses, self.token)
+
+    def get_function(self):
+        # Function should be "patch", "post", or "get"
+        return self.function
+    
+    def get_url(self):
+        return self.url
+
+    def get_json(self):
+        return self.json
+
+    def get_token(self):
+        return self.token
+
+    def get_valid_responses(self):
+        return self.valid_responses
+    
 
 
 class RyuTranslateInterface(app_manager.RyuApp):
@@ -87,9 +124,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         self._setup_logger()
 
-        # Configuration information
-        self.lcip = CONF['atlanticwave']['lcip']
-        self.ryu_cxn_port = CONF['atlanticwave']['ryu_cxn_port']
+        # Configuration file + parsing
+        self.name = CONF['atlanticwave']['lcname']
+        self.conf_file = CONF['atlanticwave']['conffile']
+        self._import_configuration()
+
 
         # Start up Database connection
         # DB is in-memory, as this probalby doesn't need to be tracked through
@@ -111,7 +150,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Establish connection to RyuControllerInterface
         self.inter_cm = InterRyuControllerConnectionManager()
-        #FIXME: Hardcoded!
         self.inter_cm_cxn = self.inter_cm.open_outbound_connection(self.lcip,
                                                                    self.ryu_cxn_port)
 
@@ -148,7 +186,29 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.logger = logging.getLogger('localcontroller.ryutranslateinterface')
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(console)
-        self.logger.addHandler(logfile) 
+        self.logger.addHandler(logfile)
+
+    def _import_configuration(self):
+        ''' Imports configuration parameters from the passed in configuration
+            file. '''
+        with open(self.conf_file) as data_file:
+            data = json.load(data_file)
+
+        # Look at information under the self.name entry, then look at only
+        # data relevant to us.
+        lcdata = data['localcontrollers'][self.name]
+        self.lcip = lcdata['lcip']
+        
+        ofdata = lcdata['internalconfig']
+        self.ryu_cxn_port = ofdata['ryucxninternalport']
+        self.corsa_url = ofdata['corsaurl']
+        self.corsa_token = ofdata['corsatoken']
+        self.corsa_bridge = ofdata['corsabridge']
+        self.corsa_bw_in = int(ofdata['corsabwin'])
+        self.corsa_bw_out = int(ofdata['corsabwout'])
+        self.corsa_rate_limit_bridge = ofdata['corsaratelimiterbridge']
+        self.corsa_rate_limit_ports = ofdata['corsaratelimiterports']
+        
 
     def main_loop(self):
         ''' This is the main loop that reads and works with the data coming from
@@ -258,7 +318,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                      of_cookie, marule, priority=100):
         ''' This translates MatchActionLCRules. There is only one rule generated
             by any given MatchActionLCRule. 
-            Returns a list of TranslatedRuleContainers
+            Returns a list of TranslatedLCRuleContainers
         ''' 
         results = []
 
@@ -269,7 +329,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                 marule.get_actions())
 
         # Make the TranslatedRuleContainer, and return it.
-        trc = TranslatedRuleContainer(of_cookie, table, priority,
+        trc = TranslatedLCRuleContainer(of_cookie, table, priority,
                                       match, instruction)
         results.append(trc)
 
@@ -279,38 +339,135 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def _translate_VlanLCRule(self, datapath, table, of_cookie, vlanrule):
         ''' This translates VlanLCRules. This can generate one or two rules, 
             depending on if this is a bidirectional tunnel (the norm) or not.
-            Returns a list of TranslatedRuleContainers
+            Returns a list of TranslatedLCRuleContainers
         '''
         results = []
 
         # Create Outbound Rule
-        # Make the equivalent MatchActionLCRule, translate it, and use these
-        # as the results. Easier translation!
-        switch_id = 0  # This is unimportant: it's never used in the translation
-        matches = [IN_PORT(vlanrule.get_inport()),
-                   VLAN_VID(vlanrule.get_vlan_in())]
-        actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
-                   Forward(vlanrule.get_outport())]
-        marule = MatchActionLCRule(switch_id, matches, actions)
-        results += self._translate_MatchActionLCRule(datapath,
-                                                     table,
-                                                     of_cookie,
-                                                     marule)
-        
-        # If bidirectional, create inbound rule
-        if vlanrule.get_bidirectional() == True:
-            matches = [IN_PORT(vlanrule.get_outport()),
-                       VLAN_VID(vlanrule.get_vlan_out())]
-            actions = [SetField(VLAN_VID(vlanrule.get_vlan_in())),
-                       Forward(vlanrule.get_inport())]
+        # There are two options here: Corsa or Non-Corsa. Non-Corsa is for
+        # regular OpenFlow switches (such as OVS) and is more straight forward.
+
+        if self.corsa_url == "":
+            # Make the equivalent MatchActionLCRule, translate it, and use these
+            # as the results. Easier translation!
+            switch_id = 0  # This is unimportant:
+                           # it's never used in the translation
+            matches = [IN_PORT(vlanrule.get_inport()),
+                       VLAN_VID(vlanrule.get_vlan_in())]
+            actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
+                       Forward(vlanrule.get_outport())]
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
                                                          table,
                                                          of_cookie,
                                                          marule)
 
-        #FIXME: Bandwidth management stuff
+            # If bidirectional, create inbound rule
+            if vlanrule.get_bidirectional() == True:
+                matches = [IN_PORT(vlanrule.get_outport()),
+                           VLAN_VID(vlanrule.get_vlan_out())]
+                actions = [SetField(VLAN_VID(vlanrule.get_vlan_in())),
+                           Forward(vlanrule.get_inport())]
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             table,
+                                                             of_cookie,
+                                                             marule)
 
+        else:
+            # Corsa case is more complicated.
+            # 4 OpenFlow rules needed:
+            #   - Inbound port  on VLAN in  to BW-in-port    on VLAN out
+            #   - BW-out-port   on VLAN out to Outbound port on VLAN out
+            #   - BW-in-port    on VLAN out to Inbound port  on VLAN in 
+            #   - Outbound port on VLAN out to BW-out-port   on VLAN out
+
+            # 1 Bandwidth Reservation REST rule needed
+            #   - Set Bandwith information for the tunnel
+
+            # OpenFlow rules are *very* similar to the non-Corsa case
+            switch_id = 0  # This is unimportant:
+                           # it's never used in the translation
+            matches = [IN_PORT(vlanrule.get_inport()),
+                       VLAN_VID(vlanrule.get_vlan_in())]
+            actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
+                       Forward(self.corsa_bw_in)]
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule)
+
+            matches = [IN_PORT(self.corsa_bw_out),
+                       VLAN_VID(vlanrule.get_vlan_out())]
+            actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
+                       Forward(vlanrule.get_outport())]
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule)
+
+            # If bidirectional, create inbound rule
+            if vlanrule.get_bidirectional() == True:
+                matches = [IN_PORT(self.corsa_bw_in),
+                           VLAN_VID(vlanrule.get_vlan_out())]
+                actions = [SetField(VLAN_VID(vlanrule.get_vlan_in())),
+                           Forward(vlanrule.get_inport())]
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             table,
+                                                             of_cookie,
+                                                             marule)
+                
+                matches = [IN_PORT(vlanrule.get_outport()),
+                           VLAN_VID(vlanrule.get_vlan_out())]
+                actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
+                           Forward(self.corsa_bw_out)]
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             table,
+                                                             of_cookie,
+                                                             marule)
+
+
+            # Bandwidth REST rules rely on the REST API. If it changes, then
+            # this may need to be modified.
+            bridge = self.corsa_rate_limit_bridge
+            vlan = vlanrule.get_vlan_out()
+            bandwidth = vlanrule.get_bandwidth()
+
+            #Find out the request_url
+            tunnel_url = (self.corsa_url + "api/v1/bridges/" +
+                          bridge + "/tunnels?list=true")
+            print "Requesting tunnels from %s" % tunnel_url
+            rest_return = requests.get(tunnel_url,
+                                       headers={'Authorization':
+                                                self.corsa_token},
+                                       verify=False) #FIXME: HARDCODED
+
+            print "Looking for %s on ports %s" % (vlan, self.corsa_rate_limit_ports)
+                
+            for entry in rest_return.json()['list']:
+                if (entry['vlan-id'] == vlan and
+                    int(entry['port']) in self.corsa_rate_limit_ports):
+
+                    request_url = entry['links']['self']['href']
+                    jsonval = [{'op':'replace',
+                                'path':'/meter/cir',
+                                'value':bandwidth},
+                               {'op':'replace',
+                                'path':'/meter/eir',
+                                'value':bandwidth}]
+                    valid_responses = [204]
+
+                    print "Patching %s:%s" % (request_url, json)
+                    results.append(TranslatedCorsaRuleContainer("patch",
+                                                            request_url,
+                                                            jsonval,
+                                                            self.corsa_token,
+                                                            valid_responses))
+        
         # Return results to be used.
         return results
 
@@ -401,7 +558,37 @@ class RyuTranslateInterface(app_manager.RyuApp):
         return parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                             results)
 
-                              
+
+    def corsa_rest_cmd(self, rc):
+        ''' Handles sending of REST commands to Corsa Switches. '''
+        verify = False #FIXME: Hardcoded
+        if rc.get_function() == "get":
+            response = requests.get(rc.get_url(),
+                                    json=rc.get_json(),
+                                    headers={'Authorization':rc.get_token()},
+                                    verify=verify)
+        elif rc.get_function() == "post":
+            response = requests.post(rc.get_url(),
+                                      json=rc.get_json(),
+                                      headers={'Authorization':rc.get_token()},
+                                      verify=verify)
+        elif rc.get_function() == "patch":
+            response = requests.patch(rc.get_url(),
+                                      json=rc.get_json(),
+                                      headers={'Authorization':rc.get_token()},
+                                      verify=verify)
+        else:
+            raise ValueError("Function not valid: %s:%s" %
+                        (rc.get_function(),
+                         rc.get_json()))
+
+        if response.status_code not in rc.get_valid_responses():
+            raise Exception("REST command failed %s:%s\n    %s\n    %s" %
+                        (rc.get_function(),
+                         rc.get_json(),
+                         response.status_code,
+                         response.json()))
+
     def add_flow(self, datapath, rc):
         ''' Ease-of-use wrapper for adding flows. ''' 
         parser = datapath.ofproto_parser
@@ -523,7 +710,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Send instructions to the switch.
         for rule in switch_rules:
-            self.add_flow(datapath, rule)
+            if type(rule) == TranslatedLCRuleContainer:
+                self.add_flow(datapath, rule)
+            elif type(rule) == TranslatedCorsaRuleContainer:
+                self.corsa_rest_cmd(rule)
 
 
     def remove_rule(self, datapath, sdx_cookie):
@@ -540,7 +730,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 
         # Remove flows
         for rule in swrules:
-            self.remove_flow(datapath, rule)
+            if type(rule) == TranslatedLCRuleContainer:
+                self.remove_flow(datapath, rule)
+            elif type(rule) == TranslatedCorsaRuleContainer:
+                # Currently, don't have to do anything here.
+                pass
 
         # Remove rule infomation from database
         self._remove_rule_in_db(sdx_cookie)

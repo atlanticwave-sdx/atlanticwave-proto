@@ -28,11 +28,13 @@ class RyuControllerInterface(ControllerInterface):
     '''
 
 
-    def __init__(self, lcip, ryu_cxn_port, openflow_port):
+    def __init__(self, lcname, conffile, lcip, ryu_cxn_port, openflow_port):
         super(RyuControllerInterface, self).__init__()
 
         self._setup_logger()
 
+        self.lcname = lcname
+        self.conffile = conffile
         self.lcip = lcip
         self.ryu_cxn_port = ryu_cxn_port
         self.openflow_port = openflow_port
@@ -57,8 +59,9 @@ class RyuControllerInterface(ControllerInterface):
         # strings within the list. For some reason, ryu-manager doesn't like 
         # this, thus one long string.
         self.logger.debug("About to start ryu-manager.")
-        subprocess.Popen(['ryu-manager --app-list /home/sdx/atlanticwave-proto-lcinterface/localctlr/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcip %s --atlanticwave-ryu-cxn-port %s' % (self.openflow_port, self.lcip, self.ryu_cxn_port)], 
+        subprocess.Popen(['ryu-manager --app-list /home/sdx/atlanticwave-proto-lcinterface/localctlr/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % (self.openflow_port, self.lcname, self.conffile)], 
                          shell=True)
+
         self.logger.debug("Started ryu-manager.")
         # Don't complete until the connection is received by inter_cm ...
         self.inter_cm_condition.acquire()
@@ -77,7 +80,6 @@ class RyuControllerInterface(ControllerInterface):
 
     def _inter_cm_thread(self):
         self.inter_cm.new_connection_callback(self._new_inter_cm_thread)
-        #FIXME: hardcoded!
         self.inter_cm.open_listening_port(self.lcip, self.ryu_cxn_port)
 
     def _new_inter_cm_thread(self, cxn):

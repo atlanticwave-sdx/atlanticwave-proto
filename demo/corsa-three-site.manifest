@@ -39,7 +39,14 @@
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55767,
-	"openflowport": 6633
+        "openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+        "corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]
       },
       "switchinfo": [
         {
@@ -92,7 +99,14 @@
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55768,
-	"openflowport": 6643
+        "openflowport": 6643,
+        "corsaurl": "",
+        "corsatoken": "",
+        "corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]
       },
       "switchinfo": [
         {
@@ -150,8 +164,15 @@
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55769,
-	"openflowport": 6653
-      },
+        "openflowport": 6653,
+        "corsaurl": "",
+        "corsatoken": "",
+        "corsabridge": "", 
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]
+        },
       "switchinfo": [
         {
           "name": "gru-switch",
