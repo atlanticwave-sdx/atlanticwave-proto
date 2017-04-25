@@ -824,14 +824,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
               - Creates new rule to skip forwarding that source address to ctlr
         '''
         # Send info to SDX Controller
-        dpid = ev.msg.datapath.id
+        switch_name = self.name
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
         src_address = eth.src
 
         self.inter_cm_cxn.send_cmd(ICX_UNKNOWN_SOURCE,
-                                   {"dpid":dpid,
+                                   {"switch":switch_name,
                                     "port":port,
                                     "src":src_address})
 

@@ -27,6 +27,8 @@ from ValidityInspector import *
 #FIXME: from shared.JsonUploadPolicy import *
 from shared.L2TunnelPolicy import *
 from shared.EndpointConnectionPolicy import *
+from shared.EdgePortPolicy import *
+from shared.LearnedDestinationPolicy import *
 
 # Switch Messages
 from shared.switch_messages import *
@@ -35,6 +37,9 @@ from shared.switch_messages import *
 # Connection Queue actions defininition
 NEW_CXN = "New Connection"
 DEL_CXN = "Remove Connection"
+
+# Username for automatically generated rules
+USERNAME = "SDXCTLR"
 
 
 
@@ -111,6 +116,8 @@ class SDXController(SingletonMixin):
 #FIXME        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
         self.rr.add_ruletype("l2tunnel", L2TunnelPolicy)
         self.rr.add_ruletype("endpointcxn", EndpointConnectionPolicy)
+        self.rr.add_ruletype("edgeport", EdgePortPolicy)
+        self.rr.add_ruletype("learneddest", LearnedDestinationPolicy)
 
 
         # Start these modules last!
@@ -179,6 +186,13 @@ class SDXController(SingletonMixin):
         if self.run_topo:
             self.rm.set_send_add_rule(self.sdx_cm.send_breakdown_rule_add)
             self.rm.set_send_rm_rule(self.sdx_cm.send_breakdown_rule_rm)
+
+        # Install an EdgePortPolicy on the switch. This installs basic rules for
+        # edge ports that are automatically determined during breakdown of the
+        # rule
+        json_rule = {"edgeport":{"switch":name}}
+        epp = EdgePortPolicy(USERNAME, json_rule)
+        self.rm.add_rule(epp)
         
     def _handle_connection_loss(self, cxn):
         #FIXME: Send this to the LocalControllerManager
@@ -243,6 +257,8 @@ class SDXController(SingletonMixin):
                     cmd, data = self.sdx_connection.recv_cmd()
                     self.logger.debug("Received : %s:%s" % (cmd, data))
                     if cmd == SM_UNKNOWN_SOURCE:
+                        # Send command to handling function
+                        self._switch_message_unknown_source(data)
                         spdspdspd
                         #FIXME: Where should this get sent to?
 
@@ -257,6 +273,18 @@ class SDXController(SingletonMixin):
             for entry in exceptional:
                 # FIXME: Handle connection failures
                 pass
+
+    def switch_message_unknown_source(self, data):
+        ''' This handles an SM_UNKNOWN_SOURCE message. 'data' is a dictionary of 
+            the following pattern - see shared/switch_messages.py:
+              {'switch':name, 'port':number, 'src':address}
+        '''
+        json_rule = {"learneddest":{"dstswitch":data['switch'],
+                                    "dstport":data['port']
+                                    "dstaddress":data['src']}}
+        ldp = LearnedDestinationPolicy(USERNAME, json_rule)
+        self.rm.add_rule(ldp)
+
 
 def send_no_rules(param):
     pass

@@ -5,5 +5,5 @@
 # generated at the LC, but at any layer in the LC.
 
 
-# Receives a dictionary {'dpid':dpid, 'port':number, 'src':address}
+# Receives a dictionary {'switch':name, 'port':number, 'src':address}
 SM_UNKNOWN_SOURCE = "UNKNOWN_SOURCE"

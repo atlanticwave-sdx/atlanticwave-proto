@@ -6,6 +6,7 @@ from lib.Singleton import SingletonMixin
 from threading import Lock
 import networkx as nx
 import json
+from lib.SteinerTree import make_steiner_tree
 
 #FIXME: This shouldn't be hard coded.
 MANIFEST_FILE = '../manifests/localcontroller.manifest'
@@ -131,8 +132,115 @@ class TopologyManager(SingletonMixin):
                         # Other fields that may be of use
                         self.topo.edge[name][destination]['vlans_in_use'] = []
                         self.topo.edge[name][destination]['bw_in_use'] = 0
-                        
-                    
+
+    # -----------------
+    # Generic functions
+    # -----------------
+
+    def reserve_bw(self, node_pairs, bw):        
+        ''' Generic method for reserving bandwidth based on pairs of nodes. '''
+        #FIXME: Should there be some more accounting on this? Reference to the
+        #structure reserving the bw?        
+        with self.topolock:
+            # Check to see if we're going to go over the bandwidth of the edge
+            for (node, nextnode) in node_pairs:
+                bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
+                bw_available = int(self.topo.edge[node][nextnode]['weight'])
+
+                if (bw_in_use + bw) > bw_available:
+                    raise TopologyManagerError("BW available on path %s:%s is %s. In use %s, new reservation of %s" % (node, nextnode, bw_available, bw_in_use, bw))
+
+            # Add bandwidth reservation
+            for (node, nextnode) in node_pairs:
+                self.topo.edge[node][nextnode]['bw_in_use'] += bw
+
+    def unreserve_bw(self, node_pairs, bw)
+        ''' Generic method for removing bw reservation based on pairs of nodes. 
+        '''
+a        with self.topolock:
+            # Check to see if we've removed too much
+            for (node, nextnode) in node_pairs:
+                bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
+
+                if bw > bw_in_use:
+                    raise TopologyManagerError("BW in use on path %s:%s is %s. Trying to remove %s" % (node, nextnode, bw_in_use, bw))
+
+            # Remove bw from path
+            for (node, nextnode) in node_pairs:
+                self.topo.edge[node][nextnode]['bw_in_use'] -= bw
+
+    def reserve_vlan(self, nodes, node_pairs, vlan):
+        ''' Generic method for reserving VLANs on given nodes and paths based on
+            nodes and pairs of nodes. '''
+        #FIXME: Should there be some more accounting on this? Reference to the
+        #structure reserving the vlan?
+        # FIXME: This probably has some issues with concurrency.
+
+        with self.topolock:
+            # Make sure the path is clear -> very similar to find_vlan_on_path
+            for node in nodes:
+                if vlan in self.topo.node[node]['vlans_in_use']:
+                    raise TopologyManagerError("VLAN %d is already reserved on node %s" % (vlan, node))
+
+            for (node, nextnode) in node_pairs:
+                if vlan in self.topo.edge[node][nextnode]['vlans_in_use']:
+                    raise TopologyManagerError("VLAN %d is already reserved on path %s:%s" % (vlan, node, nextnode))                    
+
+            # Walk through the nodess and reserve it
+            for node in nodes:
+                self.topo.node[node]['vlans_in_use'].append(vlan)
+
+            # Walk through the edges and reserve it
+            for (node, nextnode) in node_pairs:
+                self.topo.edge[node][nextnode]['vlans_in_use'].append(vlan)
+    
+    def unreserve_vlan(self, nodes, node_pairs, vlan):
+        ''' Generic method for unreserving VLANs on given nodes and paths based 
+            on nodes and pairs of nodes. '''
+        with self.topolock:
+            # Make sure it's already reserved on the given path:
+            for node in nodes:
+                if vlan not in self.topo.node[node]['vlans_in_use']:
+                    raise TopologyManagerError("VLAN %d is not reserved on node %s" % (vlan, node))
+
+            for (node, nextnode) in node_pairs:
+                if vlan not in self.topo.edge[node][nextnode]['vlans_in_use']:
+                    raise TopologyManagerError("VLAN %d is not reserved on path %s:%s" % (vlan, node, nextnode))
+
+            # Walk through the nodes and unreserve it
+            for node in nodes:
+                self.topo.node[node]['vlans_in_use'].remove(vlan)
+
+            # Walk through the edges and unreserve it
+            for (node, nextnode) in node_pairs:
+                self.topo.edge[node][nextnode]['vlans_in_use'].remove(vlan)
+
+    # --------------
+    # Path functions
+    # --------------
+
+    def reserve_vlan_on_path(self, path, vlan):
+        ''' Marks a VLAN in use on a provided path. Raises an error if the VLAN
+            is in use at the time at any location. '''
+        node_pairs = zip(path[0:-1], path[1:])
+        self.reserve_vlan(path, node_pairs, vlan)
+        
+    def unreserve_vlan_on_path(self, path, vlan):
+        ''' Removes reservations on a given path for a given VLAN. '''
+        node_pairs = zip(path[0:-1], path[1:])
+        self.unreserve_vlan(path, node_pairs, vlan)
+
+    def reserve_bw_on_path(self, path, bw):
+        ''' Reserves a specified amount of bandwidth on a given path. Raises an
+            error if the bandwidth is not available at any part of the path. '''
+        node_pairs = zip(path[0:-1], path[1:])
+        self.reserve_bw(node_pairs, bw)
+        
+    def unreserve_bw_on_path(self, path, bw):
+        ''' Removes reservations on a given path for a given amount of
+            bandwidth. '''
+        node_pairs = zip(path[0:-1], path[1:])
+        self.unreserve_bw(node_pairs, bw)
 
     def find_vlan_on_path(self, path):
         ''' Finds a VLAN that's not being used at the moment on a provided path.
@@ -167,88 +275,6 @@ class TopologyManager(SingletonMixin):
                 break
 
         return selected_vlan
-    
-    def reserve_vlan_on_path(self, path, vlan):
-        ''' Marks a VLAN in use on a provided path. Raises an error if the VLAN
-            is in use at the time at any location. '''
-        #FIXME: Should there be some more accounting on this? Reference to the
-        #structure reserving the vlan?
-        # FIXME: This probably has some issues with concurrency.
-
-        with self.topolock:
-            # Make sure the path is clear -> very similar to find_vlan_on_path
-            for point in path:
-                if vlan in self.topo.node[point]['vlans_in_use']:
-                    raise TopologyManagerError("VLAN %d is already reserved on node %s" % (vlan, point))
-
-            for (node, nextnode) in zip(path[0:-1], path[1:]):
-                if vlan in self.topo.edge[node][nextnode]['vlans_in_use']:
-                    raise TopologyManagerError("VLAN %d is already reserved on path %s:%s" % (vlan, node, nextnode))                    
-
-            # Walk through the points and reserve it
-            for point in path:
-                self.topo.node[point]['vlans_in_use'].append(vlan)
-
-            # Walk through the edges and reserve it
-            for (node, nextnode) in zip(path[0:-1], path[1:]):
-                self.topo.edge[node][nextnode]['vlans_in_use'].append(vlan)
-
-    def unreserve_vlan_on_path(self, path, vlan):
-        ''' Removes reservations on a given path for a given VLAN. '''
-        with self.topolock:
-            # Make sure it's already reserved on the given path:
-            for point in path:
-                if vlan not in self.topo.node[point]['vlans_in_use']:
-                    raise TopologyManagerError("VLAN %d is not reserved on node %s" % (vlan, point))
-
-            for (node, nextnode) in zip(path[0:-1], path[1:]):
-                if vlan not in self.topo.edge[node][nextnode]['vlans_in_use']:
-                    raise TopologyManagerError("VLAN %d is not reserved on path %s:%s" % (vlan, node, nextnode))
-
-            # Walk through teh points and unreserve it
-            for point in path:
-                self.topo.node[point]['vlans_in_use'].remove(vlan)
-
-            # Walk through the edges and unreserve it
-            for (node, nextnode) in zip(path[0:-1], path[1:]):
-                self.topo.edge[node][nextnode]['vlans_in_use'].remove(vlan)
-                
-        pass
-
-    def reserve_bw_on_path(self, path, bw):
-        ''' Reserves a specified amount of bandwidth on a given path. Raises an
-            error if the bandwidth is not available at any part of the path. '''
-        #FIXME: Should there be some more accounting on this? Reference to the
-        #structure reserving the bw?
-
-        with self.topolock:
-            # Check to see if we're going to go over the bandwidth of the edge
-            for (node, nextnode) in zip(path[0:-1], path[1:]):
-                bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
-                bw_available = int(self.topo.edge[node][nextnode]['weight'])
-
-                if (bw_in_use + bw) > bw_available:
-                    raise TopologyManagerError("BW available on path %s:%s is %s. In use %s, new reservation of %s" % (node, nextnode, bw_available, bw_in_use, bw))
-
-            # Add bandwidth reservation
-            for (node, nextnode) in zip(path[0:-1], path[1:]):
-                self.topo.edge[node][nextnode]['bw_in_use'] += bw
-
-    def unreserve_bw_on_path(self, path, bw):
-        ''' Removes reservations on a given path for a given amount of
-            bandwidth. '''
-        with self.topolock:
-            # Check to see if we've removed too much
-            for (node, nextnode) in zip(path[0:-1], path[1:]):
-                bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
-
-                if bw > bw_in_use:
-                    raise TopologyManagerError("BW in use on path %s:%s is %s. Trying to remove %s" % (node, nextnode, bw_in_use, bw))
-
-            # Remove bw from path
-            for (node, nextnode) in zip(path[0:-1], path[1:]):
-                self.topo.edge[node][nextnode]['bw_in_use'] -= bw
-
 
     def find_valid_path(self, src, dst, bw=None):
         ''' Find a path that is currently valid based on a contstraint. 
@@ -286,3 +312,116 @@ class TopologyManager(SingletonMixin):
         
         # No path return
         return None
+
+    
+    # --------------
+    # Tree functions
+    # --------------
+
+    def reserve_vlan_on_tree(self, tree, vlan):
+        ''' Marks a VLAN in use on a provided tree (nx graph). Raises an error if
+            the VLAN is in use at the time at any location. '''
+        self.reserve_vlan(tree.nodes(), tree.edges(), vlan)
+        
+    def unreserve_vlan_on_tree(self, tree, vlan):
+        ''' Removes reservations on a given tree (nx graph) for a given VLAN. '''
+        self.unreserve_vlan(tree.nodes(), tree.edges(), vlan)
+
+    def reserve_bw_on_tree(self, tree, bw):
+        ''' Reserves a specified amount of bandwidth on a given tree (nx graph). 
+            Raises an error if the bandwidth is not available at any part of the 
+            tree. '''
+        self.reserve_bw(tree.edges(), bw)
+        
+    def unreserve_bw_on_tree(self, tree, bw):
+        ''' Removes reservations on a given tree (nx graph) for a given amount of
+            bandwidth. '''
+        self.unreserve_bw(tree.edges(), bw)
+
+    def find_vlan_on_tree(self, tree):
+        ''' Tree version of find_vlan_on_path(). Finds a VLAN that's not being
+            used at the moment on a provivded path. Returns an available VLAN if
+            possible, None if none are available on the submitted tree. '''
+        selected_vlan = None
+        with self.topolock:
+            for vlan in range(1,4089):
+                # Check each point on the path
+                on_path = False
+                for node in tree.nodes():
+                    if self.topo.node[node]["type"] == "switch":
+                        if vlan in self.topo.node[node]['vlans_in_use']:
+                            on_path = True
+                            break
+                    
+                if on_path:
+                    continue
+
+                # Check each edge on the path
+                for (node, nextnode) in tree.edges():
+                    if vlan in self.topo.edge[node][nextnode]['vlans_in_use']:
+                        on_path = True
+                        break
+                    
+                if on_path:
+                    continue
+
+                # If all good, set selected_vlan
+                selected_vlan = vlan
+                break
+
+        return selected_vlan
+
+    def find_valid_steiner_tree(self, nodes, bw=None):
+        ''' Finds a Steiner tree connecting all the nodes in 'nodes' together. 
+            Uses a library containing Kou's algorithm to find one. 
+            Returns a graph, from with .nodes() and .edges() can be used
+            to call other functions. '''
+
+        #FIXME: need to accomodate inability to find appropriate amount of
+        #bandwidth. Take existing topology, copy it, and delete the edge with
+        #a problem, then rerun Kou's algorithm.
+
+        # Prime the topology to use
+        topo = self.topo
+        # Loop through, trying to make a valid Steiner tree that has available
+        # bandwidth. This will either return something valid, or will blow up
+        # due to a path not existing and will return nothing.
+        # timeout is a just-in-case measure
+        timeout = len(topo.edges())
+        while(timout > 0):
+            timeout -= 1
+            
+            try:
+                tree = make_steiner_tree(self.topo, nodes)
+            except ValueError:
+                raise
+            except networkx.exception.NetworkXNoPath:
+                #FIXME: log something here.
+                return None
+
+            # Check if enough bandwidth is available
+            enough_bw = True
+            for (node, nextnode) in tree.edges():
+                # For each edge on the path, check that bw is available.
+                bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
+                bw_available = int(self.topo.edge[node][nextnode]['weight'])
+
+                if (bw_in_use + bw) > bw_available:
+                    enough_bw = False
+                    # Remove the edge that doesn't have enough bw and try again
+                    topo.remove_edge(node, nextnode)
+                    break
+            if not enough_bw:
+                continue
+                
+
+            # Check if VLAN is available
+            selected_vlan = self.find_vlan_on_tree(tree)
+            if selecte_vlan == None:
+                #FIXME: how to handle this?
+                pass
+ 
+
+            # Has BW and VLAN available, return it.
+            return tree
+            
