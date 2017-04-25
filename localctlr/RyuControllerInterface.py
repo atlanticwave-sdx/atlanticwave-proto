@@ -8,6 +8,7 @@ from ryu.ofproto import ofproto_v1_3
 from ryu.cmd.manager import main
 from lib.Singleton import Singleton
 from shared.LCRule import LCRule
+from shared.switch_messages import *
 
 import threading
 import logging
@@ -28,7 +29,8 @@ class RyuControllerInterface(ControllerInterface):
     '''
 
 
-    def __init__(self, lcname, conffile, lcip, ryu_cxn_port, openflow_port):
+    def __init__(self, lcname, conffile, lcip,
+                 ryu_cxn_port, openflow_port, lc_callback):
         super(RyuControllerInterface, self).__init__()
 
         self._setup_logger()
@@ -38,6 +40,7 @@ class RyuControllerInterface(ControllerInterface):
         self.lcip = lcip
         self.ryu_cxn_port = ryu_cxn_port
         self.openflow_port = openflow_port
+        self.lc_callback = lc_callback
 
         # Set up server connection for RyuTranslateInterface to connect to.
         self.inter_cm = InterRyuControllerConnectionManager()
@@ -74,9 +77,11 @@ class RyuControllerInterface(ControllerInterface):
         # FIXME: This cannot be permanent. Each piece should be opened up
         # seperately...
         
-        # FIXME: What else?
         self.logger.info("RyuControllerInterface initialized.")
-        pass
+
+        # Start Main Loop
+        self.start_main_loop()
+        self.logger.info("Main Loop started.")
 
     def _inter_cm_thread(self):
         self.inter_cm.new_connection_callback(self._new_inter_cm_thread)
@@ -114,4 +119,55 @@ class RyuControllerInterface(ControllerInterface):
         self.logger = logging.getLogger('localcontroller.ryucontrollerinterface')
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(console)
-        self.logger.addHandler(logfile) 
+        self.logger.addHandler(logfile)
+
+    def start_main_loop(self):
+        self.main_loop_thread = threading.Thread(target=self._main_loop)
+        self.main_loop_thread.daemon = True
+        self.main_loop_thread.start()
+        self.logger.debug("Main Loop - %s" % (self.main_loop_thread))
+
+    def _main_loop(self):
+        ''' This is the main loop for the Local Controller. User should call 
+            start_main_loop() to start it. ''' 
+        rlist = [self.inter_cm_cxn]
+        wlist = []
+        xlist = rlist
+
+        self.logger.debug("Inside Main Loop, Inter-CM connection: %s" % (self.inter_cm_cxn))
+
+        while(True):
+            # Based, in part, on https://pymotw.com/2/select/
+            try:
+                readable, writable, exceptional = cxnselect(rlist,
+                                                         wlist,
+                                                         xlist)
+            except Exception as e:
+                self.logger.error("Error in select - %s" % (e))
+                
+
+            # Loop through readable
+            for entry in readable:
+                if entry == self.inter_cm_cxn:
+                    self.logger.debug("Receiving Command on inter_cm_cxn")
+                    cmd, data = self.inter_cm_cxn.recv_cmd()
+                    self.logger.debug("Received : %s:%s" % (cmd, data))
+                    if cmd == ICX_UNKNOWN_SOURCE:
+                        self.lc_callback(SM_UNKNOWN_SOURCE, data)
+                    elif cmd == ICX_DATAPATHS:
+                        self.logging.info("Received current datapaths: %s" %
+                                          data)
+                        #FIXME: anything here?
+
+
+                #elif?
+
+            # Loop through writable
+            for entry in writable:
+                # Anything to do here?
+                pass
+
+            # Loop through exceptional
+            for entry in exceptional:
+                # FIXME: Handle connection failures
+                pass

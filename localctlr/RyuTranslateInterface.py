@@ -24,6 +24,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.utils import hex_array
+from ryu.lib.packet import packet, ethernet, ether_types
 from time import sleep
 from RyuControllerInterface import RyuControllerInterface
 from InterRyuControllerConnectionManager import *
@@ -282,6 +283,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Install default rules on all tables
         # For ALL tables except the last table:
         #   - Create a MatchActionLCRule to send to next table. Priority 0
+        # Learning table edge ports are handled by rules coming from the
+        # SDX controller at startup.
         datapath = ev.msg.datapath.id
         of_cookie = self._get_new_OF_cookie(-1) #FIXME: magic number
         results = []
@@ -490,12 +493,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
     def _translate_EdgePortLCRule(self, datapath, switch_table,
                                   ofcookie, eprule):
-        ''' This translates EdgePortLCRules. This will generate a single rule.
+        ''' This translates EdgePortLCRules. EdgePortLCRules declare that this is
+            an edge port, nothing more. This will generate a single rule.
             Returns a list of TranslatedRuleContainers
         '''
         results = []
         switch_id = 0 # This is unimportant: it's never used int eh translation
-        matches = []  # FIXME: what's the equivalent of match(*)?
+        matches = [IN_PORT(eprule.get_edgeport())]
         actions = [Continue(), Forward(OFPP_CONTROLLER)]
         priority = 1
         marule = MatchActionLCRule(switch_id, matches, actions)
@@ -819,6 +823,27 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 controller with sdx_cm.send_new_host_port_mapping()
               - Creates new rule to skip forwarding that source address to ctlr
         '''
-        
-        spdspdspd
-        pass
+        # Send info to SDX Controller
+        dpid = ev.msg.datapath.id
+        port = ev.msg.match['in_port']
+        pkt = packet.Packet(ev.msg.data)
+        eth = pkt.get_protocols(ethernet.ethernet)[0]
+        src_address = eth.src
+
+        self.inter_cm_cxn.send_cmd(ICX_UNKNOWN_SOURCE,
+                                   {"dpid":dpid,
+                                    "port":port,
+                                    "src":src_address})
+
+        # New forwarding rule to skip over that again
+        matches = [IN_PORT(port), ETH_SRC(src_address)]
+        actions = [Continue()]
+        priority = 2
+        marule = MatchActionLCRule(switch_id, matches, actions)
+        results = self._translate_MatchActionLCRule(datapath,
+                                                    table,
+                                                    of_cookie,
+                                                    marule,
+                                                    priority)
+        for rule in results:
+            self.add_flow(ev.msg.datapath, rule)

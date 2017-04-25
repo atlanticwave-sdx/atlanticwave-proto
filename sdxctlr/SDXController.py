@@ -28,6 +28,9 @@ from ValidityInspector import *
 from shared.L2TunnelPolicy import *
 from shared.EndpointConnectionPolicy import *
 
+# Switch Messages
+from shared.switch_messages import *
+
 
 # Connection Queue actions defininition
 NEW_CXN = "New Connection"
@@ -239,10 +242,9 @@ class SDXController(SingletonMixin):
                     self.logger.debug("Receiving Command on sdx_connection")
                     cmd, data = self.sdx_connection.recv_cmd()
                     self.logger.debug("Received : %s:%s" % (cmd, data))
-                    if cmd == SDX_NEW_RULE:
-                        pass
-                    elif cmd == SDX_RM_RULE:
-                        pass
+                    if cmd == SM_UNKNOWN_SOURCE:
+                        spdspdspd
+                        #FIXME: Where should this get sent to?
 
                 #elif?
 

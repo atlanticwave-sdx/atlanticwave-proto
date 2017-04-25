@@ -13,6 +13,7 @@ ICX_REMOVE = "REMOVE"
 # Responses
 # RyuTranslateInterface to RyuControllerInterface
 ICX_DATAPATHS = "DATAPATHS"
+ICX_UKNOWN_SOURCE = "UNKNOWN_SOURCE"
 
 
 class InterRyuControllerConnectionManager(ConnectionManager):
