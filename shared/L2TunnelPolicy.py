@@ -7,7 +7,7 @@ from datetime import datetime
 from shared.constants import *
 from shared.VlanTunnelLCRule import VlanTunnelLCRule
 
-
+jsonstring = "l2tunnel"
 class L2TunnelPolicy(UserPolicy):
     ''' This policy is for network administrators to create L2 tunnels, similar 
         to NSI tunnels.
@@ -66,17 +66,17 @@ class L2TunnelPolicy(UserPolicy):
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
 
-            starttime = datetime.strptime(json_rule['l2tunnel']['starttime'],
+            starttime = datetime.strptime(json_rule[jsonstring]['starttime'],
                                          rfc3339format)
-            endtime = datetime.strptime(json_rule['l2tunnel']['endtime'],
+            endtime = datetime.strptime(json_rule[jsonstring]['endtime'],
                                          rfc3339format)
-            src_switch = json_rule['l2tunnel']['srcswitch']
-            dst_switch = json_rule['l2tunnel']['dstswitch']
-            src_port = int(json_rule['l2tunnel']['srcport'])
-            dst_port = int(json_rule['l2tunnel']['dstport'])
-            src_vlan = int(json_rule['l2tunnel']['srcvlan'])
-            dst_vlan = int(json_rule['l2tunnel']['dstvlan'])
-            bandwidth = int(json_rule['l2tunnel']['bandwidth'])
+            src_switch = json_rule[jsonstring]['srcswitch']
+            dst_switch = json_rule[jsonstring]['dstswitch']
+            src_port = int(json_rule[jsonstring]['srcport'])
+            dst_port = int(json_rule[jsonstring]['dstport'])
+            src_vlan = int(json_rule[jsonstring]['srcvlan'])
+            dst_vlan = int(json_rule[jsonstring]['dstvlan'])
+            bandwidth = int(json_rule[jsonstring]['bandwidth'])
 
             delta = endtime - starttime
             if delta.total_seconds() < 0:
@@ -233,21 +233,21 @@ class L2TunnelPolicy(UserPolicy):
     def _parse_json(self, json_rule):
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if 'l2tunnel' not in json_rule.keys():
+        if jsonstring not in json_rule.keys():
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
-        self.start_time = json_rule['l2tunnel']['starttime']
-        self.stop_time =  json_rule['l2tunnel']['endtime']
+        self.start_time = json_rule[jsonstring]['starttime']
+        self.stop_time =  json_rule[jsonstring]['endtime']
         # Make sure end is after start and after now.
         #FIXME
 
-        self.src_switch = str(json_rule['l2tunnel']['srcswitch'])
-        self.dst_switch = str(json_rule['l2tunnel']['dstswitch'])
-        self.src_port = int(json_rule['l2tunnel']['srcport'])
-        self.dst_port = int(json_rule['l2tunnel']['dstport'])
-        self.src_vlan = int(json_rule['l2tunnel']['srcvlan'])
-        self.dst_vlan = int(json_rule['l2tunnel']['dstvlan'])
-        self.bandwidth = int(json_rule['l2tunnel']['bandwidth'])
+        self.src_switch = str(json_rule[jsonstring]['srcswitch'])
+        self.dst_switch = str(json_rule[jsonstring]['dstswitch'])
+        self.src_port = int(json_rule[jsonstring]['srcport'])
+        self.dst_port = int(json_rule[jsonstring]['dstport'])
+        self.src_vlan = int(json_rule[jsonstring]['srcvlan'])
+        self.dst_vlan = int(json_rule[jsonstring]['dstvlan'])
+        self.bandwidth = int(json_rule[jsonstring]['bandwidth'])
 
         #FIXME: Really need some type verifications here.
     
