@@ -560,9 +560,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          marule)
         return results
 
-        def _translate_L2MultipointEndpointLCRule(self, datapath,
-                                                  endpoint_table, flood_table,
-                                                  ofcookie, mperule):
+    def _translate_L2MultipointEndpointLCRule(self, datapath,
+                                              endpoint_table, flood_table,
+                                              ofcookie, mperule):
         ''' This translates L2MultipointEndpointLCRules. 
             L2MultipointEndpointLCRules are uses for endpoints on a Steiner tree
             connecting L2Multipoint LANs. These handle bandwidth management, 
