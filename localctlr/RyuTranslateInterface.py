@@ -54,7 +54,7 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
         self.table = table
         self.priority = priority
         self.match = match
-        self.instruction = instruction
+        self.instructions = instructions
         self.buffer_id = buffer_id
         self.idle_timeout = idle_timeout
         self.hard_timeout = hard_timeout
@@ -62,7 +62,7 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
     def __str__(self):
         return "%s:%s:%s\n%s\n%s\n%s:%s:%s" % (self.cookie, self.table,
                                                self.priority, self.match,
-                                               self.instruction, 
+                                               self.instructions, 
                                                self.buffer_id,
                                                self.idle_timeout,
                                                self.hard_timeout)
@@ -79,8 +79,8 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
     def get_match(self):
         return self.match
     
-    def get_instruction(self):
-        return self.instruction
+    def get_instructions(self):
+        return self.instructions
     
     def get_buffer_id(self):
         return self.buffer_id
@@ -122,7 +122,21 @@ class TranslatedCorsaRuleContainer(TranslatedRuleContainer):
     def get_valid_responses(self):
         return self.valid_responses
     
+class GotoTable(LCAction):
+    ''' This performs a goto table instruction in OpenFlow. 
+        This is not part of shared/LCAction.py because we don't want the 
+        SDXController-level rules to use it, thus it's here. It's very similar
+        to all the other LCActions. '''
+    def __init__(self, table):
+        self.table = table
+        super(GotoTable, self)._-init__("GotoTable")
 
+    def __str__(self):
+        retstr = "%s:%s" % (self._name, self.table)
+        return retstr
+
+    def get(self):
+        return self.table
 
 class RyuTranslateInterface(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -334,13 +348,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Translate all the pieces
         match = self._translate_LCMatch(datapath,
-                                        marule.get_matches())
-        instruction = self._translate_LCAction(datapath,
-                                                marule.get_actions())
+                                        marule.get_matches(),
+                                        table)
+        instructions = self._translate_LCAction(datapath,
+                                                marule.get_actions(),
+                                                table)
 
         # Make the TranslatedRuleContainer, and return it.
         trc = TranslatedLCRuleContainer(of_cookie, table, priority,
-                                      match, instruction)
+                                        match, instructions)
         results.append(trc)
 
         return results
@@ -680,7 +696,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         return results
                                    
         
-    def _translate_LCMatch(self, datapath, matches):
+    def _translate_LCMatch(self, datapath, matches, table):
         args = {}
         for m in matches:
             # Add match to list
@@ -696,26 +712,40 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 
         return datapath.ofproto_parser.OFPMatch(**args)
 
-    def _translate_LCAction(self, datapath, actions):
+    def _translate_LCAction(self, datapath, actions, table):
         ''' This translates the user-level actions into OpenFlow-level Actions
-            and instructions. Returns an instruction. '''
+            and instructions. Returns a list of instructions. '''
 
         parser = datapath.ofproto_parser
         ofproto = datapath.ofproto
-        results = []
+        instructions = []
+        aa_results = []
         
         for action in actions:
+            # The first fiew action types are pretty easy: they all end up in
+            # an OFPIT_APPLY_ACTIONS instruction.
             if isinstance(action, Forward):
-                results.append(parser.OFPActionOutput(action.get()))
+                aa_results.append(parser.OFPActionOutput(action.get()))
+                continue
             elif isinstance(action, SetField):
                 args = {}
                 f = action.get()
                 args[f.get_name()] = f.get()
-                results.append(parser.OFPActionSetField(**args))
-            elif isinstance(action, Continue):
-                #FIXME: How to "continue"?
-                pass
-            elif isinstance(action, Drop):
+                aa_results.append(parser.OFPActionSetField(**args))
+                continue
+
+            # If we've gotten this far, that means the next action is *not* a
+            # Forward or SetField action, but will use a different Instruction
+            # type, so wrap up the existing Forward and SetFields in an
+            # APPLY_ACTIONS instruction first.
+            # This is a bit dirty and confusing, sadly.
+            instructions += parser.OFPInstructionActions(
+                 ofproto.OFPIT_APPLY_ACTIONS, aa_results)
+            aa_results = []
+
+            # Drop is different, it should be the only instruction involved with
+            # the match and should clear the actions that are installed.
+            if isinstance(action, Drop):
                 # This is an error!
                 if len(actions) > 1:
                     #FIXME: raise an error
@@ -723,13 +753,17 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 # To drop, need to clear actions associated with the match.
                 return parser.OFPInstructionActions(
                                ofproto.OFPIT_CLEAR_ACTIONS, [])
-            elif isinstance(action, SetBandwidth):
-                #FIXME: This is hardware specific
-                pass
 
-        # For most everything, return an action APPLY_ACTIONS
-        return parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
-                                            results)
+            # Continue and GotoTable are a bit different, as they both reference
+            # other tables using the OFPIT_GOTO_TABLE instruction.
+            elif isinstance(action, Continue):
+                # table is the current table, we want to go to the next table
+                instructions += parser.OFPInstructionGotoTable(table + 1)
+            elif isinstance(action, GotoTable):
+                instructions += parser.OFPInstructionGotoTable(action.get())
+
+        # Return all the instructions added up
+        return instructions
 
 
     def corsa_rest_cmd(self, rc):
@@ -773,7 +807,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                     buffer_id=rc.get_buffer_id(),
                                     priority=rc.get_priority(),
                                     match=rc.get_match(),
-                                    instructions=[rc.get_instruction()],
+                                    instructions=rc.get_instructions(),
                                     idle_timeout=rc.get_idle_timeout(), 
                                     hard_timeout=rc.get_hard_timeout())
         else:
@@ -783,7 +817,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                     # No buffer
                                     priority=rc.get_priority(),
                                     match=rc.get_match(),
-                                    instructions=[rc.get_instruction()],
+                                    instructions=rc.get_instructions(),
                                     idle_timeout=rc.get_idle_timeout(), 
                                     hard_timeout=rc.get_hard_timeout())
 

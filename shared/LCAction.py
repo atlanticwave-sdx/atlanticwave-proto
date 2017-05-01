@@ -61,17 +61,3 @@ class Drop(LCAction):
     ''' Drop the packets. '''
     def __init__(self):
         super(Drop, self).__init__("Drop")
-
-class SetBandwidth(LCAction):
-    ''' Sets bandwidth of flows. '''
-    #FIXME: This should have an option for whether the bandwidth is min, max, that sort of thing.
-    def __init__(self, bw):
-        self.bw = bw
-        super(SetBandwidth, self).__init__("SetBandwidth")
-
-    def __str__(self):
-        retstr = "%s:%s" % (self._name, self.bw)
-        return retstr
-
-    def get(self):
-        return self.bw
