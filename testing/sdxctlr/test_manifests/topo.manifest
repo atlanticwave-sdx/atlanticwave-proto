@@ -2,32 +2,40 @@
   "endpoints": {
     "atlh1": {
       "type":"host",
+      "friendlyname":"Atlanta Host 1",
       "location":"33.772080,-84.392869"},
     "atlh2": {
       "type":"host",
+      "friendlyname":"Atlanta Host 2",
       "location":"33.772080,-84.392869"},
     "miah1": {
       "type":"host",
+      "friendlyname":"Miami Host 1",
       "location":"25.755971,-80.373737"},
     "miah2": {
       "type":"host",
+      "friendlyname":"Miami Host 2",
       "location":"25.755971,-80.373737"},
     "gruh1": {
       "type":"host",
+      "friendlyname":"Sao Paulo Host 1",
       "location":"-23.4348091,-46.4816877"},
     "gruh2": {
       "type":"host",
+      "friendlyname":"Sao Paulo Host 2",
       "location":"-23.4348091,-46.4816877"},
     "atldtn": {
       "type":"dtn",
+      "friendlyname":"Atlanta DTN",
       "location":"33.772080,-84.392869",
       "ip":"10.0.0.101",
       "vlan":100},
     "grudtn": {
       "type":"dtn",
+      "friendlyname":"Sao Paulo DTN",
       "location":"-23.4348091,-46.4816877",
-      "ip":"10.0.0.102",
-      "vlan":200}
+      "ip":"10.0.0.103",
+      "vlan":300}
   },
   "localcontrollers": {
     "atl":{
@@ -37,35 +45,42 @@
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55767,
-	"openflowport": 6633
+	"openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
       },
       "switchinfo": [
         {
           "name": "atl-switch",
 	  "friendlyname":"Main Atlanta Switch",
           "ip": "127.0.0.1",
-          "dpid":1,
+          "dpid":"1",
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
             {
               "portnumber": 1,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "atlh1"
             },
             {
               "portnumber": 2,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "atlh2"
             },
             {
               "portnumber": 3,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "mia-switch"
             },
             {
               "portnumber": 4,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "atldtn"
             }            
           ],
@@ -95,35 +110,42 @@
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55768,
-	"openflowport": 6643
+	"openflowport": 6643,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
       },
       "switchinfo": [
         {
           "name": "mia-switch",
 	  "friendlyname":"Main Miami Switch",
           "ip": "127.0.0.1",
-          "dpid":2,
+          "dpid":"2",
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
             {
               "portnumber": 1,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "miah1"
             },
             {
               "portnumber": 2,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "miah2"
             },
             {
               "portnumber": 3,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "atl-switch"
             },
             {
               "portnumber": 4,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "gru-switch"
             }
           ],
@@ -153,35 +175,42 @@
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55769,
-	"openflowport": 6653
+	"openflowport": 6653,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
       },
       "switchinfo": [
         {
           "name": "gru-switch",
 	  "friendlyname":"Main Sao Paulo Switch",
           "ip": "127.0.0.1",
-          "dpid":3,
+          "dpid":"3",
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
             {
               "portnumber": 1,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "gruh1"
             },
             {
               "portnumber": 2,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "gruh2"
             },
             {
               "portnumber": 3,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "mia-switch"
             },
             {
               "portnumber": 4,
-              "speed": 1000,
+              "speed": 80000000000,
               "destination": "grudtn"
             }
           ],

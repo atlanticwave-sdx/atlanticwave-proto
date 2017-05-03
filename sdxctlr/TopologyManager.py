@@ -117,7 +117,7 @@ class TopologyManager(SingletonMixin):
                     # Add the links
                     for port in switchinfo['portinfo']:
                         portnumber = int(port['portnumber'])
-                        speed = str(port['speed'])
+                        speed = int(port['speed'])
                         destination = str(port['destination'])
 
                         # If link already exists
@@ -154,10 +154,10 @@ class TopologyManager(SingletonMixin):
             for (node, nextnode) in node_pairs:
                 self.topo.edge[node][nextnode]['bw_in_use'] += bw
 
-    def unreserve_bw(self, node_pairs, bw)
+    def unreserve_bw(self, node_pairs, bw):
         ''' Generic method for removing bw reservation based on pairs of nodes. 
         '''
-a        with self.topolock:
+        with self.topolock:
             # Check to see if we've removed too much
             for (node, nextnode) in node_pairs:
                 bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
@@ -388,14 +388,14 @@ a        with self.topolock:
         # due to a path not existing and will return nothing.
         # timeout is a just-in-case measure
         timeout = len(topo.edges())
-        while(timout > 0):
+        while(timeout > 0):
             timeout -= 1
             
             try:
                 tree = make_steiner_tree(self.topo, nodes)
             except ValueError:
                 raise
-            except networkx.exception.NetworkXNoPath:
+            except nx.exception.NetworkXNoPath:
                 #FIXME: log something here.
                 return None
 
@@ -406,7 +406,7 @@ a        with self.topolock:
                 bw_in_use = self.topo.edge[node][nextnode]['bw_in_use']
                 bw_available = int(self.topo.edge[node][nextnode]['weight'])
 
-                if (bw_in_use + bw) > bw_available:
+                if bw is not None and (bw_in_use + bw) > bw_available:
                     enough_bw = False
                     # Remove the edge that doesn't have enough bw and try again
                     topo.remove_edge(node, nextnode)
@@ -417,7 +417,7 @@ a        with self.topolock:
 
             # Check if VLAN is available
             selected_vlan = self.find_vlan_on_tree(tree)
-            if selecte_vlan == None:
+            if selected_vlan == None:
                 #FIXME: how to handle this?
                 pass
  

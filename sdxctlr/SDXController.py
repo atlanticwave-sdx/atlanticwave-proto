@@ -259,9 +259,6 @@ class SDXController(SingletonMixin):
                     if cmd == SM_UNKNOWN_SOURCE:
                         # Send command to handling function
                         self._switch_message_unknown_source(data)
-                        spdspdspd
-                        #FIXME: Where should this get sent to?
-
                 #elif?
 
             # Loop through writable

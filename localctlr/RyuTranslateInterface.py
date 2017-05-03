@@ -505,7 +505,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
         results = []
         switch_id = 0 # This is unimportant: it's never used in the translation
-        matches = [ETH_DST=(ldrule.get_dst_address())]
+        matches = [ETH_DST(ldrule.get_dst_address())]
         actions = [Forward(ldrule.get_outport())]
         priority = 2
         marule = MatchActionLCRule(switch_id, matches, actions)

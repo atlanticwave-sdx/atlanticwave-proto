@@ -12,6 +12,8 @@ import networkx as nx
 from sdxctlr.TopologyManager import *
 
 CONFIG_FILE = 'test_manifests/topo.manifest'
+STEINER_NO_LOOP_CONFIG_FILE = 'test_manifests/steiner-noloop.manifest'
+STEINER_LOOP_CONFIG_FILE = 'test_manifests/steiner-loop.manifest'
 
 class SingletonTest(unittest.TestCase):
     def test_singleton(self):
@@ -200,7 +202,7 @@ class VLANTopoTest(unittest.TestCase):
         # Unreserve path
         man.unreserve_vlan_on_path(path, 1)
 
-        # THis should pass:
+        # This should pass:
         man.reserve_vlan_on_path(path, 1)
 
 
@@ -224,7 +226,7 @@ class BWTopoTest(unittest.TestCase):
         # Get a path
         path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
 
-        man.reserve_bw_on_path(path, 1000) 
+        man.reserve_bw_on_path(path, 80000000000) 
 
     def test_reserve_too_much(self):
         man = TopologyManager(CONFIG_FILE)
@@ -233,7 +235,8 @@ class BWTopoTest(unittest.TestCase):
         # Get a path
         path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
 
-        self.failUnlessRaises(Exception, man.reserve_bw_on_path, path, 1001)
+        self.failUnlessRaises(Exception, man.reserve_bw_on_path, path, 
+                              80000000001)
 
     def test_unreserve_reservation(self):
         man = TopologyManager(CONFIG_FILE)
@@ -265,6 +268,227 @@ class BWTopoTest(unittest.TestCase):
         man.reserve_bw_on_path(path, 100)
         self.failUnlessRaises(Exception, man.unreserve_bw_on_path, path, 200)
 
+ 
+class SteinerTreeNoLoopTest(unittest.TestCase):
+    ''' +-----+   +-----+   +-----+
+        | sw1 |   | sw4 |   | sw6 |
+        +--+--+   +--+--+   +--+--+
+           |         |         |
+        +--+--+   +--+--+   +--+--+
+        | sw2 +---+ sw5 +---+ sw7 |
+        +--+--+   +-----+   +--+--+
+           |                   |
+        +--+--+             +--+--+
+        | sw3 |             | sw8 |
+        +-----+             +-----+
+    ''' 
+
+    def test_steiner_tree_no_loop(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        topo = man.get_topology()
+        
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+        expected_tree_nodes = ["sw1", "sw2", "sw5", "sw6", "sw7", "sw8"]
+        returned_tree_nodes = tree.nodes()
+        self.failUnlessEqual(len(expected_tree_nodes), 
+                             len(returned_tree_nodes))
+        for node in expected_tree_nodes:
+            self.failUnless(node in returned_tree_nodes)
+
+        # Get a tree connecting sw4, sw8, and sw6
+        nodes = ["sw4", "sw6", "sw8"]
+        tree = man.find_valid_steiner_tree(nodes)
+        expected_tree_nodes = ["sw4", "sw5", "sw6", "sw7", "sw8"]
+        returned_tree_nodes = tree.nodes()
+        self.failUnlessEqual(len(expected_tree_nodes), 
+                             len(returned_tree_nodes))
+        for node in expected_tree_nodes:
+            self.failUnless(node in returned_tree_nodes)
+
+    def test_find_vlan(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        topo = man.get_topology()
+        
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+
+        # Should work
+        vlan = man.find_vlan_on_tree(tree)
     
+    def test_reserve_vlan(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        topo = man.get_topology()
+        
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+
+        # Should work
+        vlan = man.find_vlan_on_tree(tree)
+
+        # Should work
+        man.reserve_vlan_on_tree(tree, vlan)
+
+    def test_unreserve_vlan(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        topo = man.get_topology()
+        
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+
+        # Should work
+        vlan = man.find_vlan_on_tree(tree)
+
+        # Should work
+        man.reserve_vlan_on_tree(tree, vlan)
+
+        # Should work
+        man.unreserve_vlan_on_tree(tree, vlan)
+
+        # Should work
+        man.reserve_vlan_on_tree(tree, vlan)
+
+    def test_reserve_on_invalid(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        topo = man.get_topology()
+        
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+
+        # Should work
+        vlan = man.find_vlan_on_tree(tree)
+
+        # Should work
+        man.reserve_vlan_on_tree(tree, vlan)
+
+        # Should work
+        self.failUnlessRaises(Exception, man.reserve_vlan_on_tree, tree, vlan)
+
+    def test_reserve_bandwidth(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+
+        # Should work
+        man.reserve_bw_on_tree(tree, 100)
+        man.reserve_bw_on_tree(tree, 100)
+        man.reserve_bw_on_tree(tree, 100)        
+
+
+    def test_reserve_maximum(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+
+        # Should work
+        man.reserve_bw_on_tree(tree, 80000000000)
+
+    def test_reserve_too_much(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+
+        # Should work
+        self.failUnlessRaises(Exception, man.reserve_bw_on_tree, tree, 
+                              80000000001)
+
+    def test_unreserve_bw(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+
+        # Should work
+        man.reserve_bw_on_tree(tree, 100)
+        man.reserve_bw_on_tree(tree, 100)
+        man.reserve_bw_on_tree(tree, 100)        
+
+        # Should work
+        man.unreserve_bw_on_tree(tree, 100)
+        man.unreserve_bw_on_tree(tree, 100)
+        man.unreserve_bw_on_tree(tree, 100)        
+
+    def test_unreserve_too_much(self):
+        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+
+        # Get a tree connecting sw1, sw8, and sw6
+        nodes = ['sw1', 'sw8', 'sw6']
+        tree = man.find_valid_steiner_tree(nodes)
+
+        # Should work
+        man.reserve_bw_on_tree(tree, 100)
+        man.unreserve_bw_on_tree(tree, 100)
+
+        self.failUnlessRaises(Exception, man.unreserve_bw_on_tree, tree, 100)
+
+        man.reserve_bw_on_tree(tree, 100)
+        self.failUnlessRaises(Exception, man.unreserve_bw_on_tree, tree, 200)
+
+
+    
+
+
+class SteinerTreeWithLoopTest(unittest.TestCase):
+    ''' +-----+   +-----+   +-----+
+        | sw1 |   | sw4 +---+ sw6 |
+        +--+--+   +--+--+   +--+--+
+           |         |         |
+        +--+--+   +--+--+   +--+--+
+        | sw2 +---+ sw5 +---+ sw7 |
+        +--+--+   +-----+   +--+--+
+           |                   |
+        +--+--+             +--+--+
+        | sw3 +-------------+ sw8 |
+        +-----+             +-----+
+    '''
+    def test_steiner_tree_with_loop(self):
+        man = TopologyManager(STEINER_LOOP_CONFIG_FILE)
+        topo = man.get_topology()
+        
+        # Get a tree connecting sw1, sw4, and sw7
+        nodes = ['sw1', 'sw4', 'sw7']
+        tree = man.find_valid_steiner_tree(nodes)
+        expected_tree_nodes = ["sw1", "sw2", "sw5", "sw4", "sw7"]
+        returned_tree_nodes = tree.nodes()
+        self.failUnlessEqual(len(expected_tree_nodes), 
+                             len(returned_tree_nodes))
+        for node in expected_tree_nodes:
+            self.failUnless(node in returned_tree_nodes)
+
+        # Get a tree connecting sw1, sw3, sw8, sw6
+        nodes = ["sw1", "sw3", "sw6", "sw8"]
+        tree = man.find_valid_steiner_tree(nodes)
+        expected_tree_nodes = ["sw1", "sw2", "sw3", "sw8", "sw7", "sw6"]
+        returned_tree_nodes = tree.nodes()
+        self.failUnlessEqual(len(expected_tree_nodes), 
+                             len(returned_tree_nodes))
+        for node in expected_tree_nodes:
+            self.failUnless(node in returned_tree_nodes)
+
+        # Get a tree connecting sw1, sw3, sw8
+        nodes = ["sw1", "sw3", "sw8"]
+        tree = man.find_valid_steiner_tree(nodes)
+        expected_tree_nodes = ["sw1", "sw2", "sw3", "sw8"]
+        returned_tree_nodes = tree.nodes()
+        self.failUnlessEqual(len(expected_tree_nodes), 
+                             len(returned_tree_nodes))
+        for node in expected_tree_nodes:
+            self.failUnless(node in returned_tree_nodes)
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
