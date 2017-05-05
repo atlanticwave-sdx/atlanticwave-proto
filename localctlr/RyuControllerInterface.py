@@ -7,6 +7,7 @@ from InterRyuControllerConnectionManager import *
 from ryu.ofproto import ofproto_v1_3
 from ryu.cmd.manager import main
 from lib.Singleton import Singleton
+from lib.Connection import select as cxnselect
 from shared.LCRule import LCRule
 from shared.switch_messages import *
 
@@ -14,6 +15,7 @@ import threading
 import logging
 import subprocess
 import sys
+import os
 
 class RyuControllerInterface(ControllerInterface):
     ''' This is a particular implementation of the ControllerInterface class
@@ -62,8 +64,8 @@ class RyuControllerInterface(ControllerInterface):
         # strings within the list. For some reason, ryu-manager doesn't like 
         # this, thus one long string.
         self.logger.debug("About to start ryu-manager.")
-        subprocess.Popen(['ryu-manager --app-list /home/sdx/atlanticwave-proto-lcinterface/localctlr/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % (self.openflow_port, self.lcname, self.conffile)], 
-                         shell=True)
+        current_dir = os.path.dirname(os.path.realpath(__file__))
+        subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % (current_dir, self.openflow_port, self.lcname, self.conffile)], shell=True)
 
         self.logger.debug("Started ryu-manager.")
         # Don't complete until the connection is received by inter_cm ...
@@ -130,6 +132,7 @@ class RyuControllerInterface(ControllerInterface):
     def _main_loop(self):
         ''' This is the main loop for the Local Controller. User should call 
             start_main_loop() to start it. ''' 
+
         rlist = [self.inter_cm_cxn]
         wlist = []
         xlist = rlist
@@ -140,10 +143,11 @@ class RyuControllerInterface(ControllerInterface):
             # Based, in part, on https://pymotw.com/2/select/
             try:
                 readable, writable, exceptional = cxnselect(rlist,
-                                                         wlist,
-                                                         xlist)
+                                                            wlist,
+                                                            xlist)
             except Exception as e:
                 self.logger.error("Error in select - %s" % (e))
+                self.logger.error("rlist: %s" % rlist)
                 
 
             # Loop through readable

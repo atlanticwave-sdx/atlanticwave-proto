@@ -126,6 +126,7 @@ class Connection(object):
         ''' Close out the connection. '''
         try:
             self.sock.close()
+            self.sock = None
         except:
             raise
 

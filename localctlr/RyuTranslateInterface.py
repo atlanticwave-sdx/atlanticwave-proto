@@ -48,7 +48,7 @@ class TranslatedRuleContainer(object):
 class TranslatedLCRuleContainer(TranslatedRuleContainer):
     ''' Used by RyuTranslateInterface to track translations of LCRules. Contains
         Ryu-friendly objects. Not for use outside RyuTranslateInterface. '''
-    def __init__(self, cookie, table, priority, match, instruction,
+    def __init__(self, cookie, table, priority, match, instructions,
                  buffer_id=None, idle_timeout=0, hard_timeout=0):
         self.cookie = cookie
         self.table = table
@@ -306,7 +306,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         #   - Create a MatchActionLCRule to send to next table. Priority 0
         # Learning table edge ports are handled by rules coming from the
         # SDX controller at startup.
-        datapath = ev.msg.datapath.id
+        switch_id = 0  # This is unimportant:
+                       # it's never used in the translation
+        datapath = ev.msg.datapath
         of_cookie = self._get_new_OF_cookie(-1) #FIXME: magic number
         results = []
         for table in ALL_TABLES_EXCEPT_LAST:
@@ -739,9 +741,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # type, so wrap up the existing Forward and SetFields in an
             # APPLY_ACTIONS instruction first.
             # This is a bit dirty and confusing, sadly.
-            instructions += parser.OFPInstructionActions(
-                 ofproto.OFPIT_APPLY_ACTIONS, aa_results)
-            aa_results = []
+            if len(aa_results) > 0:
+                instructions.append(parser.OFPInstructionActions(
+                    ofproto.OFPIT_APPLY_ACTIONS, aa_results))
+                aa_results = []
 
             # Drop is different, it should be the only instruction involved with
             # the match and should clear the actions that are installed.
@@ -751,17 +754,20 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     #FIXME: raise an error
                     pass
                 # To drop, need to clear actions associated with the match.
-                return parser.OFPInstructionActions(
-                               ofproto.OFPIT_CLEAR_ACTIONS, [])
+                return [parser.OFPInstructionActions(
+                               ofproto.OFPIT_CLEAR_ACTIONS, [])]
 
             # Continue and GotoTable are a bit different, as they both reference
             # other tables using the OFPIT_GOTO_TABLE instruction.
             elif isinstance(action, Continue):
                 # table is the current table, we want to go to the next table
-                instructions += parser.OFPInstructionGotoTable(table + 1)
+                instructions.append(parser.OFPInstructionGotoTable(table + 1))
             elif isinstance(action, GotoTable):
-                instructions += parser.OFPInstructionGotoTable(action.get())
-
+                instructions.append(parser.OFPInstructionGotoTable(action.get()))
+        # Are there any values in aa_results? If so, put them in APPLY_ACTIONS
+        if len(aa_results) > 0: 
+            instructions.append(parser.OFPInstructionActions(
+                ofproto.OFPIT_APPLY_ACTIONS, aa_results))           
         # Return all the instructions added up
         return instructions
 
