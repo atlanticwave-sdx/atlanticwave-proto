@@ -58,8 +58,7 @@ class LearnedDestinationPolicy(UserPolicy):
 
             dst_switch = json_rule[jsonstring]['dstswitch']
             dst_port = int(json_rule[jsonstring]['dstport'])
-            dst_address = json_rule[jsonstring]['dstvlan'])
-
+            dst_address = json_rule[jsonstring]['dstaddress']
 
             if ((dst_port < 0) or
                 (dst_port > 24)):
@@ -90,9 +89,13 @@ class LearnedDestinationPolicy(UserPolicy):
         self.breakdown = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
-        switches = [d for d in topology.nodes(data=True) if
-                    d['type'] == "switch"]
-        convered = []
+        switches = []
+        for (name, data) in topology.nodes(data=True):
+            if data['type'] == "switch":
+                switch = data
+                switch['name'] = name
+                switches.append(switch)
+        covered = []
 
         for sw in switches:
             if sw['name'] in covered:
@@ -145,7 +148,7 @@ class LearnedDestinationPolicy(UserPolicy):
 
         self.dst_switch = str(json_rule[jsonstring]['dstswitch'])
         self.dst_port = int(json_rule[jsonstring]['dstport'])
-        self.dst_address = str(json_rule[jsonstring]['dstvlan'])
+        self.dst_address = str(json_rule[jsonstring]['dstaddress'])
 
         #FIXME: Really need some type verifications here.
         

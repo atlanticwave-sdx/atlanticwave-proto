@@ -231,6 +231,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.corsa_rate_limit_bridge = ofdata['corsaratelimiterbridge']
         self.corsa_rate_limit_ports = ofdata['corsaratelimiterports']
         
+        # Get the DPID to name of the various switches this LC controls
+        self.dpid_dict = {}
+        for entry in lcdata['switchinfo']:
+            self.dpid_dict[str(entry['dpid'])] = entry['name']
 
     def main_loop(self):
         ''' This is the main loop that reads and works with the data coming from
@@ -295,7 +299,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             cb = self.packet_in_cbs[cookie]
             cb(ev)
         else:
-            self.logger.error('Packet-in with cookie %s has no callback.',
+            self.logger.error('Packet-in with cookie 0x%02x has no callback.',
                               cookie)
 
 
@@ -512,14 +516,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
         priority = 2
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
-                                                     table,
+                                                     switch_table,
                                                      of_cookie,
                                                      marule,
                                                      priority)
         return results
 
     def _translate_EdgePortLCRule(self, datapath, switch_table,
-                                  ofcookie, eprule):
+                                  of_cookie, eprule):
         ''' This translates EdgePortLCRules. EdgePortLCRules declare that this is
             an edge port, nothing more. This will generate a single rule.
             Returns a list of TranslatedRuleContainers
@@ -531,14 +535,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
         priority = 1
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
-                                                     table,
+                                                     switch_table,
                                                      of_cookie,
                                                      marule,
                                                      priority)
         return results
     
     def _translate_L2MultipointFloodLCRule(self, datapath, switch_table,
-                                           ofcookie, mpfrule):
+                                           of_cookie, mpfrule):
         ''' This translates L2MultipointFloodLCRules. L2MultipointFloodLCRules 
             are for ports that are on the interior of a Steiner tree that 
             connects L2Multipoint LANs. Endpoint switches use 
@@ -557,14 +561,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     actions.append(Forward(outport))
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
-                                                         table,
+                                                         switch_table,
                                                          of_cookie,
                                                          marule)
         return results
 
     def _translate_L2MultipointEndpointLCRule(self, datapath,
                                               endpoint_table, flood_table,
-                                              ofcookie, mperule):
+                                              of_cookie, mperule):
         ''' This translates L2MultipointEndpointLCRules. 
             L2MultipointEndpointLCRules are uses for endpoints on a Steiner tree
             connecting L2Multipoint LANs. These handle bandwidth management, 
@@ -862,11 +866,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Verify input
         if not isinstance(sdx_rule, LCRule):
             raise TypeError("lcrule %s is not of type LCRule: %s" %
-                            (sdx_rule, type(sdxrule)))
+                            (sdx_rule, type(sdx_rule)))
 
 
         # Get a cookie based on the SDX Controller cookie
         of_cookie = self._get_new_OF_cookie(sdx_rule.get_cookie())
+        self.logger.debug("Cookie 0x%02x used for %s" % (of_cookie, sdx_rule))
 
         # Convert rule into instructions for Ryu. Switch through the different
         # types of supported LCRules for individual translation.
@@ -909,6 +914,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                           switch_table,
                                                           of_cookie,
                                                           sdx_rule)
+            self.logger.error("EdgePortLCRule: %d:%d:%s" % (switch_table,
+                                                            of_cookie,
+                                                            sdx_rule))
             self._register_packet_in_cb(of_cookie, self.unknown_source_cb)
         elif isinstance(sdx_rule, L2MultipointFloodLCRule):
             # Installs 
@@ -1033,8 +1041,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         return result['switchcookie']
 
     def _register_packet_in_cb(self, cookie_id, function):
-        ''' Used for registering cookies for packet_in callbacks. Function is 
+        ''' Used for registeringcookies for packet_in callbacks. Function is 
             called with the packet_in event. '''
+        self.logger.warning("Registering cookie 0x%02x to function %s for packet_in handling" % (cookie_id, function))
         self.packet_in_cbs[cookie_id] = function
 
     def _deregister_packet_in_cb(self, cookie_id):
@@ -1050,7 +1059,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
               - Creates new rule to skip forwarding that source address to ctlr
         '''
         # Send info to SDX Controller
-        switch_name = self.name
+        switch_id = 0  # This is unimportant:
+                       # it's never used in the translation
+
+        datapath = ev.msg.datapath
+        switch_name = self.dpid_dict[str(datapath.id)]
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -1064,6 +1077,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # New forwarding rule to skip over that again
         matches = [IN_PORT(port), ETH_SRC(src_address)]
         actions = [Continue()]
+        table = LEARNINGTABLE
+        of_cookie = ev.msg.cookie    # Keep the same cookie as the original rule
         priority = 2
         marule = MatchActionLCRule(switch_id, matches, actions)
         results = self._translate_MatchActionLCRule(datapath,
@@ -1072,4 +1087,4 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                     marule,
                                                     priority)
         for rule in results:
-            self.add_flow(ev.msg.datapath, rule)
+            self.add_flow(datapath, rule)

@@ -45,7 +45,7 @@ class LocalController(SingletonMixin):
         # Setup switch
         self.switch_connection = RyuControllerInterface(self.name,
                                     self.manifest, self.lcip,
-                                    self.ryu_cxn_port, self.openflow_port
+                                    self.ryu_cxn_port, self.openflow_port,
                                     self.switch_connection_cb)
         self.logger.info("RyuControllerInterface setup finish.")
 

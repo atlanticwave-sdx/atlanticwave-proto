@@ -5,8 +5,8 @@
 import logging
 import threading
 import sys
-import Queue
 import dataset
+from Queue import Queue, Empty
 
 from lib.Singleton import SingletonMixin
 from lib.Connection import select as cxnselect
@@ -105,7 +105,7 @@ class SDXController(SingletonMixin):
         # Set up the connection-related nonsense - Have a connection event queue
         self.ip = options.host
         self.port = options.lcport
-        self.cxn_q = Queue.Queue()
+        self.cxn_q = Queue()
         self.connections = {}
         self.sdx_cm = SDXControllerConnectionManager()
         self.cm_thread = threading.Thread(target=self._cm_thread)
@@ -250,15 +250,12 @@ class SDXController(SingletonMixin):
 
             # Loop through readable
             for entry in readable:
-                cmx, data = entry.recv_cmd()
-                
-                if entry == self.sdx_connection:
-                    self.logger.debug("Receiving Command on sdx_connection")
-                    cmd, data = self.sdx_connection.recv_cmd()
-                    self.logger.debug("Received : %s:%s" % (cmd, data))
-                    if cmd == SM_UNKNOWN_SOURCE:
-                        # Send command to handling function
-                        self._switch_message_unknown_source(data)
+                cmd, data = entry.recv_cmd()
+                self.logger.debug("Received from %s : %s:%s" % 
+                                  (entry, cmd, data))
+                if cmd == SM_UNKNOWN_SOURCE:
+                    # Send command to handling function
+                    self._switch_message_unknown_source(data)
                 #elif?
 
             # Loop through writable
@@ -271,13 +268,13 @@ class SDXController(SingletonMixin):
                 # FIXME: Handle connection failures
                 pass
 
-    def switch_message_unknown_source(self, data):
+    def _switch_message_unknown_source(self, data):
         ''' This handles an SM_UNKNOWN_SOURCE message. 'data' is a dictionary of 
             the following pattern - see shared/switch_messages.py:
               {'switch':name, 'port':number, 'src':address}
         '''
         json_rule = {"learneddest":{"dstswitch":data['switch'],
-                                    "dstport":data['port']
+                                    "dstport":data['port'],
                                     "dstaddress":data['src']}}
         ldp = LearnedDestinationPolicy(USERNAME, json_rule)
         self.rm.add_rule(ldp)

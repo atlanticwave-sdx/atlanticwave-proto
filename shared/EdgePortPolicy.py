@@ -61,14 +61,19 @@ class EdgePortPolicy(UserPolicy):
         self.breakdown = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
-        switches = [d for d in topology.nodes(data=True) if
-                    d['type'] == "switch"]
+
+        switches = []
+        for (name, data) in topology.nodes(data=True):
+            if data['type'] == "switch":
+                switch = data
+                switch['name'] = name
+                switches.append(switch)
 
         for sw in switches:
             neighbors = topology.neighbors(sw['name'])
             edges = []
             for n in neighbors:
-                if topology[n]['type'] == "switch":
+                if topology.node[n]['type'] == "switch":
                     next
                 # Add port to list
                 edges.append(topology.edge[n][sw['name']])
@@ -79,7 +84,7 @@ class EdgePortPolicy(UserPolicy):
                 bd = UserPolicyBreakdown(shortname, [])
 
                 for e in edges:
-                    epr = EdgePortLCRule(switch_id, e)
+                    epr = EdgePortLCRule(switch_id, e[sw['name']])
                     bd.add_to_list_of_rules(epr)
 
                 self.breakdown.append(bd)

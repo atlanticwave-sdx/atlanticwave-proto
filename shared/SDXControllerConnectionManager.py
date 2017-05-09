@@ -21,12 +21,22 @@ from lib.ConnectionManager import *
 from lib.Connection import Connection
 from shared.UserPolicy import UserPolicyBreakdown
 
+from Queue import Queue
+
+class SDXControllerConnectionManagerNotConnectedError(ConnectionManagerValueError):
+    pass
+
 class SDXControllerConnectionManager(ConnectionManager):
     ''' Used to manage the connection with the SDX Controller. '''
 
     def __init__(self, *args, **kwargs):
         super(SDXControllerConnectionManager, self).__init__(*args, **kwargs)
+        # associations contains name:Connection pairs
         self.associations = {}
+        # non_connected_queues contains name:(rule, type) queues for 
+        # added/removed rules that are sent before a connection is established.
+        # Entries deleted once emptied.
+        self.non_connected_queues = {}
 
     def send_breakdown_rule_add(self, bd):
         ''' This takes in a UserPolicyBreakdown and send it to the Local
@@ -39,6 +49,11 @@ class SDXControllerConnectionManager(ConnectionManager):
             for rule in bd.get_list_of_rules():
                 switch_id = rule.get_switch_id()
                 lc_cxn.send_cmd(SDX_NEW_RULE, (switch_id, rule))
+
+        except SDXControllerConnectionManagerNotConnectedError as e:
+            # Connection doesn't yet exist.
+            self._queue_rule_for_connection(bd.get_lc(), bd, SDX_NEW_RULE)
+        
         except Exception as e: raise
 
     def send_breakdown_rule_rm(self, bd):
@@ -54,7 +69,10 @@ class SDXControllerConnectionManager(ConnectionManager):
                 switch_id = rule.get_switch_id()
                 rule_cookie = rule.get_cookie()
                 lc_cxn.send_cmd(SDX_RM_RULE, (switch_id, rule_cookie))
-            
+
+        except SDXControllerConnectionManagerNotConnectedError as e:
+            # Connection doesn't yet exist.
+            self._queue_rule_for_connection(bd.get_lc(), bd, SDX_RM_RULE)
         except Exception as e: raise
 
     def _find_lc_cxn(self, bd):
@@ -64,7 +82,7 @@ class SDXControllerConnectionManager(ConnectionManager):
             lc_cxn = self.associations[lc]
 
         if lc_cxn == None:
-            raise ConnectionManagerValueError("%s is not in the current connections.\n    Current connections %s" % (lc, self.clients))
+            raise SDXControllerConnectionManagerNotConnectedError("%s is not in the current connections.\n    Current connections %s" % (lc, self.clients))
 
         return lc_cxn
 
@@ -75,4 +93,26 @@ class SDXControllerConnectionManager(ConnectionManager):
             More hacky than I'd like it to be. '''
         self.associations[name] = cxn
         #FIXME: Should this check to make sure that the cxn is in self.clients?
-                                
+        # Clean up queuess for the new connection.
+        if name in self.non_connected_queues.keys():
+            q = self.non_connected_queues[name]
+            del self.non_connected_queues[name]
+            while not q.empty():
+                (bd, add_or_remove) = q.get()
+                if add_or_remove == SDX_NEW_RULE:
+                    self.send_breakdown_rule_add(bd)
+                elif add_or_remove == SDX_RM_RULE:
+                    self.send_breakdown_rule_rm(bd)
+        
+
+    def _queue_rule_for_connection(self, name, bd, add_or_remove):
+        ''' This queues a rule for a connection that doesn't yet exist. Queue 
+            may not exist, so may need to create it. 
+            add_or_remove is either SDX_NEW_RULE or SDX_RM_RULE, as appropriate.
+        '''
+        if name not in self.non_connected_queues.keys():
+            #FIXME: this probably should have a max length, otherwise we could
+            #get a resource exhaustion situation.
+            self.non_connected_queues[name] = Queue()
+        self.non_connected_queues[name].put((bd, add_or_remove))
+
