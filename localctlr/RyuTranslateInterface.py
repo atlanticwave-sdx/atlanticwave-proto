@@ -34,6 +34,7 @@ from shared.LearnedDestinationLCRule import *
 from shared.EdgePortLCRule import *
 from shared.L2MultipointEndpointLCRule import *
 from shared.L2MultipointFloodLCRule import *
+from shared.FloodTreeLCRule import *
 
 
 LOCALHOST = "127.0.0.1"
@@ -331,6 +332,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         matches = []
         actions = [Drop()]
         priorty = 0
+        table = LASTTABLE
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
                                                      table,
@@ -596,7 +598,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 results += self._translate_MatchActionLCRule(datapath,
                                                              endpoint_table,
                                                              of_cookie,
-                                                             mperule)
+                                                             mperule,
+                                                             priority)
                 virtual_endpoint_ports.append(port)
             # Corsa Bandwidth limiting case
             else:
@@ -613,7 +616,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 results += self._translate_MatchActionLCRule(datapath,
                                                              endpoint_table,
                                                              of_cookie,
-                                                             mperule)
+                                                             mperule,
+                                                             priority)
                 
                 matches = [IN_PORT(self.corsa_bw_in),
                            VLAN_VID(mperule.get_intermediate_vlan())]
@@ -623,7 +627,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 results += self._translate_MatchActionLCRule(datapath,
                                                              endpoint_table,
                                                              of_cookie,
-                                                             mperule)
+                                                             mperule,
+                                                             priority)
 
                 matches = [IN_PORT(self.corsa_bw_in),
                            VLAN_VID(mperule.get_intermediate_vlan())]
@@ -632,7 +637,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 results += self._translate_MatchActionLCRule(datapath,
                                                              endpoint_table,
                                                              of_cookie,
-                                                             mperule)
+                                                             mperule,
+                                                             priority)
                 
                 virtual_endpoint_ports.append(self.cors_bw_out)
 
@@ -700,6 +706,37 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          priority)
                 
         return results
+    
+    def _translate_FloodTreeLCRule(self, datapath, switch_table,
+                                   of_cookie, ftrule):
+        ''' This translate FloodTreeLCRules. FloodTreeLCRules are for ports on a
+            broadcast flood tree, so len(ports) number of rules need to be 
+            installed for each FloodTreeLCRule.
+            Returns a list of TranslatedRUleContainers
+        '''
+        results = []
+        switch_id = 0 # This is unimportant: it's never used in the translation
+        priority = 1 # Should be a last priority rule
+        
+        ports = ftrule.get_ports()
+        
+        for port in ports:
+            matches = [IN_PORT(port), ETH_DST('ff:ff:ff:ff:ff:ff')]
+            actions = []
+
+            # Forward to all other ports
+            for dstport in ports:
+                if dstport == port:
+                    continue
+                actions.append(Forward(dstport))
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         switch_table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+        return results
+            
                                    
         
     def _translate_LCMatch(self, datapath, matches, table):
@@ -934,6 +971,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                                 flood_table,
                                                                 of_cookie,
                                                                 sdx_rule)
+        elif isinstance(sdx_rule, FloodTreeLCRule):
+            switch_table = FORWARDINGTABLE
+            switch_rules = self._translate_FloodTreeLCRule(datapath,
+                                                           switch_table,
+                                                           of_cookie,
+                                                           sdx_rule)
 
         
             
