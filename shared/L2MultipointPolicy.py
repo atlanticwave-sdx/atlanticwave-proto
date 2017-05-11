@@ -10,7 +10,7 @@ from shared.L2MultipointFloodLCRule import L2MultipointFloodLCRule
 
 jsonstring = "l2multipoint"
 
-class L2MultipontPolicy(UserPolicy):
+class L2MultipointPolicy(UserPolicy):
     ''' This policy is for network administrators to create L2 multipoint LANs, 
         similar to MetroEthernet's E-LAN
 
