@@ -364,20 +364,24 @@ class RestAPI(SingletonMixin):
             if 'starttime' in request.args:
                 data["starttime"] = request.args["starttime"]
                 data["endtime"] = request.args["endtime"]
-                data["endpoints"] = request.args["endpoints"]
+                endpoints = request.args["endpoints"]
                 data["bandwidth"] = request.args["bandwidth"]
             elif 'starttime' in request.form:
                 data["starttime"] = request.form["starttime"]
                 data["endtime"] = request.form["endtime"]
-                data["endpoints"] = request.form["endpoints"]
+                endpoints = request.form["endpoints"]
                 data["bandwidth"] = request.form["bandwidth"]
             else: raise Exception('invalid rule')
         except: raise Exception('Invalid Rule Parameters')
 
+        # Process Endpoints here:
+        d = json.loads(endpoints)
+        data['endpoints'] = d['endpoints']
+
         policy = L2MultipointPolicy(flask_login.current_user.id,{'l2multipoint':data})
         rule_hash = RuleManager.instance().add_rule(policy)
 
-        return rule_hash
+        return {'l2multipoint':data}
 
     # Get information about a specific rule IDed by hash.
     @staticmethod

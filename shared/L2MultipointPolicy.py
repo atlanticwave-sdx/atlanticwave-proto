@@ -36,7 +36,6 @@ class L2MultipointPolicy(UserPolicy):
 
     print jsonstring
     def __init__(self, username, json_rule):
-        print 8
         self.start_time = None
         self.stop_time = None
         self.bandwidth = None
@@ -46,12 +45,10 @@ class L2MultipointPolicy(UserPolicy):
         self.intermediate_vlan = None
         self.tree = None
         
-        print 9
         super(L2MultipointPolicy, self).__init__(username,
                                                  "L2Multipoint",
                                                  json_rule)
 
-        print 10
         # Anything specific here?
         pass
 
@@ -205,9 +202,9 @@ class L2MultipointPolicy(UserPolicy):
         if jsonstring not in json_rule.keys():
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
-        self.start_time = json_rule['l2tunnel']['starttime']
-        self.stop_time =  json_rule['l2tunnel']['endtime']
-        self.bandwidth = int(json_rule['l2tunnel']['bandwidth'])
+        self.start_time = json_rule[jsonstring]['starttime']
+        self.stop_time =  json_rule[jsonstring]['endtime']
+        self.bandwidth = int(json_rule[jsonstring]['bandwidth'])
         # Make sure end is after start and after now.
         #FIXME
 
