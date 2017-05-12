@@ -4,9 +4,12 @@
 # Login based on example code from https://github.com/maxcountryman/flask-login
 
 from lib.Singleton import SingletonMixin
+
+from shared.L2MultipointPolicy import L2MultipointPolicy
 from shared.L2TunnelPolicy import L2TunnelPolicy
 from shared.EndpointConnectionPolicy import EndpointConnectionPolicy
 from shared.SDXControllerConnectionManager import *
+
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
 from RuleManager import RuleManager
@@ -347,11 +350,38 @@ class RestAPI(SingletonMixin):
             rule_hash = RuleManager.instance().add_rule(policy)
 
         print rule_hash
-        return flask.redirect('/rule/' + str(rule_hash))
+        return flask.redirect('/rule/hash/' + str(rule_hash))
+
+    @staticmethod
+    @app.route('/rule/l2m')
+    def make_L2M():
+        data = {
+            "starttime":None,
+            "endtime":None,
+            "endpoints": [],
+            "bandwidth": None}
+        try:
+            if 'starttime' in request.args:
+                data["starttime"] = request.args["starttime"]
+                data["endtime"] = request.args["endtime"]
+                data["endpoints"] = request.args["endpoints"]
+                data["bandwidth"] = request.args["bandwidth"]
+            elif 'starttime' in request.form:
+                data["starttime"] = request.form["starttime"]
+                data["endtime"] = request.form["endtime"]
+                data["endpoints"] = request.form["endpoints"]
+                data["bandwidth"] = request.form["bandwidth"]
+            else: raise Exception('invalid rule')
+        except: raise Exception('Invalid Rule Parameters')
+
+        policy = L2MultipointPolicy(flask_login.current_user.id,{'l2multipoint':data})
+        rule_hash = RuleManager.instance().add_rule(policy)
+
+        return rule_hash
 
     # Get information about a specific rule IDed by hash.
     @staticmethod
-    @app.route('/rule/<rule_hash>',methods=['GET','POST'])
+    @app.route('/rule/hash/<rule_hash>',methods=['GET','POST'])
     def get_rule_details_by_hash(rule_hash):
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
 

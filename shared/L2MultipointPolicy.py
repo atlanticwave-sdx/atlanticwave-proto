@@ -1,7 +1,6 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
-
 from UserPolicy import *
 from datetime import datetime
 from shared.constants import *
@@ -35,7 +34,9 @@ class L2MultipontPolicy(UserPolicy):
         parsing things into the appropriate types (int, for instance).
     '''
 
+    print jsonstring
     def __init__(self, username, json_rule):
+        print 8
         self.start_time = None
         self.stop_time = None
         self.bandwidth = None
@@ -45,10 +46,12 @@ class L2MultipontPolicy(UserPolicy):
         self.intermediate_vlan = None
         self.tree = None
         
+        print 9
         super(L2MultipointPolicy, self).__init__(username,
                                                  "L2Multipoint",
                                                  json_rule)
 
+        print 10
         # Anything specific here?
         pass
 
