@@ -93,12 +93,12 @@ class L2MultipointPolicy(UserPolicy):
 
         # Get the tree between all nodes and reserve resources
         nodes = [d["switch"] for d in self.endpoints]
-        self.tree = tm.find_valid_steiner_tree(self, nodes)
+        self.tree = tm.find_valid_steiner_tree(nodes, self.bandwidth)
         self.intermediate_vlan = tm.find_vlan_on_tree(self.tree)
         if self.intermediate_vlan == None:
             raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
-        tm.reserve_vlan_on_path(self.fullpath, self.intermediate_vlan)
-        tm.reserve_bw_on_path(self.fullpath, self.bandwidth)
+        tm.reserve_vlan_on_tree(self.tree, self.intermediate_vlan)
+        tm.reserve_bw_on_tree(self.tree, self.bandwidth)
 
         
         #nodes = topology.nodes(data=True)
@@ -121,10 +121,15 @@ class L2MultipointPolicy(UserPolicy):
         
         covered_nodes = []
         # Endpoints
-        for (node, port, vlan) in self.endpoints:
+        for switch in self.endpoints:
+            node = switch['switch']
+            port = switch['port']
+            vlan = switch['vlan']
+
             if node in covered_nodes:
                 continue
             location = node
+            print "location: %s" % location
             shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             intermediate_vlan = self.intermediate_vlan
@@ -155,7 +160,7 @@ class L2MultipointPolicy(UserPolicy):
             bd = UserPolicyBreakdown(shortname, [])
 
             rule = L2MultipointEndpointLCRule(switch_id, flooding_ports,
-                                              endpoints_ports_and_vlans,
+                                              endpoint_ports_and_vlans,
                                               intermediate_vlan, bandwidth)
 
             bd.add_to_list_of_rules(rule)
@@ -173,22 +178,23 @@ class L2MultipointPolicy(UserPolicy):
             intermediate_vlan = self.intermediate_vlan
             flooding_ports = []
 
-            # Flooding ports are all ports on the Steiner Tree (which is a subset
-            # of the full topology)
-            for neighbor in self.tree.neighbors():
+            # Flooding ports are all ports on the Steiner Tree (which is a
+            # subset of the full topology)
+            for neighbor in self.tree.neighbors(node):
                 flooding_ports.append(topology.edge[node][neighbor][node])
 
             # Make breakdown
             bd = UserPolicyBreakdown(shortname, [])
 
-            rule = L2MultpointFloodLCRule(switch_id, flooding_ports,
-                                          intermediate_vlan)
+            rule = L2MultipointFloodLCRule(switch_id, flooding_ports,
+                                           intermediate_vlan)
 
             bd.add_to_list_of_rules(rule)
             self.breakdown.append(bd)
             covered_nodes.append(node)
         
         # Return the breakdown, now that we've finished.
+        print "RETURNING BREAKDOWN %s" % self.breakdown
         return self.breakdown
 
     
