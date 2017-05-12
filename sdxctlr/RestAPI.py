@@ -381,7 +381,7 @@ class RestAPI(SingletonMixin):
         policy = L2MultipointPolicy(flask_login.current_user.id,{'l2multipoint':data})
         rule_hash = RuleManager.instance().add_rule(policy)
 
-        return {'l2multipoint':data}
+        return str({'l2multipoint':data})
 
     # Get information about a specific rule IDed by hash.
     @staticmethod

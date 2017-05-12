@@ -589,7 +589,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # virtual_endpoint_ports are there due to the Corsa Bandwidth management
         # changing where 
         virtual_endpoint_ports = []
-        for (port,vlan) in mpfrule.get_endpoint_ports_and_vlans():
+        for (port,vlan) in mperule.get_endpoint_ports_and_vlans():
             if self.corsa_url == "":
                 matches = [IN_PORT(port), VLAN_VID(vlan)]
                 actions = [SetField(VLAN_VID(mperule.get_intermediate_vlan())),
@@ -598,9 +598,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 results += self._translate_MatchActionLCRule(datapath,
                                                              endpoint_table,
                                                              of_cookie,
-                                                             mperule,
+                                                             marule,
                                                              priority)
-                virtual_endpoint_ports.append(port)
+                virtual_endpoint_ports.append((port,
+                                               vlan))
             # Corsa Bandwidth limiting case
             else:
                 # - Endpoint port on VLAN in  to BW-in-port    on VLAN out
@@ -616,7 +617,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 results += self._translate_MatchActionLCRule(datapath,
                                                              endpoint_table,
                                                              of_cookie,
-                                                             mperule,
+                                                             marule,
                                                              priority)
                 
                 matches = [IN_PORT(self.corsa_bw_in),
@@ -627,7 +628,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 results += self._translate_MatchActionLCRule(datapath,
                                                              endpoint_table,
                                                              of_cookie,
-                                                             mperule,
+                                                             marule,
                                                              priority)
 
                 matches = [IN_PORT(self.corsa_bw_in),
@@ -637,10 +638,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 results += self._translate_MatchActionLCRule(datapath,
                                                              endpoint_table,
                                                              of_cookie,
-                                                             mperule,
+                                                             marule,
                                                              priority)
                 
-                virtual_endpoint_ports.append(self.cors_bw_out)
+                virtual_endpoint_ports.append((self.corsa_bw_out,
+                                               vlan))
 
                 # Corsa REST API
                 bridge = self.corsa_rate_limit_bridge
@@ -696,6 +698,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          marule,
                                                          priority)
             actions = []
+            print "VIRTUAL_ENDPOINT_PORTS = %s, %s" % (virtual_endpoint_ports,
+                                                       type(virtual_endpoint_ports,))
             for (outport,end_vlan) in virtual_endpoint_ports:
                 actions += [SetField(VLAN_VID(end_vlan)), Forward(outport)]
             marule = MatchActionLCRule(switch_id, matches, actions)
@@ -951,13 +955,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                           switch_table,
                                                           of_cookie,
                                                           sdx_rule)
-            self.logger.error("EdgePortLCRule: %d:%d:%s" % (switch_table,
-                                                            of_cookie,
-                                                            sdx_rule))
             self._register_packet_in_cb(of_cookie, self.unknown_source_cb)
         elif isinstance(sdx_rule, L2MultipointFloodLCRule):
             # Installs 
             switch_table = FORWARDINGTABLE
+            self.logger.error("L2MultipointFlood: %d:%d:%s" % (switch_table,
+                                                               of_cookie,
+                                                               sdx_rule))
+
             switch_rules = self._translate_L2MultipointFloodLCRule(datapath,
                                                                    switch_table,
                                                                    of_cookie,
@@ -966,6 +971,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Uses
             endpoint_table = L2TUNNELTABLE
             flood_table = FORWARDINGTABLE
+            self.logger.error("L2MultipointEndpo: %d,%d:%d:%s" % (
+                endpoint_table, flood_table,
+                of_cookie,
+                sdx_rule))
             switch_rules = self._translate_L2MultipointEndpointLCRule(datapath,
                                                                 endpoint_table,
                                                                 flood_table,
