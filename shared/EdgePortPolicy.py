@@ -51,7 +51,7 @@ class EdgePortPolicy(UserPolicy):
             
     def breakdown_rule(self, tm, ai):
         ''' There are two stages to breaking down these rules:
-              - determine edge ports
+              - determine edge ports for the local switch
               - create EdgePortLCRules for each edge port
             To determine which ports are edge port, we look at each port and see
             what type the neighbor is. If they are a "switch" type, then that's
@@ -61,35 +61,21 @@ class EdgePortPolicy(UserPolicy):
         self.breakdown = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
+        switch_id = topology.node[self.switch]['dpid']
+        shortname = topology.node[self.switch]['locationshortname']
 
-        switches = []
-        for (name, data) in topology.nodes(data=True):
-            if data['type'] == "switch":
-                switch = data
-                switch['name'] = name
-                switches.append(switch)
+        bd = UserPolicyBreakdown(shortname, [])
 
-        for sw in switches:
-            neighbors = topology.neighbors(sw['name'])
-            edges = []
-            for n in neighbors:
-                if topology.node[n]['type'] == "switch":
-                    next
-                # Add port to list
-                edges.append(topology.edge[n][sw['name']])
-
-            if len(edges) > 0:
-                switch_id = sw['dpid']
-                shortname = sw['locationshortname']
-                bd = UserPolicyBreakdown(shortname, [])
-
-                for e in edges:
-                    epr = EdgePortLCRule(switch_id, e[sw['name']])
-                    bd.add_to_list_of_rules(epr)
-
-                self.breakdown.append(bd)
+        for neighbor in topology.neighbors(self.switch):
+            if topology.node[neighbor]['type'] == "switch":
+                continue
+            # Not a switch neighbor, so it's an edge port
+            edge_port = topology[self.switch][neighbor][self.switch]
+            
+            epr = EdgePortLCRule(switch_id, edge_port)
+            bd.add_to_list_of_rules(epr)
         
-        # Return the breakdown, now that we've finished.
+        self.breakdown.append(bd)
         return self.breakdown
 
     

@@ -10,7 +10,7 @@ VLAN_MAX = 4095
 class EdgePortLCRule(LCRule):
     ''' This structure is used to pass the identities of edge ports during 
         initial bootstrapping of switches.
-        Created by LearnedDestinationPolicy. '''
+        Created by EdgePortPolicy. '''
 
     def __init__(self, switch_id, edgeport):
         ''' Field descriptions:

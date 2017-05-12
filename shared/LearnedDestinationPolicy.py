@@ -98,39 +98,34 @@ class LearnedDestinationPolicy(UserPolicy):
         covered = []
 
         for sw in switches:
-            if sw['name'] in covered:
-                next
-            path = nx.shortest_path(topology,
-                                    source=sw['name'],
-                                    target=self.dst_switch)
-            # Special case: switch at destination. This needs to be handled
-            # slightly differently. Destination switch will be path[-1].
-            if path[-1] not in covered:
-                switch_id = topology.node[path[-1]]['dpid']
-                shortname = topology.node[path[-1]]['locationshortname']
+            node = sw['name']
+            switch_id = topology.node[node]['dpid']
+            shortname = topology.node[node]['locationshortname']
+            bd = UserPolicyBreakdown(shortname, [])
+
+            # Special case: destination switch
+            if node == self.dst_switch:
                 lcr = LearnedDestinationLCRule(switch_id,
                                                self.dst_address,
                                                self.dst_port)
-                bd = UserPolicyBreakdown(shortname, [])
-                bd.add_to_list_of_rules(lcr)
-                self.breakdown.append(bd)
-                covered.append(path[-1])
-
-            # The rest of the path
-            for (node, nextnode) in zip(path[0:-2], path[1:-1]):
-                if node in covered:
-                    next
-                switch_id = topology.node[node]['dpid']
-                shortname = topology.node[node]['locationshortname']
-                nextedge = topology.edge[node][nextnode]
-                dst_port = nextedge[node]
-                lcr = LearnedDestinationLCRule(switch_id,
-                                               self.dst_address,
-                                               dst_port)
-                bd = UserPolicyBreakdown(shortname, [])
                 bd.add_to_list_of_rules(lcr)
                 self.breakdown.append(bd)
                 covered.append(node)
+                continue
+
+            # All other switches
+            path = nx.shortest_path(topology,
+                                    source=node,
+                                    target=self.dst_switch)
+            next_node = path[1]
+
+            out_port = topology.edge[node][next_node][node]
+            lcr = LearnedDestinationLCRule(switch_id,
+                                           self.dst_address,
+                                           out_port)
+            bd.add_to_list_of_rules(lcr)
+            self.breakdown.append(bd)
+            covered.append(node)
 
         # Return the breakdown, now that we've finished.
         return self.breakdown

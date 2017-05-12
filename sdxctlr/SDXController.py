@@ -29,6 +29,7 @@ from shared.L2TunnelPolicy import *
 from shared.EndpointConnectionPolicy import *
 from shared.EdgePortPolicy import *
 from shared.LearnedDestinationPolicy import *
+from shared.FloodTreePolicy import *
 
 # Switch Messages
 from shared.switch_messages import *
@@ -118,6 +119,7 @@ class SDXController(SingletonMixin):
         self.rr.add_ruletype("endpointcxn", EndpointConnectionPolicy)
         self.rr.add_ruletype("edgeport", EdgePortPolicy)
         self.rr.add_ruletype("learneddest", LearnedDestinationPolicy)
+        self.rr.add_ruletype("floodtree", FloodTreePolicy)
 
 
         # Start these modules last!
@@ -132,6 +134,10 @@ class SDXController(SingletonMixin):
 
         self.pm = ParticipantManager.instance()      #FIXME - Filename
         self.rapi = RestAPI.instance(options.host,options.port,options.shib)
+
+
+        # Install any rules switches will need. 
+        self._prep_switches()
 
         # Go to main loop 
         if runloop:
@@ -269,7 +275,7 @@ class SDXController(SingletonMixin):
                 pass
 
     def _switch_message_unknown_source(self, data):
-        ''' This handles an SM_UNKNOWN_SOURCE message. 'data' is a dictionary of 
+        ''' This handles an SM_UNKNOWN_SOURCE message. 'data' is a dictionary of
             the following pattern - see shared/switch_messages.py:
               {'switch':name, 'port':number, 'src':address}
         '''
@@ -278,6 +284,14 @@ class SDXController(SingletonMixin):
                                     "dstaddress":data['src']}}
         ldp = LearnedDestinationPolicy(USERNAME, json_rule)
         self.rm.add_rule(ldp)
+
+    def _prep_switches(self):
+        ''' This sends any rules that are necessary to the switches, such as 
+            installing broadcast flooding rules. '''
+        json_rule = {"floodtree":None}
+        ftp = FloodTreePolicy(USERNAME, json_rule)
+        self.rm.add_rule(ftp)
+        
 
 
 def send_no_rules(param):
