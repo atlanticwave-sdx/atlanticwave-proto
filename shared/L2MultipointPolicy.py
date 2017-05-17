@@ -142,20 +142,22 @@ class L2MultipointPolicy(UserPolicy):
             endpoint_ports_and_vlans = [(d['port'],d['vlan']) for
                                          d in self.endpoints
                                          if d['switch'] == node]
+            print "  ENDPOINT PORTS AND VLANS: %s" % endpoint_ports_and_vlans
             endpoint_ports = [d['port'] for d in self.endpoints
                               if d['switch'] == node]
             # for non-endpoint ports, add to flooding_ports
             connected_ports = []
-            for neighbor in topology.neighbors(node):
-                # edge[node][neighbor] gets the edge structure, the [node] at the
-                # end gives us the port on 'node'. Replacing it with [neighbor]
-                # would give us the port on 'neighbor'.
+            for neighbor in self.tree.neighbors(node):
+                # edge[node][neighbor] gets the edge structure, the [node] at
+                # the end gives us the port on 'node'. Replacing it with 
+                # [neighbor] would give us the port on 'neighbor'.
+                # Using topology as it is sure to include all the data.
                 connected_ports.append(topology.edge[node][neighbor][node])
             for p in connected_ports:
                 if p in endpoint_ports:
                     continue
-                flooding_ports.append(port)
-    
+                flooding_ports.append(p)
+            print "  FLOODING PORTS: %s" % flooding_ports
             # Make breakdown
             bd = UserPolicyBreakdown(shortname, [])
 
@@ -168,11 +170,13 @@ class L2MultipointPolicy(UserPolicy):
             covered_nodes.append(node)
 
         # Interior nodes
+        print "INTERIOR NODES!"
         for node in self.tree.nodes():
             # Endpoint nodes can be skipped
             if node in covered_nodes:
                 continue 
             location = node
+            print "location: %s" % location
             shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             intermediate_vlan = self.intermediate_vlan
@@ -182,6 +186,7 @@ class L2MultipointPolicy(UserPolicy):
             # subset of the full topology)
             for neighbor in self.tree.neighbors(node):
                 flooding_ports.append(topology.edge[node][neighbor][node])
+            print "  FLOODING PORTS: %s" % flooding_ports
 
             # Make breakdown
             bd = UserPolicyBreakdown(shortname, [])
