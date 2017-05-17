@@ -69,7 +69,15 @@ class UserPolicy(object):
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
         pass
-    
+
+    def switch_change_callback(self, tm, ai, data):
+        ''' This is called if there is a change triggered by a switch. For 
+            instance, a switch learns of a new endpoint, this will be called.
+            data is an opaque data type that is specific to the particular
+            policy type.
+            May not need to be implemented. '''
+        pass
+
     def set_breakdown(self, breakdown):
         self.breakdown = breakdown
 

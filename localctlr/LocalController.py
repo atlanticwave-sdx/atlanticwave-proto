@@ -46,7 +46,7 @@ class LocalController(SingletonMixin):
         self.switch_connection = RyuControllerInterface(self.name,
                                     self.manifest, self.lcip,
                                     self.ryu_cxn_port, self.openflow_port,
-                                    self.switch_connection_cb)
+                                    self.switch_message_cb)
         self.logger.info("RyuControllerInterface setup finish.")
 
         # Setup connection manager
@@ -161,13 +161,15 @@ class LocalController(SingletonMixin):
         pass
     # Is this necessary?
 
-    def switch_connection_cb(self, cmd, msg):
+    def switch_message_cb(self, cmd, msg):
         ''' Called by SwitchConnection to pass information back from the Switch.
             type is the type of message defined in shared/switch_messages.py.
             msg is the message that's being sent back, which is type dependant.
         '''
-        if cmd == SM_UNKNOWN_SOURCE:
+        if (cmd == SM_UNKNOWN_SOURCE or
+            cmd == SM_L2MULTIPOINT_UNKNOWN_SOURCE)
             self.sdx_connection.send_cmd(cmd, msg)
+
         #FIXME: Else?
             
 

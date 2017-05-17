@@ -259,10 +259,14 @@ class SDXController(SingletonMixin):
                 cmd, data = entry.recv_cmd()
                 self.logger.debug("Received from %s : %s:%s" % 
                                   (entry, cmd, data))
+
+                # Send command to handling function
                 if cmd == SM_UNKNOWN_SOURCE:
-                    # Send command to handling function
                     self._switch_message_unknown_source(data)
-                #elif?
+                # This should be expanded for furture commands. Currently only
+                # handles SM_L2MULTIPOINT_UNKNOWN_SOURCE.
+                elif cmd == SM_L2MULTIPOINT_UNKNOWN_SOURCE:
+                    self._switch_change_callback_handler(data)
 
             # Loop through writable
             for entry in writable:
@@ -285,6 +289,19 @@ class SDXController(SingletonMixin):
         ldp = LearnedDestinationPolicy(USERNAME, json_rule)
         self.rm.add_rule(ldp)
 
+    def _switch_change_callback_handler(self, data):
+        ''' This handles any message for switch_change_callbacks. 'data' is a 
+            dictionary of the following pattern - see shared/switch_messages.py:
+              {'cookie':cookie, 'data':opaque data for handler}
+            The cookie is for looking up the policy that needs to handle this
+            callback. data is opaque data that is passed to the 
+            UserPolicy.switch_change_callback() function.
+        '''
+        cookie = data['cookie']
+        opaque = data['data']
+
+        self.rm.change_callback_dispatch(cookie, opaque)
+        
     def _prep_switches(self):
         ''' This sends any rules that are necessary to the switches, such as 
             installing broadcast flooding rules. '''

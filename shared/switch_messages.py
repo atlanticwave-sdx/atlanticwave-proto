@@ -7,3 +7,6 @@
 
 # Receives a dictionary {'switch':name, 'port':number, 'src':address}
 SM_UNKNOWN_SOURCE = "UNKNOWN_SOURCE"
+
+# Receives a dictionary {'cookie':cookie, 'data':opaque data for handler}
+SM_L2MULTIPOINT_UKNOWN_SOURCE = "L2MULTIPOINT_UKNOWN_SOURCE"

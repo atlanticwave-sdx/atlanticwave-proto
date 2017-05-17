@@ -6,6 +6,7 @@ from datetime import datetime
 from shared.constants import *
 from shared.L2MultipointEndpointLCRule import L2MultipointEndpointLCRule
 from shared.L2MultipointFloodLCRule import L2MultipointFloodLCRule
+from shared.L2MultipointLearnedDestinationLCRule import L2MulipointLearnedDestinationLCRule
 
 jsonstring = "l2multipoint"
 
@@ -247,8 +248,76 @@ class L2MultipointPolicy(UserPolicy):
         # Release VLAN and BW in use
         tm.unreserve_vlan_on_path(self.fullpath, self.intermediate_vlan)
         tm.unreserve_bw_on_path(self.fullpath, self.bandwidth)
+
+    def switch_change_callback(self, tm, ai, data):
+        ''' This is for a learned destination on a L2MultipointPolicy. 
+            The LocalController sent up a message that there was a new 
+            destination on an endpoint point that needs to be learned so more
+            specific (e.g., not flooding) paths are installed.
+            data is a dictionary of the following form:
+               {'dstswitch':switch_id,
+                'dstport':port_number
+                'dstaddress':address}
+            Heavily derived from LearnedDestinationPolicy.breakdown_rule(),
+            but requires some more work due to VLAN translation.
+        '''
         
+        dst_switch = data['dstswitch']
+        dst_port = data['dstport']
+        dst_address = data['dstaddress']
+        intermediate_vlan = self.intermediate_vlan
+        tree = self.tree
+        switches = []        
+        for (name, data) in tree.nodes(data=True):
+            if data['type'] == "switch":
+                switch = data
+                switch['name'] = name
+                switches.append(switch)
+        covered = []
+        breakdowns = []
 
+        for sw in switches:
+            node = sw['name']
+            switch_id = tree.node[node]['dpid']
+            shortname = tree.node[node]['locationshortname']
+            bd = UserPolicyBreakdown(shortname, [])
 
+            # Special case: destination switch
+            if node == dst_switch:
+                # The outbound VLAN here is the translation that we care about.
+                for d in self.endpoints:
+                    if d['switch'] == dst_switch:
+                        outbound_vlan = d['vlan']
+                        break
+                ldr = L2MulipointLearnedDestinationLCRule(switch_id,
+                                                          dst_address,
+                                                          dst_port,
+                                                          intermediate_vlan,
+                                                          outbound_vlan)
+                bd.add_to_list_of_rules(ldr)
+                breakdowns.append(bd)
+                covered.append(node)
+                continue
 
+            # All other switches
+            path = nx.shortest_path(tree,
+                                    source=node,
+                                    target=dst_switch)
+            next_node = path[1]
+
+            out_port = tree.edge[node][next_node][node]
+            ldr = L2MulipointLearnedDestinationLCRule(switch_id,
+                                                      dst_address,
+                                                      out_port,
+                                                      intermediate_vlan,
+                                                      intermediate_vlan)
+            bd.add_to_list_of_rules(ldr)
+            breakdowns.append(bd)
+            covered.append(node)
+
+        # Return the breakdown, now that we've finished.
+        return breakdowns
+            
+                
+        
 

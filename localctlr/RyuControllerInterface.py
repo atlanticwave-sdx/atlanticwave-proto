@@ -158,6 +158,8 @@ class RyuControllerInterface(ControllerInterface):
                     self.logger.debug("Received : %s:%s" % (cmd, data))
                     if cmd == ICX_UNKNOWN_SOURCE:
                         self.lc_callback(SM_UNKNOWN_SOURCE, data)
+                    elif cmd == ICX_L2MULTIPOINT_UNKNOWN_SOURCE:
+                        self.lc_callback(SM_L2MULTIPOINT_UNKNOWN_SOURCE, data)
                     elif cmd == ICX_DATAPATHS:
                         self.logging.info("Received current datapaths: %s" %
                                           data)

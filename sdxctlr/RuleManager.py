@@ -350,7 +350,8 @@ class RuleManager(SingletonMixin):
                                 'ruletype':rule.get_ruletype(),
                                 'state':state,
                                 'starttime':rule.get_start_time(),
-                                'stoptime':rule.get_stop_time()})
+                                'stoptime':rule.get_stop_time(),
+                                'extendedbd':pickle.dumps(None)})
 
         # Restart install timer if it's a rule starting the future
         if state == INACTIVE_RULE:
@@ -372,7 +373,7 @@ class RuleManager(SingletonMixin):
         
 
         if state == ACTIVE_RULE:
-            self._remove_rule(rule)
+            self._remove_rule(rule.get_rule_hash())
 
             if stoptime == self.remove_next_time:
                 self._restart_remove_timer()
@@ -398,17 +399,27 @@ class RuleManager(SingletonMixin):
     def _install_rule(self, rule):
         ''' Helper function that installs a rule into the switch. '''
         try:
-            for bd in rule.get_breakdown():
-                self.send_user_add_rule(bd)
+            self._install_breakdown(rule.get_breakdown())
         except Exception as e: raise
         self._restart_remove_timer()
 
+    def _install_breakdown(self, breakdown):
+        try:
+            for bd in breakdown:
+                self.send_user_add_rule(bd)
+        except Exception as e: raise
 
-    def _remove_rule(self, rule):
+    def _remove_rule(self, rule_hash):
         ''' Helper function that remove a rule from the switch. '''
         try:
+            table_entry = self.rule_table.find_one(hash=rule_hash)
+            rule = pickle.loads(str(table_entry['rule']))
+            extendedbd = pickle.loads(str(table_entry['extendedbd']))
             for bd in rule.get_breakdown():
                 self.send_user_rm_rule(bd)
+            if extendedbd != None:
+                for bd in extendedbd:
+                    self.send_user_rm_rule(bd)
         except Exception as e: raise
         
     def _rule_install_timer_cb(self):
@@ -471,7 +482,7 @@ class RuleManager(SingletonMixin):
             self.rule_table.update({'hash':rule['hash'],
                                     'state':EXPIRED_RULE}, 
                                    ['hash'])
-            self._remove_rule(pickle.loads(str(rule['rule'])))
+            self._remove_rule(rule['hash'])
             # FIXME: Recurrant rules will need to be updated on the install list potentially.
 
         # Set timer for next rule removal, if necessary
@@ -533,3 +544,39 @@ class RuleManager(SingletonMixin):
                                            self._rule_install_timer_cb)
                 self.install_timer.daemon = True
                 self.install_timer.start()
+                
+    def change_callback_dispatch(self, cookie, data):
+        ''' This is used to handle changes callbacks. It performs four main 
+            functions:
+              - Find the policy that this change callback belongs to
+              - Call the change callback with data, possibly receive breakdown
+                to install.
+              - if received breakdown, install it
+              - if received breakdown, update database of installed additional 
+                breakdown.
+        '''
+        table_entry = self.rule_table.find_one(hash=rule_hash)
+        if table_entry == None:
+            raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
+
+        policy = pickle.loads(str(table_entry['rule']))
+
+        breakdown = policy.switch_change_callback(TopologyManager.instance()
+                                                  AuthorizationInspector.instance(),
+                                                  data)
+        if breakdown == None:
+            return
+
+        self._install_breakdown(breakdown)
+
+        extendedbd = pickle.loads(str(table_entry['extendedbd']))
+        if extendedbd == None:
+            extendedbd = breakdown
+        else:
+            for entry in breakdown:
+                extendedbd.add_to_list_of_rules(entry)
+
+        self.rule_table.update({'hash':table_entry['hash'],
+                                'extendedbd':pickle.dumps(extendedbd)},
+                               ['hash'])
+
