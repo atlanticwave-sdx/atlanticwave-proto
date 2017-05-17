@@ -615,6 +615,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          marule,
                                                          priority)           
 
+            #FIXME: this needs to be updated for Bandwidth Management!
         # Endpoint and Flooding ports
         # - Install flooding rules on flood table
         ports = mperule.get_flooding_ports()
