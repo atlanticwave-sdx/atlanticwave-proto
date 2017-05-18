@@ -167,7 +167,7 @@ class LocalController(SingletonMixin):
             msg is the message that's being sent back, which is type dependant.
         '''
         if (cmd == SM_UNKNOWN_SOURCE or
-            cmd == SM_L2MULTIPOINT_UNKNOWN_SOURCE)
+            cmd == SM_L2MULTIPOINT_UNKNOWN_SOURCE):
             self.sdx_connection.send_cmd(cmd, msg)
 
         #FIXME: Else?

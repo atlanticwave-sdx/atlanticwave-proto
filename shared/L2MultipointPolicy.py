@@ -6,7 +6,8 @@ from datetime import datetime
 from shared.constants import *
 from shared.L2MultipointEndpointLCRule import L2MultipointEndpointLCRule
 from shared.L2MultipointFloodLCRule import L2MultipointFloodLCRule
-from shared.L2MultipointLearnedDestinationLCRule import L2MulipointLearnedDestinationLCRule
+from shared.L2MultipointLearnedDestinationLCRule import L2MultipointLearnedDestinationLCRule
+import networkx as nx
 
 jsonstring = "l2multipoint"
 
@@ -35,7 +36,6 @@ class L2MultipointPolicy(UserPolicy):
         parsing things into the appropriate types (int, for instance).
     '''
 
-    print jsonstring
     def __init__(self, username, json_rule):
         self.start_time = None
         self.stop_time = None
@@ -102,8 +102,8 @@ class L2MultipointPolicy(UserPolicy):
         tm.reserve_bw_on_tree(self.tree, self.bandwidth)
 
         
-        #nodes = topology.nodes(data=True)
-        #edges = topology.edges(data=True)
+        #nodes = self.tree.nodes(data=True)
+        #edges = self.tree.edges(data=True)
         #import json
         #print "NODES:"
         #print json.dumps(nodes, indent=2)
@@ -130,7 +130,6 @@ class L2MultipointPolicy(UserPolicy):
             if node in covered_nodes:
                 continue
             location = node
-            print "location: %s" % location
             shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             intermediate_vlan = self.intermediate_vlan
@@ -143,7 +142,6 @@ class L2MultipointPolicy(UserPolicy):
             endpoint_ports_and_vlans = [(d['port'],d['vlan']) for
                                          d in self.endpoints
                                          if d['switch'] == node]
-            print "  ENDPOINT PORTS AND VLANS: %s" % endpoint_ports_and_vlans
             endpoint_ports = [d['port'] for d in self.endpoints
                               if d['switch'] == node]
             # for non-endpoint ports, add to flooding_ports
@@ -158,7 +156,6 @@ class L2MultipointPolicy(UserPolicy):
                 if p in endpoint_ports:
                     continue
                 flooding_ports.append(p)
-            print "  FLOODING PORTS: %s" % flooding_ports
             # Make breakdown
             bd = UserPolicyBreakdown(shortname, [])
 
@@ -171,13 +168,11 @@ class L2MultipointPolicy(UserPolicy):
             covered_nodes.append(node)
 
         # Interior nodes
-        print "INTERIOR NODES!"
         for node in self.tree.nodes():
             # Endpoint nodes can be skipped
             if node in covered_nodes:
                 continue 
             location = node
-            print "location: %s" % location
             shortname = topology.node[location]['locationshortname']
             switch_id = topology.node[location]['dpid']
             intermediate_vlan = self.intermediate_vlan
@@ -187,7 +182,6 @@ class L2MultipointPolicy(UserPolicy):
             # subset of the full topology)
             for neighbor in self.tree.neighbors(node):
                 flooding_ports.append(topology.edge[node][neighbor][node])
-            print "  FLOODING PORTS: %s" % flooding_ports
 
             # Make breakdown
             bd = UserPolicyBreakdown(shortname, [])
@@ -200,7 +194,6 @@ class L2MultipointPolicy(UserPolicy):
             covered_nodes.append(node)
         
         # Return the breakdown, now that we've finished.
-        print "RETURNING BREAKDOWN %s" % self.breakdown
         return self.breakdown
 
     
@@ -267,8 +260,10 @@ class L2MultipointPolicy(UserPolicy):
         dst_address = data['dstaddress']
         intermediate_vlan = self.intermediate_vlan
         tree = self.tree
-        switches = []        
-        for (name, data) in tree.nodes(data=True):
+        topology = tm.get_topology()
+        switches = []
+        for name in tree.nodes():
+            data = topology.node[name]
             if data['type'] == "switch":
                 switch = data
                 switch['name'] = name
@@ -278,8 +273,8 @@ class L2MultipointPolicy(UserPolicy):
 
         for sw in switches:
             node = sw['name']
-            switch_id = tree.node[node]['dpid']
-            shortname = tree.node[node]['locationshortname']
+            switch_id = topology.node[node]['dpid']
+            shortname = topology.node[node]['locationshortname']
             bd = UserPolicyBreakdown(shortname, [])
 
             # Special case: destination switch
@@ -289,11 +284,11 @@ class L2MultipointPolicy(UserPolicy):
                     if d['switch'] == dst_switch:
                         outbound_vlan = d['vlan']
                         break
-                ldr = L2MulipointLearnedDestinationLCRule(switch_id,
-                                                          dst_address,
-                                                          dst_port,
-                                                          intermediate_vlan,
-                                                          outbound_vlan)
+                ldr = L2MultipointLearnedDestinationLCRule(switch_id,
+                                                           dst_address,
+                                                           dst_port,
+                                                           intermediate_vlan,
+                                                           outbound_vlan)
                 bd.add_to_list_of_rules(ldr)
                 breakdowns.append(bd)
                 covered.append(node)
@@ -306,11 +301,11 @@ class L2MultipointPolicy(UserPolicy):
             next_node = path[1]
 
             out_port = tree.edge[node][next_node][node]
-            ldr = L2MulipointLearnedDestinationLCRule(switch_id,
-                                                      dst_address,
-                                                      out_port,
-                                                      intermediate_vlan,
-                                                      intermediate_vlan)
+            ldr = L2MultipointLearnedDestinationLCRule(switch_id,
+                                                       dst_address,
+                                                       out_port,
+                                                       intermediate_vlan,
+                                                       intermediate_vlan)
             bd.add_to_list_of_rules(ldr)
             breakdowns.append(bd)
             covered.append(node)

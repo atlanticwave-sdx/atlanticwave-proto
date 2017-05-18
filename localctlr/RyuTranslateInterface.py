@@ -34,6 +34,7 @@ from shared.LearnedDestinationLCRule import *
 from shared.EdgePortLCRule import *
 from shared.L2MultipointEndpointLCRule import *
 from shared.L2MultipointFloodLCRule import *
+from shared.L2MultipointLearnedDestinationLCRule import *
 from shared.FloodTreeLCRule import *
 
 
@@ -296,6 +297,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def packet_in_handler(self, ev):
         # Look through the packet_in_cbs's dictionary and send it onwards.
         cookie = ev.msg.cookie
+
         if cookie in self.packet_in_cbs:
             cb = self.packet_in_cbs[cookie]
             cb(ev)
@@ -319,7 +321,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         for table in ALL_TABLES_EXCEPT_LAST:
             matches = [] # FIXME: what's the equivalent of match(*)?
             actions = [Continue()]
-            priority = 0
+            priority = PRIORITY_DEFAULT
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
                                                          table,
@@ -331,7 +333,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         #   - Create a default drop rule (if necessary needed). Priority 0
         matches = []
         actions = [Drop()]
-        priorty = 0
+        priorty = PRIORITY_DEFAULT
         table = LASTTABLE
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
@@ -515,7 +517,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         switch_id = 0 # This is unimportant: it's never used in the translation
         matches = [ETH_DST(ldrule.get_dst_address())]
         actions = [Forward(ldrule.get_outport())]
-        priority = 2
+        priority = PRIORITY_GENERIC_LEARNED
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
                                                      switch_table,
@@ -534,7 +536,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         switch_id = 0 # This is unimportant: it's never used in the translation
         matches = [IN_PORT(eprule.get_edgeport())]
         actions = [Continue(), Forward(OFPP_CONTROLLER)]
-        priority = 1
+        priority = PRIORITY_GENERIC_LEARNING
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
                                                      switch_table,
@@ -561,14 +563,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
             for outport in mpfrule.get_flooding_ports():
                 if outport != port:
                     actions.append(Forward(outport))
-            priority = 2
+            priority = PRIORITY_L2M_FLOOD_FORWARDING
             marule = MatchActionLCRule(switch_id, matches, actions) 
             results += self._translate_MatchActionLCRule(datapath,
                                                          switch_table,
                                                          of_cookie,
                                                          marule,
                                                          priority)
-       return results
+        return results
 
     def _translate_L2MultipointEndpointLCRule(self, datapath,
                                               endpoint_table,
@@ -586,7 +588,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
         results = []
         switch_id = 0 # This is unimportant: it's never used in the translation
-        priority = 3 # must be higher than L2MultipointLearnedDestinationLCRules
         intermediate_vlan = mperule.get_intermediate_vlan()
 
 
@@ -597,7 +598,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
             matches = [IN_PORT(port), VLAN_VID(vlan)]
             actions = [SetField(VLAN_VID(intermediate_vlan)), Continue()]
-            priority = 2
+            priority = PRIORITY_L2MULTIPOINT
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
                                                          endpoint_table,
@@ -607,34 +608,52 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
             actions = [Continue(), Forward(OFPP_CONTROLLER)]
-            priority = 2
+            priority = PRIORITY_L2MULTIPOINT_LEARNING
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
                                                          learning_table,
                                                          of_cookie,
                                                          marule,
-                                                         priority)           
+                                                         priority)
 
             #FIXME: this needs to be updated for Bandwidth Management!
-        # Endpoint and Flooding ports
+        # Endpoint and Flooding ports.
         # - Install flooding rules on flood table
-        ports = mperule.get_flooding_ports()
-        ports += [port for (port,vlan) in
-                  mperule.get_endpoint_ports_and_vlans()]
+        flooding_ports = mperule.get_flooding_ports()
+        endpoint_ports = [port for (port,vlan) in
+                          mperule.get_endpoint_ports_and_vlans()]
+        ports = flooding_ports + endpoint_ports
 
         for port in ports:
             matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
             actions = []
-            for outport in ports:
+            for outport in flooding_ports:
                 if outport != port:
                     actions.append(Forward(outport))
-            priority = 2
+            for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
+                if outport != port:
+                    actions.append(SetField(VLAN_VID(vlan)))
+                    actions.append(Forward(outport))
+            priority = PRIORITY_L2M_FLOOD_FORWARDING
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
                                                          flood_table,
                                                          of_cookie,
                                                          marule,
                                                          priority)
+
+            matches = [IN_PORT(port), 
+                       VLAN_VID(intermediate_vlan), 
+                       ETH_DST('ff:ff:ff:ff:ff:ff')]
+            # Same actions as above, no need to rebuild
+            priority = PRIORITY_L2M_BROADCAST_FORWARDING
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         flood_table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+            
         return results
 
     
@@ -650,15 +669,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
         results = []
         switch_id = 0 # This is unimportant: it's never used in the translation
-        matches = [ETH_DST(ldrule.get_dst_address())]
+        matches = [VLAN_VID(ldrule.get_intermediate_vlan)(),
+                   ETH_DST(ldrule.get_dst_address())]
         actions = None
         # Non-endpoints
         if ldrule.get_intermediate_vlan() == ldrule.get_out_vlan():
             actions = [Forward(ldrule.get_outport())]
         else:
-            actions = [SetFiled(VLAN_VID(ldrule.get_out_vlan())),
+            actions = [SetField(VLAN_VID(ldrule.get_out_vlan())),
                        Forward(ldrule.get_outport())]
-        priority = 3
+        priority = PRIORITY_L2M_DESTINATION_FORWARDING
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
                                                      switch_table,
@@ -677,7 +697,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
         results = []
         switch_id = 0 # This is unimportant: it's never used in the translation
-        priority = 1 # Should be a last priority rule
+        priority = PRIORITY_FLOOD_FORWARDING
         
         ports = ftrule.get_ports()
         
@@ -1065,7 +1085,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def _find_sdx_cookie(self, of_cookie):
         ''' Loops up the SDX cookie in local database based on a provided
             of_cookie. '''
-        resule = self.rule_table.find_one(switchcookie=of_cookie)
+        result = self.rule_table.find_one(switchcookie=of_cookie)
         if result == None:
             return None
         return result['sdxcookie']
@@ -1109,7 +1129,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         actions = [Continue()]
         table = LEARNINGTABLE
         of_cookie = ev.msg.cookie    # Keep the same cookie as the original rule
-        priority = 2
+        priority = PRIORITY_GENERIC_LEARNED
         marule = MatchActionLCRule(switch_id, matches, actions)
         results = self._translate_MatchActionLCRule(datapath,
                                                     table,
@@ -1123,9 +1143,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         ''' Handles new unknown source callbacks on L2MultipointPolicy edge
             ports. This is very similar to unknown_source_cb(). 
         '''
-
         # Send info to SDX Controller
-                switch_id = 0  # This is unimportant:
+        switch_id = 0  # This is unimportant:
                        # it's never used in the translation
 
         datapath = ev.msg.datapath
@@ -1148,7 +1167,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         matches = [IN_PORT(port), ETH_SRC(src_address)]
         actions = [Continue()]
         table = LEARNINGTABLE
-        priority = 2
+        priority = PRIORITY_L2MULTIPOINT_LEARNED
         marule = MatchActionLCRule(switch_id, matches, actions)
         results = self._translate_MatchActionLCRule(datapath,
                                                     table,

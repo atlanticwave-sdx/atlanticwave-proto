@@ -555,13 +555,13 @@ class RuleManager(SingletonMixin):
               - if received breakdown, update database of installed additional 
                 breakdown.
         '''
-        table_entry = self.rule_table.find_one(hash=rule_hash)
+        table_entry = self.rule_table.find_one(hash=cookie)
         if table_entry == None:
             raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
 
         policy = pickle.loads(str(table_entry['rule']))
 
-        breakdown = policy.switch_change_callback(TopologyManager.instance()
+        breakdown = policy.switch_change_callback(TopologyManager.instance(),
                                                   AuthorizationInspector.instance(),
                                                   data)
         if breakdown == None:
@@ -574,7 +574,7 @@ class RuleManager(SingletonMixin):
             extendedbd = breakdown
         else:
             for entry in breakdown:
-                extendedbd.add_to_list_of_rules(entry)
+                extendedbd.append(entry)
 
         self.rule_table.update({'hash':table_entry['hash'],
                                 'extendedbd':pickle.dumps(extendedbd)},
