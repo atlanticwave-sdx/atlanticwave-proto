@@ -221,7 +221,7 @@ class RuleManager(SingletonMixin):
         # Handle ordering, if necessary.
         if ordering != None:
             filter['order_by'] = ordering
-        
+
         # Do the search on the table
         results = self.rule_table.find(**filter)
 
@@ -233,6 +233,79 @@ class RuleManager(SingletonMixin):
                    pickle.loads(str(x['rule'])).get_user(),
                    STATE_TO_STRING(str(x['state']))) for x in results]
         return retval
+
+    def validate_filter(self, rulefilter):
+        """ This method supports the method get_hash. Because get_hash is 
+        based on kind-of match fields, this method makes sure minimum 
+        parameters were passed by user. The params needed are:
+        srcvlan, srcport and src_switch. 
+        
+        Args:
+            rulefilter: params provided by user via REST
+        Returns:
+            True and a dict if all fields are present
+            False and a msg if otherwise
+        """
+        import urlparse
+        try:
+            rulefilter = dict(urlparse.parse_qsl(rulefilter))
+            match = {'srcvlan': rulefilter['srcvlan'],
+                     'srcport': rulefilter['srcport'],
+                     'srcswitch': rulefilter['srcswitch']}
+        except Exception as err:
+            msg = "Argument filter missing: %s" % err
+            return False, msg
+
+        return True, match
+
+    def filter_vlan_port_return_hash(self, rule, values):
+        """ This method compares a rule with the parameters provided
+        by the user using REST. 
+        
+        Args:
+            rule: a rule from the self.rule_table
+            values: search parameters
+        Returns:
+            hash (int) if rule matches
+            0 if rule does not match
+            False if error (if someday the rule_table changes)
+        """
+        try:
+            hash = rule['hash']
+            rule = pickle.loads(str(rule['rule'])).get_json_rule()
+            rule = rule['l2tunnel']
+            if rule['srcswitch'] == values['srcswitch']:
+                if rule['srcvlan'] == values['srcvlan']:
+                    if rule['srcport'] == values['srcport']:
+                        return hash
+            return 0
+        except Exception as err:
+            print("Rule Error: %s" % err)
+            return False
+
+    def get_hash(self, rulefilter):
+        """ Method used to retrieve the rule hash using a set of search
+        parameters provided via REST. The initial use for this method is
+        compatibility with NSI, but it can be expanded for other remote
+        apps. 
+        Args:
+            rulefilter: REST received parameters
+        Returns:
+            JSON output: 'error' or 'result'
+            'error' in case there is an error in the params provided
+            'result' otherwise.
+        """
+        import json
+        # Validate filter
+        result, values = self.validate_filter(rulefilter)
+        if result is False:
+            return json.dumps({'error': values})
+
+        for mrule in self.rule_table:
+            hash = self.filter_vlan_port_return_hash(mrule, values)
+            if isinstance(hash, int) and hash is not 0:
+                return json.dumps({'result': hash})
+        return json.dumps({'result': 'rule not found'})
 
     def get_rule_details(self, rule_hash):
         ''' This will return details of a rule, including the rule itself, the 

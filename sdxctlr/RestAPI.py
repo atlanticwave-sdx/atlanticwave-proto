@@ -397,6 +397,23 @@ class RestAPI(SingletonMixin):
             return str(RuleManager.instance().get_rules(filter={query},ordering=query))
         return unauthorized_handler()
 
+    @staticmethod
+    @app.route('/rule/get_id/<query>')
+    def get_rule_hash(query):
+        """ REST method used to retrieve the rule hash using a set of search
+        parameters provided via REST. The initial use for this method is
+        compatibility with NSI, but it can be expanded for other remote
+        apps. 
+        Args:
+            <query>: POST parameters
+        Returns:
+            JSON output received from get_hash: 'error' or 'result'
+            'error' in case there is an error in the params provided
+            'result' otherwise.
+        """
+        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id, 'search_rules'):
+            return RuleManager.instance().get_hash(rulefilter=query)
+        return unauthorized_handler()
 
 if __name__ == "__main__":
     def blah(param):
