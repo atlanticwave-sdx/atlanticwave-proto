@@ -757,13 +757,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 args[f.get_name()] = f.get()
                 aa_results.append(parser.OFPActionSetField(**args))
                 continue
-            elif isinstance(action, WriteMetadata):
-                (value, mask) = action.get()
-                aa_results.append(parser.OFPInstructionWriteMetadata(value,
-                                                                     mask))
-
+            elif isinstance(action, PushVLAN):
+                aa_results.append(parser.OFPActionPushVlan())
+                continue
+            elif isinstance(action, PopVLAN):
+                aa_results.append(parser.OFPActionPushVlan())
+                continue
             # If we've gotten this far, that means the next action is *not* a
-            # Forward, SetField, or WriteMetadata action, but will use a
+            # Forward, SetField, PushVLAN, or PopVLAN action, but will use a
             # different Instruction type, so wrap up the existing actions in an
             # APPLY_ACTIONS instruction first.
             # This is a bit dirty and confusing, sadly.
@@ -790,6 +791,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 instructions.append(parser.OFPInstructionGotoTable(table + 1))
             elif isinstance(action, GotoTable):
                 instructions.append(parser.OFPInstructionGotoTable(action.get()))
+            # WriteMetadata is a separate instruction, so must be handled
+            # separetely
+            elif isinstance(action, WriteMetadata):
+                (value, mask) = action.get()
+                aa_results.append(parser.OFPInstructionWriteMetadata(value,
+                                                                     mask))
+
         # Are there any values in aa_results? If so, put them in APPLY_ACTIONS
         if len(aa_results) > 0: 
             instructions.append(parser.OFPInstructionActions(

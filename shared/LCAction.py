@@ -52,7 +52,7 @@ class SetField(LCAction):
     def get(self):
         return self.field
 
-class SetMetadata(LCAction):
+class WriteMetadata(LCAction):
     ''' Sets the metadata meta-field. '''
     def __init__(self, value, mask=2**64-1):
         self.value = value
@@ -61,10 +61,27 @@ class SetMetadata(LCAction):
 
     def __str__(self):
         retstr = "%s:%s mask %s" % (self._name, self.value, self.mask)
+        return retstr
 
     def get(self):
         # Returns as tuple (value, mask)
         return (self.value, self.mask)
+
+class PushVLAN(LCAction):
+    def __init__(self):
+        super(PushVLAN, self).__init__("PushVLAN")
+
+    def __str__(self):
+        retstr = "%s" % (self._name)
+        return retstr
+    
+class PopVLAN(LCAction):
+    def __init__(self):
+        super(PopVLAN, self).__init__("PopVLAN")
+
+    def __str__(self):
+        retstr = "%s" % (self._name)
+        return retstr
 
 class Continue(LCAction):
     ''' Continues on to the next table. '''
