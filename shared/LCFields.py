@@ -275,13 +275,19 @@ class VLAN_VID(number_field):
                                self.cfi)
         return retstr
 
+class METADATA(number_field):
+    def __init__(self, value=None, mask=2**64-1):
+        super(METADATA, self).__init__('metadata', value=value,
+                                       minval=0, maxval=2**64-1,
+                                       mask=mask)
+
 
 
 # This needs to be updated whenever there are new valid fields that we will
 # accept.
 VALID_MATCH_FIELDS = [ IN_PORT, ETH_DST, ETH_SRC, ETH_TYPE, IP_PROTO, IPV4_SRC,
                        IPV4_DST, TCP_SRC, TCP_DST, UDP_SRC,
-                       UDP_DST, VLAN_VID ]
+                       UDP_DST, VLAN_VID, METADATA ]
 
 
 # This is a translation mechanism for mapping a name to a class
@@ -302,4 +308,5 @@ MATCH_NAME_TO_CLASS = { 'in_port': {'type':IN_PORT, 'required':None},
                         'udp_src': {'type':UDP_SRC, 'required':None},
                         'udp_dst': {'type':UDP_DST, 'required':None},
                         'vlan_vid': {'type':VLAN_VID, 'required':None},
+                        'metadata': {'type':METADATA, 'required':['mask']},
                        }

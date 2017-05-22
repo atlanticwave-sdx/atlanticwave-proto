@@ -757,10 +757,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 args[f.get_name()] = f.get()
                 aa_results.append(parser.OFPActionSetField(**args))
                 continue
+            elif isinstance(action, WriteMetadata):
+                (value, mask) = action.get()
+                aa_results.append(parser.OFPInstructionWriteMetadata(value,
+                                                                     mask))
 
             # If we've gotten this far, that means the next action is *not* a
-            # Forward or SetField action, but will use a different Instruction
-            # type, so wrap up the existing Forward and SetFields in an
+            # Forward, SetField, or WriteMetadata action, but will use a
+            # different Instruction type, so wrap up the existing actions in an
             # APPLY_ACTIONS instruction first.
             # This is a bit dirty and confusing, sadly.
             if len(aa_results) > 0:
