@@ -574,6 +574,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
     def _translate_L2MultipointEndpointLCRule(self, datapath,
                                               endpoint_table,
+                                              translate_table,
                                               flood_table,
                                               learning_table,
                                               of_cookie, mperule):
@@ -590,69 +591,234 @@ class RyuTranslateInterface(app_manager.RyuApp):
         switch_id = 0 # This is unimportant: it's never used in the translation
         intermediate_vlan = mperule.get_intermediate_vlan()
 
+        # Non-Corsa first
+        if self.corsa_url == "":
+            # Endpoint ports
+            # - Translate VLANs on ingress on endpoint_table
+            # - Install learning rules on intermediate VLAN on ingress on
+            #   learning table
+            for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
+                matches = [IN_PORT(port), VLAN_VID(vlan)]
+                actions = [SetField(VLAN_VID(intermediate_vlan)), Continue()]
+                priority = PRIORITY_L2MULTIPOINT
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             endpoint_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
 
-        # Endpoint ports
-        # - Translate VLANs on ingress on endpoint_table
-        # - Install learning rules on intermediate VLAN on ingress on learning
-        #   table
-        for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-            matches = [IN_PORT(port), VLAN_VID(vlan)]
-            actions = [SetField(VLAN_VID(intermediate_vlan)), Continue()]
+                matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
+                actions = [Continue(), Forward(OFPP_CONTROLLER)]
+                priority = PRIORITY_L2MULTIPOINT_LEARNING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             learning_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+
+
+            # Endpoint and Flooding ports.
+            # - Install flooding rules on flood table
+            flooding_ports = mperule.get_flooding_ports()
+            endpoint_ports = [port for (port,vlan) in
+                              mperule.get_endpoint_ports_and_vlans()]
+            ports = flooding_ports + endpoint_ports
+            
+            for port in ports:
+                matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
+                actions = []
+                for outport in flooding_ports:
+                    if outport != port:
+                        actions.append(Forward(outport))
+                for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
+                    if outport != port:
+                        actions.append(SetField(VLAN_VID(vlan)))
+                        actions.append(Forward(outport))
+                priority = PRIORITY_L2M_FLOOD_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+
+                matches = [IN_PORT(port), 
+                           VLAN_VID(intermediate_vlan), 
+                           ETH_DST('ff:ff:ff:ff:ff:ff')]
+                # Same actions as above, no need to rebuild
+                priority = PRIORITY_L2M_BROADCAST_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+
+        # Corsa Case
+        else:
+            # Endpoint rules
+            for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
+                # - Ingress rule from endpoints -
+                #  - endpoint_table
+                #  - match inport(endpoint), vlan(endpoint)
+                #   - set current VLAN tag to inport's value
+                #   - Push new VLAN tag
+                #   - Set new VLAN tag to intermediate
+                #   - Forward to bw-in port
+                matches = [IN_PORT(port), VLAN_VID(vlan)]
+                actions = [SetField(VLAN_VID(port)),
+                           PushVLAN(),
+                           SetField(VLAN_VID(intermediate_vlan)),
+                           Forward(self.corsa_bw_in)]
+                priority = PRIORITY_L2MULTIPOINT
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             endpoint_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+                
+                # - Translate rule
+                #  - translate_table
+                #  - match metadata(MD_L2M_TRANSLATE), vlan(endpoint)
+                #    See "Rule Needed Once", below, as to why this happens
+                #   - set metadata(endpoint)
+                #   - set VLAN tag to intermediate
+                matches = [METADATA(MD_L2M_TRANSLATE),
+                           VLAN_VID(port)]
+                actions = [WriteMetadata(port),
+                           SetFields(VLAN_VID(Intermediate_vlan))]
+                priority = PRIORITY_L2MULTIPOINT_TRANSLATE
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             translate_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+                                
+                # - Learning rule
+                #  - learning_table
+                #   - match metadata(endpoint), vlan(intermediate)
+                #    - continue
+                #    - Forward to controller
+                matches = [METADATA(port),
+                           VLAN_VID(intermediate_vlan)]
+                actions = [Continue(), Forward(OFPP_CONTROLLER)]
+                priority = PRIORITY_L2MULTIPOINT_LEARNING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             learning_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+
+            # Rule Needed Once
+            # - Ingress rule from bw-out port (bw has been managed)
+            #  - endpoint_table
+            #  - match inport(bw-out), vlan(intermediate)
+            #   - pop outer VLAN
+            #   - set metadata(MD_L2M_TRANSLATE)
+            #   - goto translate_table
+            matches = [IN_PORT(self.corsa_bw_out),
+                       VLAN_VID(intermediate_vlan)]
+            actions = [PopVLAN(),
+                       WriteMetadata(MD_L2M_TRANSLATE),
+                       GotoTable(translate_table)]
             priority = PRIORITY_L2MULTIPOINT
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
-                                                         endpoint_table,
+                                                         translate_table,
                                                          of_cookie,
                                                          marule,
                                                          priority)
 
-            matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
-            actions = [Continue(), Forward(OFPP_CONTROLLER)]
-            priority = PRIORITY_L2MULTIPOINT_LEARNING
-            marule = MatchActionLCRule(switch_id, matches, actions)
-            results += self._translate_MatchActionLCRule(datapath,
-                                                         learning_table,
-                                                         of_cookie,
-                                                         marule,
-                                                         priority)
+            bridge = self.corsa_rate_limit_bridge
+            vlan = intermediate_vlan
+            bandwidth = mperule.get_bandwidth()
 
-            #FIXME: this needs to be updated for Bandwidth Management!
-        # Endpoint and Flooding ports.
-        # - Install flooding rules on flood table
-        flooding_ports = mperule.get_flooding_ports()
-        endpoint_ports = [port for (port,vlan) in
-                          mperule.get_endpoint_ports_and_vlans()]
-        ports = flooding_ports + endpoint_ports
+            tunnel_url = (self.corsa_url + "api/v1/bridges/" +
+                          bridge + "/tunnels?list=true")
+            rest_return = requests.get(tunnel_url,
+                                       headers={'Authorization':
+                                                self.corsa_token},
+                                       verify=False) #FIXME: HARDCODED
 
-        for port in ports:
-            matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
-            actions = []
-            for outport in flooding_ports:
-                if outport != port:
-                    actions.append(Forward(outport))
-            for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
-                if outport != port:
-                    actions.append(SetField(VLAN_VID(vlan)))
-                    actions.append(Forward(outport))
-            priority = PRIORITY_L2M_FLOOD_FORWARDING
-            marule = MatchActionLCRule(switch_id, matches, actions)
-            results += self._translate_MatchActionLCRule(datapath,
-                                                         flood_table,
-                                                         of_cookie,
-                                                         marule,
-                                                         priority)
+            # - Corsa BW Management rule
+            for entry in rest_return.json()['list']:
+                if (entry['vlan-id'] == vlan and
+                    int(entry['port']) in self.corsa_rate_limit_ports):
 
-            matches = [IN_PORT(port), 
-                       VLAN_VID(intermediate_vlan), 
-                       ETH_DST('ff:ff:ff:ff:ff:ff')]
-            # Same actions as above, no need to rebuild
-            priority = PRIORITY_L2M_BROADCAST_FORWARDING
-            marule = MatchActionLCRule(switch_id, matches, actions)
-            results += self._translate_MatchActionLCRule(datapath,
-                                                         flood_table,
-                                                         of_cookie,
-                                                         marule,
-                                                         priority)
+                    request_url = entry['links']['self']['href']
+                    jsonval = [{'op':'replace',
+                                'path':'/meter/cir',
+                                'value':bandwidth},
+                               {'op':'replace',
+                                'path':'/meter/eir',
+                                'value':bandwidth}]
+                    valid_responses = [204]
+
+                    print "Patching %s:%s" % (request_url, json)
+                    results.append(TranslatedCorsaRuleContainer("patch",
+                                                            request_url,
+                                                            jsonval,
+                                                            self.corsa_token,
+                                                            valid_responses))
+
+            # All ports
+            flooding_ports = mperule.get_flooding_ports()
+            endpoint_ports = [port for (port,vlan) in
+                              mperule.get_endpoint_ports_and_vlans()]
+            ports = flooding_ports + endpoint_ports
+            # - Flooding rules for endpoints
+            #  - flood_table
+            #   - match metadata(endpoint), vlan(intermediate)
+            #   - set vlan to outbound port, fwd
+            #    - Repeat for all ports
+            # - Flooding rules for flooding ports
+            #  - flood_table
+            #   - match inport(flood port), vlan(intermediate)
+            #   - set vlan to outbound port, fwd
+            #    - Repeat for all ports
+            for port in ports:
+                matches = []
+                if port in endpoint_ports:
+                    matches = [METADATA(port), VLAN_VID(intermediate_vlan)]
+                elif port in flooding_ports:
+                    matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
+                actions = []
+                for outport in flooding_ports:
+                    if outport != port:
+                        actions.append(Forward(outport))
+                for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
+                    if outport != port:
+                        actions.append(SetField(VLAN_VID(vlan)))
+                        actions.append(Forward(outport))
+                priority = PRIORITY_L2M_FLOOD_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+
+                if port in endpoint_ports:
+                    matches = [METADATA(port), 
+                               VLAN_VID(intermediate_vlan), 
+                               ETH_DST('ff:ff:ff:ff:ff:ff')]
+                elif port in flooding ports:
+                    matches = [IN_PORT(port), 
+                               VLAN_VID(intermediate_vlan), 
+                               ETH_DST('ff:ff:ff:ff:ff:ff')]
+                # Same actions as above, no need to rebuild
+                priority = PRIORITY_L2M_BROADCAST_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
             
         return results
 
@@ -959,6 +1125,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         elif isinstance(sdx_rule, L2MultipointEndpointLCRule):
             # Uses
             endpoint_table = L2TUNNELTABLE
+            translate_table = SDXEGRESSRULETABLE
             flood_table = FORWARDINGTABLE
             learning_table = LEARNINGTABLE
             self.logger.error("L2MultipointEndpo: %d,%d:%d:%s" % (
@@ -967,6 +1134,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 sdx_rule))
             switch_rules = self._translate_L2MultipointEndpointLCRule(datapath,
                                                                 endpoint_table,
+                                                                translate_table,
                                                                 flood_table,
                                                                 learning_table,
                                                                 of_cookie,
