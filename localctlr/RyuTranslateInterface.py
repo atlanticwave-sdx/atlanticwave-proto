@@ -807,7 +807,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     matches = [METADATA(port), 
                                VLAN_VID(intermediate_vlan), 
                                ETH_DST('ff:ff:ff:ff:ff:ff')]
-                elif port in flooding ports:
+                elif port in flooding_ports:
                     matches = [IN_PORT(port), 
                                VLAN_VID(intermediate_vlan), 
                                ETH_DST('ff:ff:ff:ff:ff:ff')]
