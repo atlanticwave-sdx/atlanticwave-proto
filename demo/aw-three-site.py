@@ -128,7 +128,7 @@ def TwoSite():
     atlswitch.start([atlctlr])
     miaswitch.start([miactlr])
     gruswitch.start([gructlr])
-    net.start()
+    # net.start()
     print "net.start"
     CLI(net)
     print "CLI(net)"
