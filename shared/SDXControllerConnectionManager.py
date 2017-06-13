@@ -31,8 +31,16 @@ class SDXControllerConnectionManager(ConnectionManager):
 
     def __init__(self, *args, **kwargs):
         super(SDXControllerConnectionManager, self).__init__(*args, **kwargs)
+        # associations are for easy lookup of connections based on the name of
+        # the Local Controller.
+        
         # associations contains name:Connection pairs
         self.associations = {}
+
+        # When a message arrives for a non-connected Local Controller, rather
+        # than failing the installation of the rule, queue it until the LC has
+        # connected. Once connected, install rules and empty out the queue.
+        
         # non_connected_queues contains name:(rule, type) queues for 
         # added/removed rules that are sent before a connection is established.
         # Entries deleted once emptied.
@@ -93,7 +101,7 @@ class SDXControllerConnectionManager(ConnectionManager):
             More hacky than I'd like it to be. '''
         self.associations[name] = cxn
         #FIXME: Should this check to make sure that the cxn is in self.clients?
-        # Clean up queuess for the new connection.
+        # Clean up queues for the new connection.
         if name in self.non_connected_queues.keys():
             q = self.non_connected_queues[name]
             del self.non_connected_queues[name]

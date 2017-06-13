@@ -947,8 +947,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     #FIXME: raise an error
                     pass
                 # To drop, need to clear actions associated with the match.
-                return [parser.OFPInstructionActions(
-                               ofproto.OFPIT_CLEAR_ACTIONS, [])]
+                instructions.append(parser.OFPInstructionActions(
+                                         ofproto.OFPIT_CLEAR_ACTIONS, []))
 
             # Continue and GotoTable are a bit different, as they both reference
             # other tables using the OFPIT_GOTO_TABLE instruction.
@@ -965,6 +965,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                                      mask))
 
         # Are there any values in aa_results? If so, put them in APPLY_ACTIONS
+        # This is for the case where a bunch of simple rules (Forward, SetField,
+        # PushVLAN, PopVLAN) are the only rules that exist, and they haven't yet
+        # been put into an instruction. 
         if len(aa_results) > 0: 
             instructions.append(parser.OFPInstructionActions(
                 ofproto.OFPIT_APPLY_ACTIONS, aa_results))           
