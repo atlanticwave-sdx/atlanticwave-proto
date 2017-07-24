@@ -8,28 +8,29 @@ from shared.constants import rfc3339format
 from shared.SDXMatches import *
 from shared.SDXActions import *
 
-jsonstring "sdxegress"
+jsonstring "sdxingress"
 
-VALID_SDX_EGRESS_MATCHES = ['src_mac', 'src_ip', 'tcp_src', 'udp_src',
-                            'dst_mac', 'dst_ip', 'tcp_dst', 'udp_dst',
-                            'ip_proto', 'eth_type', 'vlan']
-VALID_SDX_EGRESS_ACTIONS = ['ModifySRCMAC', 'ModifySRCIP', 'ModifyTCPSRC',
-                            'ModifyUDPSRC', 'ModifyVLAN', 'Drop', 'Continue']
+VALID_SDX_INGRESS_MATCHES = ['src_mac', 'src_ip', 'tcp_src', 'udp_src',
+                             'dst_mac', 'dst_ip', 'tcp_dst', 'udp_dst',
+                             'ip_proto', 'eth_type', 'vlan']
+VALID_SDX_INGRESS_ACTIONS = ['ModifyDSTMAC', 'ModifyDSTIP', 'ModifyTCPDST',
+                             'ModifyUDPDST', 'ModifyVLAN', 'Forward', 'Drop',
+                             'Continue']
 
-class SDXEgressPolicy(UserPolicy):
-    ''' This policy is used for creating "SDX Rules" on egress from a network.
+class SDXIngressPolicy(UserPolicy):
+    ''' This policy is used for creating "SDX Rules" on ingress to a network.
         An "SDX Rule" is an arbitrary network manipulation based on a limited
         number of Matches and Actions. 
 
        It requires the following information:
          - Start time
          - End time
-         - switch
+         - Switch
          - List of Matches  
          - List of Actions
 
        Example JSON:
-       {"sdxegress":{
+       {"sdxingress":{
             "starttime":"1985-04-12T23:20:50",
             "endtime":"1985-04-12T23:20:50+0400",
             "switch":"atl-switch",
@@ -48,7 +49,8 @@ class SDXEgressPolicy(UserPolicy):
         self.matches = []
         self.actions = []
 
-        super(SDXEgressPolicy, self).__init__(username, "SDXEgress", json_rule)
+        super(SDXIngressPolicy, self).__init__(username, "SDXIngress",
+                                               json_rule)
 
         # Anything specific here?
         pass
@@ -96,10 +98,10 @@ class SDXEgressPolicy(UserPolicy):
                 m = match_entry.keys()[0]
                 v = match_entry[m]
 
-                # Check to confirm that it is a valid Match type for Egress
-                if m not in VALID_SDX_EGRESS_MATCHES:
-                    raise UserPolicyValueError("%s is not a valid SDX Egress match type: %s" %
-                                               (m, VALID_SDX_EGRESS_MATCHES))
+                # Check to confirm that it is a valid Match type for Ingress
+                if m not in VALID_SDX_INGRESS_MATCHES:
+                    raise UserPolicyValueError("%s is not a valid SDX Ingress match type: %s" %
+                                               (m, VALID_SDX_INGRESS_MATCHES))
 
                 # This is somewhat magical. It first looks up the match class
                 # type based on the match type (m), and then creates an object
@@ -121,10 +123,10 @@ class SDXEgressPolicy(UserPolicy):
                 a = action_entry.keys()[0]
                 v = action_entry[a]
 
-                # Check to confirm that it is a valid Match type for Egress
-                if a not in VALID_SDX_EGRESS_ACTIONS:
-                    raise UserPolicyValueError("%s is not a valid SDX Egress aciton type: %s" %
-                                               (a, VALID_SDX_EGRESS_ACTIONS))
+                # Check to confirm that it is a valid Match type for Ingress
+                if a not in VALID_SDX_GRESS_ACTIONS:
+                    raise UserPolicyValueError("%s is not a valid SDX Ingress aciton type: %s" %
+                                               (a, VALID_SDX_INGRESS_ACTIONS))
                 
                 # Same magic as above
                 action = SDXAction.lookup_action_type(a)(v)
@@ -191,7 +193,7 @@ class SDXEgressPolicy(UserPolicy):
             elif isinstance(a, Continue):
                 cont = True
             actions.append(a)
-        # Since this is an INGRESS rule, there's an implied Continue as part of
+        # Since this is an SDX rule, there's an implied Continue as part of
         # the actions. Append this (if there isn't a drop).
         if !drop and !cont:
             actions.append(Continue())
