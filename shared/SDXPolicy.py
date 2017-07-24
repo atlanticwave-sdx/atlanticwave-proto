@@ -8,17 +8,10 @@ from shared.constants import rfc3339format
 from shared.SDXMatches import *
 from shared.SDXActions import *
 
-jsonstring "sdxingress"
 
-VALID_SDX_INGRESS_MATCHES = ['src_mac', 'src_ip', 'tcp_src', 'udp_src',
-                             'dst_mac', 'dst_ip', 'tcp_dst', 'udp_dst',
-                             'ip_proto', 'eth_type', 'vlan']
-VALID_SDX_INGRESS_ACTIONS = ['ModifyDSTMAC', 'ModifyDSTIP', 'ModifyTCPDST',
-                             'ModifyUDPDST', 'ModifyVLAN', 'Forward', 'Drop',
-                             'Continue']
-
-class SDXIngressPolicy(UserPolicy):
-    ''' This policy is used for creating "SDX Rules" on ingress to a network.
+class SDXPolicy(UserPolicy):
+    ''' This policy is a parent for creating "SDX Rules" on from a network. Both
+        SDXIngressPolicy and SDXEgressPolicy inherent from this.
         An "SDX Rule" is an arbitrary network manipulation based on a limited
         number of Matches and Actions. 
 
@@ -30,7 +23,7 @@ class SDXIngressPolicy(UserPolicy):
          - List of Actions
 
        Example JSON:
-       {"sdxingress":{
+       {"sdxXXgress":{
             "starttime":"1985-04-12T23:20:50",
             "endtime":"1985-04-12T23:20:50+0400",
             "switch":"atl-switch",
@@ -42,15 +35,18 @@ class SDXIngressPolicy(UserPolicy):
         parsing things into the appropriate types (int, for instance).
     '''
     
-    def __init__(self, username, json_rule):
+    def __init__(self, username, rulename, json_rule, jsonstring,
+                 valid_matches, valid_actions):
         self.start_time = None
         self.stop_time = None
         self.switch = None
+        self._jsonstring = jsonstring
+        self._valid_matches = valid_matches
+        self._valid_actions = valid_actions
         self.matches = []
         self.actions = []
 
-        super(SDXIngressPolicy, self).__init__(username, "SDXIngress",
-                                               json_rule)
+        super(SDXPolicy, self).__init__(username, rulename, json_rule)
 
         # Anything specific here?
         pass
@@ -61,21 +57,21 @@ class SDXIngressPolicy(UserPolicy):
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
 
-            starttime = datetime.strptime(json_rule[jsonstring]['starttime'],
+            starttime = datetime.strptime(json_rule[self._jsonstring]['starttime'],
                                          rfc3339format)
-            endtime = datetime.strptime(json_rule[jsonstring]['endtime'],
+            endtime = datetime.strptime(json_rule[self._jsonstring]['endtime'],
                                          rfc3339format)
             delta = endtime - starttime
             if delta.total_seconds() < 0:
                 raise UserPolicyValueError("Time ends before it begins: begin %s, end %s" % (starttime, endtime))
 
             # Check that switch is good?
-            switch = json_rule[jsonstring]['switch']
+            switch = json_rule[self._jsonstring]['switch']
             #FIXME - Is there anything that can be done about this?
 
             # Make sure matches and actions make sense
-            matches_json = json_rule[jsonstring]['matches']
-            actions_json = json_rule[jsonstring]['actions']
+            matches_json = json_rule[self._jsonstring]['matches']
+            actions_json = json_rule[self._jsonstring]['actions']
             matches = []
             actions = []
 
@@ -98,10 +94,10 @@ class SDXIngressPolicy(UserPolicy):
                 m = match_entry.keys()[0]
                 v = match_entry[m]
 
-                # Check to confirm that it is a valid Match type for Ingress
-                if m not in VALID_SDX_INGRESS_MATCHES:
-                    raise UserPolicyValueError("%s is not a valid SDX Ingress match type: %s" %
-                                               (m, VALID_SDX_INGRESS_MATCHES))
+                # Check to confirm that it is a valid Match type
+                if m not in self._valid_matches:
+                    raise UserPolicyValueError("%s is not a valid SDX  match type: %s" %
+                                               (m, self._valid_matches))
 
                 # This is somewhat magical. It first looks up the match class
                 # type based on the match type (m), and then creates an object
@@ -123,10 +119,10 @@ class SDXIngressPolicy(UserPolicy):
                 a = action_entry.keys()[0]
                 v = action_entry[a]
 
-                # Check to confirm that it is a valid Match type for Ingress
-                if a not in VALID_SDX_GRESS_ACTIONS:
-                    raise UserPolicyValueError("%s is not a valid SDX Ingress aciton type: %s" %
-                                               (a, VALID_SDX_INGRESS_ACTIONS))
+                # Check to confirm that it is a valid action type
+                if a not in self._valid_actions:
+                    raise UserPolicyValueError("%s is not a valid SDX action type: %s" %
+                                               (a, self._valid_actions))
                 
                 # Same magic as above
                 action = SDXAction.lookup_action_type(a)(v)
@@ -141,18 +137,18 @@ class SDXIngressPolicy(UserPolicy):
     def _parse_json(self, json_rule):
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
+        if self._jsonstring not in json_rule.keys():
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))
         
-        self.start_time = json_rule[jsonstring]['starttime']
-        self.end_time = json_rule[jsonstring]['endtime']
+        self.start_time = json_rule[self._jsonstring]['starttime']
+        self.end_time = json_rule[self._jsonstring]['endtime']
 
-        self.switch = json_rule[jsonstring]['switch']
+        self.switch = json_rule[self._jsonstring]['switch']
         
-        matches_json = json_rule[jsonstring]['matches']
-        actions_json = json_rule[jsonstring]['actions']
+        matches_json = json_rule[self._jsonstring]['matches']
+        actions_json = json_rule[self._jsonstring]['actions']
 
-        for match_entry in json_rule[jsonstring]['matches']:
+        for match_entry in json_rule[self._jsonstring]['matches']:
             m = match_entry.keys()[0]
             v = match_entry[m]
 
@@ -220,4 +216,46 @@ class SDXIngressPolicy(UserPolicy):
     def switch_change_callback(self, tm, ai, data):
         ''' This is called when a switch change message is called back. 
             May not need to be implemented. '''
+        pass
+
+
+
+class SDXEgressPolicy(SDXPolicy):
+    ''' This policy inherits from SDXPolicy which has virtually all 
+        functionality built in. '''    
+    def __init__(self, username, json_rule):
+        jsonstring = "sdxegress"
+        VALID_SDX_EGRESS_MATCHES = ['src_mac', 'src_ip', 'tcp_src', 'udp_src',
+                                    'dst_mac', 'dst_ip', 'tcp_dst', 'udp_dst',
+                                    'ip_proto', 'eth_type', 'vlan']
+        VALID_SDX_EGRESS_ACTIONS = ['ModifySRCMAC', 'ModifySRCIP',
+                                    'ModifyTCPSRC', 'ModifyUDPSRC',
+                                    'ModifyVLAN', 'Drop', 'Continue']
+
+        super(SDXEgressPolicy, self).__init__(username, "SDXEgress",
+                                              json_rule, jsonstring,
+                                              VALID_SDX_EGRESS_MATCHES,
+                                              VALID_SDX_EGRESS_ACTIONS)
+
+        # Anything specific here?
+        pass
+
+class SDXIngressPolicy(SDXPolicy):
+    ''' This policy inherits from SDXPolicy which has virtually all 
+        functionality built in. '''    
+    def __init__(self, username, json_rule):
+        jsonstring = "sdxingress"
+        VALID_SDX_INGRESS_MATCHES = ['src_mac', 'src_ip', 'tcp_src', 'udp_src',
+                                     'dst_mac', 'dst_ip', 'tcp_dst', 'udp_dst',
+                                     'ip_proto', 'eth_type', 'vlan']
+        VALID_SDX_INGRESS_ACTIONS = ['ModifySRCMAC', 'ModifySRCIP',
+                                     'ModifyTCPSRC', 'ModifyUDPSRC',
+                                     'ModifyVLAN', 'Drop', 'Continue']
+
+        super(SDXIngressPolicy, self).__init__(username, "SDXIngress",
+                                               json_rule, jsonstring,
+                                              VALID_SDX_INGRESS_MATCHES,
+                                              VALID_SDX_INGRESS_ACTIONS)
+
+        # Anything specific here?
         pass
