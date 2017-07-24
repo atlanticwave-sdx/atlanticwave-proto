@@ -47,6 +47,9 @@ class SDXMatch(object):
                 self.value == other.value and
                 self.field == other.field)
 
+    def get_match(self):
+        return self.field
+
     def lookup_match_type(cls, name):
         if name not in SDXMATCH_TO_CLASS.keys():
             raise SDXMatchValueError("%s not in SDXMATCH_TO_CLASS: %s" %

@@ -47,7 +47,10 @@ class SDXAction(object):
                 self.value == other.value and
                 self.action == other.action)
 
-    def lookup_match_type(cls, name):
+    def get_action(self):
+        return self.action
+
+    def lookup_action_type(cls, name):
         if name not in SDXACTION_TO_CLASS.keys():
             raise SDXActionValueError("%s not in SDXACTION_TO_CLASS: %s" %
                                      (name, SDXACTION_TO_CLASS.keys()))
