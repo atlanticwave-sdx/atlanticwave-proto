@@ -8,7 +8,7 @@ from LCAction import *
 class SDXActionTypeError(TypeError):
     pass
 
-class SDXMatchValueError(ValueError):
+class SDXActionValueError(ValueError):
     pass
 
 class SDXAction(object):
@@ -27,14 +27,14 @@ class SDXAction(object):
         '''
         self._name = name
         self.value = value
-        if !isinstance(field, LCField):
-            raise SDXMatchTypeError("field is not LCField: %s" % type(field))
+        if not isinstance(action, LCAction):
+            raise SDXActionTypeError("field is not LCAction: %s" % type(action))
         self.action = action
 
     def __repr__(self):
         return "%s : %s:%s : %s" % (self.__class__.__name__,
-                                    self._name
-                                    self.value
+                                    self._name,
+                                    self.value,
                                     repr(self.action))
 
     def __str__(self):
@@ -45,12 +45,15 @@ class SDXAction(object):
             return False
         return (self._name == other._name and
                 self.value == other.value and
-                self.action == other.action)
+                str(self.action) == str(other.action)) #FIXME: This is dirty, as
+                                                       #LCAction doesn't have a
+                                                       #__eq__() function.
 
     def get_action(self):
         return self.action
 
-    def lookup_action_type(cls, name):
+    @staticmethod
+    def lookup_action_type(name):
         if name not in SDXACTION_TO_CLASS.keys():
             raise SDXActionValueError("%s not in SDXACTION_TO_CLASS: %s" %
                                      (name, SDXACTION_TO_CLASS.keys()))

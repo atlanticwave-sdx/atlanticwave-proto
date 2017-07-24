@@ -27,14 +27,14 @@ class SDXMatch(object):
         '''
         self._name = name
         self.value = value
-        if !isinstance(field, LCField):
+        if not isinstance(field, LCField):
             raise SDXMatchTypeError("field is not LCField: %s" % type(field))
         self.field = field
 
     def __repr__(self):
         return "%s : %s:%s : %s" % (self.__class__.__name__,
-                                    self._name
-                                    self.value
+                                    self._name,
+                                    self.value,
                                     repr(self.field))
 
     def __str__(self):
@@ -50,7 +50,8 @@ class SDXMatch(object):
     def get_match(self):
         return self.field
 
-    def lookup_match_type(cls, name):
+    @staticmethod
+    def lookup_match_type(name):
         if name not in SDXMATCH_TO_CLASS.keys():
             raise SDXMatchValueError("%s not in SDXMATCH_TO_CLASS: %s" %
                                      (name, SDXMATCH_TO_CLASS.keys()))
