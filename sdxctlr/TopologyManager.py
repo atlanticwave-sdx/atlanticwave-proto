@@ -63,8 +63,9 @@ class TopologyManager(SingletonMixin):
         with open(manifest_filename) as data_file:
             data = json.load(data_file)
 
-        for key in data['endpoints'].keys():
+        for unikey in data['endpoints'].keys():
             # All the other nodes
+            key = str(unikey)
             endpoint = data['endpoints'][key]
             with self.topolock:
                 if not self.topo.has_node(key):
@@ -93,12 +94,12 @@ class TopologyManager(SingletonMixin):
             # Fill out topology
             with self.topolock:
                 for switchinfo in entry['switchinfo']:
-                    name = switchinfo['name']
+                    name = str(switchinfo['name'])
                     # Node may be implicitly declared, check this first.
                     if not self.topo.has_node(name):
                         self.topo.add_node(name)
                     # Per switch info, gets added to topo
-                    self.topo.node[name]['friendlyname'] = switchinfo['friendlyname']
+                    self.topo.node[name]['friendlyname'] = str(switchinfo['friendlyname'])
                     self.topo.node[name]['dpid'] = int(switchinfo['dpid'], 0) #0 guesses base.
                     self.topo.node[name]['ip'] = str(switchinfo['ip'])
                     self.topo.node[name]['brand'] = str(switchinfo['brand'])

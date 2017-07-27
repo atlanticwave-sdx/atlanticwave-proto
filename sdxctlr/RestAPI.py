@@ -5,6 +5,7 @@
 
 from lib.Singleton import SingletonMixin
 
+from shared.SDXPolicy import SDXIngressPolicy, SDXEgressPolicy
 from shared.L2MultipointPolicy import L2MultipointPolicy
 from shared.L2TunnelPolicy import L2TunnelPolicy
 from shared.EndpointConnectionPolicy import EndpointConnectionPolicy
@@ -355,6 +356,9 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/rule/l2m')
     def make_L2M():
+        ''' Test URL:
+http://localhost:5000/rule/l2m?starttime=2017-05-12T23:01:50&endtime=2017-05-13T23:20:50&endpoints={%22endpoints%22:[{%22switch%22:%22sw1%22,%20%22port%22:1,%20%22vlan%22:1000},{%22switch%22:%22sw2%22,%20%22port%22:1,%20%22vlan%22:2000},{%22switch%22:%22sw5%22,%20%22port%22:1,%20%22vlan%22:1000}]}&bandwidth=1000 
+        ''' 
         data = {
             "starttime":None,
             "endtime":None,
@@ -382,6 +386,65 @@ class RestAPI(SingletonMixin):
         rule_hash = RuleManager.instance().add_rule(policy)
 
         return str({'l2multipoint':data})
+
+    @staticmethod
+    @app.route('/rule/sdxingress')
+    @app.route('/rule/sdxegress')
+    def make_sdx_policy():
+        ''' Test URLs:
+http://localhost:5000/rule/sdxegress?starttime=1985-04-12T23:20:50&endtime=1985-04-13T23:20:50&switch=sw1&matches={"matches":[{"src_mac":"12:34:56:12:34:56"}]}&actions={"actions":[{"ModifySRCMAC":"56:34:12:56:34:12"}]}
+http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985-04-13T23:20:50&switch=sw1&matches={"matches":[{"src_mac":"12:34:56:12:34:56"}]}&actions={"actions":[{"ModifyDSTMAC":"56:34:12:56:34:12"}]}
+        '''
+        data = {
+            "starttime":None,
+            "endtime":None,
+            "switch":None,
+            "matches":[],
+            "actions":[]}
+        try:
+            if 'starttime' in request.args:
+                data["starttime"] = request.args["starttime"]
+                data["endtime"] = request.args["endtime"]
+                data["switch"] = request.args["switch"]
+                matches = request.args["matches"]
+                actions = request.args["actions"]
+            elif 'starttime' in request.form:
+                data["starttime"] = request.form["starttime"]
+                data["endtime"] = request.form["endtime"]
+                data["switch"] = request.form["switch"]
+                matches = request.form["matches"]
+                actions = request.form["actions"]
+            else: raise Exception('invalid rule')
+        except: raise Exception('Invalid rule parameters')
+
+        # Process matches and actions here:
+        m = json.loads(matches)
+        a = json.loads(actions)
+        data['matches'] = m['matches']
+        data['actions'] = a['actions']
+
+        policy = None
+        try:
+            if request.path == "/rule/sdxingress":
+                jsonrule = {'sdxingress':data}
+                SDXIngressPolicy.check_syntax(jsonrule)
+                policy = SDXIngressPolicy(flask_login.current_user.id,
+                                          jsonrule)
+                rule_hash = RuleManager.instance().add_rule(policy)
+
+                return str(jsonrule)
+
+            elif request.path == "/rule/sdxegress":
+                jsonrule = {'sdxegress':data}
+                SDXEgressPolicy.check_syntax(jsonrule)
+                policy = SDXEgressPolicy(flask_login.current_user.id,
+                                         jsonrule)
+                rule_hash = RuleManager.instance().add_rule(policy)
+
+                return str(jsonrule)
+            else: raise Exception("not a good path. %s" % request.path)
+        except: raise
+
 
     # Get information about a specific rule IDed by hash.
     @staticmethod

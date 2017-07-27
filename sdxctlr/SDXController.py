@@ -30,6 +30,7 @@ from shared.EndpointConnectionPolicy import *
 from shared.EdgePortPolicy import *
 from shared.LearnedDestinationPolicy import *
 from shared.FloodTreePolicy import *
+from shared.SDXPolicy import SDXEgressPolicy, SDXIngressPolicy
 
 # Switch Messages
 from shared.switch_messages import *
@@ -120,6 +121,8 @@ class SDXController(SingletonMixin):
         self.rr.add_ruletype("edgeport", EdgePortPolicy)
         self.rr.add_ruletype("learneddest", LearnedDestinationPolicy)
         self.rr.add_ruletype("floodtree", FloodTreePolicy)
+        self.rr.add_ruletype("sdxegress", SDXEgressPolicy)
+        self.rr.add_ruletype("sdxingress", SDXIngressPolicy)
 
 
         # Start these modules last!
