@@ -136,7 +136,7 @@ class SDXPolicy(UserPolicy):
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))
         
         self.start_time = json_rule[self._jsonstring]['starttime']
-        self.end_time = json_rule[self._jsonstring]['endtime']
+        self.stop_time = json_rule[self._jsonstring]['endtime']
 
         self.switch = str(json_rule[self._jsonstring]['switch'])
         
