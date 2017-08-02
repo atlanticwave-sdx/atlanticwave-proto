@@ -372,7 +372,7 @@ class RestAPI(SingletonMixin):
 
             # Handles other HTTP request methods
             else:
-                return "Invalid HTTP request for rule manager"
+                return "Invalid HTTP request for ru3le manager"
 
         return unauthorized_handler()
 
@@ -396,6 +396,108 @@ class RestAPI(SingletonMixin):
             # TODO: Parse query into filters and ordering
             return str(RuleManager.instance().get_rules(filter={query},ordering=query))
         return unauthorized_handler()
+
+    @staticmethod
+    @app.route('/network/maxbandwidth', methods=['GET'])
+    def get_max_bandwidth():
+        # This is a one-off for Joaquin Chung's research. It gets the maximum
+        # bandwidth between two points on a network controlled by the SDX
+        # controller.
+
+        # Lovingly ripped off from John's work here:
+        # https://github.com/skandaloptagon/atlanticwave-proto-1/blob/master/sdxctlr/AuthorizationInspector.py#L133
+
+        # Example url:
+        #http://localhost:5000/network/maxbandwidth?startdate=2017-09-02T00:00:00&enddate=2017-09-13T23:20:50&inport=1&outport=2
+        inport_events = []
+        outport_events = []
+        import time
+
+        startdate = None
+        enddate = None
+        inport = None
+        outport = None
+        bandwidth_available = 8000000000
+        try:
+            if 'startdate' in request.args:
+                startdate = time.mktime(time.strptime(request.args['startdate'],
+                                                      rfc3339format))
+                enddate = time.mktime(time.strptime(request.args['enddate'],
+                                                    rfc3339format))
+                inport = request.args['inport']
+                outport = request.args['outport']
+            elif 'startdate' in request.form:
+                startdate = time.mktime(time.strptime(request.form['startdate'],
+                                                      rfc3339format))
+                enddate = time.mktime(time.strptime(request.form['enddate'],
+                                                    rfc3339format))
+                inport = request.form['inport']
+                outport = request.form['outport']
+            else: raise Exception('invalid request')
+        except: raise Exception('invalid request parameters')
+        
+        
+        for ruletuple in RuleManager.instance().get_rules():
+            (hash, jsonrule, ruletype, username, state) = ruletuple
+
+            # THIS IS THE ONLY RULETYPE WE CARE ABOUT  BECAUSE WE'RE
+            # HACKING THIS TOGETHER
+            if ruletype != 'L2Tunnel':
+                continue
+
+            # THIS ALSO ONLY WORKS BECAUSE WE'RE HACKING THIS TOGETHER!
+            important_ports = [inport, outport]
+            srcport = jsonrule['l2tunnel']['srcport']
+            dstport = jsonrule['l2tunnel']['dstport']
+            if not ((srcport in important_ports) or
+                    (dstport in important_ports)):
+                continue
+
+            start_time = time.mktime(time.strptime(
+                jsonrule['l2tunnel']['starttime'], rfc3339format))
+            end_time = time.mktime(time.strptime(
+                jsonrule['l2tunnel']['endtime'], rfc3339format))
+
+            bw = int(jsonrule['l2tunnel']['bandwidth'])
+            start = int(start_time)
+            end = int(end_time)
+
+            total_time = end - start
+            if inport in [srcport, dstport]:
+                inport_events.append((bw, True, start))
+                inport_events.append((bw, False, end))
+            else:
+                outport_events.append((bw, True, start))
+                outport_events.append((bw, false, end))
+
+        # Simple algorithm to compute the max sum. Adds bw at start 
+        # of rule time and removes bw at the end of rule time and
+        # appends this value to a list at every change. Then it just
+        # gets the max from that list.
+        inport_time_table = [0]
+        current_bw = 0
+        
+        for event in sorted(inport_events, key=lambda x:x[2]):
+            if event[1]:
+                current_bw += event[0]
+            else:
+                current_bw -= event[0]
+            if event[2] > int(startdate) and event[2] < int(enddate):
+                inport_time_table.append(current_bw)
+        outport_time_table = [0]
+        current_bw = 0
+        for event in sorted(outport_events, key=lambda x:x[2]):
+            if event[1]:
+                current_bw += event[0]
+            else:
+                current_bw -= event[0]
+            if event[2] > int(startdate) and event[2] < int(enddate):
+                outport_time_table.append(current_bw)
+            
+        #self.logger.debug("Time table: {}".format(time_table))
+        max_bw_in_use = max(inport_time_table + outport_time_table)
+        return str({'bw_available':bandwidth_available - max_bw_in_use})
+                
 
 
 if __name__ == "__main__":
