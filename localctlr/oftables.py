@@ -9,22 +9,25 @@
 L2TUNNELTABLE          = 0
 SDXEGRESSRULETABLE     = 1
 SDXINGRESSRULETABLE    = 2
-LEARNINGTABLE          = 2
-FORWARDINGTABLE        = 3
-LASTTABLE              = 3
+LEARNINGTABLE          = 3
+FORWARDINGTABLE        = 4
+LASTTABLE              = 4
 
 ALL_TABLES             = [L2TUNNELTABLE,
                           SDXEGRESSRULETABLE,
                           SDXINGRESSRULETABLE,
+                          LEARNINGTABLE,
                           FORWARDINGTABLE]
 ALL_TABLES_EXCEPT_LAST = [L2TUNNELTABLE,
                           SDXEGRESSRULETABLE,
-                          SDXINGRESSRULETABLE]
+                          SDXINGRESSRULETABLE,
+                          LEARNINGTABLE]
 
 
 
 # Which tables to use for specific activities
 PRIORITY_DEFAULT                       = 0
+
 #L2TUNNELTABLE - Table 0
 PRIORITY_DEFAULT_L2TABLE               = 0
 PRIORITY_L2TUNNEL                      = 1
@@ -38,14 +41,14 @@ PRIORITY_L2MULTIPOINT_TRANSLATE        = 2
 PRIORITY_DEFAULT_SDXINGRESS            = 0
 
 
-#LEARNINGTABLE - Table 2
-PRIORITY_GENERIC_LEARNING              = 1
-PRIORITY_GENERIC_LEARNED               = 2
-PRIORITY_L2MULTIPOINT_LEARNING         = 3
-PRIORITY_L2MULTIPOINT_LEARNED          = 4
+#LEARNINGTABLE - Table 3
+PRIORITY_GENERIC_LEARNING              = 0
+PRIORITY_GENERIC_LEARNED               = 1
+PRIORITY_L2MULTIPOINT_LEARNING         = 2
+PRIORITY_L2MULTIPOINT_LEARNED          = 3
 
 
-#FORWARDINGTABLE - Table 3
+#FORWARDINGTABLE - Table 4
 PRIORITY_DEFAULT_FORWARDING            = 0
 PRIORITY_FLOOD_FORWARDING              = 1
 PRIORITY_BROADCAST_FORWARDING          = 2
