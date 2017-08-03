@@ -1,0 +1,71 @@
+{
+  "endpoints": {
+    "NeighborBR1": {
+      "type":"host",
+      "friendlyname":"BR1",
+      "location":"0,0"},
+    "NeighborBR4": {
+      "type":"host",
+      "friendlyname":"BR4",
+      "location":"0,0"}
+  },
+  "localcontrollers": {
+    "br3":{
+      "shortname": "br3",
+      "credentials": "pwd",
+      "location": "0,0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55763,
+        "openflowport": 6653,
+        "corsaurl": "",
+        "corsatoken": "",
+        "corsabridge": "br3",
+        "corsabwin":11,
+        "corsabwout":12,
+        "corsaratelimiterbridge":"br21",
+        "corsaratelimiterports":[6,7]
+      },
+      "switchinfo": [
+        {
+          "name":"bridge3",
+          "friendlyname":"bridge3",
+          "ip": "128.61.159.153",
+          "dpid":"3",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+	            "speed": 8000000000,
+	            "destination": "NeighborBR1"
+	          },
+            {
+	            "portnumber": 2,
+	            "speed": 8000000000,
+	            "destination": "NeighborBR4"
+	          }
+	        ]
+	      }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+  },
+  "participants": {
+    "sdonovan": {
+      "credentials": "1234",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "sdonovan@gatech.edu",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    }
+  }
+}

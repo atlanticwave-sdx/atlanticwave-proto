@@ -1,0 +1,68 @@
+configure port 1 tunnel-mode passthrough 
+configure port 4 tunnel-mode passthrough 
+configure port 5 tunnel-mode passthrough
+configure port 8 tunnel-mode passthrough
+configure port 13 tunnel-mode passthrough 
+configure port 14 tunnel-mode passthrough 
+configure port 26 tunnel-mode passthrough 
+configure port 27 tunnel-mode passthrough 
+configure port 28 tunnel-mode passthrough 
+configure port 29 tunnel-mode passthrough 
+configure port 30 tunnel-mode passthrough 
+configure port 31 tunnel-mode passthrough 
+configure port 32 tunnel-mode passthrough 
+
+
+configure bridge add br1 openflow resources 5 
+configure bridge br1 dpid 1 
+configure bridge br1 controller add atlctlr 128.61.159.146 6651
+yes
+
+
+configure bridge add br2 openflow resources 5 
+configure bridge br2 dpid 2 
+configure bridge br2 controller add atlctlr 128.61.159.146 6652
+yes
+
+
+configure bridge add br3 openflow resources 5 
+configure bridge br3 dpid 3 
+configure bridge br3 controller add atlctlr 128.61.159.146 6653
+yes
+
+
+configure bridge add br4 openflow resources 5 
+configure bridge br4 dpid 4 
+configure bridge br4 controller add atlctlr 128.61.159.146 6654
+yes
+
+
+
+configure bridge add br21 vpws resources 1 
+configure bridge br21 controller add Eline 172.18.2.1
+yes
+
+
+
+configure bridge br1 tunnel attach ofport 1 port 14
+configure bridge br1 tunnel attach ofport 2 port 25
+configure bridge br1 tunnel attach ofport 3 port 29
+
+
+configure bridge br2 tunnel attach ofport 1 port 26
+configure bridge br2 tunnel attach ofport 2 port 27
+configure bridge br2 tunnel attach ofport 11 port 1
+configure bridge br2 tunnel attach ofport 12 port 4
+
+
+configure bridge br3 tunnel attach ofport 1 port 30
+configure bridge br3 tunnel attach ofport 2 port 31
+configure bridge br3 tunnel attach ofport 11 port 5
+configure bridge br3 tunnel attach ofport 12 port 8
+
+
+configure bridge br4 tunnel attach ofport 1 port 28
+configure bridge br4 tunnel attach ofport 2 port 32
+configure bridge br4 tunnel attach ofport 3 port 13
+
+
