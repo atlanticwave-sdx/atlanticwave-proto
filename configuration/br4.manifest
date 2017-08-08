@@ -35,7 +35,7 @@
           "name":"bridge4",
           "friendlyname":"bridge4",
           "ip": "128.61.159.153",
-          "dpid":"14,
+          "dpid":"4",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
