@@ -388,11 +388,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                 self.corsa_token},
                                        verify=False) #FIXME: HARDCODED
 
-            print rest_return
 
             print "Looking for %s on ports %s" % (vlan, self.corsa_rate_limit_ports)
-            print json.dumps(rest_return.json())
-            print "!!!!\n\n"
             
             for entry in rest_return.json()['list']:
                 if (entry['vlan-id'] == vlan and
