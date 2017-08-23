@@ -396,12 +396,21 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     int(entry['port']) in self.corsa_rate_limit_ports):
 
                     request_url = entry['links']['self']['href']
+                    # This implements Red/Green, per Corsa's spec. Anything over
+                    # the CIR value (and not part of a CBS burst) will be marked
+                    # red and dropped.
                     jsonval = [{'op':'replace',
                                 'path':'/meter/cir',
                                 'value':bandwidth},
                                {'op':'replace',
+                                'path':'/meter/cbs',
+                                'value':bandwidth},
+                               {'op':'replace',
                                 'path':'/meter/eir',
-                                'value':bandwidth}]
+                                'value':0},
+                               {'op':'replace',
+                                'path':'/meter/ebs',
+                                'value':0}]
                     valid_responses = [204]
 
                     print "Patching %s:%s" % (request_url, json)
