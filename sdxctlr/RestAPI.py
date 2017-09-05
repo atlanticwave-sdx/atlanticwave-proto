@@ -496,7 +496,7 @@ class RestAPI(SingletonMixin):
             
         #self.logger.debug("Time table: {}".format(time_table))
         max_bw_in_use = max(inport_time_table + outport_time_table)
-        return str({'bw_available':bandwidth_available - max_bw_in_use})
+        return str({"bw_available":bandwidth_available - max_bw_in_use})
                 
 
 
