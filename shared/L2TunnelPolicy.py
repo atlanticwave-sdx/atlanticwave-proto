@@ -34,7 +34,7 @@ class L2TunnelPolicy(UserPolicy):
             "dstvlan":1789,
             "bandwidth":1}}
         Times are RFC3339 formated offset from UTC, if any, is after the seconds
-        Bandwidth is in Mbit/sec
+        Bandwidth is in kbit/sec
 
         Side effect of coming from JSON, everything's unicode. Need to handle 
         parsing things into the appropriate types (int, for instance).

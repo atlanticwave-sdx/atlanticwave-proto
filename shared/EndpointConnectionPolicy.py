@@ -106,9 +106,10 @@ class EndpointConnectionPolicy(UserPolicy):
         if total_time == EndpointConnectionPolicy.buffer_time_sec or total_time == 0:
             # This adjustment is to prevent 0 denominators in the next formulas
             total_time += 1
-            
-        self.bandwidth = int(ceil(max(self.data/(total_time - EndpointConnectionPolicy.buffer_time_sec),
-                                      (self.data/total_time)*EndpointConnectionPolicy.buffer_bw_percent)))
+
+        data_in_bits = data*8
+        self.bandwidth = int(ceil(max(data_in_bits/(total_time - EndpointConnectionPolicy.buffer_time_sec),
+                                      (data_in_bits/total_time)*EndpointConnectionPolicy.buffer_bw_percent)))
 
         # Second, get the path, and reserve bw and a VLAN on it
         self.fullpath = tm.find_valid_path(self.src, self.dst, self.bandwidth)
