@@ -468,7 +468,7 @@ class RestAPI(SingletonMixin):
                 inport_events.append((bw, False, end))
             else:
                 outport_events.append((bw, True, start))
-                outport_events.append((bw, false, end))
+                outport_events.append((bw, False, end))
 
         # Simple algorithm to compute the max sum. Adds bw at start 
         # of rule time and removes bw at the end of rule time and
