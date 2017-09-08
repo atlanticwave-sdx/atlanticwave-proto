@@ -93,7 +93,12 @@ class L2MultipointPolicy(UserPolicy):
         authorization_func = ai.is_authorized
 
         # Get the tree between all nodes and reserve resources
-        nodes = [d["switch"] for d in self.endpoints]
+        nodes = []
+        for d in self.endpoints:
+            if d['switch'] not in nodes:
+                nodes.append(d['switch'])
+
+        # Build tree.
         self.tree = tm.find_valid_steiner_tree(nodes, self.bandwidth)
         self.intermediate_vlan = tm.find_vlan_on_tree(self.tree)
         if self.intermediate_vlan == None:
