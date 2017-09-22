@@ -1,0 +1,193 @@
+==============================
+= OVERVIEW OF FUNCTIONALTITY =
+==============================
+
+The AtlanticWave/SDX (AW/SDX) controller focuses on making it easy for both
+network operators *and* network users such as domain scientists to create
+network paths. 
+
+
+--- MAC Learning --- 
+By default, traffic will be forwarded based on MAC learning switch behavior. It
+is not a typical MAC learning algorithm, but customized to our particular setup.
+
+Learned behavior is the default, but users are able to override this behavior in
+multiple ways: L2 tunnels and arbitrary rules.
+
+For unknown destinations, traffic is flooded across a Steiner tree (acting as a
+spanning tree). For all other learned addresses, shortest paths are taken. This
+allows topologies with loops to be easily used without actually running some
+version of Spanning Tree Protocol.
+
+--- L2 Tunnels ---
+L2 tunnels, both point-to-point and multipoint tunnels, are implemented using
+802.1q VLANs. This is seen as a lowest-common-denominator format for tunnels
+that is supported and used heavily by many networks.
+
+Point-to-point tunnels connect one VLAN to another VLAN from any endpoint to any
+other endpoint, including on the same physical port. The shortest path is
+calculated and used to pass traffic. This will need to change in the future to
+handle rerouting based on traffic load.
+
+Multipoint tunnels use a Steiner tree to flood unknown traffic. It uses MAC
+learning to forward known traffic directly.
+
+--- Arbitray Rules ---
+By offering a subset of OpenFlow that users can use to modify flows in more-or-
+less arbitrary ways. These rules are split into two tables: one for Egress from
+one's own network and one for ingress into one's own network.
+
+Currently, there are no restrictions as to what a users can install (i.e., I can
+install rules to affect someone else's egress traffic), but this will be dealt
+with at a later point
+
+--- Controller Southbound Interface ---
+Currently there are two variations of the OpenFlow 1.3 southbound interface.
+First, is a raw OpenFlow interface that does not do any bandwidth management.
+Second, is a Corsa DP2000-series switch specific version that includes
+specialized modifications to work with Corsa's bandwith management abilities.
+Ryu is used as an OpenFlow speaker, and nothing more.
+
+The controller's architecture is designed such that the southbound interface
+could be easily replaced. For instance, a new southbound could be created to
+use netconf or a vendor's REST API or CLI interface. This would require a
+translation interface.
+
+============================
+= USER FUNCTIONS AVAILABLE =
+============================
+There are two ways of interacting with the AW/SDX controller: a GUI and REST
+interface. Both of thes need to be updated. The GUI is very limited right now,
+and can handle only a couple of rules. The REST API needs a total overhaul, as
+it doesn't follow standard REST practices and need to be enhanced to support
+better security.
+
+--- GUI Interface ---
+There is a web-based interface that handles L2 point-to-point tunnels. There are
+two interfaces: one for network operators that focuses on VLANs, physical ports,
+bandwidth amounts, and one for domain scientists that focus on sources and
+destinations and data transfer amounts. Both of these map to the same L2 tunnel
+functionality, with the domain scientist interface providing an easier-to-use
+interface.
+
+--- REST Interface ---
+The REST intefaces are somewhat kludgy right now, but provide access to a
+variety of management functions using HTTP calls.
+
+ - User login
+ - View installed rule
+ - View installed rules
+ - Query for rules
+ - View topology
+ - Network Operator L2 point-to-point tunnels
+ - Domain Scientist L2 point-to-point tunnels
+ - L2 multipoint tunnels
+ - Arbitrary ingress rules
+ - Arbitrary egress rules
+
+The entire REST interface will be rewritten to be more consistent with REST
+standards.
+ 
+================
+= TABLE LAYOUT =
+================
+
+The table layout below is what is used in the two current supported southbound
+interfaces (OVS and Corsa)
+
+--- DIAGRAM ---
+
+      +---+    +---+    +---+    +---+    +---+
+      |   |    |   |    |   |    |   |    |   |
+------> 1 +----> 2 +----> 3 +----> 4 +----> 5 +----> OUTPUT
+      |   |    |   |    |   |    |   |    |   |
+      +-+-+    +---+    +---+    +---+    +---+
+        |
+        +------------------------------------------> OUTPUT
+
+--- Table descriptions ---
+
+  Table 0 - L2 Tunnel Table
+This table handles L2 tunnel-related work. It's a "shortcut". So, whenver a rule
+is in a particulat VLAN of interest, it will be captured by a VLAN rule and
+forwarded as apropriate (generally, there's more going on when it comes to
+multipoint tunnels).
+
+  Table 1 - SDX Egress Table
+Rules for egress occur here. These are a subset of OpenFlow rules. Egress rules
+occurs first, as we want users to be able to modify what they are sending prior
+to the destination modifying flows in the Ingress table.
+
+  Table 2 - SDX Ingress Table
+This is basically the same as the SDX Egress table w/r/t what functions are
+available.
+
+  Table 3 - Learning Table
+Learning table is for learning new src-mac to src-port combinations.
+Automatically created and not modifiable by users. Added to the Forwarding Table
+for forwarding
+
+  Table 4 - Forwarding Table
+Forwarding table handles know dst-mac to dst-port combinations. Unknown dst-macs
+are flooded along a Steiner tree that's automatically populated.
+
+
+===============
+= OVS SUPPORT =
+===============
+
+Open vSwitch is the standard switch that we use for testing. It's useful for
+testing and demonstrating nearly all functions, except for bandwidth limiting a
+tunnel.
+
+Topologies are included for running test topologies using Mininet.
+
+
+=================
+= CORSA SUPPORT =
+=================
+
+Using DP2000 series, running firmware version 3.0.2, there is full support for
+all functions including bandwidth management.
+
+To handle bandwidth management we have a second virtual switch that handles
+bandwidth limiting. See below. This takes advantage of metadata fields to return
+to the correct table for further processing.
+
+
+          +-----------------+
+          |    Bandwidth    |
+  +-------+     Limiter     |
+  |       +-^---^---------^-+
+  |         |   |         |
+  |     +---+   |         |
+  |     |       |         |
+  |   +-+-+    ++--+    +-+-+    +---+    +---+
+  +--->   |    |   |    |   |    |   |    |   |
+      | 1 +----> 2 +----> 3 +----> 4 +----> 5 +----> OUTPUT
+------>   |    |   |    |   |    |   |    |   |
+      +-+-+    +---+    +---+    +---+    +---+
+        |
+        +------------------------------------------> OUTPUT
+
+
+=========
+= TODOs =
+=========
+
+Below is an unordered list of changes that are necessary for the future of
+AW/SDX.
+
+ - Rework REST API entirely
+ - Add new web-GUI elements to easily create different types of rules
+ - Integrate compute into AW/SDX story
+ - Create a new southbound interface using something other than OpenFlow
+
+
+====================
+= POSSIBLE CHANGES =
+====================
+
+Below is an unordered list of possible changes that can be accomplish.
+
+ - L2 -> L3 learning 
