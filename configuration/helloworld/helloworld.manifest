@@ -25,7 +25,7 @@
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55780,
-        "openflowport": 6633,
+        "openflowport": 6680,
         "corsaurl": "",
         "corsatoken": "",
         "corsabridge": "br1",

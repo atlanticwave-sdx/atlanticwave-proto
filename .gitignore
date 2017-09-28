@@ -68,3 +68,6 @@ target/
 
 # For VIM
 *.swp
+
+# For Vagrant
+.vagrant/
