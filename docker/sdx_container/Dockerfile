@@ -11,7 +11,7 @@ RUN . /appenv/bin/activate
 ENV PYTHONPATH $PYTHONPATH:/atlanticwave-proto
 
 COPY run_sdx.sh .
-COPY ../*.manifest .
+COPY ./*.manifest .
 
 # This really should point to a particular version
 RUN git clone https://github.com/atlanticwave-sdx/atlanticwave-proto.git
