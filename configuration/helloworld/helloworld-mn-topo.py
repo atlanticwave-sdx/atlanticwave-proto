@@ -63,7 +63,7 @@ VLAN+------+1      1         3       1+------+
 
     # Hosts and switches
     net = Mininet(topo=None, build=False)
-    atlswitch = net.addSwitch('s1', listenPort=6633, mac='00:00:00:00:00:01')
+    atlswitch = net.addSwitch('s1', listenPort=6680, mac='00:00:00:00:00:01')
 
     atl    = net.addHost('atl', mac='00:00:00:00:01:00',
                          cls=VLANHost, vlan=1234)
