@@ -165,11 +165,13 @@ class SDXController(SingletonMixin):
         self.sdx_cm.new_connection_callback(self._handle_new_connection)
         self.sdx_cm.open_listening_port(self.ip, self.port)
         self.logger.critical("Listening on %s:%d" % (self.ip, self.port))
+        print("Listening on %s:%d" % (self.ip, self.port))
         pass
         
     def _handle_new_connection(self, cxn):
         # Receive name from LocalController, verify that it's in the topology
         self.logger.critical("Handling new connection %s" % cxn)
+        print("Handling new connection %s" % cxn)
         cmd,name = cxn.recv_cmd()
 
         if cmd != SDX_IDENTIFY:
