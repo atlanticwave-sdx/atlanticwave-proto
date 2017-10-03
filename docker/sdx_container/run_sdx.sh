@@ -20,7 +20,7 @@ echo "Port: $PORT"
 
 if ! test $LCPORT
 then 
-  PORT=5555
+  LCPORT=5555
 fi
 echo "LC Port: $LCPORT"
 
