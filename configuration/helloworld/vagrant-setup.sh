@@ -26,3 +26,9 @@ cd ../lc_container
 sudo docker build -t lc_container .
 rm helloworld.manifest
 
+# Copy over run scripts
+cd ~/atlanticwave-proto/configuration/helloworld
+cp 1-start-sdxctlr.sh ~
+cp 2-start-lcctlr.sh ~
+cp 3-start-mininet.sh ~
+cp 4-get-ip.sh
