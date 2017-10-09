@@ -142,8 +142,8 @@ class EndpointConnectionPolicy(UserPolicy):
             outedge = topology.edge[location][self.dst]
             inport  = inedge[location]
             outport = outedge[location]
-            invlan  = topology.node[self.src]['vlan']
-            outvlan = topology.node[self.dst]['vlan']
+            invlan  = int(topology.node[self.src]['vlan'])
+            outvlan = int(topology.node[self.dst]['vlan'])
             bandwidth = self.bandwidth
 
             bd = UserPolicyBreakdown(shortname, [])

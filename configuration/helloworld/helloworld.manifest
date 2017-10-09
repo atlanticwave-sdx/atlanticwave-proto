@@ -7,7 +7,8 @@
     "atldtn": {
       "type":"dtn",
       "friendlyname":"atldtn",
-      "location":"0,0"},
+      "location":"0,0",
+      "vlan":2345},
     "mia": {
       "type":"host",
       "friendlyname":"mia",
@@ -15,7 +16,8 @@
     "miadtn": {
       "type":"dtn",
       "friendlyname":"miadtn",
-      "location":"0,0"}
+      "location":"0,0",
+      "vlan":2345}
   },
   "localcontrollers": {
     "br1":{
