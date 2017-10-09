@@ -70,9 +70,9 @@ VLAN+------+1      1         3       1+------+
     atldtn = net.addHost('atldtn', mac='00:00:00:00:02:00',
                          cls=VLANHost, vlan=2345)                         
 
-    mia    = net.addHost('miah1', mac='00:00:00:00:03:00',
+    mia    = net.addHost('mia', mac='00:00:00:00:03:00',
                          cls=VLANHost, vlan=1234)
-    miadtn = net.addHost('miah2', mac='00:00:00:00:04:00',
+    miadtn = net.addHost('miadtn', mac='00:00:00:00:04:00',
                          cls=VLANHost, vlan=2345)
 
     # Wiring
