@@ -42,7 +42,8 @@ From here, you'll need to log in. Click the log in button on the top bar, and us
 
 Below is the topology:
 
-'''VLAN+------+1      1         3       1+------+
+'''
+VLAN+------+1      1         3       1+------+
 1234|  ATL +-------+         +--------+ MIA  |1234
     +------+       +---------+        +------+
                    | Switch  |
