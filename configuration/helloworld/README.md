@@ -11,11 +11,11 @@ In order to use the Hello World example, users must first install both VirtualBo
 
 Once installed, you must clone the atlanticwave-proto repository, then create the VM using Vagrant
 
-'''bash
+``` bash
 git clone https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 cd atlanticwave-proto/configuration/helloworld
 vagrant up
-'''
+```
 
 Get comfortable, as the VM takes a few minutes to complete building. Once the VM is created, you need to create four different terminals. Create each terminal from the `atlanticwave-proto/configuration/helloworld` directory. In each terminal issue the `vagrant ssh` command to connect to the newly created VM. Each terminal serves a different function:
 
@@ -42,7 +42,7 @@ From here, you'll need to log in. Click the log in button on the top bar, and us
 
 Below is the topology:
 
-'''
+``` markdown
 VLAN+------+1      1         3       1+------+
 1234|  ATL +-------+         +--------+ MIA  |1234
     +------+       +---------+        +------+
@@ -50,7 +50,7 @@ VLAN+------+1      1         3       1+------+
     +------+       +---------+        +------+
 2345|ATLDTN+-------+         +--------+MIADTN|2345
     +------+1      2         4       1+------+
-'''
+```
 
 This topology is fairly simple, but we can use it to demonstrate both types of rules that the currenat AtlanticWave/SDX Controller supports.
 
