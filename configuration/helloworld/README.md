@@ -55,7 +55,7 @@ VLAN+------+1      1         3       1+------+
 This topology is fairly simple, but we can use it to demonstrate both types of rules that the currenat AtlanticWave/SDX Controller supports.
 
 NOTE:
-See the [Issues](https://github.com/atlanticwave-sdx/atlanticwave-proto/issues/) page for potential issues. In particular [Issue 39](https://github.com/atlanticwave-sdx/atlanticwave-proto/issues/39) relates to deleting rules. Rules are correctly deleted, however there is a GUI error as of 2017/10/09.
+See the [Issues](https://github.com/atlanticwave-sdx/atlanticwave-proto/issues/) page for potential issues. There are none known as of 11 October 2017.
 
 Let's start by checking connectivity. Run the `pingall` command in the mininet window (window 3). None of the nodes will be able to communicate.
 
