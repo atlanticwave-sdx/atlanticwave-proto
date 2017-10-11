@@ -368,25 +368,23 @@ class RuleManager(SingletonMixin):
         starttime = record['starttime']
         stoptime = record['stoptime']
 
-        # Remove from the rule_table
-        self.rule_table.delete(hash=rule.get_rule_hash())
-        
-
         if state == ACTIVE_RULE:
-            self._remove_rule(rule.get_rule_hash())
+            self._remove_rule(rule)
+            self.rule_table.delete(hash=rule.get_rule_hash())
 
             if stoptime == self.remove_next_time:
                 self._restart_remove_timer()
-
-
+                
         # If inactive, 
         # Was it the next install timer to pop? If so, update timer.
         elif state == INACTIVE_RULE:
+            self.rule_table.delete(hash=rule.get_rule_hash())
             self._restart_install_timer()
 
         # If Expired:
         # Nothing specific to do right now
         elif state == EXPIRED_RULE:
+            self.rule_table.delete(hash=rule.get_rule_hash())
             pass
             #FIXME: Recurrent rules are weird. 
 
@@ -409,11 +407,10 @@ class RuleManager(SingletonMixin):
                 self.send_user_add_rule(bd)
         except Exception as e: raise
 
-    def _remove_rule(self, rule_hash):
+    def _remove_rule(self, rule):
         ''' Helper function that remove a rule from the switch. '''
         try:
-            table_entry = self.rule_table.find_one(hash=rule_hash)
-            rule = pickle.loads(str(table_entry['rule']))
+            table_entry = self.rule_table.find_one(hash=rule.get_rule_hash())
             extendedbd = pickle.loads(str(table_entry['extendedbd']))
             for bd in rule.get_breakdown():
                 self.send_user_rm_rule(bd)
@@ -482,7 +479,7 @@ class RuleManager(SingletonMixin):
             self.rule_table.update({'hash':rule['hash'],
                                     'state':EXPIRED_RULE}, 
                                    ['hash'])
-            self._remove_rule(rule['hash'])
+            self._remove_rule(rule)
             # FIXME: Recurrant rules will need to be updated on the install list potentially.
 
         # Set timer for next rule removal, if necessary
