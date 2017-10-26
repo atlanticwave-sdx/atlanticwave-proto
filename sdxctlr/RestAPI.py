@@ -125,6 +125,287 @@ class RestAPI(SingletonMixin):
     class User(flask_login.UserMixin):
         pass
 
+    # From     http://flask.pocoo.org/snippets/45/
+    @staticmethod
+    def request_wants_json():
+        best = request.accept_mimetypes.best_match(['application/json',
+                                                    'text/html'])
+        return (best == 'application/json' and
+                request.accept_mimetypes[best] >
+                request.accept_mimetypes['text/html'])
+
+    '''
+    GET /api/v1/localcontrollers/
+      List all configured Local Controllers.
+    Query Parameters
+      details (bool) - Default: false. Return all the details of the local 
+        controllers. By default, returns a link to the local controller's 
+        detailed information.
+    Status Codes
+      200 OK - no error
+    Example Request
+      GET /api/v1/localcontrollers
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "links": {
+          "NAME": {
+            "href": "http://awavesdx/api/v1/localcontrollers/NAME"
+          }
+        }
+      }
+    '''
+    @staticmethod
+    @app.route('/api/v1/localcontrollers', methods=['GET'])
+    def v1localcontrollers()
+        pass
+
+
+    '''
+    GET /api/v1/localcontrollers/<lcname>
+      List details of local controller named lcname.
+    Query Parameters
+      details (bool) - Default: false. Return all the details of the local 
+        controller's switches. By default, returns a link to the local 
+        controller's switches' detailed information. 
+    Status Codes
+      200 OK - no error
+      404 Not Found - If local controller lcname doesn't exist.
+    Example Request
+      GET /api/v1/localcontrollers/ATL
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "ATL": {
+          "href": "http://awavesdx/api/v1/localcontrollers/ATL",
+          "lcip": "10.2.3.4",
+          "internalconfig": {
+            "href": "http://awavesdx/api/v1/localcontrollers/ATL/internalconfig"},
+          "switches": {
+            "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches",
+            "links": {
+              "atlsw1": {
+                "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1"},
+              "atlsw2": {
+                "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw2"}}}
+          "operator": {
+            "organization": "Georgia Tech/RNOC",
+            "administrator": "Sean Donovan",
+            "contact": "sdonovan@gatech.edu"}
+        }
+      }
+    '''
+    @staticmethod
+    @app.route('/api/v1/localcontrollers/<lcname>', methods=['GET'])
+    def v1localcontrollersspecific(lcname):
+        pass
+
+
+
+
+    '''
+    GET /api/v1/localcontrollers/<lcname>/internalconfig
+      Details of a local controller's internal configuration.
+    Query Parameters
+      N/A
+    Status Codes
+      200 OK - no error
+      403 Forbidden - if a non-local administrator or non-global administrator 
+        attempts to view the internal configuration information, this is 
+        returned.
+    Example Request
+      GET /api/v1/localcontrollers/ATL/internalconfig
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "ATL": {
+          "internalconfig": {
+            "ryucxninternalport": 55780,
+            "openflowport": 6680,
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22]
+          }
+        }
+      }
+    '''
+    @staticmethod
+    @app.route('/api/v1/localcontrollers/<lcname>/internalconfig',
+               methods=['GET'])
+    def v1localcontrollersspecificinternalconfig(lcname):
+        pass
+
+
+    '''
+    GET /api/v1/localcontrollers/<lcname>/switches
+      List of switches associated with lcname.
+    Query Parameters
+      details (bool) - Default: false. Return all the details of the local 
+        controller's switches. By default, returns a link to the local 
+        controller's switches' detailed information. 
+    Status Codes
+      200 OK - no error
+      403 Forbidden - if a non-local administrator or non-global administrator 
+        attempts to view the internal configuration information, this is 
+        returned.
+    Example Request
+      GET /api/v1/localcontrollers/ATL/switches
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "links": {
+          "atlsw1": {
+            "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1"},
+          "atlsw2": {
+            "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw2"}
+        }
+      }
+    ''' 
+    @staticmethod
+    @app.route('/api/v1/localcontrollers/<lcname>/switches', methods=['GET'])
+    def v1localcontrollersspecificswitches(lcname):
+        pass
+
+
+    '''
+    GET /api/v1/localcontrollers/<lcname>/switches/<switchname>
+      Returns details on switch switchname that belongs to local controller 
+      lcname.
+    Query Parameters
+      details (bool) - Default: false. Return all the details of the switch's 
+      ports. By default, returns a link to the switch's ports' detailed 
+      information. 
+    Status Codes
+      200 OK - no error
+      403 Forbidden - if a non-local administrator or non-global administrator 
+        attempts to view the internal configuration information, this is 
+        returned.
+    Example Request
+      GET /api/v1/localcontrollers/ATL/switches/atlsw1
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "atlsw1": {
+          "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1"}
+          "friendlyname":"Atlanta Switch 1",
+          "ip": "10.2.3.20",
+          "dpid": "1",
+          "brand": "Corsa",
+          "model": "DP2200 Software version 3.0.2",
+          "ports": {
+            "port1": {
+              "portnumber": 1,
+              "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/1"},
+            "port2": {
+              "portnumber": 2,
+              "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/2"},
+            "port3": {
+              "portnumber": 3,
+              "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/3"},
+            "port4": {
+              "portnumber": 4,
+              "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/4"}
+          }
+        }
+      }
+    '''
+    @staticmethod
+    @app.route('/api/v1/localcontrollers/<lcname>/switches/<switchname>',
+               methods=['GET'])
+    def v1localcontrollersspecificswitchesspecific(lcname, switchname):
+        pass
+
+
+    '''
+    GET /api/v1/localcontrollers/<lcname>/switches/<switchname>/ports
+      List of ports associated with switchname.
+    Query Parameters
+      details (bool) - Default: false. Return all the details of the switch's 
+      ports. By default, returns a link to the local switch's ports' detailed 
+      information. 
+    Status Codes
+      200 OK - no error
+      403 Forbidden - if a non-local administrator or non-global administrator 
+        attempts to view the internal configuration information, this is 
+        returned.
+    Example Request
+      GET /api/v1/localcontrollers/ATL/switches/atlsw1/ports
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "links": {
+          "port1": {
+            "portnumber": 1,
+            "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/1"},
+          "port2": {
+            "portnumber": 2,
+            "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/2"},
+          "port3": {
+            "portnumber": 3,
+            "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/3"},
+          "port4": {
+            "portnumber": 4,
+            "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/4"}
+      }
+    '''
+    @staticmethod
+    @app.route('/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports',
+               methods=['GET'])
+    def v1localcontrollersspecificswitchesspecificports(lcname, switchname):
+        pass
+
+
+    '''
+    GET /api/v1/localcontrollers/<lcname>/switches/<switchname>/ports/<portnumber>
+      Details of port portnumber belonging to switchname. speed is in bits per 
+      second
+    Query Parameters
+      N/A
+    Status Codes
+      200 OK - no error
+      403 Forbidden - if a non-local administrator or non-global administrator 
+        attempts to view the internal configuration information, this is 
+        returned.
+    Example Request
+      GET /api/v1/localcontrollers/ATL/switches/atlsw1/ports/1
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "port1": {
+          "portnumber": 1,
+          "speed": 800000000,
+          "destination": "atldtn"
+        }
+      }
+    '''
+    @staticmethod
+    @app.route('/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports/<portnumber>',
+               methods=['GET'])
+    def v1localcontrollersspecificswitchesspecificportsspecific(lcname,
+                                                                switchname,
+                                                                portnumber):
+        pass
+
+
+
+
+
+
+
+    
+
+    
     # This builds a shibboleth session
     @staticmethod
     @app.route('/build_session')
@@ -477,6 +758,13 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
     @staticmethod
     @app.route('/rule/all/', methods=['GET','POST'])
     def get_rules():
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(request.__dict__)
+        print "\n\n####"
+        print request.accept_mimetypes
+        print request.accept_mimetypes.best_match(["application/json", 'text/html'])
+        print "####"
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
             #TODO: Throws exception currently    
             if request.method == 'POST':
