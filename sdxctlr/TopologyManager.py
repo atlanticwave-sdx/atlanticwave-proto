@@ -93,6 +93,17 @@ class TopologyManager(SingletonMixin):
 
             # Fill out topology
             with self.topolock:
+                # Local controller
+                self.topo.add_node(key)
+                self.topo.node[key]['type'] = "localcontroller"
+                self.topo.node[key]['shortname'] = shortname
+                self.topo.node[key]['location'] = location
+                self.topo.node[key]['ip'] = lcip
+                self.topo.node[key]['org'] = org
+                self.topo.node[key]['administrator'] = administrator
+                self.topo.node[key]['contact'] = contact
+
+                # Switches for that LC
                 for switchinfo in entry['switchinfo']:
                     name = str(switchinfo['name'])
                     # Node may be implicitly declared, check this first.
@@ -114,6 +125,8 @@ class TopologyManager(SingletonMixin):
 
                     # Other fields that may be of use
                     self.topo.node[name]['vlans_in_use'] = []
+
+                    self.topo.node[name]['internalconfig'] = switchinfo['internalconfig']
 
                     # Add the links
                     for port in switchinfo['portinfo']:

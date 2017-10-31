@@ -20,21 +20,14 @@
       "vlan":2345}
   },
   "localcontrollers": {
-    "br1":{
-      "shortname": "br1",
+    "br1LC":{
+      "shortname": "br1LC",
       "credentials": "pwd",
       "location": "0,0",
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55780,
-        "openflowport": 6680,
-        "corsaurl": "",
-        "corsatoken": "",
-        "corsabridge": "br1",
-        "corsabwin":11,
-        "corsabwout":12,
-        "corsaratelimiterbridge":"br21",
-        "corsaratelimiterports":[21,22]
+        "openflowport": 6680
       },
       "switchinfo": [
         {
@@ -65,8 +58,17 @@
               "speed": 8000000000,
               "destination": "miadtn"
             }
-	        ]
-	      }
+	        ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22]
+          }
+	    }
       ],
       "operatorinfo": {
         "organization": "Georgia Tech/RNOC",

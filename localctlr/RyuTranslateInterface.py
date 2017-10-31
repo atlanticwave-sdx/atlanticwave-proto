@@ -225,18 +225,21 @@ class RyuTranslateInterface(app_manager.RyuApp):
         
         ofdata = lcdata['internalconfig']
         self.ryu_cxn_port = ofdata['ryucxninternalport']
-        self.corsa_url = ofdata['corsaurl']
-        self.corsa_token = ofdata['corsatoken']
-        self.corsa_bridge = ofdata['corsabridge']
-        self.corsa_bw_in = int(ofdata['corsabwin'])
-        self.corsa_bw_out = int(ofdata['corsabwout'])
-        self.corsa_rate_limit_bridge = ofdata['corsaratelimiterbridge']
-        self.corsa_rate_limit_ports = ofdata['corsaratelimiterports']
-        
+
         # Get the DPID to name of the various switches this LC controls
         self.dpid_dict = {}
         for entry in lcdata['switchinfo']:
             self.dpid_dict[str(entry['dpid'])] = entry['name']
+
+    def _get_switch_internal_config(self, datapath):
+        ''' Gets switch internal config information based on datapath passed in
+        '''
+        dpid = datapath.id
+
+        if dpid in self.dpid_dict.keys():
+            return self.dpid_dict[dpid][internalconfig]
+        raise ValueError("%s is not in the dpid_dict: %s" % (dpid,
+                                                    self.dpid_dict.keys()))
 
     def main_loop(self):
         ''' This is the main loop that reads and works with the data coming from
@@ -378,12 +381,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
             Returns a list of TranslatedLCRuleContainers
         '''
         results = []
+        internal_config = self._get_switch_internal_config(datapath)
 
         # Create Outbound Rule
         # There are two options here: Corsa or Non-Corsa. Non-Corsa is for
         # regular OpenFlow switches (such as OVS) and is more straight forward.
 
-        if self.corsa_url == "":
+        if internal_config['corsaurl'] == "":
             # Make the equivalent MatchActionLCRule, translate it, and use these
             # as the results. Easier translation!
             switch_id = 0  # This is unimportant:
@@ -427,14 +431,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
             matches = [IN_PORT(vlanrule.get_inport()),
                        VLAN_VID(vlanrule.get_vlan_in())]
             actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
-                       Forward(self.corsa_bw_in)]
+                       Forward(internal_config['corsabwin'])
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
                                                          table,
                                                          of_cookie,
                                                          marule)
 
-            matches = [IN_PORT(self.corsa_bw_out),
+            matches = [IN_PORT(internal_config['corsabwout']),
                        VLAN_VID(vlanrule.get_vlan_out())]
             actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
                        Forward(vlanrule.get_outport())]
@@ -446,7 +450,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # If bidirectional, create inbound rule
             if vlanrule.get_bidirectional() == True:
-                matches = [IN_PORT(self.corsa_bw_in),
+                matches = [IN_PORT(internal_config['corsabwin']),
                            VLAN_VID(vlanrule.get_vlan_out())]
                 actions = [SetField(VLAN_VID(vlanrule.get_vlan_in())),
                            Forward(vlanrule.get_inport())]
@@ -459,7 +463,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 matches = [IN_PORT(vlanrule.get_outport()),
                            VLAN_VID(vlanrule.get_vlan_out())]
                 actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
-                           Forward(self.corsa_bw_out)]
+                           Forward(internal_config['corsa_bw_out'])]
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
                                                              table,
@@ -469,24 +473,25 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # Bandwidth REST rules rely on the REST API. If it changes, then
             # this may need to be modified.
-            bridge = self.corsa_rate_limit_bridge
+            bridge = internal_config['corsaratelimitbridge']
             vlan = vlanrule.get_vlan_out()
             bandwidth = vlanrule.get_bandwidth()
 
             #Find out the request_url
-            tunnel_url = (self.corsa_url + "api/v1/bridges/" +
+            tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                           bridge + "/tunnels?list=true")
             print "Requesting tunnels from %s" % tunnel_url
             rest_return = requests.get(tunnel_url,
                                        headers={'Authorization':
-                                                self.corsa_token},
+                                                internal_config['corsatoken']},
                                        verify=False) #FIXME: HARDCODED
 
-            print "Looking for %s on ports %s" % (vlan, self.corsa_rate_limit_ports)
+            print "Looking for %s on ports %s" % (vlan,
+                                      internal_config['corsaratelimitports'])
                 
             for entry in rest_return.json()['list']:
                 if (entry['vlan-id'] == vlan and
-                    int(entry['port']) in self.corsa_rate_limit_ports):
+                    int(entry['port']) in internal_config['corsaratelimitports']):
 
                     request_url = entry['links']['self']['href']
                     # This implements Red/Green, per Corsa's spec. Anything over
@@ -508,10 +513,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
                     print "Patching %s:%s" % (request_url, json)
                     results.append(TranslatedCorsaRuleContainer("patch",
-                                                            request_url,
-                                                            jsonval,
-                                                            self.corsa_token,
-                                                            valid_responses))
+                                                request_url,
+                                                jsonval,
+                                                internal_config['corsatoken'],
+                                                valid_responses))
         
         # Return results to be used.
         return results
@@ -597,11 +602,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
             Returns a list of TranslatedRuleContainers
         '''
         results = []
+        internal_config = self._get_switch_internal_config(datapath)
         switch_id = 0 # This is unimportant: it's never used in the translation
         intermediate_vlan = mperule.get_intermediate_vlan()
 
         # Non-Corsa first
-        if self.corsa_url == "":
+        if internal_config['corsaurl'] == "":
             # Endpoint ports
             # - Translate VLANs on ingress on endpoint_table
             # - Install learning rules on intermediate VLAN on ingress on
@@ -680,7 +686,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 actions = [SetField(VLAN_VID(port)),
                            PushVLAN(),
                            SetField(VLAN_VID(intermediate_vlan)),
-                           Forward(self.corsa_bw_in)]
+                           Forward(internal_config['corsabwin'])]
                 priority = PRIORITY_L2MULTIPOINT
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
@@ -730,7 +736,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             #   - pop outer VLAN
             #   - set metadata(MD_L2M_TRANSLATE)
             #   - goto translate_table
-            matches = [IN_PORT(self.corsa_bw_out),
+            matches = [IN_PORT(internal_config['corsabwout']),
                        VLAN_VID(intermediate_vlan)]
             actions = [PopVLAN(),
                        WriteMetadata(MD_L2M_TRANSLATE),
@@ -743,21 +749,21 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          marule,
                                                          priority)
 
-            bridge = self.corsa_rate_limit_bridge
+            bridge = internal_config['corsaratelimitbridge']
             vlan = intermediate_vlan
             bandwidth = mperule.get_bandwidth()
 
-            tunnel_url = (self.corsa_url + "api/v1/bridges/" +
+            tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                           bridge + "/tunnels?list=true")
             rest_return = requests.get(tunnel_url,
                                        headers={'Authorization':
-                                                self.corsa_token},
+                                                internal_config['corsatoken']},
                                        verify=False) #FIXME: HARDCODED
 
             # - Corsa BW Management rule
             for entry in rest_return.json()['list']:
                 if (entry['vlan-id'] == vlan and
-                    int(entry['port']) in self.corsa_rate_limit_ports):
+                    int(entry['port']) in internal_config['corsaratelimitports']):
 
                     request_url = entry['links']['self']['href']
                     jsonval = [{'op':'replace',
@@ -770,10 +776,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
                     print "Patching %s:%s" % (request_url, json)
                     results.append(TranslatedCorsaRuleContainer("patch",
-                                                            request_url,
-                                                            jsonval,
-                                                            self.corsa_token,
-                                                            valid_responses))
+                                                request_url,
+                                                jsonval,
+                                                internal_config['corsatoken'],
+                                                valid_responses))
 
             # All ports
             flooding_ports = mperule.get_flooding_ports()
