@@ -68,7 +68,7 @@
           "name":"br2",
           "friendlyname":"br2",
           "ip": "127.0.0.1",
-          "dpid":"1",
+          "dpid":"2",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [

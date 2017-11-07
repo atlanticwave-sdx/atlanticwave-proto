@@ -227,19 +227,27 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.ryu_cxn_port = ofdata['ryucxninternalport']
 
         # Get the DPID to name of the various switches this LC controls
-        self.dpid_dict = {}
+        self.dpid_data = {}
         for entry in lcdata['switchinfo']:
-            self.dpid_dict[str(entry['dpid'])] = entry['name']
+            dpid = str(entry['dpid'])
+            self.dpid_data[dpid] = {}
+            self.dpid_data[dpid]['name'] = entry['name']
+            print entry['internalconfig']
+            self.dpid_data[dpid]['internalconfig'] = entry['internalconfig']
 
     def _get_switch_internal_config(self, datapath):
         ''' Gets switch internal config information based on datapath passed in
         '''
-        dpid = datapath.id
+        dpid = str(datapath.id)
 
-        if dpid in self.dpid_dict.keys():
-            return self.dpid_dict[dpid][internalconfig]
-        raise ValueError("%s is not in the dpid_dict: %s" % (dpid,
-                                                    self.dpid_dict.keys()))
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(self.dpid_data)
+
+        if dpid in self.dpid_data.keys():
+            return self.dpid_data[dpid]['internalconfig']
+        raise ValueError("%s is not in the dpid_data: %s" % (dpid,
+                                                    self.dpid_data.keys()))
 
     def main_loop(self):
         ''' This is the main loop that reads and works with the data coming from
@@ -1311,7 +1319,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                        # it's never used in the translation
 
         datapath = ev.msg.datapath
-        switch_name = self.dpid_dict[str(datapath.id)]
+        switch_name = self.dpid_data[str(datapath.id)]['name']
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -1346,7 +1354,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                        # it's never used in the translation
 
         datapath = ev.msg.datapath
-        switch_name = self.dpid_dict[str(datapath.id)]
+        switch_name = self.dpid_data[str(datapath.id)]['name']
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
