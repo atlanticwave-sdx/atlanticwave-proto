@@ -62,8 +62,9 @@
             "corsabwout":12,
             "corsaratelimiterbridge":"br21",
             "corsaratelimiterports":[21,22]
-          },
-          {
+          }
+        },
+        {
           "name":"br2",
           "friendlyname":"br2",
           "ip": "127.0.0.1",
@@ -96,7 +97,7 @@
             "corsaratelimiterbridge":"br21",
             "corsaratelimiterports":[21,22]
           }
-	    }
+        }
       ],
       "operatorinfo": {
         "organization": "Georgia Tech/RNOC",

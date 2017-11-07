@@ -158,7 +158,7 @@ class RestAPI(SingletonMixin):
     '''
     @staticmethod
     @app.route('/api/v1/localcontrollers', methods=['GET'])
-    def v1localcontrollers()
+    def v1localcontrollers():
         pass
 
 

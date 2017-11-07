@@ -103,7 +103,9 @@ class TopologyManager(SingletonMixin):
                 self.topo.node[key]['administrator'] = administrator
                 self.topo.node[key]['contact'] = contact
 
-                self.topo.node[key]['switches'] = []
+                # Add switches to the local controller. Actually happens after
+                # the switches are handled.
+                switch_list = []
 
                 # Switches for that LC
                 for switchinfo in entry['switchinfo']:
@@ -112,8 +114,8 @@ class TopologyManager(SingletonMixin):
                     if not self.topo.has_node(name):
                         self.topo.add_node(name)
 
-                    # Add switch to LC
-                    self.topo.node[key]['switches'].append(name)
+                    # Add switch to LC list. This will be added at the end.
+                    switch_list.append(name)
                     
                     # Per switch info, gets added to topo
                     self.topo.node[name]['friendlyname'] = str(switchinfo['friendlyname'])
@@ -153,6 +155,9 @@ class TopologyManager(SingletonMixin):
                         # Other fields that may be of use
                         self.topo.edge[name][destination]['vlans_in_use'] = []
                         self.topo.edge[name][destination]['bw_in_use'] = 0
+                # Once all the switches have been looked at, add them to the
+                # LC
+                self.topo.node[key]['switches'] = switch_list
 
     # -----------------
     # Generic functions
