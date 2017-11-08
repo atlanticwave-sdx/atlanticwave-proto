@@ -102,6 +102,7 @@ class TopologyManager(SingletonMixin):
                 self.topo.node[key]['org'] = org
                 self.topo.node[key]['administrator'] = administrator
                 self.topo.node[key]['contact'] = contact
+                self.topo.node[key]['internalconfig'] = entry['internalconfig']
 
                 # Add switches to the local controller. Actually happens after
                 # the switches are handled.

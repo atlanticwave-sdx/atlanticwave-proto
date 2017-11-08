@@ -51,6 +51,25 @@ from dateutil.parser import parse as pd
 #Constants
 from shared.constants import *
 
+# ENDPOINTS
+EP_LOCALCONTROLLER = "/api/v1/localcontrollers"
+EP_LOCALCONTROLLERLC = "/api/v1/localcontrollers/<lcname>"
+EP_LOCALCONTROLLERLCINT = "/api/v1/localcontrollers/<lcname>/internalconfig"
+EP_LOCALCONTROLLERLCSW = "/api/v1/localcontrollers/<lcname>/switches"
+EP_LOCALCONTROLLERLCSWSPEC = "/api/v1/localcontrollers/<lcname>/switches/<switchname>"
+EP_LOCALCONTROLLERLCSWSPECPORT = "/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports"
+EP_LOCALCONTROLLERLCSWSPECPORTSPEC = "/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports/<portnumber>"
+
+
+# From     http://flask.pocoo.org/snippets/45/
+def request_wants_json(r):
+    best = r.accept_mimetypes.best_match(['application/json',
+                                          'text/html'])
+    return (best == 'application/json' and
+            r.accept_mimetypes[best] >
+            r.accept_mimetypes['text/html'])
+
+
 
 class RestAPI(SingletonMixin):
     ''' The REST API will be the main interface for participants to use to push 
@@ -125,14 +144,6 @@ class RestAPI(SingletonMixin):
     class User(flask_login.UserMixin):
         pass
 
-    # From     http://flask.pocoo.org/snippets/45/
-    @staticmethod
-    def request_wants_json():
-        best = request.accept_mimetypes.best_match(['application/json',
-                                                    'text/html'])
-        return (best == 'application/json' and
-                request.accept_mimetypes[best] >
-                request.accept_mimetypes['text/html'])
 
     '''
     GET /api/v1/localcontrollers/
@@ -156,11 +167,25 @@ class RestAPI(SingletonMixin):
         }
       }
     '''
+    
     @staticmethod
-    @app.route('/api/v1/localcontrollers', methods=['GET'])
+    @app.route(EP_LOCALCONTROLLER, methods=['GET'])
     def v1localcontrollers():
-        pass
+        
+        retdict = {'links':{}}
+        # Get topology
+        topo = TopologyManager.instance().get_topology()            
+        for node_id in topo.nodes():
+            node = topo.node[node_id]
+            if node['type'] == 'localcontroller':
+                # Add each LC to the dictionary
+                retdict['links'][node_id] = {'href':request.url + "/" + node_id}
 
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict)
 
     '''
     GET /api/v1/localcontrollers/<lcname>
@@ -198,9 +223,37 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
-    @app.route('/api/v1/localcontrollers/<lcname>', methods=['GET'])
+    @app.route(EP_LOCALCONTROLLERLC, methods=['GET'])
     def v1localcontrollersspecific(lcname):
-        pass
+        retdict =  {}
+        # Get topology
+        topo = TopologyManager.instance().get_topology()            
+        for node_id in topo.nodes():
+            node = topo.node[node_id]
+            if (node_id == lcname and
+                node['type'] == 'localcontroller'):
+                # Add that LC to the dictionary
+                base_url = request.url
+                retdict[node_id] = {'href':base_url}
+                retdict[node_id]['lcip'] = node['ip']
+                retdict[node_id]['internalconfig'] = {'href':
+                                            base_url + "/internalconfig"}
+                retdict[node_id]['operator'] = {'organization': node['org'],
+                                       'administrator': node['administrator'],
+                                       'contact' : node['contact']}
+                # Add links to each switch
+                retdict[node_id]['switches'] = {'href':
+                                            base_url + "/switches"}
+                for switch in node['switches']:
+                    retdict[node_id]['switches'][switch] = {'href':
+                                            base_url + "/switches/" + switch}
+                                                
+
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict)
 
 
 
@@ -222,25 +275,34 @@ class RestAPI(SingletonMixin):
       Content-Type: application/json
       {
         "ATL": {
+          "href": "http://awavesdx/api/v1/localcontrollers/ATL/internalconfig",
           "internalconfig": {
             "ryucxninternalport": 55780,
-            "openflowport": 6680,
-            "corsaurl": "",
-            "corsatoken": "",
-            "corsabridge": "br1",
-            "corsabwin":11,
-            "corsabwout":12,
-            "corsaratelimiterbridge":"br21",
-            "corsaratelimiterports":[21,22]
+            "openflowport": 6680
           }
         }
       }
     '''
     @staticmethod
-    @app.route('/api/v1/localcontrollers/<lcname>/internalconfig',
-               methods=['GET'])
+    @app.route(EP_LOCALCONTROLLERLCINT, methods=['GET'])
     def v1localcontrollersspecificinternalconfig(lcname):
-        pass
+        retdict = {}
+        # Get the topology first
+        topo = TopologyManager.instance().get_topology()            
+        for node_id in topo.nodes():
+            node = topo.node[node_id]
+            if (node_id == lcname and
+                node['type'] == 'localcontroller'):
+                # For the particular LC, get the internal configuration
+                base_url = request.url
+                retdict[node_id] = {'href':base_url}
+                retdict[node_id]['internalconfig'] = node['internalconfig']
+
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict)
 
 
     '''
@@ -261,6 +323,7 @@ class RestAPI(SingletonMixin):
       HTTP/1.1 200 OK
       Content-Type: application/json
       {
+        "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/",
         "links": {
           "atlsw1": {
             "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1"},
@@ -270,9 +333,29 @@ class RestAPI(SingletonMixin):
       }
     ''' 
     @staticmethod
-    @app.route('/api/v1/localcontrollers/<lcname>/switches', methods=['GET'])
+    @app.route(EP_LOCALCONTROLLERLCSW, methods=['GET'])
     def v1localcontrollersspecificswitches(lcname):
-        pass
+        retdict = {}
+        # Get the topology first
+        topo = TopologyManager.instance().get_topology()            
+        for node_id in topo.nodes():
+            node = topo.node[node_id]
+            if (node_id == lcname and
+                node['type'] == 'localcontroller'):
+                # For the particular LC, get the internal configuration
+                base_url = request.url
+                retdict[node_id] = {'href':base_url}
+                # Add links to each switch:
+                retdict[node_id]['links'] = {}
+                for switch in node['switches']:
+                    retdict[node_id]['links'][switch] = {'href':
+                                                     base_url + "/" + switch}
+
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict)
 
 
     '''
@@ -302,6 +385,7 @@ class RestAPI(SingletonMixin):
           "brand": "Corsa",
           "model": "DP2200 Software version 3.0.2",
           "ports": {
+            "href":  "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports"},
             "port1": {
               "portnumber": 1,
               "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/1"},
@@ -319,11 +403,42 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
-    @app.route('/api/v1/localcontrollers/<lcname>/switches/<switchname>',
-               methods=['GET'])
+    @app.route(EP_LOCALCONTROLLERLCSWSPEC, methods=['GET'])
     def v1localcontrollersspecificswitchesspecific(lcname, switchname):
-        pass
+        retdict = {}
+        # Get the topology first
+        topo = TopologyManager.instance().get_topology()            
+        for node_id in topo.nodes():
+            node = topo.node[node_id]
+            if (node_id == switchname and
+                node['type'] == 'switch' and
+                node['lcname'] == lcname):
 
+                # Found the correct node, 
+                base_url = request.url
+                retdict[node_id] = {'href':base_url}
+                retdict[node_id]['friendlyname'] = node['friendlyname']
+                retdict[node_id]['ip'] = node['ip']
+                retdict[node_id]['dpid'] = node['dpid']
+                retdict[node_id]['brand'] = node['brand']
+                retdict[node_id]['model'] = node['model']
+
+                # Per-port information
+                retdict[node_id]['ports'] = {'href':base_url + "/ports"}
+                for neighbor in topo.neighbors(node_id):
+                    # Need to extract the port info out of this
+                    portnum = topo.edge[node_id][neighbor][node_id]
+                    pns = "port"+str(portnum) # port number string
+                    portinfo = topo.edge[node_id][neighbor]
+                    retdict[node_id]['ports'][pns] = {'href':
+                                        base_url + "/ports/" + str(portnum),
+                                        'portnumber':portnum}
+
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict)
 
     '''
     GET /api/v1/localcontrollers/<lcname>/switches/<switchname>/ports
@@ -343,6 +458,7 @@ class RestAPI(SingletonMixin):
       HTTP/1.1 200 OK
       Content-Type: application/json
       {
+        "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports"}
         "links": {
           "port1": {
             "portnumber": 1,
@@ -359,10 +475,37 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
-    @app.route('/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports',
-               methods=['GET'])
+    @app.route(EP_LOCALCONTROLLERLCSWSPECPORT, methods=['GET'])
     def v1localcontrollersspecificswitchesspecificports(lcname, switchname):
-        pass
+        retdict = {}
+        # Get the topology first
+        topo = TopologyManager.instance().get_topology()            
+        for node_id in topo.nodes():
+            node = topo.node[node_id]
+            if (node_id == switchname and
+                node['type'] == 'switch' and
+                node['lcname'] == lcname):
+
+                # Found the correct node, 
+                base_url = request.url
+                retdict['href'] = base_url
+
+                # Per-port information
+                retdict['links'] = {}
+                for neighbor in topo.neighbors(node_id):
+                    # Need to extract the port info out of this
+                    portnum = topo.edge[node_id][neighbor][node_id]
+                    pns = "port"+str(portnum) # port number string
+                    portinfo = topo.edge[node_id][neighbor]
+                    retdict['links'][pns] = {'href':
+                                         base_url + "/" + str(portnum),
+                                        'portnumber':portnum}
+
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict)        
 
 
     '''
@@ -383,6 +526,7 @@ class RestAPI(SingletonMixin):
       Content-Type: application/json
       {
         "port1": {
+          "href": "http://awavesdx/api/v1/localcontrollers/ATL/switches/atlsw1/ports/1",
           "portnumber": 1,
           "speed": 800000000,
           "destination": "atldtn"
@@ -390,12 +534,50 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
-    @app.route('/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports/<portnumber>',
+    @app.route(EP_LOCALCONTROLLERLCSWSPECPORTSPEC,
                methods=['GET'])
     def v1localcontrollersspecificswitchesspecificportsspecific(lcname,
                                                                 switchname,
                                                                 portnumber):
-        pass
+        retdict = {}
+        # Get the topology first
+        topo = TopologyManager.instance().get_topology()            
+        for node_id in topo.nodes():
+            node = topo.node[node_id]
+            if (node_id == switchname and
+                node['type'] == 'switch' and
+                node['lcname'] == lcname):
+
+                # Found the correct node, 
+                base_url = request.url
+
+                # Find the correct port next
+                for neighbor in topo.neighbors(node_id):
+                    # Need to extract the port info out of this
+                    portnum = topo.edge[node_id][neighbor][node_id]
+                    if portnum != int(portnumber): continue
+
+                    pns = "port"+str(portnum) # port number string
+                    portinfo = topo.edge[node_id][neighbor]
+                    retdict[pns] = {'href': base_url + "/ports/" + str(portnum),
+                                    'portnumber': portnum,
+                                    'speed': portinfo['weight'],
+                                    'destination': neighbor,
+                                    'vlansinuse': portinfo['vlans_in_use'],
+                                    'bwinuse': portinfo['bw_in_use']}
+
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict) 
+
+
+
+
+
+
+
 
 
 
@@ -758,13 +940,6 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
     @staticmethod
     @app.route('/rule/all/', methods=['GET','POST'])
     def get_rules():
-        import pprint
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(request.__dict__)
-        print "\n\n####"
-        print request.accept_mimetypes
-        print request.accept_mimetypes.best_match(["application/json", 'text/html'])
-        print "####"
         if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
             #TODO: Throws exception currently    
             if request.method == 'POST':
