@@ -160,6 +160,7 @@ class RestAPI(SingletonMixin):
       HTTP/1.1 200 OK
       Content-Type: application/json
       {
+        "href": "http://awavesdx/api/v1/localcontrollers/",
         "links": {
           "NAME": {
             "href": "http://awavesdx/api/v1/localcontrollers/NAME"
@@ -171,15 +172,33 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route(EP_LOCALCONTROLLER, methods=['GET'])
     def v1localcontrollers():
-        
-        retdict = {'links':{}}
+        base_url = request.base_url
+        retdict = {'links':{},'href':base_url}
         # Get topology
         topo = TopologyManager.instance().get_topology()            
         for node_id in topo.nodes():
             node = topo.node[node_id]
             if node['type'] == 'localcontroller':
                 # Add each LC to the dictionary
-                retdict['links'][node_id] = {'href':request.url + "/" + node_id}
+                lcdict = {'href':base_url + "/" + node_id}
+                
+                ##### QUERY details #####
+                if (request.args.get('details') == 'true' or
+                    request.args.get('details') == 'True'):
+                    lcdict['lcip'] = node['ip']
+                    lcdict['internalconfig'] = {'href': base_url + "/" +
+                                                node_id + "/internalconfig"}
+                    lcdict['operator'] = {'organization': node['org'],
+                                        'administrator': node['administrator'],
+                                        'contact' : node['contact']}
+                    # Add links to each switch
+                    lcdict['switches'] = {'href': base_url + "/" +
+                                          node_id + "/switches"}
+                    for switch in node['switches']:
+                        lcdict['switches'][switch] = {'href': base_url +
+                                                      "/" + node_id +
+                                                      "/switches/" + switch}
+                retdict['links'][node_id] = lcdict
 
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
@@ -233,7 +252,7 @@ class RestAPI(SingletonMixin):
             if (node_id == lcname and
                 node['type'] == 'localcontroller'):
                 # Add that LC to the dictionary
-                base_url = request.url
+                base_url = request.base_url
                 retdict[node_id] = {'href':base_url}
                 retdict[node_id]['lcip'] = node['ip']
                 retdict[node_id]['internalconfig'] = {'href':
@@ -245,8 +264,30 @@ class RestAPI(SingletonMixin):
                 retdict[node_id]['switches'] = {'href':
                                             base_url + "/switches"}
                 for switch in node['switches']:
-                    retdict[node_id]['switches'][switch] = {'href':
-                                            base_url + "/switches/" + switch}
+                    swdict = {'href': base_url + "/switches/" + switch}
+                    ##### QUERY details = True #####
+                    if (request.args.get('details') == 'true' or
+                        request.args.get('details') == 'True'):
+                        swnode = topo.node[switch]
+                        swdict['friendlyname'] = swnode['friendlyname']
+                        swdict['ip'] = swnode['ip']
+                        swdict['dpid'] = swnode['dpid']
+                        swdict['brand'] = swnode['brand']
+                        swdict['model'] = swnode['model']
+
+                        swdict['ports'] = {'href':base_url + "/switches/" +
+                                           switch + "/ports"}
+                        for neighbor in topo.neighbors(switch):
+                            portnum = topo.edge[switch][neighbor][switch]
+                            pns = "port"+str(portnum)
+                            portinfo = topo.edge[switch][neighbor]
+                            swdict['ports'][pns] = {'href':
+                                        base_url + "/switches/" + switch +
+                                        "/ports/" + str(portnum),
+                                        'portnumber':portnum}
+                    
+                    retdict[node_id]['switches'][switch] = swdict
+                                                                        
                                                 
 
         # If they requested a JSON, send back the raw JSON
@@ -294,7 +335,7 @@ class RestAPI(SingletonMixin):
             if (node_id == lcname and
                 node['type'] == 'localcontroller'):
                 # For the particular LC, get the internal configuration
-                base_url = request.url
+                base_url = request.base_url
                 retdict[node_id] = {'href':base_url}
                 retdict[node_id]['internalconfig'] = node['internalconfig']
 
@@ -343,13 +384,34 @@ class RestAPI(SingletonMixin):
             if (node_id == lcname and
                 node['type'] == 'localcontroller'):
                 # For the particular LC, get the internal configuration
-                base_url = request.url
+                base_url = request.base_url
                 retdict[node_id] = {'href':base_url}
                 # Add links to each switch:
                 retdict[node_id]['links'] = {}
                 for switch in node['switches']:
-                    retdict[node_id]['links'][switch] = {'href':
-                                                     base_url + "/" + switch}
+                    swdict = {'href': base_url + "/" + switch}
+                    ##### Query details = True #####
+                    if (request.args.get('details') == 'true' or
+                        request.args.get('details') == 'True'):
+                        swnode = topo.node[switch]
+                        swdict['friendlyname'] = swnode['friendlyname']
+                        swdict['ip'] = swnode['ip']
+                        swdict['dpid'] = swnode['dpid']
+                        swdict['brand'] = swnode['brand']
+                        swdict['model'] = swnode['model']
+
+                        swdict['ports'] = {'href':base_url +
+                                           switch + "/ports"}
+                        for neighbor in topo.neighbors(switch):
+                            portnum = topo.edge[switch][neighbor][switch]
+                            pns = "port"+str(portnum)
+                            portinfo = topo.edge[switch][neighbor]
+                            swdict['ports'][pns] = {'href':
+                                        base_url + switch +
+                                        "/ports/" + str(portnum),
+                                        'portnumber':portnum}
+                    
+                    retdict[node_id]['links'][switch] = swdict
 
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
@@ -415,7 +477,7 @@ class RestAPI(SingletonMixin):
                 node['lcname'] == lcname):
 
                 # Found the correct node, 
-                base_url = request.url
+                base_url = request.base_url
                 retdict[node_id] = {'href':base_url}
                 retdict[node_id]['friendlyname'] = node['friendlyname']
                 retdict[node_id]['ip'] = node['ip']
@@ -424,16 +486,32 @@ class RestAPI(SingletonMixin):
                 retdict[node_id]['model'] = node['model']
 
                 # Per-port information
-                retdict[node_id]['ports'] = {'href':base_url + "/ports"}
+                portsdict = {'href':base_url + "/ports"}
                 for neighbor in topo.neighbors(node_id):
                     # Need to extract the port info out of this
                     portnum = topo.edge[node_id][neighbor][node_id]
                     pns = "port"+str(portnum) # port number string
                     portinfo = topo.edge[node_id][neighbor]
-                    retdict[node_id]['ports'][pns] = {'href':
-                                        base_url + "/ports/" + str(portnum),
-                                        'portnumber':portnum}
+                    ##### QUERY details = True #####
+                    print "details = %s" % request.args.get('details')
+                    if (request.args.get('details') == 'true' or
+                        request.args.get('details') == 'True'):
+                        portsdict[pns] = {'href':
+                                          base_url + "/ports/" + str(portnum),
+                                          'portnumber': portnum,
+                                          'speed': portinfo['weight'],
+                                          'destination': neighbor,
+                                          'vlansinuse':
+                                          portinfo['vlans_in_use'],
+                                          'bwinuse': portinfo['bw_in_use']}
+                    ##### QUERY details = False/None #####
+                    else:
+                        portsdict[pns] = {'href':
+                                          base_url + "/ports/" + str(portnum),
+                                          'portnumber':portnum}
 
+                retdict[node_id]['ports'] = portsdict
+                
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
@@ -487,19 +565,35 @@ class RestAPI(SingletonMixin):
                 node['lcname'] == lcname):
 
                 # Found the correct node, 
-                base_url = request.url
+                base_url = request.base_url
                 retdict['href'] = base_url
-
+                
                 # Per-port information
-                retdict['links'] = {}
+                portsdict = {}
                 for neighbor in topo.neighbors(node_id):
+                    print "neighbor: %s" % neighbor
                     # Need to extract the port info out of this
                     portnum = topo.edge[node_id][neighbor][node_id]
                     pns = "port"+str(portnum) # port number string
                     portinfo = topo.edge[node_id][neighbor]
-                    retdict['links'][pns] = {'href':
-                                         base_url + "/" + str(portnum),
-                                        'portnumber':portnum}
+                    ##### QUERY details = True #####
+                    print "details = %s" % request.args.get('details')
+                    if (request.args.get('details') == 'true' or
+                        request.args.get('details') == 'True'):
+                        portsdict[pns] = {'href':
+                                          base_url + "/" + str(portnum),
+                                          'portnumber': portnum,
+                                          'speed': portinfo['weight'],
+                                          'destination': neighbor,
+                                          'vlansinuse':
+                                          portinfo['vlans_in_use'],
+                                          'bwinuse': portinfo['bw_in_use']}
+                    ##### QUERY details = False/None #####
+                    else:
+                        portsdict[pns] = {'href':
+                                          base_url + "/" + str(portnum),
+                                          'portnumber':portnum}
+                retdict['links'] = portsdict
 
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
@@ -549,7 +643,7 @@ class RestAPI(SingletonMixin):
                 node['lcname'] == lcname):
 
                 # Found the correct node, 
-                base_url = request.url
+                base_url = request.base_url
 
                 # Find the correct port next
                 for neighbor in topo.neighbors(node_id):
