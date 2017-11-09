@@ -52,6 +52,7 @@ from dateutil.parser import parse as pd
 from shared.constants import *
 
 # ENDPOINTS
+# - localcontrollers
 EP_LOCALCONTROLLER = "/api/v1/localcontrollers"
 EP_LOCALCONTROLLERLC = "/api/v1/localcontrollers/<lcname>"
 EP_LOCALCONTROLLERLCINT = "/api/v1/localcontrollers/<lcname>/internalconfig"
@@ -59,6 +60,11 @@ EP_LOCALCONTROLLERLCSW = "/api/v1/localcontrollers/<lcname>/switches"
 EP_LOCALCONTROLLERLCSWSPEC = "/api/v1/localcontrollers/<lcname>/switches/<switchname>"
 EP_LOCALCONTROLLERLCSWSPECPORT = "/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports"
 EP_LOCALCONTROLLERLCSWSPECPORTSPEC = "/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports/<portnumber>"
+# - users
+EP_USERS = "/api/v1/users/"
+EP_USERSSPEC = "/api/v1/users/<username>"
+EP_USERSSPECPOLICIES = "/api/v1/users/<username>/policies"
+EP_USERSSPECPERMISSIONS = "/api/v1/users/<username>/permissions"
 
 
 # From     http://flask.pocoo.org/snippets/45/
@@ -666,7 +672,154 @@ class RestAPI(SingletonMixin):
         #FIXME:  NEED HTML response written
         return json.dumps(retdict) 
 
+    '''
+    GET /api/v1/users/
+      List all users. Administrators are able to view all users, while regular 
+      users are only able to see themselves. 
+    Query Parameters
+      details (bool) - Default: false. Return all the details of the users. May
+        produce very large results.
+    Status Codes
+      200 OK - no error
+    Example Request
+      GET /api/v1/users
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "href": "http://awavesdx/api/v1/users
+        "links": {
+          "sdonovan": {	
+            "href": "http://awavesdx/api/v1/users/sdonovan",
+            "type":"administrator",
+            "organization":"sox",
+            "policies": "http://awavesdx/api/v1/users/sdonovan/policies",
+            "permissions": "http://awavesdx/api/v1/users/sdonovan/permissions"},
+          "jchung": {
+            "href": "http://awavesdx/api/v1/users/jchung",
+            "type":"user",
+            "organization":"georgiatech",
+            "policies": "http://awavesdx/api/v1/users/jchung/policies",
+            "permissions": "http://awavesdx/api/v1/users/jchung/permissions"}
+        }
+      }
+    '''
+    @staticmethod
+    @app.route(EP_USERS, methods=['GET'])
+    def v1users():
+        retdict = {}
 
+        pass
+
+    '''
+    GET /api/v1/users/<username>
+      Show an individual user. Administrators are able to view all users, while
+      regular users are only able to see themselves. 
+    Query Parameters
+      details (bool) - Default: false. Return all the details of the users.
+    Status Codes
+      200 OK - no error
+    Example Request
+      GET /api/v1/users/sdonovan
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "sdonovan": {	
+          "href": "http://awavesdx/api/v1/users/sdonovan",
+          "type":"administrator",
+          "organization":"sox",
+          "policies": "http://awavesdx/api/v1/users/sdonovan/policies",
+          "permissions": "http://awavesdx/api/v1/users/sdonovan/permissions"
+        }
+      }
+    '''
+    @staticmethod
+    @app.route(EP_USERSSPEC, methods=['GET'])
+    def v1usersspec(username):
+        retdict = {}
+
+        pass
+    
+
+    '''
+    GET /api/v1/users/<username>/permissions
+      Retrieves permissions about a single user, username.
+    Query Parameters
+      N/A
+    Status Codes
+      200 OK - no error
+      401 Unauthorized - This is for when a regular user attempts to view 
+        another user's permissions that they are not authorized to view.
+      404 Not Found - This is for when a user attempts to find a user  that does
+        not exist
+
+    Example Request
+      GET /api/v1/users/sdonovan/permissions
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "sdonovan": {	
+          "href":"http://awavesdx/api/v1/users/sdonovan/permissions",
+          FIXME
+      }
+    '''
+    @staticmethod
+    @app.route(EP_USERSSPECPERMISSIONS, methods=['GET'])
+    def v1usersspecperms(username):
+        retdict = {}
+
+        pass
+
+    '''
+    GET /api/v1/users/<username>/policies
+      Retrieves policies created/owned by a single user, username.
+    Query Parameters
+      type (string) - Filter based on a policy type. See the endpoint 
+        /api/v1/policies/type/ for a list of policies. 
+    Status Codes
+      200 OK - no error
+      401 Unauthorized - This is for when a regular user attempts to view 
+        another user's permissions that they are not authorized to view.
+      404 Not Found - This is for when a user attempts to find a policy that 
+        does not exist
+
+    Example Request
+      GET /api/v1/users/sdonovan/policies
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "sdonovan": {
+          "href":"http://awavesdx/api/v1/users/sdonovan/policies",
+          "policies": {
+            "policy2": {	
+              "href": "http://awavesdx/api/v1/policy/number/2",
+              "policynumber": 2,
+              "user":"sdonovan",
+              "type":"l2tunnel"},
+            "policy3": {
+              "href": "http://awavesdx/api/v1/policy/number/3",
+              "policynumber": 3,
+              "user":"sdonovan",
+              "type":"l2multipoint"}
+          }
+        }
+      }
+    '''
+    @staticmethod
+    @app.route(EP_USERSSPECPOLICIES, methods=['GET'])
+    def v1usersspecpolicies(username):
+        retdict = {}
+
+        pass
+
+    
+
+
+
+    
 
 
 
