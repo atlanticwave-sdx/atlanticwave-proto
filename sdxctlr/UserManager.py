@@ -36,11 +36,11 @@ class UserManager(SingletonMixin):
         for unikey in data['participants'].keys():
             key = str(unikey)
             user = data['participants'][key]
+            user['username'] = key
             self.add_user(user)
 
     def add_user(self, user):
-        # Adds user to db
-        pass
+        self.user_table.insert(self._format_db_entry(user))
     
     def get_user(self, user):
         self.logger.info("getting user: {}".format(user))
@@ -75,7 +75,7 @@ class UserManager(SingletonMixin):
         temp_user['organization'] = user['organization']
         temp_user['contact'] = user['contact']
         temp_user['permitted_actions'] = pickle.dumps(user['permitted_actions'])
-        temp_user['restrictions'] = pickle.loads(user['restrictions'])
+        temp_user['restrictions'] = pickle.dumps(user['restrictions'])
         return temp_user
 
     def _setup_logger(self):
