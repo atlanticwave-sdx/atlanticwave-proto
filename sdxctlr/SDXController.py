@@ -22,6 +22,7 @@ from RuleManager import *
 from RuleRegistry import *
 from TopologyManager import *
 from ValidityInspector import *
+from UserManager import *
 
 # Known UserPolicies
 #FIXME: from shared.JsonUploadPolicy import *
@@ -78,11 +79,9 @@ class SDXController(SingletonMixin):
         # self.run_topo decides whether or not to send rules.
         self.run_topo = run_topo
 
-        # Modules with potentially configurable configuration files
-        if mani != None:
-            self.tm = TopologyManager.instance(mani)
-        else:
-            self.tm = TopologyManager.instance()
+        # Modules with configuration files
+        self.tm = TopologyManager.instance(mani)
+        self.um = UserManager.instance(self.db, mani)
 
         # Initialize all the modules - Ordering is relatively important here
         self.aci = AuthenticationInspector.instance()
