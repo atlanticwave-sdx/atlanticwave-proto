@@ -111,6 +111,19 @@
       "credentials": "1234",
       "organization": "Georgia Tech/RNOC",
       "contact": "sdonovan@gatech.edu",
+      "type": "administrator",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    },
+    "jchung": {
+      "credentials": "4321",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "jchung@gatech.edu",
+      "type": "user",
       "permitted_actions": [
         "tbd"
       ],

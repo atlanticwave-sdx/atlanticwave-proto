@@ -61,6 +61,7 @@ class UserManager(SingletonMixin):
         temp_user['credentials'] = user['credentials']
         temp_user['organization'] = user['organization']
         temp_user['contact'] = user['contact']
+        temp_user['type'] = user['type']
         temp_user['permitted_actions'] = pickle.loads(
             str(user['permitted_actions']))
         temp_user['restrictions'] = pickle.loads(
@@ -74,6 +75,7 @@ class UserManager(SingletonMixin):
         temp_user['credentials'] = user['credentials']
         temp_user['organization'] = user['organization']
         temp_user['contact'] = user['contact']
+        temp_user['type'] = user['type']
         temp_user['permitted_actions'] = pickle.dumps(user['permitted_actions'])
         temp_user['restrictions'] = pickle.dumps(user['restrictions'])
         return temp_user

@@ -15,6 +15,7 @@ from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
 from RuleManager import RuleManager
 from TopologyManager import TopologyManager
+from UserManager import UserManager
 #from RuleRegistry import RuleRegistry
 
 #API Stuff
@@ -61,10 +62,17 @@ EP_LOCALCONTROLLERLCSWSPEC = "/api/v1/localcontrollers/<lcname>/switches/<switch
 EP_LOCALCONTROLLERLCSWSPECPORT = "/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports"
 EP_LOCALCONTROLLERLCSWSPECPORTSPEC = "/api/v1/localcontrollers/<lcname>/switches/<switchname>/ports/<portnumber>"
 # - users
-EP_USERS = "/api/v1/users/"
+EP_USERS = "/api/v1/users"
 EP_USERSSPEC = "/api/v1/users/<username>"
 EP_USERSSPECPOLICIES = "/api/v1/users/<username>/policies"
 EP_USERSSPECPERMISSIONS = "/api/v1/users/<username>/permissions"
+# - policies
+EP_POLICIES = "/api/v1/policies"
+EP_POLICIESSPEC = "/api/v1/policies/number/<policynumber>"
+EP_POLICIESTYPE = "/api/v1/policies/type"
+EP_POLICIESTYPESPEC = "/api/v1/policies/type/<policytype>"
+EP_POLICIESTYPESPECEXAMPLE = "/api/v1/policies/type/<policytype>/example.html"
+
 
 
 # From     http://flask.pocoo.org/snippets/45/
@@ -499,7 +507,6 @@ class RestAPI(SingletonMixin):
                     pns = "port"+str(portnum) # port number string
                     portinfo = topo.edge[node_id][neighbor]
                     ##### QUERY details = True #####
-                    print "details = %s" % request.args.get('details')
                     if (request.args.get('details') == 'true' or
                         request.args.get('details') == 'True'):
                         portsdict[pns] = {'href':
@@ -577,13 +584,11 @@ class RestAPI(SingletonMixin):
                 # Per-port information
                 portsdict = {}
                 for neighbor in topo.neighbors(node_id):
-                    print "neighbor: %s" % neighbor
                     # Need to extract the port info out of this
                     portnum = topo.edge[node_id][neighbor][node_id]
                     pns = "port"+str(portnum) # port number string
                     portinfo = topo.edge[node_id][neighbor]
                     ##### QUERY details = True #####
-                    print "details = %s" % request.args.get('details')
                     if (request.args.get('details') == 'true' or
                         request.args.get('details') == 'True'):
                         portsdict[pns] = {'href':
@@ -707,9 +712,25 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route(EP_USERS, methods=['GET'])
     def v1users():
-        retdict = {}
-
-        pass
+        base_url = request.base_url
+        retdict = {'href':base_url, 'links':{}}
+        # Get all the users
+        users = UserManager.instance().get_users()
+        for user in users:
+            un = user['username']
+            retdict['links'][un] = {'href': base_url + "/" + un,
+                                    'type': user['type'],
+                                    'organization': user['organization'],
+                                    'permissions': base_url + "/" + un +
+                                                   "/permissions",
+                                    'policies': base_url + "/" + un +
+                                                "/policies"}
+            
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict) 
 
     '''
     GET /api/v1/users/<username>
@@ -738,8 +759,22 @@ class RestAPI(SingletonMixin):
     @app.route(EP_USERSSPEC, methods=['GET'])
     def v1usersspec(username):
         retdict = {}
+        base_url = request.base_url
+        retdict = {'href':base_url}
+        # Get specific user
+        user = UserManager.instance().get_user(username)
+        retdict[username] = {'href': base_url,
+                             'type': user['type'],
+                             'organization': user['organization'],
+                             'permissions': base_url + "/permissions",
+                             'policies': base_url + "/policies"}
+            
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict) 
 
-        pass
     
 
     '''
@@ -769,7 +804,20 @@ class RestAPI(SingletonMixin):
     @app.route(EP_USERSSPECPERMISSIONS, methods=['GET'])
     def v1usersspecperms(username):
         retdict = {}
+        base_url = request.base_url
+        retdict = {}
+        # Get specific user
+        user = UserManager.instance().get_user(username)
+        retdict[username] = {'href': base_url}
 
+        #FIXME - Once this is squared away, this needs to be written.
+        retdict[username]['permissions'] = user['permitted_actions']
+        
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict) 
         pass
 
     '''
@@ -811,8 +859,31 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route(EP_USERSSPECPOLICIES, methods=['GET'])
     def v1usersspecpolicies(username):
+        base_url = request.base_url
         retdict = {}
+        # Get specific user
+        user = UserManager.instance().get_user(username)
+        retdict[username] = {'href': base_url,
+                             'policies':{}}
 
+        # Get Policies
+        rules = RuleManager.instance().get_rules({'user':username})
+        policy_url = request.url_root + EP_POLICIES
+
+        for rule in rules:
+            (rule_hash, jsonrule, ruletype, user, state) = rule
+            retdict[username]['policies']['policy'+str(rule_hash)] = {'href':
+                                    policy_url + "/number/" + str(rule_hash),
+                                    'policynumber':rule_hash,
+                                    'user':username,
+                                    'type':ruletype}
+            retdict
+
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict) 
         pass
 
     

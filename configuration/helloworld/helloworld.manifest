@@ -82,6 +82,7 @@
       "credentials": "1234",
       "organization": "Georgia Tech/RNOC",
       "contact": "sdonovan@gatech.edu",
+      "type": "administrator",
       "permitted_actions": [
         "tbd"
       ],
