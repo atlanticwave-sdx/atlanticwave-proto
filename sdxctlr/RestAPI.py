@@ -698,14 +698,18 @@ class RestAPI(SingletonMixin):
             "href": "http://awavesdx/api/v1/users/sdonovan",
             "type":"administrator",
             "organization":"sox",
-            "policies": "http://awavesdx/api/v1/users/sdonovan/policies",
-            "permissions": "http://awavesdx/api/v1/users/sdonovan/permissions"},
+            "policies": 
+              {"href":"http://awavesdx/api/v1/users/sdonovan/policies"},
+            "permissions": 
+              {"href":"http://awavesdx/api/v1/users/sdonovan/permissions"}},
           "jchung": {
             "href": "http://awavesdx/api/v1/users/jchung",
             "type":"user",
             "organization":"georgiatech",
-            "policies": "http://awavesdx/api/v1/users/jchung/policies",
-            "permissions": "http://awavesdx/api/v1/users/jchung/permissions"}
+            "policies": 
+              {"href":"http://awavesdx/api/v1/users/jchung/policies"},
+            "permissions": 
+              {"href":"http://awavesdx/api/v1/users/jchung/permissions"}}
         }
       }
     '''
@@ -720,12 +724,30 @@ class RestAPI(SingletonMixin):
             un = user['username']
             retdict['links'][un] = {'href': base_url + "/" + un,
                                     'type': user['type'],
-                                    'organization': user['organization'],
-                                    'permissions': base_url + "/" + un +
-                                                   "/permissions",
-                                    'policies': base_url + "/" + un +
-                                                "/policies"}
-            
+                                    'organization': user['organization']}
+            perms = {'href':base_url + "/" + un + "/permissions"}
+            policies = {'href':base_url + "/" + un + "/policies"}
+
+            ##### QUERY details #####
+            if (request.args.get('details') == 'true' or
+                request.args.get('details') == 'True'):
+                # Permissions - FIXME
+                user['permitted_actions']
+                # Policies
+                rules = RuleManager.instance().get_rules({'user':un})
+                policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
+
+                for rule in rules:
+                    (rule_hash, jsonrule, ruletype, username, state) = rule
+                    policies['policy'+str(rule_hash)] = {'href':
+                                    policy_url + str(rule_hash),
+                                    'policynumber':rule_hash,
+                                    'user':un,
+                                    'type':ruletype}
+                    
+            # Add permissions and policies to the user 
+            retdict['links'][un]['permissions'] = perms
+            retdict['links'][un]['policies'] = policies
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
@@ -750,8 +772,10 @@ class RestAPI(SingletonMixin):
           "href": "http://awavesdx/api/v1/users/sdonovan",
           "type":"administrator",
           "organization":"sox",
-          "policies": "http://awavesdx/api/v1/users/sdonovan/policies",
-          "permissions": "http://awavesdx/api/v1/users/sdonovan/permissions"
+          "policies": 
+              {"href":"http://awavesdx/api/v1/users/sdonovan/policies"},
+          "permissions": 
+              {"href":"http://awavesdx/api/v1/users/sdonovan/permissions"}
         }
       }
     '''
@@ -765,9 +789,30 @@ class RestAPI(SingletonMixin):
         user = UserManager.instance().get_user(username)
         retdict[username] = {'href': base_url,
                              'type': user['type'],
-                             'organization': user['organization'],
-                             'permissions': base_url + "/permissions",
-                             'policies': base_url + "/policies"}
+                             'organization': user['organization']}
+        perms = {'href':base_url + "/permissions"}
+        policies = {'href':base_url + "/policies"}
+
+        ##### QUERY details #####
+        if (request.args.get('details') == 'true' or
+            request.args.get('details') == 'True'):
+            # Permissions - FIXME
+            user['permitted_actions']
+            # Policies
+            rules = RuleManager.instance().get_rules({'user':username})
+            policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
+
+            for rule in rules:
+                (rule_hash, jsonrule, ruletype, un, state) = rule
+                policies['policy'+str(rule_hash)] = {'href':
+                                    policy_url + str(rule_hash),
+                                    'policynumber':rule_hash,
+                                    'user':username,
+                                    'type':ruletype}
+                    
+        # Add permissions and policies to the user 
+        retdict[username]['permissions'] = perms
+        retdict[username]['policies'] = policies
             
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
@@ -818,7 +863,6 @@ class RestAPI(SingletonMixin):
             return json.dumps(retdict)
         #FIXME:  NEED HTML response written
         return json.dumps(retdict) 
-        pass
 
     '''
     GET /api/v1/users/<username>/policies
@@ -867,24 +911,28 @@ class RestAPI(SingletonMixin):
                              'policies':{}}
 
         # Get Policies
-        rules = RuleManager.instance().get_rules({'user':username})
-        policy_url = request.url_root + EP_POLICIES
+        query = {'user':username}
+        ##### QEURY type #####
+        if (request.args.get('type') != None):
+            query['ruletype'] = request.args.get('type')
+        
+        rules = RuleManager.instance().get_rules(query)
+        policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
         for rule in rules:
             (rule_hash, jsonrule, ruletype, user, state) = rule
             retdict[username]['policies']['policy'+str(rule_hash)] = {'href':
-                                    policy_url + "/number/" + str(rule_hash),
+                                    policy_url + str(rule_hash),
                                     'policynumber':rule_hash,
                                     'user':username,
                                     'type':ruletype}
-            retdict
 
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
         #FIXME:  NEED HTML response written
         return json.dumps(retdict) 
-        pass
+
 
     
 
