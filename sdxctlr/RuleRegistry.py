@@ -51,3 +51,7 @@ class RuleRegistry(SingletonMixin):
             return self.ruletype_db[ruletype]
         raise RuleRegistryTypeError("Ruletype %s is not in the ruletype_db" %
                                     ruletype)
+
+    def get_list_of_policies(self):
+        ''' Returns a list of all know Policy types.'''
+        return self.ruletype_db.keys()
