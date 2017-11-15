@@ -16,11 +16,11 @@ from AuthorizationInspector import AuthorizationInspector
 from RuleManager import RuleManager
 from TopologyManager import TopologyManager
 from UserManager import UserManager
-#from RuleRegistry import RuleRegistry
+from RuleRegistry import RuleRegistry
 
 #API Stuff
 import flask
-from flask import Flask, session, redirect, request, url_for, send_from_directory, render_template, Markup
+from flask import Flask, session, redirect, request, url_for, send_from_directory, render_template, Markup, make_response, jsonify
 
 import flask_login
 from flask_login import LoginManager
@@ -72,7 +72,6 @@ EP_POLICIESSPEC = "/api/v1/policies/number/<policynumber>"
 EP_POLICIESTYPE = "/api/v1/policies/type"
 EP_POLICIESTYPESPEC = "/api/v1/policies/type/<policytype>"
 EP_POLICIESTYPESPECEXAMPLE = "/api/v1/policies/type/<policytype>/example.html"
-
 
 
 # From     http://flask.pocoo.org/snippets/45/
@@ -933,8 +932,322 @@ class RestAPI(SingletonMixin):
         #FIXME:  NEED HTML response written
         return json.dumps(retdict) 
 
+    '''
+    GET /api/v1/policies/
+      List all visible policies. Administrators are able to view all policies, 
+      while regular users are only able to see their own policies. 
+    Query Parameters
+      details (bool) - Default: false. Return all the details of the policies. 
+        May produce very large results.
+      FIXME
+    Status Codes
+      200 OK - no error
 
-    
+    Example Request
+      GET /api/v1/policies
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "href": "http://awavesdx/api/v1/policies",
+        "links": {
+          "policy2": {	
+            "href": "http://awavesdx/api/v1/policies/number/2",
+            "policynumber": 2,
+            "user":"sdonovan",
+            "type":"l2tunnel"
+          },
+          "policy3": {
+            "href": "http://awavesdx/api/v1/policies/number/3",
+            "policynumber": 3,
+            "user":"sdonovan",
+            "type":"l2multipoint"
+        }
+      }
+    '''
+    @staticmethod
+    @app.route(EP_POLICIES, methods=['GET'])
+    def v1policies():
+        base_url = request.base_url
+        retdict = {'href': base_url, 'links':{}}
+
+        # Get all the rules:
+        rules = RuleManager.instance().get_rules()
+        policy_url = base_url + "/number/"
+
+        for rule in rules:
+            (rule_hash, jsonrule, ruletype, username, state) = rule
+            policy = {'href':policy_url + str(rule_hash),
+                      'policynumber':rule_hash,
+                      'user':username,
+                      'type':ruletype}
+            retdict['links']['policy'+str(rule_hash)] = policy
+            
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict) 
+
+    '''
+    GET /api/v1/policies/number/<policynumber>
+      Get details of a given policy specified by policynumber. Each policy type 
+      will return different style of information, so we've sequestered the 
+      details into a sub-piece
+    Query Parameters
+      N/A
+    Status Codes
+      200 OK - no error
+      401 Unauthorized - This is for when a regular user attempts to view 
+        another user's policy that they are not authorized to view.
+      404 Not Found - This is for when a user attempts to find a policy that 
+        does not exist
+      410 Gone - FIXME - should we use this?
+
+    Example Request
+      GET /api/v1/policies/number/5
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "policy3": {
+          "href": "http://awavesdx/api/v1/policies/number/3",
+          "policynumber": 3,
+          "user":"sdonovan",
+          "type":"l2multipoint",
+          "json":"{
+            "l2multipoint":{
+              "starttime":"1985-04-12T23:20:50",
+              "endtime":"1985-04-12T23:20:50+0400",
+              "endpoints": [ {"switch":"mia-switch", 
+                              "port":5, 
+                              "vlan":286},
+                             {"switch":"atl-switch", 
+                              "port":3, 
+                              "vlan":1856},
+                             {"switch":"gru-switch", 
+                              "port":4, 
+                              "vlan":3332} ],
+                           "Bandwidth":1000}
+          }
+        }
+      }
+    '''
+    @staticmethod
+    @app.route(EP_POLICIESSPEC, methods=['GET'])
+    def v1policiesspec(policynumber):
+        base_url = request.base_url
+        retdict = {}
+
+        # Get all the rules:
+        rule = RuleManager.instance().get_rule_details(policynumber)
+        if rule == None:
+            #FIXME - proper response
+            if request_wants_json(request):
+                return make_response(jsonify({'error': 'Not found'}), 404)
+            #FIXME:  NEED HTML response written
+            return make_response(jsonify({'error': 'Not found'}), 404)
+
+        (rule_hash, jsonrule, ruletype, state, user, breakdowns) = rule
+        policy = {'href':base_url + str(rule_hash),
+                  'policynumber':rule_hash,
+                  'user':user,
+                  'type':ruletype,
+                  'json':jsonrule}
+        retdict['policy'+str(rule_hash)] = policy
+            
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict) 
+        
+    '''
+    DELETE /api/v1/policies/number/<policynumber>
+      Deletes a given policy specified by policynumber. 
+    Query Parameters
+      N/A
+    Status Codes
+      204 No Content - no error
+      401 Unauthorized - This is for when a regular user attempts to view 
+        another user's policy that they are not authorized to view.
+      404 Not Found - This is for when a user attempts to find a policy that 
+        does not exist
+      410 Gone - FIXME - should we use this?
+
+    Example Request
+      DELETE /api/v1/policies/number/5
+    Example Response
+      HTTP/1.1 204 No Content
+    '''
+    @staticmethod
+    @app.route(EP_POLICIESSPEC, methods=['DELETE'])
+    def v1policiesspecDEL(policynumber):
+        rule = RuleManager.instance().get_rule_details(policynumber)
+        if rule == None:
+            #FIXME - proper response
+            if request_wants_json(request):
+                return make_response(jsonify({'error': 'Not found'}), 404)
+            #FIXME:  NEED HTML response written
+            return make_response(jsonify({'error': 'Not found'}), 404)        
+
+        # Delete rule
+        (rule_hash, jsonrule, ruletype, state, user, breakdowns) = rule
+        RuleManager.instance().remove_rule(rule_hash, user)
+
+        #FIXME - proper response
+        if request_wants_json(request):
+            return make_response(jsonify({}), 204)
+        #FIXME:  NEED HTML response written
+        return make_response(jsonify({}), 204) 
+
+    '''
+    GET /api/v1/policies/type
+      Get the list of different types of policies. This has two functions: easy
+      to walk thorugh the different policy types, and easy way for a user to see
+      if there are new functions and how to use them.
+    Query Parameters
+      N/A
+    Status Codes
+      200 OK - no error
+
+    Example Request
+      GET /api/v1/policies/type
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "href": "http://awavesdx/api/v1/policies/type",
+        "l2tunnel": {
+          "type": "l2tunnel",
+          "href": "http://awavesdx/api/v1/policies/type/l2tunnel",
+          "example": 
+            "http://awavesdx/api/v1/policies/type/l2tunnel/example.html"},
+        "l2multipoint": {
+          "type": "l2multipoint",
+          "href": "http://awavesdx/api/v1/policies/type/l2multipoint",
+          "example": 
+            "http://awavesdx/api/v1/policies/type/l2multipoint/example.html"},
+        "sdxingress": {
+          "type": "sdxingress",
+          "href": "http://awavesdx/api/v1/policies/type/sdxingress",
+          "example": 
+            "http://awavesdx/api/v1/policies/type/sdxingress/example.html"},
+        "sdxegress": {
+          "type": "sdxegress",
+          "href": "http://awavesdx/api/v1/policies/type/sdxegress",
+          "example": 
+            "http://awavesdx/api/v1/policies/type/sdxegress/example.html"}
+       }
+    '''
+    @staticmethod
+    @app.route(EP_POLICIESTYPE, methods=['GET'])
+    def v1policiestype():
+        base_url = request.base_url
+        retdict = {'href':base_url}
+        policies = RuleRegistry.instance().get_list_of_policies()
+        print "------- Policies: -------"
+        print policies
+
+        for policy in policies:
+            p = {'type':policy,
+                 'href':base_url + "/" + policy,
+                 'example': base_url + "/" + policy + "/example.html"}
+            retdict[policy] = p
+            
+
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict) 
+        pass
+
+
+    '''
+    GET /api/v1/policies/type/<policytype>
+      Get the list of policies of type policytype that the user has access to. 
+      This is a filtered version of the /api/v1/policies endpoint. 
+    Query Parameters
+      FIXME
+    Status Codes
+      200 OK - no error
+
+    Example Request
+      GET /api/v1/policies/type/l2tunnel
+    Example Response
+      HTTP/1.1 200 OK
+      Content-Type: application/json
+      {
+        "href": "http://awavesdx/api/v1/policies/type/l2tunnel",
+        "policy3": {
+          "href": "http://awavesdx/api/v1/policies/number/3",
+          "policynumber": 3,
+          "user":"sdonovan",
+          "type":"l2tunnel",
+          "json":"{
+            "l2tunnel":{
+              "starttime":"1985-04-12T23:20:50",
+              "endtime":"1985-04-12T23:20:50+0400",
+              "srcswitch":"atl-switch",
+              "dstswitch":"mia-switch",
+              "srcport":5,
+              "dstport":7,
+              "srcvlan":1492,
+              "dstvlan":1789,
+              "bandwidth":1}
+            }
+          }
+        }
+    '''
+    @staticmethod
+    @app.route(EP_POLICIESTYPESPEC, methods=['GET'])
+    def v1policiestypespec(policytype):
+        base_url = request.base_url
+        retdict = {'href': base_url}
+
+        # Get all the rules:
+        rules = RuleManager.instance().get_rules()
+        policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
+
+        for rule in rules:
+            (rule_hash, jsonrule, ruletype, username, state) = rule
+            if ruletype == policytype:
+                policy = {'href':policy_url + str(rule_hash),
+                          'policynumber':rule_hash,
+                          'user':username,
+                          'type':ruletype}
+                retdict['policy'+str(rule_hash)] = policy
+            
+        # If they requested a JSON, send back the raw JSON
+        if request_wants_json(request):
+            return json.dumps(retdict)
+        #FIXME:  NEED HTML response written
+        return json.dumps(retdict) 
+
+    '''
+    GET /api/v1/policies/type/<policytype>/example.html
+      This endpoint returns an HTML file describing an example for creating that
+      policy type. This is meant to be human readable and is not directly part 
+      of the REST API. This is meant for developers to manually request 
+      particular policy type information, such that they can use the REST API 
+      more effectively.
+    '''
+    @staticmethod
+    @app.route(EP_POLICIESTYPESPECEXAMPLE, methods=['GET'])
+    def v1policiestypeexample(policytype):
+        rr = RuleRegistry.instance()
+        if rr.get_rule_class(policytype) == None:
+            #FIXME - proper response
+            if request_wants_json(request):
+                return make_response(jsonify({}), 404)
+            #FIXME:  NEED HTML response written
+            return make_response(jsonify({}), 404) 
+
+        html = rr.get_rule_class(policytype).get_html_help()
+        return html
+
+    ##### SPECIFIC RULE POSTS #####
 
 
 
