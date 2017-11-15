@@ -41,6 +41,38 @@ class UserPolicy(object):
             Must be implemented by child classes. '''
         raise NotImplementedError("Subclasses must implement this.")
 
+    @classmethod
+    def get_html_help(cls):
+        ''' Used to get HTML help. Should be filled in per-policy. By default,
+            a "Not User Accessible" message will be returned. User accessible 
+            UserPolicys should implement this. '''
+        # Find out if there's an <classname>.html file in the doc/ directory
+        name = cls.__name__
+        if name.startswith("shared."):
+            name = name[len("shared."):]
+        #FIXME: Magic .. there... The only places that this would be called from
+        # are subdirectories, so should be safe to do. Ugly, but should be fine.
+        filename = "../doc/" + name + ".html"
+
+        # If so, read and return the string
+        try:
+            with open(filename) as f:
+                data = f.readlines()
+                return "".join(data)
+        except IOError as e:
+            print "Example HTML file %s does not exist." % filename
+                    
+        # If not:
+        return "<html><h1>Not User Accessible</h1></html>"
+
+    @classmethod
+    def get_policy_name(cls):
+        ''' Returns the Policy's name. '''
+        n = cls.__name__
+        if n.startswith("shared."):
+            return __name__[len("shared."):]
+        return __name__
+
     def breakdown_rule(self, tm, ai):
         ''' Called by the BreakdownEngine to break a user rule apart. Should
             only be called by the BreakdownEngine, which passes the topology

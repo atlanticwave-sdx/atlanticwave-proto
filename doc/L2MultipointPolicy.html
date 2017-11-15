@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="1504.83">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 5.3px 0.0px; line-height: 20.0px; font: 14.7px 'Courier New'; color: #000000; -webkit-text-stroke: #000000}
+    p.p2 {margin: 0.0px 0.0px 0.0px 48.0px; line-height: 20.0px; font: 14.7px Arial; color: #000000; -webkit-text-stroke: #000000}
+    p.p3 {margin: 0.0px 0.0px 5.3px 48.0px; line-height: 20.0px; font: 14.7px Arial; color: #666666; -webkit-text-stroke: #666666}
+    p.p5 {margin: 0.0px 0.0px 0.0px 48.0px; line-height: 20.0px; font: 14.7px 'Courier New'; color: #000000; -webkit-text-stroke: #000000}
+    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; line-height: 14.0px; font: 12.0px Times; color: #000000; -webkit-text-stroke: #000000; min-height: 14.0px}
+    li.li4 {margin: 0.0px 0.0px 0.0px 0.0px; line-height: 20.0px; font: 14.7px Arial; color: #000000; -webkit-text-stroke: #000000}
+    span.s1 {font-kerning: none}
+    span.s2 {font: 14.7px 'Courier New'; font-kerning: none}
+    ul.ul1 {list-style-type: disc}
+    ul.ul2 {list-style-type: circle}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1"><b>POST /api/v1/policies/type/L2Multipoint</b></span></p>
+<p class="p2"><span class="s1">Create a new L2 Multipoint Tunnel Policy.</span></p>
+<p class="p3"><span class="s1"><i>Request JSON Object</i></span></p>
+<ul class="ul1">
+  <li class="li4"><span class="s1">starttime (<i>string</i>) - Start time of the L2 Multipoint Tunnel. String should be in RFC3339 format: </span><span class="s2">"2017-04-12T23:20:50"</span><span class="s1"><br>
+</span></li>
+  <li class="li4"><span class="s1">endtime (<i>string</i>) - End time of the L2 Multipoint Tunnel. String should be in RFC3339 format: </span><span class="s2">"2017-04-12T23:20:50"</span><span class="s1"><br>
+</span></li>
+  <li class="li4"><span class="s1">endpoints (list) - List of dictionaries with the following contents<br>
+</span></li>
+  <ul class="ul2">
+    <li class="li4"><span class="s1">switch (<i>string</i>) - Name of endpoint switch. See the  <i>/api/v1/localcontrollers/&lt;lcname&gt;/switches/</i> endpoint for switch names.<br>
+</span></li>
+    <li class="li4"><span class="s1">port (<i>int</i>) - Port number on endpoint switch. See the <i>/api/v1/localcontrollers/&lt;lcname&gt;/switches/&lt;switchname&gt;/ports</i> endpoint for switch port information.<br>
+</span></li>
+    <li class="li4"><span class="s1">vlan (int) VLAN at endpoint port.<br>
+</span></li>
+  </ul>
+  <li class="li4"><span class="s1">bandwidth (<i>int</i>) - Bandwidth in kbit/sec.<br>
+</span></li>
+</ul>
+<p class="p3"><span class="s1"><i>Response JSON Object</i></span></p>
+<ul class="ul1">
+  <li class="li4"><span class="s1">policy (<i>dict</i>) - Link to the newly created policy<br>
+</span></li>
+</ul>
+<p class="p3"><span class="s1"><i>Status Codes</i></span></p>
+<ul class="ul1">
+  <li class="li4"><span class="s1">201 Created - Policy successfully created<br>
+</span></li>
+  <li class="li4"><span class="s1">400 Bad Request - Invalid Argument<br>
+</span></li>
+  <li class="li4"><span class="s1">401 Unauthorized - Returned if a user is not able to use a particular policy type or particular resource that this policy requires<br>
+</span></li>
+  <li class="li4"><span class="s1">404 Not Found - Returned if a resource does not exist that is being requested.<br>
+</span></li>
+</ul>
+<p class="p3"><span class="s1"><i>Example Request</i></span></p>
+<p class="p5"><span class="s1">POST /api/v1/policies/type/L2Multipoint</span></p>
+<p class="p5"><span class="s1">{</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> "starttime":"1985-04-12T23:20:50",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> "endtime":"1985-04-12T23:20:50+0400",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> "endpoints": [ {"switch":"mia-switch",<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                 "port":5,<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                 "vlan":286},<br>
+<span class="Apple-converted-space"> </span>                {"switch":"atl-switch",<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                 "port":3,<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                 "vlan":1856},<br>
+<span class="Apple-converted-space"> </span>                {"switch":"gru-switch",<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                 "port":4,<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                 "vlan":3332} ],</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> "bandwidth":1000</span></p>
+<p class="p5"><span class="s1">}</span></p>
+<p class="p6"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"><i>Example Response</i></span></p>
+<p class="p5"><span class="s1">HTTP/1.1 201 Created</span></p>
+<p class="p5"><span class="s1">Content-Type: application/json</span></p>
+<p class="p5"><span class="s1">{</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> "policy": {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "href": "http://awavesdx/api/v1/policy/number/4",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "policynumber": 4,</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "user":"sdonovan",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "type":"L2Multipoint",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "json":"{</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>     "L2Multipoint":{</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>       "starttime":"1985-04-12T23:20:50",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>       "endtime":"1985-04-12T23:20:50+0400",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>       "endpoints": [ {"switch":"mia-switch",<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                       "port":5,<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                       "vlan":286},<br>
+<span class="Apple-converted-space"> </span>                      {"switch":"atl-switch",<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                       "port":3,<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                       "vlan":1856},<br>
+<span class="Apple-converted-space"> </span>                      {"switch":"gru-switch",<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                       "port":4,<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>                       "vlan":3332} ],</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>       "bandwidth":1000}</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>     }</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   }</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> }</span></p>
+</body>
+</html>

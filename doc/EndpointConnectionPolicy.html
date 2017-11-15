@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="1504.83">
+  <style type="text/css">
+    p.p2 {margin: 0.0px 0.0px 0.0px 48.0px; line-height: 20.0px; font: 14.7px Arial; color: #000000; -webkit-text-stroke: #000000}
+    p.p5 {margin: 0.0px 0.0px 0.0px 48.0px; line-height: 20.0px; font: 14.7px 'Courier New'; color: #000000; -webkit-text-stroke: #000000}
+    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; line-height: 14.0px; font: 12.0px Times; color: #000000; -webkit-text-stroke: #000000; min-height: 14.0px}
+    li.li4 {margin: 0.0px 0.0px 0.0px 0.0px; line-height: 20.0px; font: 14.7px Arial; color: #000000; -webkit-text-stroke: #000000}
+    span.s1 {font-kerning: none}
+    span.s2 {-webkit-text-stroke: 0px #000000}
+    span.s3 {font: 14.7px 'Courier New'; font-kerning: none}
+    ul.ul1 {list-style-type: disc}
+  </style>
+</head>
+<body>
+<h5 style="margin: 0.0px 0.0px 5.3px 0.0px; line-height: 20.0px; font: 14.7px 'Courier New'; color: #000000; -webkit-text-stroke: #000000"><span class="s1"><b>POST /api/v1/policies/type/EndpointConnection</b></span></h5>
+<p class="p2"><span class="s1">Create a new Endpoint Connection between different DTNs.</span></p>
+<h6 style="margin: 0.0px 0.0px 5.3px 48.0px; line-height: 20.0px; font: 14.7px Arial; color: #666666; -webkit-text-stroke: #666666"><span class="s1"><i>Request JSON Object</i></span></h6>
+<ul class="ul1">
+  <li class="li4"><span class="s2"></span><span class="s1">deadline (<i>string</i>) - Time user wants to finish a transfer. String should be in RFC3339 format: </span><span class="s3">"2017-04-12T23:20:50"</span><span class="s1"><br>
+</span></li>
+  <li class="li4"><span class="s2"></span><span class="s1">srcendpoint (<i>string</i>) - One endpoint on this connection. Must point to a DTN node in the network topology.<br>
+</span></li>
+  <li class="li4"><span class="s2"></span><span class="s1">dstendpoint (<i>string</i>) - Other endpoint on this connection. Must point to a DTN node in the network topology.<br>
+</span></li>
+  <li class="li4"><span class="s2"></span><span class="s1">dataquantity (<i>int</i>) - Amount of data to be transferred in bytes.<br>
+</span></li>
+</ul>
+<h6 style="margin: 0.0px 0.0px 5.3px 48.0px; line-height: 20.0px; font: 14.7px Arial; color: #666666; -webkit-text-stroke: #666666"><span class="s1"><i>Response JSON Object</i></span></h6>
+<ul class="ul1">
+  <li class="li4"><span class="s2"></span><span class="s1">policy (<i>dict</i>) - Link to the newly created policy<br>
+</span></li>
+</ul>
+<h6 style="margin: 0.0px 0.0px 5.3px 48.0px; line-height: 20.0px; font: 14.7px Arial; color: #666666; -webkit-text-stroke: #666666"><span class="s1"><i>Status Codes</i></span></h6>
+<ul class="ul1">
+  <li class="li4"><span class="s2"></span><span class="s1">201 Created - Policy successfully created<br>
+</span></li>
+  <li class="li4"><span class="s2"></span><span class="s1">400 Bad Request - Invalid Argument<br>
+</span></li>
+  <li class="li4"><span class="s2"></span><span class="s1">401 Unauthorized - Returned if a user is not able to use a particular policy type or particular resource that this policy requires<br>
+</span></li>
+  <li class="li4"><span class="s2"></span><span class="s1">404 Not Found - Returned if a resource does not exist that is being requested.<br>
+</span></li>
+</ul>
+<h6 style="margin: 0.0px 0.0px 5.3px 48.0px; line-height: 20.0px; font: 14.7px Arial; color: #666666; -webkit-text-stroke: #666666"><span class="s1"><i>Example Request</i></span></h6>
+<p class="p5"><span class="s1">POST /api/v1/policies/type/l2tunnel</span></p>
+<p class="p5"><span class="s1">{</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> "EndpointConnection":{</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "deadline":"1985-04-12T23:20:50",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "srcendpoint":"atlh1",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "dstendpoint":"miah2",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "dataquantity":57000000000</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> }</span></p>
+<p class="p5"><span class="s1">}</span></p>
+<p class="p6"><span class="s1"></span><br></p>
+<h6 style="margin: 0.0px 0.0px 5.3px 48.0px; line-height: 20.0px; font: 14.7px Arial; color: #666666; -webkit-text-stroke: #666666"><span class="s1"><i>Example Response</i></span></h6>
+<p class="p5"><span class="s1">HTTP/1.1 201 Created</span></p>
+<p class="p5"><span class="s1">Content-Type: application/json</span></p>
+<p class="p5"><span class="s1">{</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> "policy": {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "href": "http://awavesdx/api/v1/policy/number/3",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "policynumber": 3,</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "user":"sdonovan",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "type":"EndpointConnection",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   "json":"{</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>     "EndpointConnection":{</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>       "deadline":"1985-04-12T23:20:50",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>       "srcendpoint":"atlh1",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>       "dstendpoint":"miah2",</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>       "dataquantity":57000000000</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>     }</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span>   }</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space"> </span> }</span></p>
+<p class="p6"><span class="s1"></span><br></p>
+</body>
+</html>
