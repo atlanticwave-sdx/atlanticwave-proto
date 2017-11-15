@@ -9,8 +9,6 @@ from shared.L2MultipointFloodLCRule import L2MultipointFloodLCRule
 from shared.L2MultipointLearnedDestinationLCRule import L2MultipointLearnedDestinationLCRule
 import networkx as nx
 
-jsonstring = "l2multipoint"
-
 class L2MultipointPolicy(UserPolicy):
     ''' This policy is for network administrators to create L2 multipoint LANs, 
         similar to MetroEthernet's E-LAN
@@ -47,18 +45,17 @@ class L2MultipointPolicy(UserPolicy):
         self.tree = None
         
         super(L2MultipointPolicy, self).__init__(username,
-                                                 "L2Multipoint",
                                                  json_rule)
 
         # Anything specific here?
         pass
 
-    @staticmethod
-    def check_syntax(json_rule):
+    @classmethod
+    def check_syntax(cls, json_rule):
         try:
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
-
+            jsonstring = cls.get_policy_name()
             starttime = datetime.strptime(json_rule[jsonstring]['starttime'],
                                          rfc3339format)
             endtime = datetime.strptime(json_rule[jsonstring]['endtime'],
@@ -207,6 +204,7 @@ class L2MultipointPolicy(UserPolicy):
         return True
 
     def _parse_json(self, json_rule):
+        jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
         if jsonstring not in json_rule.keys():

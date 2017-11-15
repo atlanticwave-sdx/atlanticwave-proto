@@ -1251,6 +1251,7 @@ class RestAPI(SingletonMixin):
 
 
 
+
     
 
 
@@ -1471,7 +1472,8 @@ class RestAPI(SingletonMixin):
 
     
             # The Object to pass into L2TunnelPolicy
-            data = {"l2tunnel":{"starttime":str(starttime.strftime(rfc3339format)),
+            data = {L2TunnelPolicy.get_policy_name():
+                    {"starttime":str(starttime.strftime(rfc3339format)),
                                             "endtime":str(endtime.strftime(rfc3339format)),
                                             "srcswitch":request.form['source'],
                                             "dstswitch":request.form['dest'],
@@ -1484,7 +1486,7 @@ class RestAPI(SingletonMixin):
             policy = L2TunnelPolicy(theID, data)
             rule_hash = RuleManager.instance().add_rule(policy)
         except:
-            data =  {"endpointconnection":{
+            data =  {EndpointConnectionPolicy.get_policy_name():{
             "deadline":request.form['deadline']+':00',
             "srcendpoint":request.form['source'],
             "dstendpoint":request.form['dest'],
@@ -1568,7 +1570,7 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
         policy = None
         try:
             if request.path == "/rule/sdxingress":
-                jsonrule = {'sdxingress':data}
+                jsonrule = {SDXIngressPolicy.get_policy_name():data}
                 SDXIngressPolicy.check_syntax(jsonrule)
                 policy = SDXIngressPolicy(flask_login.current_user.id,
                                           jsonrule)
@@ -1577,7 +1579,7 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
                 return str(jsonrule)
 
             elif request.path == "/rule/sdxegress":
-                jsonrule = {'sdxegress':data}
+                jsonrule = {SDXEgressPolicy.get_policy_name():data}
                 SDXEgressPolicy.check_syntax(jsonrule)
                 policy = SDXEgressPolicy(flask_login.current_user.id,
                                          jsonrule)

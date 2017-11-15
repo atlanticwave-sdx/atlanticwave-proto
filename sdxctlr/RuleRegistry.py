@@ -39,7 +39,7 @@ class RuleRegistry(SingletonMixin):
     def add_ruletype(self, classlink):
         ''' Adds a new rule type to the registry. '''
         name = classlink.get_policy_name()
-        print "classlink: " + name
+        print "Available Policy type: " + name
         self.ruletype_db[name] = classlink
 
     def get_rule_class(self, ruletype):

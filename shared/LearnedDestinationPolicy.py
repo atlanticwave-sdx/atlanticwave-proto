@@ -8,8 +8,6 @@ from shared.constants import *
 from LearnedDestinationLCRule import *
 import networkx as nx
 
-jsonstring = "learneddest"
-
 class LearnedDestinationPolicy(UserPolicy):
     ''' This policy is for a distributed learning switch model. Traditional 
         OpenFlow learning switches involve a surprising amount of forwarding to
@@ -44,18 +42,17 @@ class LearnedDestinationPolicy(UserPolicy):
         self.dst_address = None
 
         super(LearnedDestinationPolicy, self).__init__(username,
-                                                       "LearnedDestination",
                                                        json_rule)
 
         # Anything specific here?
         pass
 
-    @staticmethod
-    def check_syntax(json_rule):
+    @classmethod
+    def check_syntax(cls, json_rule):
         try:
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
-
+            jsonstring = cls.get_policy_name()
             dst_switch = json_rule[jsonstring]['dstswitch']
             dst_port = int(json_rule[jsonstring]['dstport'])
             dst_address = json_rule[jsonstring]['dstaddress']
@@ -136,6 +133,7 @@ class LearnedDestinationPolicy(UserPolicy):
         return True
 
     def _parse_json(self, json_rule):
+        jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
         if jsonstring not in json_rule.keys():

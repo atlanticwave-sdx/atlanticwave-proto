@@ -15,10 +15,11 @@ class UserPolicy(object):
         application. This will likely be heavily modified over the course of 
         development, more so than most other interfaces. '''
 
-    def __init__(self, username, ruletype, json_rule):
+
+    def __init__(self, username, json_rule):
         ''' Parses the json_rule passed in to populate the UserPolicy. '''
         self.username = username
-        self.ruletype = ruletype
+        self.ruletype = self.get_policy_name()
         self.json_rule = json_rule
 
         # The breakdown list should be a list of UserPolicyBreakdown objects.
@@ -35,8 +36,8 @@ class UserPolicy(object):
         self._parse_json(self.json_rule)
 
 
-    @staticmethod
-    def check_syntax(json_rule):
+    @classmethod
+    def check_syntax(cls, json_rule):
         ''' Used to validate syntax of json user rules before they are parsed.
             Must be implemented by child classes. '''
         raise NotImplementedError("Subclasses must implement this.")
@@ -69,8 +70,7 @@ class UserPolicy(object):
     def get_policy_name(cls):
         ''' Returns the Policy's name. '''
         n = cls.__name__
-        print "   %s:%s" % (__name__, cls.__name__)
-        print cls.__name__
+
         if n.startswith("shared."):
             n = cls.__name__[len("shared."):]
         if n.endswith("Policy"):
