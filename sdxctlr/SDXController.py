@@ -27,6 +27,7 @@ from UserManager import *
 # Known UserPolicies
 #FIXME: from shared.JsonUploadPolicy import *
 from shared.L2TunnelPolicy import *
+from shared.L2MultipointPolicy import *
 from shared.EndpointConnectionPolicy import *
 from shared.EdgePortPolicy import *
 from shared.LearnedDestinationPolicy import *
@@ -111,15 +112,14 @@ class SDXController(SingletonMixin):
         self.cm_thread.start()
 
         # Register known UserPolicies
-#FIXME        self.rr.add_ruletype("json-upload", JsonUploadPolicy)
-        self.rr.add_ruletype("l2tunnel", L2TunnelPolicy)
-        self.rr.add_ruletype("endpointcxn", EndpointConnectionPolicy)
-        self.rr.add_ruletype("edgeport", EdgePortPolicy)
-        self.rr.add_ruletype("learneddest", LearnedDestinationPolicy)
-        self.rr.add_ruletype("floodtree", FloodTreePolicy)
-        self.rr.add_ruletype("sdxegress", SDXEgressPolicy)
-        self.rr.add_ruletype("sdxingress", SDXIngressPolicy)
-
+        self.rr.add_ruletype(L2TunnelPolicy)
+        self.rr.add_ruletype(L2MultipointPolicy)
+        self.rr.add_ruletype(EndpointConnectionPolicy)
+        self.rr.add_ruletype(EdgePortPolicy)
+        self.rr.add_ruletype(LearnedDestinationPolicy)
+        self.rr.add_ruletype(FloodTreePolicy)
+        self.rr.add_ruletype(SDXEgressPolicy)
+        self.rr.add_ruletype(SDXIngressPolicy)
 
         # Start these modules last!
         if self.run_topo:

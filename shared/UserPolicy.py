@@ -69,9 +69,13 @@ class UserPolicy(object):
     def get_policy_name(cls):
         ''' Returns the Policy's name. '''
         n = cls.__name__
+        print "   %s:%s" % (__name__, cls.__name__)
+        print cls.__name__
         if n.startswith("shared."):
-            return __name__[len("shared."):]
-        return __name__
+            n = cls.__name__[len("shared."):]
+        if n.endswith("Policy"):
+            n = n[:0-len("Policy")]
+        return n
 
     def breakdown_rule(self, tm, ai):
         ''' Called by the BreakdownEngine to break a user rule apart. Should
