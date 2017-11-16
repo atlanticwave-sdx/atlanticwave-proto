@@ -47,7 +47,6 @@ class RuleRegistry(SingletonMixin):
             Raise an error if it's not in the registry. '''
         if ruletype in self.ruletype_db.keys():
             return self.ruletype_db[ruletype]
-        print self.ruletype_db.keys()
         raise RuleRegistryTypeError("Ruletype %s is not in the ruletype_db" %
                                     ruletype)
 

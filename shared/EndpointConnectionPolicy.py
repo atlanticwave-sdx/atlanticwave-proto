@@ -89,7 +89,7 @@ class EndpointConnectionPolicy(UserPolicy):
                 raise UserPolicyTypeError("data is not an int: %s:%s" %
                                           (str(data), type(data)))
             #FIXME: checking on src and dst to see if they're strings?
-        except e:
+        except Exception as e:
             raise
 
     def breakdown_rule(self, tm, ai):

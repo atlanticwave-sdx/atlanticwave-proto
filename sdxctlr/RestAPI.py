@@ -16,7 +16,7 @@ from AuthorizationInspector import AuthorizationInspector
 from RuleManager import RuleManager
 from TopologyManager import TopologyManager
 from UserManager import UserManager
-from RuleRegistry import RuleRegistry
+from RuleRegistry import RuleRegistry, RuleRegistryTypeError
 
 #API Stuff
 import flask
@@ -1146,8 +1146,6 @@ class RestAPI(SingletonMixin):
         base_url = request.base_url
         retdict = {'href':base_url}
         policies = RuleRegistry.instance().get_list_of_policies()
-        print "------- Policies: -------"
-        print policies
 
         for policy in policies:
             p = {'type':policy,
@@ -1237,19 +1235,65 @@ class RestAPI(SingletonMixin):
     @app.route(EP_POLICIESTYPESPECEXAMPLE, methods=['GET'])
     def v1policiestypeexample(policytype):
         rr = RuleRegistry.instance()
-        if rr.get_rule_class(policytype) == None:
+        try:
+            html = rr.get_rule_class(policytype).get_html_help()
+            return html
+            
+        except TypeError as e:
             #FIXME - proper response
             if request_wants_json(request):
                 return make_response(jsonify({}), 404)
             #FIXME:  NEED HTML response written
             return make_response(jsonify({}), 404) 
 
-        html = rr.get_rule_class(policytype).get_html_help()
-        return html
-
+        
     ##### SPECIFIC RULE POSTS #####
 
+    '''
+    POST /api/v1/policies/type/<policytype>
+      This endpoint is used for creating new policies of type <policytype>. See
+      individual example.html file for how to create each of these.
+    '''
+    @staticmethod
+    @app.route(EP_POLICIESTYPESPEC, methods=['POST'])
+    def v1policiestypespecpost(policytype):
+        base_url = request.base_url
+        userid = flask_login.current_user.id
+        data = request.get_json()
+        retdict = {'policy':{'href':base_url,
+                             'user':userid,
+                             'type':policytype,
+                             'json':data}}
+                             
 
+        # Get UserPolicy
+        try:
+            policyclass = RuleRegistry.instance().get_rule_class(policytype)
+            policyclass.check_syntax(data)
+            policy = policyclass(userid, data)
+            hash = RuleManager.instance().add_rule(policy)
+
+            #FIXME - proper response
+            if request_wants_json(request):
+                return make_response(jsonify(retdict), 404)
+            #FIXME:  NEED HTML response written
+            return make_response(jsonify(retdict), 404)
+        
+        except RuleRegistryTypeError as e:
+            #FIXME - proper response
+            if request_wants_json(request):
+                return make_response(jsonify({}), 404)
+            #FIXME:  NEED HTML response written
+            return make_response(jsonify({}), 404)
+
+        except Exception as e:
+             #FIXME - proper response
+            if request_wants_json(request):
+                return make_response(jsonify({str(e)}), 400)
+            #FIXME:  NEED HTML response written
+            return make_response(jsonify({str(e)}), 400)
+           
+            
 
 
     
@@ -1322,7 +1366,7 @@ class RestAPI(SingletonMixin):
     # Preset the login form to the user and request to log user in
     @staticmethod
     @app.route('/login', methods=['POST','GET'])
-    def login(): 
+    def login():
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
         if AuthenticationInspector.instance().is_authenticated(email,flask.request.form['pw']):
