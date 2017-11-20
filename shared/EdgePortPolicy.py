@@ -18,7 +18,7 @@ class EdgePortPolicy(UserPolicy):
           - Switch
 
         Example Json:
-        {"edgeport":{
+        {"EdgePort":{
             "switch":"mia-switch"}}
     
         The vast majority of the work is handled by the breakdown_rule() function

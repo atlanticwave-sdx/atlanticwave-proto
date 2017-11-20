@@ -20,7 +20,7 @@ class L2MultipointPolicy(UserPolicy):
           - Maximum Bandwidth on a given link
 
         Example Json:
-        {"l2multipoint":{
+        {"L2Multipoint":{
             "starttime":"1985-04-12T23:20:50",
             "endtime":"1985-04-12T23:20:50+0400",
             "endpoints": [ {"switch":"mia-switch", "port":5, "vlan":286},

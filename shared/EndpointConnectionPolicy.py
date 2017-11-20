@@ -34,7 +34,7 @@ class EndpointConnectionPolicy(UserPolicy):
         FIXME: Recurrant items too!
 
         Example Json:
-        {"endpointconnection":{
+        {"EndpointConnection":{
             "deadline":"1985-04-12T23:20:50",
             "srcendpoint":"atlh1",
             "dstendpoint":"miah2",

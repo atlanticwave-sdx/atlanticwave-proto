@@ -24,7 +24,7 @@ class LearnedDestinationPolicy(UserPolicy):
           - Dst Address
 
         Example Json:
-        {"learneddest":{
+        {"LearnedDestination":{
             "dstswitch":"mia-switch",
             "dstport":7,
             "dstaddress":"aa:bb:cc:dd:ee:ff"}}

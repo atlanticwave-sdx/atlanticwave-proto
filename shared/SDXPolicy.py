@@ -23,7 +23,7 @@ class SDXPolicy(UserPolicy):
          - List of Actions
 
        Example JSON:
-       {"sdxXXgress":{
+       {"SDX**gress":{
             "starttime":"1985-04-12T23:20:50",
             "endtime":"1985-04-12T23:20:50+0400",
             "switch":"atl-switch",
