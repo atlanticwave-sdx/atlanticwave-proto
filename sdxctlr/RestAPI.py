@@ -23,7 +23,7 @@ import flask
 from flask import Flask, session, redirect, request, url_for, send_from_directory, render_template, Markup, make_response, jsonify
 
 import flask_login
-from flask_login import LoginManager
+from flask_login import LoginManager, login_required
 
 #from flask_sso import *
 
@@ -183,10 +183,12 @@ class RestAPI(SingletonMixin):
     '''
     
     @staticmethod
+    @login_required
     @app.route(EP_LOCALCONTROLLER, methods=['GET'])
     def v1localcontrollers():
         base_url = request.base_url
         retdict = {'links':{},'href':base_url}
+        
         # Get topology
         topo = TopologyManager.instance().get_topology()            
         for node_id in topo.nodes():
@@ -196,8 +198,9 @@ class RestAPI(SingletonMixin):
                 lcdict = {'href':base_url + "/" + node_id}
                 
                 ##### QUERY details #####
-                if (request.args.get('details') == 'true' or
-                    request.args.get('details') == 'True'):
+                if (flask_login.current_user.is_authenticated and
+                    (request.args.get('details') == 'true' or
+                     request.args.get('details') == 'True')):
                     lcdict['lcip'] = node['ip']
                     lcdict['internalconfig'] = {'href': base_url + "/" +
                                                 node_id + "/internalconfig"}
@@ -338,8 +341,14 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_LOCALCONTROLLERLCINT, methods=['GET'])
     def v1localcontrollersspecificinternalconfig(lcname):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)            
+
         retdict = {}
         # Get the topology first
         topo = TopologyManager.instance().get_topology()            
@@ -387,8 +396,14 @@ class RestAPI(SingletonMixin):
       }
     ''' 
     @staticmethod
+    @login_required
     @app.route(EP_LOCALCONTROLLERLCSW, methods=['GET'])
     def v1localcontrollersspecificswitches(lcname):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)            
+                    
         retdict = {}
         # Get the topology first
         topo = TopologyManager.instance().get_topology()            
@@ -478,8 +493,14 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_LOCALCONTROLLERLCSWSPEC, methods=['GET'])
     def v1localcontrollersspecificswitchesspecific(lcname, switchname):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)            
+                            
         retdict = {}
         # Get the topology first
         topo = TopologyManager.instance().get_topology()            
@@ -565,8 +586,14 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_LOCALCONTROLLERLCSWSPECPORT, methods=['GET'])
     def v1localcontrollersspecificswitchesspecificports(lcname, switchname):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)            
+                    
         retdict = {}
         # Get the topology first
         topo = TopologyManager.instance().get_topology()            
@@ -643,6 +670,11 @@ class RestAPI(SingletonMixin):
     def v1localcontrollersspecificswitchesspecificportsspecific(lcname,
                                                                 switchname,
                                                                 portnumber):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)            
+                    
         retdict = {}
         # Get the topology first
         topo = TopologyManager.instance().get_topology()            
@@ -685,6 +717,9 @@ class RestAPI(SingletonMixin):
         produce very large results.
     Status Codes
       200 OK - no error
+       403 Forbidden - if a non-local administrator or non-global administrator 
+        attempts to view the internal configuration information, this is 
+        returned.
     Example Request
       GET /api/v1/users
     Example Response
@@ -713,8 +748,14 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_USERS, methods=['GET'])
     def v1users():
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)            
+           
         base_url = request.base_url
         retdict = {'href':base_url, 'links':{}}
         # Get all the users
@@ -761,6 +802,9 @@ class RestAPI(SingletonMixin):
       details (bool) - Default: false. Return all the details of the users.
     Status Codes
       200 OK - no error
+      403 Forbidden - if a non-local administrator or non-global administrator 
+        attempts to view the internal configuration information, this is 
+        returned.
     Example Request
       GET /api/v1/users/sdonovan
     Example Response
@@ -779,8 +823,14 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_USERSSPEC, methods=['GET'])
     def v1usersspec(username):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)            
+
         retdict = {}
         base_url = request.base_url
         retdict = {'href':base_url}
@@ -828,7 +878,7 @@ class RestAPI(SingletonMixin):
       N/A
     Status Codes
       200 OK - no error
-      401 Unauthorized - This is for when a regular user attempts to view 
+      403 Forbidden - This is for when a regular user attempts to view 
         another user's permissions that they are not authorized to view.
       404 Not Found - This is for when a user attempts to find a user  that does
         not exist
@@ -845,8 +895,14 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_USERSSPECPERMISSIONS, methods=['GET'])
     def v1usersspecperms(username):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)
+        
         retdict = {}
         base_url = request.base_url
         retdict = {}
@@ -871,7 +927,7 @@ class RestAPI(SingletonMixin):
         /api/v1/policies/type/ for a list of policies. 
     Status Codes
       200 OK - no error
-      401 Unauthorized - This is for when a regular user attempts to view 
+      403 Forbidden - This is for when a regular user attempts to view 
         another user's permissions that they are not authorized to view.
       404 Not Found - This is for when a user attempts to find a policy that 
         does not exist
@@ -900,8 +956,14 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_USERSSPECPOLICIES, methods=['GET'])
     def v1usersspecpolicies(username):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)
+        
         base_url = request.base_url
         retdict = {}
         # Get specific user
@@ -966,8 +1028,13 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_POLICIES, methods=['GET'])
     def v1policies():
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)           
         base_url = request.base_url
         retdict = {'href': base_url, 'links':{}}
 
@@ -998,7 +1065,7 @@ class RestAPI(SingletonMixin):
       N/A
     Status Codes
       200 OK - no error
-      401 Unauthorized - This is for when a regular user attempts to view 
+      403 Forbidden - This is for when a regular user attempts to view 
         another user's policy that they are not authorized to view.
       404 Not Found - This is for when a user attempts to find a policy that 
         does not exist
@@ -1034,8 +1101,14 @@ class RestAPI(SingletonMixin):
       }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_POLICIESSPEC, methods=['GET'])
     def v1policiesspec(policynumber):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)
+        
         base_url = request.base_url
         retdict = {}
 
@@ -1069,7 +1142,7 @@ class RestAPI(SingletonMixin):
       N/A
     Status Codes
       204 No Content - no error
-      401 Unauthorized - This is for when a regular user attempts to view 
+      403 Forbidden - This is for when a regular user attempts to view 
         another user's policy that they are not authorized to view.
       404 Not Found - This is for when a user attempts to find a policy that 
         does not exist
@@ -1081,8 +1154,14 @@ class RestAPI(SingletonMixin):
       HTTP/1.1 204 No Content
     '''
     @staticmethod
+    @login_required
     @app.route(EP_POLICIESSPEC, methods=['DELETE'])
     def v1policiesspecDEL(policynumber):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)
+        
         rule = RuleManager.instance().get_rule_details(policynumber)
         if rule == None:
             #FIXME - proper response
@@ -1169,6 +1248,9 @@ class RestAPI(SingletonMixin):
     Query Parameters
       FIXME
     Status Codes
+      403 Forbidden -  if a non-local administrator or non-global administrator 
+        attempts to view the internal configuration information, this is 
+        returned.
       200 OK - no error
 
     Example Request
@@ -1199,8 +1281,14 @@ class RestAPI(SingletonMixin):
         }
     '''
     @staticmethod
+    @login_required
     @app.route(EP_POLICIESTYPESPEC, methods=['GET'])
     def v1policiestypespec(policytype):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)            
+
         base_url = request.base_url
         retdict = {'href': base_url}
 
@@ -1255,8 +1343,14 @@ class RestAPI(SingletonMixin):
       individual example.html file for how to create each of these.
     '''
     @staticmethod
+    @login_required
     @app.route(EP_POLICIESTYPESPEC, methods=['POST'])
     def v1policiestypespecpost(policytype):
+        if not flask_login.current_user.is_authenticated:
+            print "Not Authenticated!"
+            return make_response(jsonify({'error': 'User Not Authenticated'}),
+                                 403)            
+
         base_url = request.base_url
         userid = flask_login.current_user.id
         data = request.get_json()
