@@ -72,6 +72,9 @@ EP_POLICIESSPEC = "/api/v1/policies/number/<policynumber>"
 EP_POLICIESTYPE = "/api/v1/policies/type"
 EP_POLICIESTYPESPEC = "/api/v1/policies/type/<policytype>"
 EP_POLICIESTYPESPECEXAMPLE = "/api/v1/policies/type/<policytype>/example.html"
+# - Login
+EP_LOGIN = "/api/v1/login"
+EP_LOGOUT = "/api/v1/logout"
 
 
 # From     http://flask.pocoo.org/snippets/45/
@@ -1386,9 +1389,61 @@ class RestAPI(SingletonMixin):
                 return make_response(jsonify({str(e)}), 400)
             #FIXME:  NEED HTML response written
             return make_response(jsonify({str(e)}), 400)
-           
+
+
+
+
+    # Login endpoint
+    @staticmethod
+    @app.route(EP_LOGIN, methods=['POST'])
+    def login():
+        # Extract username and password
+        if 'username' in flask.request.form.keys():
+            username = flask.request.form['username']
+            password = flask.request.form['password']
+        else:
+            data = request.get_json()
+            username = data['username']
+            password = data['password']
+        
+            
+        # Check with AuthenticationInspector
+        if AuthenticationInspector.instance().is_authenticated(username,
+                                                               password):
+            # Log user in
+            user = User()
+            user.id = username
+            flask_login.login_user(user)
+            return flask.redirect(EP_LOGIN)
+
+        return make_response(jsonify({'error': 'User Not Authenticated'}),
+                             403)
+
+
+    # Logout endpoint
+    @staticmethod
+    @login_required
+    @app.route(EP_LOGOUT, methods=['POST'])
+    def logout():
+        flask_login.logout_user()
+        return flask.redirect(flask.url_for('home'))
+
+    
+    # Unauthorized handler
+    @staticmethod
+    @login_manager.unauthorized_handler
+    def unauthorized_handler():
+        return 'Unauthorized'
+    
             
 
+
+
+
+
+
+
+    
 
     
 
@@ -1460,7 +1515,7 @@ class RestAPI(SingletonMixin):
     # Preset the login form to the user and request to log user in
     @staticmethod
     @app.route('/login', methods=['POST','GET'])
-    def login():
+    def old_login():
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
         if AuthenticationInspector.instance().is_authenticated(email,flask.request.form['pw']):
@@ -1483,15 +1538,15 @@ class RestAPI(SingletonMixin):
     # Log out of the system
     @staticmethod
     @app.route('/logout')
-    def logout():
+    def old_logout():
         flask_login.logout_user()
         return flask.redirect(flask.url_for('home'))
 
-    # Present the page which tells a user they are unauthorized
-    @staticmethod
-    @login_manager.unauthorized_handler
-    def unauthorized_handler():
-        return 'Unauthorized'
+#    # Present the page which tells a user they are unauthorized
+#    @staticmethod
+#    @login_manager.unauthorized_handler
+#    def unauthorized_handler():
+#        return 'Unauthorized'
 
     # Access information about a user
     @staticmethod
