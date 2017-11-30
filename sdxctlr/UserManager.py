@@ -10,6 +10,7 @@ import json
 
 from lib.Singleton import SingletonMixin
 from AuthorizationInspector import AuthorizationInspector
+from AuthenticationInspector import AuthenticationInspector
 
 
 class UserManager(SingletonMixin):
@@ -40,7 +41,11 @@ class UserManager(SingletonMixin):
             self.add_user(user)
 
     def add_user(self, user):
+        # Add to DB
         self.user_table.insert(self._format_db_entry(user))
+
+        # Push to A&A Inspectors
+        self._send_to_AA(user)
     
     def get_user(self, user):
         self.logger.info("getting user: {}".format(user))
@@ -79,6 +84,16 @@ class UserManager(SingletonMixin):
         temp_user['permitted_actions'] = pickle.dumps(user['permitted_actions'])
         temp_user['restrictions'] = pickle.dumps(user['restrictions'])
         return temp_user
+
+
+    def _send_to_AA(self, user):
+        print "Sending %s:%s to AuthenticationInspector" % (user['username'],
+                                                            user['credentials'])
+        AuthenticationInspector.instance().add_user(user['username'],
+                                                    user['credentials'])
+        AuthorizationInspector.instance().set_user_authorization(
+                                                    user['username'],
+                                                    user['permitted_actions'])
 
     def _setup_logger(self):
         ''' Internal function for setting up the logger formats. '''

@@ -16,7 +16,6 @@ from AuthenticationInspector import *
 from AuthorizationInspector import *
 from BreakdownEngine import *
 from LocalControllerManager import *
-from ParticipantManager import *
 from RestAPI import *
 from RuleManager import *
 from RuleRegistry import *
@@ -82,7 +81,6 @@ class SDXController(SingletonMixin):
 
         # Modules with configuration files
         self.tm = TopologyManager.instance(mani)
-        self.um = UserManager.instance(self.db, mani)
 
         # Initialize all the modules - Ordering is relatively important here
         self.aci = AuthenticationInspector.instance()
@@ -90,12 +88,12 @@ class SDXController(SingletonMixin):
         self.be = BreakdownEngine.instance()
         self.rr = RuleRegistry.instance()
         self.vi = ValidityInspector.instance()
+        self.um = UserManager.instance(self.db, mani)
+
 
         if mani != None:
-            self.pm = ParticipantManager.instance(mani)
             self.lcm = LocalControllerManager.instance(mani)
         else: 
-            self.pm = ParticipantManager.instance()
             self.lcm = LocalControllerManager.instance()
 
         topo = self.tm.get_topology()
@@ -131,7 +129,6 @@ class SDXController(SingletonMixin):
                                            send_no_rules,
                                            send_no_rules)
 
-        self.pm = ParticipantManager.instance()      #FIXME - Filename
         self.rapi = RestAPI.instance(options.host,options.port,options.shib)
 
 

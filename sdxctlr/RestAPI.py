@@ -127,9 +127,6 @@ class RestAPI(SingletonMixin):
         app.run(host=self.host, port=self.port)
 
     def __init__(self,host='0.0.0.0',port=5000, shib=False):
-        #FIXME: Creating user only for testing purposes
-        AuthenticationInspector.instance().add_user('sdonovan','1234')
-
         global shibboleth
         shibboleth = shib
 
