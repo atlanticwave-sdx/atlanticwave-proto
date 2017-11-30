@@ -158,7 +158,8 @@ class RestAPI(SingletonMixin):
         self.logger.addHandler(logfile) 
 
     class User(flask_login.UserMixin):
-        pass
+        def __init__(self, id):
+            self.id = id
 
 
     '''
@@ -1411,8 +1412,7 @@ class RestAPI(SingletonMixin):
         if AuthenticationInspector.instance().is_authenticated(username,
                                                                password):
             # Log user in
-            user = User()
-            user.id = username
+            user = User(username)
             flask_login.login_user(user)
             return flask.redirect(EP_LOGIN)
 
@@ -1434,7 +1434,16 @@ class RestAPI(SingletonMixin):
     @login_manager.unauthorized_handler
     def unauthorized_handler():
         return 'Unauthorized'
-    
+
+    # User handler
+    @staticmethod
+    @login_manager.user_loader
+    def user_loader(username):
+        user = UserManager.instance().get_user(username)
+        if user == None:
+            return None
+
+        return User(username)
             
 
 
@@ -1475,13 +1484,13 @@ class RestAPI(SingletonMixin):
             return flask.redirect(flask.url_for('home'))
         return "Invalid Login"
 
-    # This maintains the state of a logged in user.
-    @staticmethod
-    @login_manager.user_loader
-    def user_loader(email):
-        user = User()
-        user.id = email
-        return user
+#    # This maintains the state of a logged in user.
+#    @staticmethod
+#    @login_manager.user_loader
+#    def user_loader(email):
+#        user = User()
+#        user.id = email
+#        return user
 
     # Preset the login form to the user and request to log user in
     #@staticmethod
