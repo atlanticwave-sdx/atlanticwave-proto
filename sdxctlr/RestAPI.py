@@ -1837,17 +1837,3 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
             return str(RuleManager.instance().get_rules(filter={query},ordering=query))
         return unauthorized_handler()
 
-
-if __name__ == "__main__":
-    def blah(param):
-        pass
-
-    sdx_cm = SDXControllerConnectionManager()
-    import dataset    
-    db = dataset.connect('sqlite:///:memory:', engine_kwargs={'connect_args':{'check_same_thread':False}})
-
-    rm = RuleManager.instance(db, blah, blah)
-
-    RestAPI()
-
-    raw_input('Press <ENTER> to quit at any time...\n')
