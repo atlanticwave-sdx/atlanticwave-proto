@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AtlanticWave SDX Web Application">
+<meta name="author" content="Ankita Lamba">
+<title>Atlantic Wave SDX</title>
+</head>
+
+<style>
+.tabcontent {display:none;}
+</style>
+
+
+<body data-spy="scroll" data-target="#navbar" data-offset="0">
+  <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+    <!-- Table Header -->
+    <br>
+    <center><h1 style="color:white;">Local Controllers</h1></center>
+    {% for lcname,lcdetails in lcdict.iteritems() %}
+    <thead>
+      <tr>
+        <th>LC Name</th>
+        <th>LC IP</th>
+        <th>Operator organization</th>
+        <th>Operator administrator</th>
+        <th>Operator contact</th>
+        <th colspan="{{ lcdetails['switches']|length }}">Switches</th>
+        <th>Internal Config</th>
+      </tr>
+    </thead>
+
+    <!-- Table Body -->
+    <tbody>
+      <tr>
+        <td><a href={{ lcdetails['href'] }}>{{ lcname }}</a></td>
+        <td>{{ lcdetails['lcip'] }}</td>
+        <td>{{ lcdetails['operator']['organization'] }}</td>
+        <td>{{ lcdetails['operator']['administrator'] }}</td>
+        <td>{{ lcdetails['operator']['contact'] }}</td>
+        <td><a href={{ lcdetails['switches']['href'] }}>Switches</a>
+        {% for sw,ln in lcdetails['switches'].iteritems() %}
+          {% if sw != 'href' %}
+        <td><a href={{ ln['href'] }}> {{ sw }} </a></td>
+          {% endif %}
+        {% endfor %}
+        <td><a href={{ lcdetails['internalconfig']['href'] }}>link</td>
+
+
+      </tr>
+    </tbody>
+    {% endfor %}
+    <!-- Table Body -->
+  </table>
+</body>

@@ -100,7 +100,8 @@ class RestAPI(SingletonMixin):
 
     global User, app, login_manager, shibboleth
 
-    app = Flask(__name__, static_url_path='', static_folder='')
+    app = Flask(__name__, static_url_path='', static_folder='',
+                template_folder="overhaul-templates")
     #sso = SSO(app=app)
 
     #FIXME: This should be more secure.
@@ -220,8 +221,9 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict)
+        # HTML output
+        return flask.render_template('localcontrollers.html', lcdict=retdict)
+
 
     '''
     GET /api/v1/localcontrollers/<lcname>
@@ -310,8 +312,9 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict)
+        # HTML output
+        return flask.render_template('localcontrollersspecific.html',
+                                     lcdict=retdict)
 
 
 
@@ -365,8 +368,11 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict)
+        # HTML output
+        return flask.render_template(
+            'localcontrollersspecificinternalconfig.html',
+             config=retdict)
+
 
 
     '''
@@ -445,8 +451,9 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict)
+        # HTML output
+        return flask.render_template('localcontrollersspecificswitches.html',
+                                     lcdict=retdict)
 
 
     '''
@@ -549,8 +556,10 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict)
+        # HTML output
+        return flask.render_template(
+            'localcontrollersspecificswitchesspecific.html',
+                                     lcdict=retdict)
 
     '''
     GET /api/v1/localcontrollers/<lcname>/switches/<switchname>/ports
@@ -636,9 +645,10 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict)        
-
+        # HTML output
+        return flask.render_template(
+            'localcontrollersspecificswitchspecificports.html',
+            lcdict=retdict)
 
     '''
     GET /api/v1/localcontrollers/<lcname>/switches/<switchname>/ports/<portnumber>
@@ -706,8 +716,10 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict) 
+        # HTML output
+        return flask.render_template(
+            'localcontrollersspecificswitchesspecificportsspecific.html',
+            lcdict=retdict)
 
     '''
     GET /api/v1/users/
@@ -1133,8 +1145,10 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict) 
+
+        # else: HTML
+        detail = RuleManager.instance().get_rule_details(rule_hash)
+        return flask.render_template('details.html', detail = detail)
         
     '''
     DELETE /api/v1/policies/number/<policynumber>
@@ -1352,11 +1366,10 @@ class RestAPI(SingletonMixin):
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)            
 
-        base_url = request.base_url
+        base_url = request.url_root[:-1] + EP_POLICIES + "/number/"
         userid = flask_login.current_user.id
         data = request.get_json()
-        retdict = {'policy':{'href':base_url,
-                             'user':userid,
+        retdict = {'policy':{'user':userid,
                              'type':policytype,
                              'json':data}}
                              
@@ -1367,12 +1380,16 @@ class RestAPI(SingletonMixin):
             policyclass.check_syntax(data)
             policy = policyclass(userid, data)
             hash = RuleManager.instance().add_rule(policy)
+            policy_url = base_url + str(hash)
+            retdict['policy']['href'] = policy_url
 
             #FIXME - proper response
             if request_wants_json(request):
-                return make_response(jsonify(retdict), 404)
-            #FIXME:  NEED HTML response written
-            return make_response(jsonify(retdict), 404)
+                return make_response(jsonify(retdict), 201)
+
+            # else: HTML
+            flask.redirect(policy_url)
+        
         
         except RuleRegistryTypeError as e:
             #FIXME - proper response
@@ -1393,6 +1410,15 @@ class RestAPI(SingletonMixin):
 
     # Login endpoint
     @staticmethod
+    @app.route(EP_LOGIN, methods=['GET'])
+    def login_form():
+        if flask_login.current_user.get_id() == None:
+            return app.send_static_file('overhaul/login.html')
+        else:
+            print "%s already logged in" % flask_login.current_user.get_id() 
+            return flask.redirect(EP_LOGOUT)
+        
+    @staticmethod
     @app.route(EP_LOGIN, methods=['POST'])
     def login():
         # Extract username and password
@@ -1403,7 +1429,6 @@ class RestAPI(SingletonMixin):
             data = request.get_json()
             username = data['username']
             password = data['password']
-        
             
         # Check with AuthenticationInspector
         if AuthenticationInspector.instance().is_authenticated(username,
@@ -1411,7 +1436,7 @@ class RestAPI(SingletonMixin):
             # Log user in
             user = User(username)
             flask_login.login_user(user)
-            return flask.redirect(EP_LOGIN)
+            return flask.redirect(EP_LOGOUT, code=303)
 
         return make_response(jsonify({'error': 'User Not Authenticated'}),
                              403)
@@ -1419,11 +1444,20 @@ class RestAPI(SingletonMixin):
 
     # Logout endpoint
     @staticmethod
+    @app.route(EP_LOGOUT, methods=['GET'])
+    def logout_form():
+        if flask_login.current_user.get_id() == None:
+            return flask.redirect(EP_LOGIN)
+        else:
+            print "%s viewing logout page" % flask_login.current_user.get_id()
+            return flask.render_template('logout.html')
+        
+    @staticmethod
     @login_required
     @app.route(EP_LOGOUT, methods=['POST'])
     def logout():
         flask_login.logout_user()
-        return flask.redirect(flask.url_for('home'))
+        return flask.redirect(EP_LOGIN, code=303)
 
     
     # Unauthorized handler
