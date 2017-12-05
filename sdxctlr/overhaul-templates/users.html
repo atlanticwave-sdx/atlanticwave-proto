@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AtlanticWave SDX Web Application">
+<meta name="author" content="Ankita Lamba">
+<title>Atlantic Wave SDX</title>
+</head>
+
+<style>
+.tabcontent {display:none;}
+</style>
+
+
+<body data-spy="scroll" data-target="#navbar" data-offset="0">
+  <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+    <!-- Table Header -->
+    <br>
+    <center><h1 style="color:white;">Users</h1></center>
+    <thead>
+      <tr>
+        <th>User Name</th>
+        <th>User Type</th>
+        <th>User Organization</th>
+        <th>Policies Link</th>
+        <th>Permissions Link</th>
+      </tr>
+    </thead>
+
+    <!-- Table Body -->
+    <tbody>
+    {% for username,userdetails in userdict['links'].iteritems() %}
+      <tr>
+        <td><a href={{ userdetails['href'] }}>{{ username }}</a></td>
+        <td>{{ userdetails['type'] }}</td>
+        <td>{{ userdetails['organization'] }}</td>
+        <td><a href={{ userdetails['policies'] }}>Policies</td>
+        <td><a href={{ userdetails['permissions'] }}>Permissions</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    <!-- Table Body -->
+  </table>
+</body>

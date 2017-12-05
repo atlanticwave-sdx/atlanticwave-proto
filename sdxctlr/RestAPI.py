@@ -1,4 +1,4 @@
-# Copyright 2016 - Sean Donovan
+
 # Edited by John Skandalakis
 # AtlanticWave/SDX Project
 # Login based on example code from https://github.com/maxcountryman/flask-login
@@ -811,8 +811,9 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict) 
+        # HTML output
+        return flask.render_template('users.html', userdict=retdict)
+
 
     '''
     GET /api/v1/users/<username>
@@ -831,6 +832,7 @@ class RestAPI(SingletonMixin):
       HTTP/1.1 200 OK
       Content-Type: application/json
       {
+        "href": "http://awavesdx/api/v1/users/sdonovan",
         "sdonovan": {	
           "href": "http://awavesdx/api/v1/users/sdonovan",
           "type":"administrator",
@@ -886,9 +888,8 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict) 
-
+        # HTML output
+        return flask.render_template('usersspec.html', userdict=retdict)
     
 
     '''
@@ -936,8 +937,8 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict) 
+        # HTML output
+        return flask.render_template('usersspecperms.html', userdict=retdict)
 
     '''
     GET /api/v1/users/<username>/policies
@@ -1011,8 +1012,9 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict) 
+        # HTML output
+        return flask.render_template('usersspecpolicies.html', userdict=retdict)
+
 
     '''
     GET /api/v1/policies/
@@ -1152,7 +1154,7 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-
+        return json.dumps(retdict)
         # else: HTML
         detail = RuleManager.instance().get_rule_details(rule_hash)
         return flask.render_template('details.html', detail = detail)
@@ -1389,14 +1391,12 @@ class RestAPI(SingletonMixin):
             hash = RuleManager.instance().add_rule(policy)
             policy_url = base_url + str(hash)
             retdict['policy']['href'] = policy_url
-
             #FIXME - proper response
             if request_wants_json(request):
                 return make_response(jsonify(retdict), 201)
 
             # else: HTML
-            flask.redirect(policy_url)
-        
+            return flask.redirect(policy_url, code=303)
         
         except RuleRegistryTypeError as e:
             #FIXME - proper response
