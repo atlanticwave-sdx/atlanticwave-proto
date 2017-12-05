@@ -25,6 +25,8 @@ from flask import Flask, session, redirect, request, url_for, send_from_director
 import flask_login
 from flask_login import LoginManager, login_required
 
+import jinja2
+
 #from flask_sso import *
 
 #Topology json stuff
@@ -100,8 +102,13 @@ class RestAPI(SingletonMixin):
 
     global User, app, login_manager, shibboleth
 
-    app = Flask(__name__, static_url_path='', static_folder='',
-                template_folder="overhaul-templates")
+    app = Flask(__name__, static_url_path='', static_folder='')
+    my_loader = jinja2.ChoiceLoader([
+        app.jinja_loader,
+        jinja2.FileSystemLoader(['overhaul-templates', 
+                                 'templates']),
+    ])
+    app.jinja_loader = my_loader
     #sso = SSO(app=app)
 
     #FIXME: This should be more secure.
