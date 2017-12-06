@@ -1075,8 +1075,10 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict) 
+        # HTML output
+        return flask.render_template('policies.html',
+                                     policydict=retdict)
+
 
     '''
     GET /api/v1/policies/number/<policynumber>
@@ -1140,11 +1142,11 @@ class RestAPI(SingletonMixin):
             #FIXME - proper response
             if request_wants_json(request):
                 return make_response(jsonify({'error': 'Not found'}), 404)
-            #FIXME:  NEED HTML response written
+            # HTML output
             return make_response(jsonify({'error': 'Not found'}), 404)
 
         (rule_hash, jsonrule, ruletype, state, user, breakdowns) = rule
-        policy = {'href':base_url + str(rule_hash),
+        policy = {'href':base_url,
                   'policynumber':rule_hash,
                   'user':user,
                   'type':ruletype,
@@ -1154,8 +1156,9 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        return json.dumps(retdict)
-        # else: HTML
+        # HTML output
+        return flask.render_template('policiesspec.html', policydict=retdict)
+        # else: fancy HTML
         detail = RuleManager.instance().get_rule_details(rule_hash)
         return flask.render_template('details.html', detail = detail)
         
@@ -1260,9 +1263,8 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict) 
-        pass
+        # HTML output
+        return flask.render_template('policiestype.html', policydict=retdict)
 
 
     '''
@@ -1332,9 +1334,9 @@ class RestAPI(SingletonMixin):
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
             return json.dumps(retdict)
-        #FIXME:  NEED HTML response written
-        return json.dumps(retdict) 
-
+        # HTML output
+        return flask.render_template('policiestypespec.html',
+                                     policydict=retdict)
     '''
     GET /api/v1/policies/type/<policytype>/example.html
       This endpoint returns an HTML file describing an example for creating that
@@ -1373,16 +1375,16 @@ class RestAPI(SingletonMixin):
         if not flask_login.current_user.is_authenticated:
             print "Not Authenticated!"
             return make_response(jsonify({'error': 'User Not Authenticated'}),
-                                 403)            
+                                 403)
 
         base_url = request.url_root[:-1] + EP_POLICIES + "/number/"
+
         userid = flask_login.current_user.id
         data = request.get_json()
         retdict = {'policy':{'user':userid,
                              'type':policytype,
                              'json':data}}
                              
-
         # Get UserPolicy
         try:
             policyclass = RuleRegistry.instance().get_rule_class(policytype)
