@@ -42,4 +42,45 @@
     </tbody>
     <!-- Table Body -->
   </table>
+  
+  {# This section is for creating specific new rules. #}
+  {% if policytype == "EndpointConnection" %}
+  <form action="EndpointConnection" method="POST">
+    <div class="row">
+      <p>Deadline: <input type="text" id="deadline" name="deadline" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>Source: <input type="text" id="srcendpoint" name="srcendpoint" required="required"></p>
+      <p>Destination: <input type="text" id="dstendpoint" name="dstendpoint" required="required"></p>
+      <p>Data Quantity: <input type="number" id="dataquantity" name="dataquantity" required="required"></p>
+    </div>
+    <button type="submit">Submit</button>
+  </form>
+
+  
+  {% elif policytype == "L2Multipoint" %}
+  {% elif policytype == "L2Tunnel" %}
+  <form action="L2Tunnel" method="POST">
+    <div class="row">
+      <p>Start time: <input type="text" id="starttime" name="starttime" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>End time: <input type="text" id="endtime" name="endtime" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>Source Switch: <input type="text" id="srcswitch" name="srcswitch" required="required"></p>
+      <p>Destination Switch: <input type="text" id="dstswitch" name="dstswitch" required="required"></p>
+      <p>Source Port: <input type="number" id="srcport" name="srcport" required="required"></p>
+      <p>Destination Port: <input type="number" id="dstport" name="dstport" required="required"></p>
+      <p>Source VLAN: <input type="number" id="srcvlan" name="srcvlan" required="required"></p>
+      <p>Destination VLAN: <input type="number" id="dstvlan" name="dstvlan" required="required"></p>
+      <p>Bandwidth: <input type="number" id="bandwidth" name="bandwidth" required="required"></p>
+    </div>
+    <button type="submit">Submit</button>
+  </form>
+
+  
+  {% elif policytype == "SDXEgress" %}
+  {% elif policytype == "SDXIngress" %}
+  
+  {% else %}
+  {% endif %}
+
+  <p> Format for times is "1985-04-12T23:20:50" </p>
+  <p> Bandwidth is in bits per second </p>
+  <p> Data quantity in bits </p>
 </body>

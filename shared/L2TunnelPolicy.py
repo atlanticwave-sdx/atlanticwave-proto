@@ -95,8 +95,8 @@ class L2TunnelPolicy(UserPolicy):
                                            src_vlan)
             if ((dst_vlan < 0) or
                 (dst_vlan > 4090)):
-                raise UserPolicyValueError("src_vlan is out of range %d" %
-                                           src_vlan)            
+                raise UserPolicyValueError("dst_vlan is out of range %d" %
+                                           dst_vlan)
 
         except e:
             raise

@@ -1336,7 +1336,8 @@ class RestAPI(SingletonMixin):
             return json.dumps(retdict)
         # HTML output
         return flask.render_template('policiestypespec.html',
-                                     policydict=retdict)
+                                     policydict=retdict,
+                                     policytype=policytype)
     '''
     GET /api/v1/policies/type/<policytype>/example.html
       This endpoint returns an HTML file describing an example for creating that
@@ -1380,7 +1381,13 @@ class RestAPI(SingletonMixin):
         base_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
         userid = flask_login.current_user.id
+
+        # Extract out data. Try JSON first.
         data = request.get_json()
+        if data == None:
+            # Not JSON, so from the HTML form:
+            data = {policytype:(flask.request.form.to_dict())}
+        
         retdict = {'policy':{'user':userid,
                              'type':policytype,
                              'json':data}}
