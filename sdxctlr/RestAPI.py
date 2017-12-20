@@ -1364,6 +1364,7 @@ class RestAPI(SingletonMixin):
         
     ##### SPECIFIC RULE POSTS #####
 
+
     '''
     POST /api/v1/policies/type/<policytype>
       This endpoint is used for creating new policies of type <policytype>. See
@@ -1377,6 +1378,45 @@ class RestAPI(SingletonMixin):
             print "Not Authenticated!"
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
+        '''
+        Helper function that's used to preprocess incoming data from form
+        '''
+        def _parse_post_data(data_json):
+            print data_json
+            if "L2Multipoint" in data_json.keys():
+                # This parses out the individual "multipointelements" and
+                # reinserts them into the data_json object
+                count = int(data_json['L2Multipoint'].pop('count'))
+                data_json['L2Multipoint']['endpoints']=[]
+                for i in range(1,count+1):
+                    element = data_json['L2Multipoint'].pop('multipointelement_'+str(i))
+                    (node, portstr, vlanstr) = str(element).split(',')
+                    data_json['L2Multipoint']['endpoints'].append(
+                        {"switch":node,
+                         "port":int(portstr),
+                         "vlan":int(vlanstr)})
+            elif ("SDXEgress" in data_json.keys() or
+                  "SDXIngress" in data_json.keys()):
+                if "SDXEgress" in data_json.keys():
+                    pol = "SDXEgress"
+                else:
+                    pol = "SDXIngress"
+
+                match_count = int(data_json[pol].pop('match_count'))
+                action_count = nt(data_json[pol].pop('action_count'))
+                data_json[pol]['matches']=[]
+                for i in range(1,match_count+1):
+                    element = data_json[pol].pop('match_'+str(i))
+                    (m,v) = str(element).split(':')
+                    data_json[pol]['matches'].append({m:v})
+                data_json[pol]['actionss']=[]
+                for i in range(1,action_count+1):
+                    element = data_json[pol].pop('action_'+str(i))
+                    (a,v) = str(element).split(':')
+                    data_json[pol]['matches'].append({a:v})
+                    
+            return data_json
+
 
         base_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
@@ -1386,8 +1426,9 @@ class RestAPI(SingletonMixin):
         data = request.get_json()
         if data == None:
             # Not JSON, so from the HTML form:
-            data = {policytype:(flask.request.form.to_dict())}
-        
+            preprocessed_data = {policytype:(flask.request.form.to_dict())}
+            data = _parse_post_data(preprocessed_data)
+            
         retdict = {'policy':{'user':userid,
                              'type':policytype,
                              'json':data}}
