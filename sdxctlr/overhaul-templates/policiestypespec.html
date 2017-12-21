@@ -53,6 +53,7 @@
       <p>Destination: <input type="text" id="dstendpoint" name="dstendpoint" required="required"></p>
       <p>Data Quantity: <input type="number" id="dataquantity" name="dataquantity" required="required"></p>
     </div>
+    <br>
     <button type="submit">Submit</button>
   </form>
 
@@ -70,10 +71,11 @@
       <input type="hidden" id="count" name="count" value="0" />
       <span id="myForm"> </span>
       
-      <button onclick="multipointFunction()">+</button>
+      <button type="button" onclick="multipointFunction()">+</button>
 
       <p>Bandwidth: <input type="number" id="bandwidth" name="bandwidth" required="required"></p>
     </div>
+    <br>
     <button type="submit">Submit</button>
   </form>
 
@@ -92,6 +94,7 @@
       <p>Destination VLAN: <input type="number" id="dstvlan" name="dstvlan" required="required"></p>
       <p>Bandwidth: <input type="number" id="bandwidth" name="bandwidth" required="required"></p>
     </div>
+    <br>
     <button type="submit">Submit</button>
   </form>
 
@@ -113,9 +116,11 @@
       <input type="hidden" id="action_count" name="action_count" value="0" />
       <span id="myForm"> </span>
       
-      <button onclick="sdxmatchFunction()">+Match</button>
-      <button onclick="sdxactionFunction()">+Action</button>
+      <button type="button" onclick="sdxmatchFunction()">+Match</button>
+      <br>
+      <button type="button" onclick="sdxactionFunction()">+Action</button>
     </div>
+    <br>
     <button type="submit">Submit</button>
     {% elif policytype == "SDXIngress" %}
     
@@ -135,9 +140,11 @@
       <input type="hidden" id="action_count" name="action_count" value="0" />
       <span id="myForm"> </span>
       
-      <button onclick="sdxmatchFunction()">+Match</button>
-      <button onclick="sdxactionFunction()">+Action</button>
+      <button type="button" onclick="sdxmatchFunction()">+Match</button>
+      <br>
+      <button type="button" onclick="sdxactionFunction()">+Action</button>
     </div>
+    <br>
     <button type="submit">Submit</button>
     
   {% else %}
