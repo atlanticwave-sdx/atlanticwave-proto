@@ -1399,21 +1399,46 @@ class RestAPI(SingletonMixin):
                   "SDXIngress" in data_json.keys()):
                 if "SDXEgress" in data_json.keys():
                     pol = "SDXEgress"
+                    # See SDXPolicy.py for source of this list
+                    types = {'src_mac':str, 'src_ip':str,
+                             'tcp_src':int, 'udp_src':int,
+                             'dst_mac':str, 'dst_ip':str,
+                             'tcp_dst':int, 'udp_dst':int,
+                             'ip_proto':int, 'eth_type':int, 'vlan':int,
+                             'ModifySRCMAC':str, 'ModifySRCIP':str,
+                             'ModifyTCPSRC':int, 'ModifyUDPSRC':int,
+                             'ModifyVLAN':int}
+
                 else:
                     pol = "SDXIngress"
+                    types = {'src_mac':str, 'src_ip':str,
+                             'tcp_src':int, 'udp_src':int,
+                             'dst_mac':str, 'dst_ip':str,
+                             'tcp_dst':int, 'udp_dst':int,
+                             'ip_proto':int, 'eth_type':int, 'vlan':int,
+                             'ModifyDSTMAC':str, 'ModifyDSTIP':str,
+                             'ModifyTCPDST':int, 'ModifyUDPDST':int,
+                             'ModifyVLAN':int}
+                    no_type = ['Drop', 'Continue']
+
 
                 match_count = int(data_json[pol].pop('match_count'))
-                action_count = nt(data_json[pol].pop('action_count'))
+                action_count = int(data_json[pol].pop('action_count'))
                 data_json[pol]['matches']=[]
                 for i in range(1,match_count+1):
                     element = data_json[pol].pop('match_'+str(i))
-                    (m,v) = str(element).split(':')
+                    (m,vstr) = str(element).split(',')
+                    # Only somewhat dirty type conversion
+                    v = types[m](vstr)
                     data_json[pol]['matches'].append({m:v})
-                data_json[pol]['actionss']=[]
+                data_json[pol]['actions']=[]
                 for i in range(1,action_count+1):
                     element = data_json[pol].pop('action_'+str(i))
-                    (a,v) = str(element).split(':')
-                    data_json[pol]['matches'].append({a:v})
+                    if element in no_type:
+                        data_json[pol]['actions'].append({element})
+                    else:
+                        (a,v) = str(element).split(',')
+                        data_json[pol]['actions'].append({a:v})
                     
             return data_json
 

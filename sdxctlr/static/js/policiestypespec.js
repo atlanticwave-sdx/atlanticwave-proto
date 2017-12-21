@@ -62,7 +62,7 @@ function sdxmatchFunction(){
     g.setAttribute("src", "delete.png");
     m += 1;
     y.setAttribute("Name", "match_" + m);
-    r.innerHTML = "MATCH:value"
+    r.innerHTML = "MATCH,value"
     r.appendChild(y);
     g.setAttribute("onclick", "removeElement('myForm','match_" + m + "')");
     r.appendChild(g);
@@ -80,7 +80,7 @@ function sdxactionFunction(){
     g.setAttribute("src", "delete.png");
     m += 1;
     y.setAttribute("Name", "action_" + a);
-    r.innerHTML = "ACTION:newvalue"
+    r.innerHTML = "ACTION,newvalue"
     r.appendChild(y);
     g.setAttribute("onclick", "removeElement('myForm','action_" + a + "')");
     r.appendChild(g);
