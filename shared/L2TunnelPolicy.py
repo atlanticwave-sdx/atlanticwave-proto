@@ -7,7 +7,6 @@ from datetime import datetime
 from shared.constants import *
 from shared.VlanTunnelLCRule import VlanTunnelLCRule
 
-jsonstring = "l2tunnel"
 class L2TunnelPolicy(UserPolicy):
     ''' This policy is for network administrators to create L2 tunnels, similar 
         to NSI tunnels.
@@ -23,7 +22,7 @@ class L2TunnelPolicy(UserPolicy):
           - Bandwidth
 
         Example Json:
-        {"l2tunnel":{
+        {"L2Tunnel":{
             "starttime":"1985-04-12T23:20:50",
             "endtime":"1985-04-12T23:20:50+0400",
             "srcswitch":"atl-switch",
@@ -55,17 +54,17 @@ class L2TunnelPolicy(UserPolicy):
         self.intermediate_vlan = None
         self.fullpath = None
         
-        super(L2TunnelPolicy, self).__init__(username, "L2Tunnel", json_rule)
+        super(L2TunnelPolicy, self).__init__(username, json_rule)
 
         # Anything specific here?
         pass
 
-    @staticmethod
-    def check_syntax(json_rule):
+    @classmethod
+    def check_syntax(cls, json_rule):
         try:
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
-
+            jsonstring = cls.get_policy_name()
             starttime = datetime.strptime(json_rule[jsonstring]['starttime'],
                                          rfc3339format)
             endtime = datetime.strptime(json_rule[jsonstring]['endtime'],
@@ -96,8 +95,8 @@ class L2TunnelPolicy(UserPolicy):
                                            src_vlan)
             if ((dst_vlan < 0) or
                 (dst_vlan > 4090)):
-                raise UserPolicyValueError("src_vlan is out of range %d" %
-                                           src_vlan)            
+                raise UserPolicyValueError("dst_vlan is out of range %d" %
+                                           dst_vlan)
 
         except e:
             raise
@@ -231,6 +230,7 @@ class L2TunnelPolicy(UserPolicy):
         return True
 
     def _parse_json(self, json_rule):
+        jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
         if jsonstring not in json_rule.keys():

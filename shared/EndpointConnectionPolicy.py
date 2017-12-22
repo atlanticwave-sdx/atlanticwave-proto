@@ -34,7 +34,7 @@ class EndpointConnectionPolicy(UserPolicy):
         FIXME: Recurrant items too!
 
         Example Json:
-        {"endpointconnection":{
+        {"EndpointConnection":{
             "deadline":"1985-04-12T23:20:50",
             "srcendpoint":"atlh1",
             "dstendpoint":"miah2",
@@ -46,7 +46,6 @@ class EndpointConnectionPolicy(UserPolicy):
         Side effect of coming from JSON, everything's unicode. Need to handle 
         parsing things into the appropriate types (int, for instance).    
     '''
-    rulename = 'endpointconnection'
     buffer_time_sec = 300
     buffer_bw_percent = 1.05
 
@@ -64,7 +63,6 @@ class EndpointConnectionPolicy(UserPolicy):
         self.fullpath = None
 
         super(EndpointConnectionPolicy, self).__init__(username,
-                                                       "EndpointConnection",
                                                        json_rule)
 
         print "Passed: %s:%s:%s:%s:%s:%s:%s" % (self.deadline,
@@ -77,20 +75,21 @@ class EndpointConnectionPolicy(UserPolicy):
         # Second
         pass
 
-    @staticmethod
-    def check_syntax(json_rule):
+    @classmethod
+    def check_syntax(cls, json_rule):
         try:
-            deadline = datetime.strptime(json_rule[EndpointConnectionPolicy.rulename]['deadline'],
+            jsonstring = cls.get_policy_name()
+            deadline = datetime.strptime(json_rule[jsonstring]['deadline'],
                                          rfc3339format)
-            src = json_rule[EndpointConnectionPolicy.rulename]['srcendpoint']
-            dst = json_rule[EndpointConnectionPolicy.rulename]['dstendpoint']
-            data = json_rule[EndpointConnectionPolicy.rulename]['dataquantity']
+            src = json_rule[jsonstring]['srcendpoint']
+            dst = json_rule[jsonstring]['dstendpoint']
+            data = json_rule[jsonstring]['dataquantity']
 
             if type(data) != int:
                 raise UserPolicyTypeError("data is not an int: %s:%s" %
                                           (str(data), type(data)))
             #FIXME: checking on src and dst to see if they're strings?
-        except e:
+        except Exception as e:
             raise
 
     def breakdown_rule(self, tm, ai):
@@ -227,15 +226,16 @@ class EndpointConnectionPolicy(UserPolicy):
         return True
 
     def _parse_json(self, json_rule):
+        jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if EndpointConnectionPolicy.rulename not in json_rule.keys():
+        if jsonstring not in json_rule.keys():
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
-        self.deadline = str(json_rule[EndpointConnectionPolicy.rulename]['deadline'])
-        self.src = str(json_rule[EndpointConnectionPolicy.rulename]['srcendpoint'])
-        self.dst = str(json_rule[EndpointConnectionPolicy.rulename]['dstendpoint'])
-        self.data = int(json_rule[EndpointConnectionPolicy.rulename]['dataquantity'])
+        self.deadline = str(json_rule[jsonstring]['deadline'])
+        self.src = str(json_rule[jsonstring]['srcendpoint'])
+        self.dst = str(json_rule[jsonstring]['dstendpoint'])
+        self.data = int(json_rule[jsonstring]['dataquantity'])
 
 
 

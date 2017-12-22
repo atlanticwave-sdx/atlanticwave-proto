@@ -14,21 +14,14 @@
       "location":"0,0"}
   },
   "localcontrollers": {
-    "br1":{
-      "shortname": "br1",
+    "br1LC":{
+      "shortname": "br1LC",
       "credentials": "pwd",
       "location": "0,0",
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55780,
-        "openflowport": 6680,
-        "corsaurl": "",
-        "corsatoken": "",
-        "corsabridge": "br1",
-        "corsabwin":11,
-        "corsabwout":12,
-        "corsaratelimiterbridge":"br21",
-        "corsaratelimiterports":[2,3]
+        "openflowport": 6680
       },
       "switchinfo": [
         {
@@ -38,6 +31,7 @@
           "dpid":"1",
           "brand":"Open vSwitch",
           "model": "2.3.0",
+          
           "portinfo": [
             {
       	      "portnumber": 1,
@@ -54,7 +48,15 @@
               "speed": 8000000000,
               "destination": "NeighborBR3"
             }
-	        ]
+	        ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[2,3]
 	      }
       ],
       "operatorinfo": {
@@ -69,6 +71,19 @@
       "credentials": "1234",
       "organization": "Georgia Tech/RNOC",
       "contact": "sdonovan@gatech.edu",
+      "type":"administrator",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    },
+    "jchung": {
+      "credentials": "4321",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "jchung@gatech.edu",
+       "type":"user",
       "permitted_actions": [
         "tbd"
       ],

@@ -86,7 +86,7 @@ class RuleManager(SingletonMixin):
         self.config_table = self.db['config']     # Key-value configuration DB
 
         # Used for filtering.
-        self._valid_table_columns = ['hash', 'ruletype', 
+        self._valid_table_columns = ['hash', 'ruletype', 'user',
                                      'state', 'starttime', 'stoptime']
 
 
@@ -218,9 +218,9 @@ class RuleManager(SingletonMixin):
             if type(filter) != dict:
                 raise RuleManagerTypeError("filter is not a dictionary: %s" % 
                                            type(filter))
-            for keys in filter.keys():
+            for key in filter.keys():
                 if key not in self._valid_table_columns:
-                    raise RuleManagerValidationError("filter column %s is not a valid filtering field %s" % (key, self._valid_table_columns))
+                    raise RuleManagerValidationError("filter column '%s' is not a valid filtering field %s" % (key, self._valid_table_columns))
 
         # Handle ordering, if necessary.
         if ordering != None:
@@ -352,6 +352,7 @@ class RuleManager(SingletonMixin):
         self.rule_table.insert({'hash':rule.get_rule_hash(), 
                                 'rule':pickle.dumps(rule),
                                 'ruletype':rule.get_ruletype(),
+                                'user':rule.get_user(),
                                 'state':state,
                                 'starttime':rule.get_start_time(),
                                 'stoptime':rule.get_stop_time(),

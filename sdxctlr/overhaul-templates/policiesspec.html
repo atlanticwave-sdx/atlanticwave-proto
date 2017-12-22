@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AtlanticWave SDX Web Application">
+<meta name="author" content="Ankita Lamba">
+<title>Atlantic Wave SDX</title>
+</head>
+
+<style>
+.tabcontent {display:none;}
+</style>
+
+
+<body data-spy="scroll" data-target="#navbar" data-offset="0">
+  {% for policyname,policydetails in policydict.iteritems() %}
+  <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+    <!-- Table Header -->
+    <br>
+    <center><h1 style="color:white;">Policy</h1></center>
+    <thead>
+      <tr>
+        <th>Policy</th>
+        <th>Policy Number</th>
+        <th>User</th>
+        <th>Policy Type</th>
+      </tr>
+    </thead>
+
+    <!-- Table Body -->
+    <tbody>
+      <tr>
+        <td><a href={{ policydetails['href'] }}>{{ policyname }}</a></td>
+        <td>{{ policydetails['policynumber'] }}</td>
+        <td>{{ policydetails['user'] }}</td>
+        <td>{{ policydetails['type'] }}</td>
+      </tr>
+    </tbody>
+    <!-- Table Body -->
+  </table>
+
+  {# PER POLICY TYPE SECTION! #}
+  <p> Raw JSON </p>
+  <p> {{ policydetails['json'] }} </p>
+  {% if policydetails['type'] == "EndpointConnection" %}
+  <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+    <!-- Table Body -->
+    <tbody>
+      <tr>
+        <td> Deadline <td>
+        <td>{{ policydetails['json']['EndpointConnection']['deadline'] }}</td>
+      </tr>
+      <tr>
+        <td> Source Endpoint <td>
+        <td>{{ policydetails['json']['EndpointConnection']['srcendpoint'] }}</td>
+      </tr>
+      <tr>
+        <td> Destination Endpoint <td>
+        <td>{{ policydetails['json']['EndpointConnection']['dstendpoint'] }}</td>
+      </tr>
+      <tr>
+        <td> Data Quantity <td>
+        <td>{{ policydetails['json']['EndpointConnection']['dataquantity'] }}</td>
+      </tr>
+    </tbody>
+    <!-- Table Body -->
+  </table>
+      
+  
+  {% elif policydetails['type'] == "L2Multipoint" %}
+  <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+    <!-- Table Body -->
+      <tbody>
+      <tr>
+        <td> Start Time </td>
+        <td>{{ policydetails['json']['L2Multipoint']['starttime'] }}</td>
+      </tr>
+      <tr>
+        <td> End Time </td>
+        <td>{{ policydetails['json']['L2Multipoint']['endtime'] }}</td>
+      </tr>
+      <tr>
+        <td rowspan="{{ policydetails['json']['L2Multipoint']['endpoints']|length }}">Actions</td>
+        {% for entry in policydetails['json']['L2Multipoint']['endpoints'] %}
+        <td>{{ entry }}</td> {# FIXME - This should be broken out as well #}
+      </tr>
+      <tr>
+        {% endfor %}
+        <td> Bandwidth </td>
+        <td>{{ policydetails['json']['L2Multipoint']['bandwidth'] }}</td>
+      </tr>
+    </tbody>
+    <!-- Table Body -->
+  </table>
+      
+
+  {% elif policydetails['type'] == "L2Tunnel" %}
+    <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+    <!-- Table Body -->
+      <tbody>
+      <tr>
+        <td> Start Time <td>
+        <td>{{ policydetails['json']['L2Tunnel']['starttime'] }}</td>
+      </tr>
+      <tr>
+        <td> End Time <td>
+        <td>{{ policydetails['json']['L2Tunnel']['endtime'] }}</td>
+      </tr>
+      <tr>
+        <td> Source Switch <td>
+        <td>{{ policydetails['json']['L2Tunnel']['srcswitch'] }}</td>
+      </tr>
+      <tr>
+        <td> Destination Switch <td>
+        <td>{{ policydetails['json']['L2Tunnel']['dstswitch'] }}</td>
+      </tr>
+      <tr>
+        <td> Source Port <td>
+        <td>{{ policydetails['json']['L2Tunnel']['srcport'] }}</td>
+      </tr>
+      <tr>
+        <td> Destination Port <td>
+        <td>{{ policydetails['json']['L2Tunnel']['dstport'] }}</td>
+      </tr>
+      <tr>
+        <td> Source VLAN <td>
+        <td>{{ policydetails['json']['L2Tunnel']['srcvlan'] }}</td>
+      </tr>
+      <tr>
+        <td> Destination VLAN <td>
+        <td>{{ policydetails['json']['L2Tunnel']['srcvlan'] }}</td>
+      </tr>
+      <tr>
+        <td> Bandwidth <td>
+        <td>{{ policydetails['json']['L2Tunnel']['bandwidth'] }}</td>
+      </tr>
+    </tbody>
+    <!-- Table Body -->
+    </table>
+
+    
+
+  {% elif policydetails['type'] == "SDXEgress" %}
+  <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+    <!-- Table Body -->
+    <tbody>
+      <tr>
+        <td> Start Time </td>
+        <td>{{ policydetails['json']['SDXEgress']['starttime'] }}</td>
+      </tr>
+      <tr>
+        <td> End Time </td>
+        <td>{{ policydetails['json']['SDXEgress']['endtime'] }}</td>
+      </tr>
+      <tr>
+        <td colspan="{{ policydetails['json']['SDXEgress']['matches']|length }}">Matches</td>
+        {% for entry in policydetails['json']['SDXEgress']['matches'] %}
+        <td>{{ entry }}</td>
+      </tr>
+      <tr>
+        {% endfor %}
+        <td colspan="{{ policydetails['json']['SDXEgress']['actions']|length }}">Actions</td>
+        {% for entry in policydetails['json']['SDXEgress']['actions'] %}
+        <td>{{ entry }}</td>
+      </tr>
+      <tr>
+        {% endfor %}
+        <td> Switch </td>
+        <td>{{ policydetails['json']['SDXEgress']['switch'] }}</td>
+      </tr>
+
+      </tr>
+    </tbody>
+    <!-- Table Body -->
+  </table>
+
+
+  {% elif policydetails['type'] == "SDXIngress" %}
+  <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+    <!-- Table Body -->
+    <tbody>
+      <tr>
+        <td> Start Time </td>
+        <td>{{ policydetails['json']['SDXIngress']['starttime'] }}</td>
+      </tr>
+      <tr>
+        <td> End Time </td>
+        <td>{{ policydetails['json']['SDXIngress']['endtime'] }}</td>
+      </tr>
+      <tr>
+        <td colspan="{{ policydetails['json']['SDXIngress']['matches']|length }}">Matches</td>
+        {% for entry in policydetails['json']['SDXIngress']['matches'] %}
+        <td>{{ entry }}</td>
+      </tr>
+      <tr>
+        {% endfor %}
+        <td colspan="{{ policydetails['json']['SDXIngress']['actions']|length }}">Actions</td>
+        {% for entry in policydetails['json']['SDXIngress']['actions'] %}
+        <td>{{ entry }}</td>
+      </tr>
+      <tr>
+        {% endfor %}
+        <td> Switch </td>
+        <td>{{ policydetails['json']['SDXIngress']['switch'] }}</td>
+      </tr>
+
+      </tr>
+    </tbody>
+    <!-- Table Body -->
+  </table>
+  
+  {% else %}
+  
+  {% endif %}
+  {% endfor %}
+
+</body>

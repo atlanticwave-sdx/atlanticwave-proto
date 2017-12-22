@@ -20,8 +20,8 @@
       "vlan":2345}
   },
   "localcontrollers": {
-    "br1LC":{
-      "shortname": "br1LC",
+    "oneLC":{
+      "shortname": "oneLC",
       "credentials": "pwd",
       "location": "0,0",
       "lcip": "127.0.0.1",
@@ -33,7 +33,7 @@
         {
           "name":"br1",
           "friendlyname":"br1",
-          "ip": "128.61.159.153",
+          "ip": "127.0.0.1",
           "dpid":"1",
           "brand":"Open vSwitch",
           "model": "2.3.0",
@@ -51,13 +51,8 @@
             {
       	      "portnumber": 3,
 	          "speed": 8000000000,
-	          "destination": "mia"
-	        },
-            {
-              "portnumber": 4,
-              "speed": 8000000000,
-              "destination": "miadtn"
-            }
+	          "destination": "br2"
+	        }
 	        ],
           "internalconfig": {
             "corsaurl": "",
@@ -68,7 +63,41 @@
             "corsaratelimiterbridge":"br21",
             "corsaratelimiterports":[21,22]
           }
-	    }
+        },
+        {
+          "name":"br2",
+          "friendlyname":"br2",
+          "ip": "127.0.0.1",
+          "dpid":"2",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "mia"
+	        },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "miadtn"
+            },
+            {
+      	      "portnumber": 3,
+	          "speed": 8000000000,
+	          "destination": "br1"
+	        }
+	        ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br2",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22]
+          }
+        }
       ],
       "operatorinfo": {
         "organization": "Georgia Tech/RNOC",
@@ -83,6 +112,18 @@
       "organization": "Georgia Tech/RNOC",
       "contact": "sdonovan@gatech.edu",
       "type": "administrator",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    },
+    "jchung": {
+      "credentials": "4321",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "jchung@gatech.edu",
+      "type": "user",
       "permitted_actions": [
         "tbd"
       ],

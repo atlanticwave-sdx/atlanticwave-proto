@@ -6,7 +6,6 @@ from UserPolicy import *
 from FloodTreeLCRule import *
 import networkx as nx
 
-jsonstring = "floodtree"
 
 class FloodTreePolicy(UserPolicy):
     ''' This policy is for creating a tree for broadcast flooding. A spanning
@@ -22,16 +21,15 @@ class FloodTreePolicy(UserPolicy):
 
     def __init__(self, username, json_rule):
         super(FloodTreePolicy, self).__init__(username,
-                                              'FloodTree',
                                               json_rule)
 
         # Anythign specific here?
         pass
 
-    @staticmethod
-    def check_syntax(json_rule):
+    @classmethod
+    def check_syntax(cls, json_rule):
         try:
-            value = json_rule[jsonstring]
+            value = json_rule[cls.get_policy_name()]
             if value != None or value != [] or value != {}:
                 raise UserPolicyValueError("value json_rule should be None, [], or {}, not %s." % value)
         except e: raise
@@ -80,8 +78,8 @@ class FloodTreePolicy(UserPolicy):
     def _parse_json(self, json_rule):
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
-            raise UserPolicyValueError("%s value not in entry:\n    %s" % (jsonstring, json_rule)) 
+        if self.ruletype not in json_rule.keys():
+            raise UserPolicyValueError("%s value not in entry:\n    %s" % (self.ruletype, json_rule)) 
 
         # Not much to do here. There's no data on startup.
 

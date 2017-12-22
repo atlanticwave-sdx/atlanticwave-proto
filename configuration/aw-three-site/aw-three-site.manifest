@@ -44,26 +44,19 @@
       "vlan":300}
   },
   "localcontrollers": {
-    "atl":{
-      "shortname": "atl",
+    "atlLC":{
+      "shortname": "atlLC",
       "credentials": "atlpw",
       "location": "33.772000,-84.390000",
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55767,
-	"openflowport": 6633,
-        "corsaurl": "",
-        "corsatoken": "",
-	"corsabridge": "",
-        "corsabwin":0,
-        "corsabwout":0,
-        "corsaratelimiterbridge":"br0",
-        "corsaratelimiterports":[0,0]	
+        "openflowport": 6633
       },
       "switchinfo": [
         {
           "name": "atl-switch",
-	  "friendlyname":"Main Atlanta Switch",
+          "friendlyname":"Main Atlanta Switch",
           "ip": "127.0.0.1",
           "dpid":"1",
           "brand": "Open vSwitch",
@@ -90,16 +83,14 @@
               "destination": "atldtn"
             }            
           ],
-          "rulesaccepted": [
-            "tbd"
-          ],
-          "rulesnotaccepted": [
-            "tbd"
-          ],
-          "reservationsallowed": {
-            "maxtime": "7 days",
-            "maxbandwidth": "200 Mbps",
-            "maxports": "3"
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "",
+            "corsabwin":0,
+            "corsabwout":0,
+            "corsaratelimiterbridge":"br0",
+            "corsaratelimiterports":[0,0]
           }
         }
       ],
@@ -109,21 +100,14 @@
         "contact": "sdonovan@gatech.edu"
       }
     },
-    "mia":{
-      "shortname": "mia",
+    "miaLC":{
+      "shortname": "miaLC",
       "credentials": "miapw",
       "location":"25.756,-80.373000",
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55768,
-	"openflowport": 6643,
-        "corsaurl": "",
-        "corsatoken": "",
-	"corsabridge": "",
-        "corsabwin":0,
-        "corsabwout":0,
-        "corsaratelimiterbridge":"br0",
-        "corsaratelimiterports":[0,0]	
+        "openflowport": 6643
       },
       "switchinfo": [
         {
@@ -160,16 +144,14 @@
               "destination": "miadtn"
             }
           ],
-          "rulesaccepted": [
-            "tbd"
-          ],
-          "rulesnotaccepted": [
-            "tbd"
-          ],
-          "reservationsallowed": {
-            "maxtime": "7 days",
-            "maxbandwidth": "200 Mbps",
-            "maxports": "3"
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "",
+            "corsabwin":0,
+            "corsabwout":0,
+            "corsaratelimiterbridge":"br0",
+            "corsaratelimiterports":[0,0]
           }
         }
       ],
@@ -179,21 +161,14 @@
         "contact": "sdonovan@gatech.edu"
       }
     },
-    "gru":{
-      "shortname": "gru",
+    "gruLC":{
+      "shortname": "gruLC",
       "credentials": "grupw",
       "location": "-23.430000,-46.480000",
       "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55769,
-	"openflowport": 6653,
-        "corsaurl": "",
-        "corsatoken": "",
-	"corsabridge": "",
-        "corsabwin":0,
-        "corsabwout":0,
-        "corsaratelimiterbridge":"br0",
-        "corsaratelimiterports":[0,0]	
+        "openflowport": 6653
       },
       "switchinfo": [
         {
@@ -225,16 +200,14 @@
               "destination": "grudtn"
             }
           ],
-          "rulesaccepted": [
-            "tbd"
-          ],
-          "rulesnotaccepted": [
-            "tbd"
-          ],
-          "reservationsallowed": {
-            "maxtime": "7 days",
-            "maxbandwidth": "200 Mbps",
-            "maxports": "3"
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "",
+            "corsabwin":0,
+            "corsabwout":0,
+            "corsaratelimiterbridge":"br0",
+            "corsaratelimiterports":[0,0]
           }
         }
       ],
@@ -250,6 +223,7 @@
       "credentials": "1234",
       "organization": "Georgia Tech/RNOC",
       "contact": "sdonovan@gatech.edu",
+      "type":"administrator",
       "permitted_actions": [
         "tbd"
       ],

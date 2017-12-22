@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AtlanticWave SDX Web Application">
+<meta name="author" content="Ankita Lamba">
+<script src="/static/js/policiestypespec.js" type="text/javascript"></script>
+<title>Atlantic Wave SDX</title>
+</head>
+
+<style>
+.tabcontent {display:none;}
+</style>
+
+
+<body data-spy="scroll" data-target="#navbar" data-offset="0">
+  <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
+    <!-- Table Header -->
+    <br>
+    <center><h1 style="color:white;">Policies</h1></center>
+    <thead>
+      <tr>
+        <th>Policy</th>
+        <th>Policy Number</th>
+        <th>User</th>
+        <th>Policy Type</th>
+      </tr>
+    </thead>
+
+    <!-- Table Body -->
+    <tbody>
+      {% for policyname,policydetails in policydict.iteritems() %}
+      {% if policyname != "href" %}
+      <tr>
+        <td><a href={{ policydetails['href'] }}>{{ policyname }}</a></td>
+        <td>{{ policydetails['policynumber'] }}</td>
+        <td>{{ policydetails['user'] }}</td>
+        <td>{{ policydetails['type'] }}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+    <!-- Table Body -->
+  </table>
+  
+  {# This section is for creating specific new rules. #}
+  {% if policytype == "EndpointConnection" %}
+  <form action="EndpointConnection" method="POST">
+    <div class="row">
+      <p>Deadline: <input type="text" id="deadline" name="deadline" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>Source: <input type="text" id="srcendpoint" name="srcendpoint" required="required"></p>
+      <p>Destination: <input type="text" id="dstendpoint" name="dstendpoint" required="required"></p>
+      <p>Data Quantity: <input type="number" id="dataquantity" name="dataquantity" required="required"></p>
+    </div>
+    <br>
+    <button type="submit">Submit</button>
+  </form>
+
+  
+  {% elif policytype == "L2Multipoint" %}
+  <form action="L2Multipoint" method="POST">
+    <div class="row">
+      <p>Start time: <input type="text" id="starttime" name="starttime" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>End time: <input type="text" id="endtime" name="endtime" required="required" placeholder="1985-04-12T23:20:50"></p>
+
+      {# Multipoint endpoints are of the form "mia-switch,5,286" for the json:
+         {"switch":"mia-switch", "port":5, "vlan":286}
+         There is a hidden attribute for count of endpoints.
+      #}
+      <input type="hidden" id="count" name="count" value="0" />
+      <span id="myForm"> </span>
+      
+      <button type="button" onclick="multipointFunction()">+</button>
+
+      <p>Bandwidth: <input type="number" id="bandwidth" name="bandwidth" required="required"></p>
+    </div>
+    <br>
+    <button type="submit">Submit</button>
+  </form>
+
+
+  
+  {% elif policytype == "L2Tunnel" %}
+  <form action="L2Tunnel" method="POST">
+    <div class="row">
+      <p>Start time: <input type="text" id="starttime" name="starttime" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>End time: <input type="text" id="endtime" name="endtime" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>Source Switch: <input type="text" id="srcswitch" name="srcswitch" required="required"></p>
+      <p>Destination Switch: <input type="text" id="dstswitch" name="dstswitch" required="required"></p>
+      <p>Source Port: <input type="number" id="srcport" name="srcport" required="required"></p>
+      <p>Destination Port: <input type="number" id="dstport" name="dstport" required="required"></p>
+      <p>Source VLAN: <input type="number" id="srcvlan" name="srcvlan" required="required"></p>
+      <p>Destination VLAN: <input type="number" id="dstvlan" name="dstvlan" required="required"></p>
+      <p>Bandwidth: <input type="number" id="bandwidth" name="bandwidth" required="required"></p>
+    </div>
+    <br>
+    <button type="submit">Submit</button>
+  </form>
+
+  
+  {% elif policytype == "SDXEgress" %}
+  <form action="SDXEgress" method="POST">
+    <div class="row">
+      <p>Start time: <input type="text" id="starttime" name="starttime" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>End time: <input type="text" id="endtime" name="endtime" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>Switch: <input type="text" id="switch" name="switch" required="required" placeholder="mia-switch"></p>
+
+      {# Matches are of the form "INPORT:3" for the json: {"INPORT":3}
+         Actions are of the form "ModifyDstIP:'1.3.4.5'" for the json:
+           {"ModifyDstIP":'1.3.4.5'}
+         There is a hidden attribute for count of matches.
+         There is a hidden attribute for count of actions.
+      #}
+      <input type="hidden" id="match_count" name="match_count" value="0" />
+      <input type="hidden" id="action_count" name="action_count" value="0" />
+      <span id="myForm"> </span>
+      
+      <button type="button" onclick="sdxmatchFunction()">+Match</button>
+      <br>
+      <button type="button" onclick="sdxactionFunction()">+Action</button>
+    </div>
+    <br>
+    <button type="submit">Submit</button>
+    {% elif policytype == "SDXIngress" %}
+    
+  <form action="SDXIngress" method="POST">
+    <div class="row">
+      <p>Start time: <input type="text" id="starttime" name="starttime" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>End time: <input type="text" id="endtime" name="endtime" required="required" placeholder="1985-04-12T23:20:50"></p>
+      <p>Switch: <input type="text" id="switch" name="switch" required="required" placeholder="mia-switch"></p>
+
+      {# Matches are of the form "INPORT:3" for the json: {"INPORT":3}
+         Actions are of the form "ModifyDstIP:'1.3.4.5'" for the json:
+           {"ModifyDstIP":'1.3.4.5'}
+         There is a hidden attribute for count of matches.
+         There is a hidden attribute for count of actions.
+      #}
+      <input type="hidden" id="match_count" name="match_count" value="0" />
+      <input type="hidden" id="action_count" name="action_count" value="0" />
+      <span id="myForm"> </span>
+      
+      <button type="button" onclick="sdxmatchFunction()">+Match</button>
+      <br>
+      <button type="button" onclick="sdxactionFunction()">+Action</button>
+    </div>
+    <br>
+    <button type="submit">Submit</button>
+    
+  {% else %}
+  {% endif %}
+
+  <p> Format for times is "1985-04-12T23:20:50" </p>
+  <p> Bandwidth is in bits per second </p>
+  <p> Data quantity in bits </p>
+</body>

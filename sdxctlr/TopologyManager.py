@@ -93,11 +93,31 @@ class TopologyManager(SingletonMixin):
 
             # Fill out topology
             with self.topolock:
+                # Add local controller
+                self.topo.add_node(key)
+                self.topo.node[key]['type'] = "localcontroller"
+                self.topo.node[key]['shortname'] = shortname
+                self.topo.node[key]['location'] = location
+                self.topo.node[key]['ip'] = lcip
+                self.topo.node[key]['org'] = org
+                self.topo.node[key]['administrator'] = administrator
+                self.topo.node[key]['contact'] = contact
+                self.topo.node[key]['internalconfig'] = entry['internalconfig']
+
+                # Add switches to the local controller. Actually happens after
+                # the switches are handled.
+                switch_list = []
+
+                # Switches for that LC
                 for switchinfo in entry['switchinfo']:
                     name = str(switchinfo['name'])
                     # Node may be implicitly declared, check this first.
                     if not self.topo.has_node(name):
                         self.topo.add_node(name)
+
+                    # Add switch to LC list. This will be added at the end.
+                    switch_list.append(name)
+                    
                     # Per switch info, gets added to topo
                     self.topo.node[name]['friendlyname'] = str(switchinfo['friendlyname'])
                     self.topo.node[name]['dpid'] = int(switchinfo['dpid'], 0) #0 guesses base.
@@ -107,6 +127,7 @@ class TopologyManager(SingletonMixin):
                     self.topo.node[name]['locationshortname'] = shortname
                     self.topo.node[name]['location'] = location
                     self.topo.node[name]['lcip'] = lcip
+                    self.topo.node[name]['lcname'] = key
                     self.topo.node[name]['org'] = org
                     self.topo.node[name]['administrator'] = administrator
                     self.topo.node[name]['contact'] = contact
@@ -114,6 +135,8 @@ class TopologyManager(SingletonMixin):
 
                     # Other fields that may be of use
                     self.topo.node[name]['vlans_in_use'] = []
+
+                    self.topo.node[name]['internalconfig'] = switchinfo['internalconfig']
 
                     # Add the links
                     for port in switchinfo['portinfo']:
@@ -133,6 +156,9 @@ class TopologyManager(SingletonMixin):
                         # Other fields that may be of use
                         self.topo.edge[name][destination]['vlans_in_use'] = []
                         self.topo.edge[name][destination]['bw_in_use'] = 0
+                # Once all the switches have been looked at, add them to the
+                # LC
+                self.topo.node[key]['switches'] = switch_list
 
     # -----------------
     # Generic functions

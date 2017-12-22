@@ -8,8 +8,6 @@ from shared.constants import *
 from EdgePortLCRule import *
 import networkx as nx
 
-jsonstring = "edgeport"
-
 class EdgePortPolicy(UserPolicy):
     ''' This policy is used during initialization of the LocalController to let 
         it know which ports of it are edge ports. This is necessary for proper
@@ -20,7 +18,7 @@ class EdgePortPolicy(UserPolicy):
           - Switch
 
         Example Json:
-        {"edgeport":{
+        {"EdgePort":{
             "switch":"mia-switch"}}
     
         The vast majority of the work is handled by the breakdown_rule() function
@@ -32,19 +30,18 @@ class EdgePortPolicy(UserPolicy):
         self.switch = None
 
         super(EdgePortPolicy, self).__init__(username,
-                                             "EdgePort",
                                              json_rule)
 
         # Anything specific here?
         pass
 
-    @staticmethod
-    def check_syntax(json_rule):
+    @classmethod
+    def check_syntax(cls, json_rule):
         try:
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
 
-            switch = json_rule[jsonstring]['switch']
+            switch = json_rule[cls.get_policy_name()]['switch']
 
         except e:
             raise
@@ -84,6 +81,7 @@ class EdgePortPolicy(UserPolicy):
         return True
 
     def _parse_json(self, json_rule):
+        jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
         if jsonstring not in json_rule.keys():
