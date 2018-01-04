@@ -113,7 +113,7 @@ VLAN          PORT        |       4    |     6   |
                         cls=VLANHost, vlan=32)
     nych3 = net.addHost('nych3', mac='00:00:00:00:33:00',
                         cls=VLANHost, vlan=33)
-    nych1 = net.addHost('atlh1', mac='00:00:00:00:41:00',
+    atlh1 = net.addHost('atlh1', mac='00:00:00:00:41:00',
                         cls=VLANHost, vlan=41)
     atlh2 = net.addHost('atlh2', mac='00:00:00:00:42:00',
                         cls=VLANHost, vlan=42)
