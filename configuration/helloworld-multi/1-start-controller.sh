@@ -17,3 +17,9 @@ SDXIPVAL="172.17.0.2"
 docker run -e MANIFEST="/helloworld.manifest" -e SITE="br1" -e SDXIP=$SDXIPVAL -p 6680:6680 -dit --name=westctlr lc_container
 docker run -e MANIFEST="/helloworld.manifest" -e SITE="br1" -e SDXIP=$SDXIPVAL -p 6681:6681 -dit --name=centctlr lc_container
 docker run -e MANIFEST="/helloworld.manifest" -e SITE="br1" -e SDXIP=$SDXIPVAL -p 6682:6682 -dit --name=eastctlr lc_container
+
+
+
+# Display IP 
+echo "The IP of the VM is:"
+ifconfig | awk '/inet addr/{print substr($2,6)}' | awk '/192.168/{print}'

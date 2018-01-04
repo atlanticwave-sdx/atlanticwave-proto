@@ -1641,7 +1641,7 @@ class RestAPI(SingletonMixin):
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
         if AuthenticationInspector.instance().is_authenticated(email,flask.request.form['pw']):
-            user = User()
+            user = User(email)
             user.id = email
             flask_login.login_user(user)
             return flask.redirect(flask.url_for('home'))
