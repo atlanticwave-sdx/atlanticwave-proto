@@ -137,10 +137,10 @@ VLAN          PORT        |       4    |     6   |
 
 
     # Switch Wiring
-    net.addLink(laxswitch, ordswitch, port1=4, port1=4)
-    net.addLink(laxswitch, atlswitch, port1=5, port1=4)
-    net.addLink(ordswitch, atlswitch, port1=5, port1=5)
-    net.addLink(ordswitch, nycswitch, port1=6, port1=4)
+    net.addLink(laxswitch, ordswitch, port1=4, port2=4)
+    net.addLink(laxswitch, atlswitch, port1=5, port2=4)
+    net.addLink(ordswitch, atlswitch, port1=5, port2=5)
+    net.addLink(ordswitch, nycswitch, port1=6, port2=4)
 
 
 
