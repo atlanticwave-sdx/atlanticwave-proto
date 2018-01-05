@@ -1213,14 +1213,22 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Get the Rules based on the it.
         (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie)
-                
-        # Remove flows
-        for rule in swrules:
-            if type(rule) == TranslatedLCRuleContainer:
-                self.remove_flow(datapath, rule)
-            elif type(rule) == TranslatedCorsaRuleContainer:
-                # Currently, don't have to do anything here.
-                pass
+
+        try:
+            # Remove flows
+            for rule in swrules:
+                if type(rule) == TranslatedLCRuleContainer:
+                    self.remove_flow(datapath, rule)
+                elif type(rule) == TranslatedCorsaRuleContainer:
+                    # Currently, don't have to do anything here.
+                    pass
+        except Exception as e:
+            self.logger.error("Error in remove_rule")
+            self.logger.error("  swcookie: %s" % swcookie)
+            self.logger.error("  sdxrule: %s" % sdxrule)
+            self.logger.error("  swrules: %s" % swrules)
+            self.logger.error("  table: %s" % table)
+            raise e
 
         # Remove rule infomation from database
         self._remove_rule_in_db(sdx_cookie)
