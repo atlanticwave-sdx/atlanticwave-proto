@@ -23,9 +23,13 @@ class ConnectionManager(object):
         be subclassed, even though much will be in common. Singleton. '''
     __metaclass__ = Singleton
 
-    def __init__(self):
+    def __init__(self, connection_cls=Connection):
         self.listening_sock = None
         self.clients = []
+        if not issubclass(connection_cls, Connection):
+            raise TypeError("%s is not a Connection type." %
+                            str(connection_cls))
+        self.connection_cls = connection_cls
 
     def __repr__(self):
         clientstr = ""
@@ -100,7 +104,7 @@ class ConnectionManager(object):
             passes this to the saved new connection handling function. 
             Private. '''
         client_ip, client_port = address
-        client_connection = Connection(client_ip, client_port, sock)
+        client_connection = self.connection_cls(client_ip, client_port, sock)
         self.clients.append(client_connection)
         self.listening_callback(client_connection)
         
@@ -114,5 +118,5 @@ class ConnectionManager(object):
         except:
             sock.close()
             raise
-        return Connection(ip, port, sock)
+        return self.connection_cls(ip, port, sock)
 
