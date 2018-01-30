@@ -2,6 +2,10 @@
 # AtlanticWave/SDX Project
 
 
+from lib.Connection import Connection
+import cPickle as pickle
+import struct
+
 # This list of state machien states is primarily a point of reference.
 STATE_MACHINE_STAGES = [ 'UNCONNECTED',
                          'INITIALIZING',
@@ -35,21 +39,40 @@ class SDXMessage(object):
         else:
             self.data = data
 
+    def __str__(self):
+        return "%s: %s-%s-%s" % (self.name, self.validity,
+                                 self.data_json_name, self.data)
+
+    def __eq__(self, other):
+        return ((self.name == other.name) and
+                (self.validity == other.validity) and
+                (self.data_json_name == other.data_json_name) and
+                (self.data == other.data))
+
     def get_json(self):
         json_msg = {self.name:self.data}
-            return json_msg
+        return json_msg
 
     def parse_json(self, json_msg):
+        #print self.name
         if self.name not in json_msg.keys():
-            raise SDXMessageValueError("%s is not in %s: %s" % (name,
+            raise SDXMessageValueError("%s is not in %s: %s" % (self.name,
                                                 self.__class__.__name__,
                                                 json_msg))
-        for entry in json_msg[data_json_name].keys():
-            if entry not in self.data_json_name:
-                raise SDXMessageValueError("%s is not in %s: %s" % (entry,
+#        print self.data_json_name
+        print "json_msg[self.name] = %s" % json_msg[self.name]
+        if json_msg[self.name] != None:
+            for entry in json_msg[self.name].keys():
+#                print entry
+                if entry not in self.data_json_name:
+                    raise SDXMessageValueError("%s is not in %s: %s" % (entry,
                                                 self.data_json_name,
                                                 json_msg))
-        self.data = json_msg[data_json_name]
+        # Subtle, but to make it consistent.
+        if json_msg[self.name] == {}:
+            self.data = None
+        else:
+            self.data = json_msg[self.name]
 
     def get_data(self):
         ''' Returns data dictionary. '''
@@ -110,7 +133,7 @@ class SDXMessageHeartbeatResponse(SDXMessage):
         else:
             super(SDXMessageHeartbeatResponse, self).__init__('HBRESP',
                                                         data_json_name,
-                                                        validity
+                                                        validity,
                                                         data)
 
 class SDXMessageCapabilitiesRequest(SDXMessage):
@@ -144,9 +167,9 @@ class SDXMessageCapabilitiesResponse(SDXMessage):
         validity = ['CAPABILITIES']
         if json_msg != None:
             super(SDXMessageCapabilitiesResponse, self).__init__('CAPRESP',
-                                                             data_json_name,
-                                                             validity,
-                                                             data_json=json_msg)
+                                                        data_json_name,
+                                                        validity,
+                                                        data_json=json_msg)
         else:
             super(SDXMessageCapabilitiesResponse, self).__init__('CAPRESP',
                                                              data_json_name,
@@ -280,7 +303,7 @@ class SDXMessageInstallRuleFailure(SDXMessage):
     #FIXME: What are failure reasons?
     def __init__(self, cookie=None, failure_reason=None, json_msg=None):
         data_json_name = ['cookie','failure_reason']
-        data = {'cookie':cookie
+        data = {'cookie':cookie,
                 'failure_reason':failure_reason}
         validity = ['MAIN_PHASE']
         if json_msg != None:
@@ -303,7 +326,8 @@ class SDXMessageUnknownSource(SDXMessage):
     #FIXME: What are failure reasons?
     def __init__(self, mac_address=None, port=None, json_msg=None):
         data_json_name = ['mac_address', 'port']
-        data = [mac_address, port]
+        data = {'mac_address':mac_address,
+                'port':port}
         validity = ['MAIN_PHASE']
         if json_msg != None:
             super(SDXMessageUnknownSource, self).__init__('UNKNOWN',
@@ -325,16 +349,17 @@ class SDXMessageL2MultipointUnknownSource(SDXMessage):
     #FIXME: What are failure reasons?
     def __init__(self, mac_address=None, port=None, json_msg=None):
         data_json_name = ['mac_address', 'port']
-        data = [mac_address, port]
+        data = {'mac_address':mac_address,
+                'port':port}
         validity = ['MAIN_PHASE']
         if json_msg != None:
-            super(SDXMessageL2MultpointUnknownSource, self).__init__(
+            super(SDXMessageL2MultipointUnknownSource, self).__init__(
                 'UNKNOWNL2',
                 data_json_name,
                 validity,
                 data_json=json_msg)
         else:
-            super(SDXMessageL2MultpointUnknownSource, self).__init__(
+            super(SDXMessageL2MultipointUnknownSource, self).__init__(
                 'UNKNOWNL2',
                 data_json_name,
                 validity,
@@ -352,7 +377,6 @@ SDX_MESSAGE_NAME_TO_CLASS = {'HELLO': SDXMessageHello,
                              'INSTALL': SDXMessageInstallRule,
                              'INSTCOMP': SDXMessageInstallRuleComplete,
                              'INSTFAIL': SDXMessageInstallRuleFailure,
-
                              'UNKNOWN': SDXMessageUnknownSource,
                              'UNKNOWNL2': SDXMessageL2MultipointUnknownSource,
                              }
@@ -366,7 +390,7 @@ class SDXControllerConnection(Connection):
           - Message data
     '''
 
-    def __init__(self, address, port sock):
+    def __init__(self, address, port, sock):
         self.msg_num = 0
         self.msg_ack = 0
 
@@ -375,6 +399,7 @@ class SDXControllerConnection(Connection):
         self.name = None
         self.capabilites = None
 
+        super(SDXControllerConnection, self).__init__(address, port, sock)
 
 
     def get_state(self):
@@ -390,10 +415,13 @@ class SDXControllerConnection(Connection):
                 sock_data = self.sock.recv(12-len(meta_data))
                 meta_data += sock_data
                 if len(meta_data) == 12:
-                    (msg_num, msg_ack, recv_size) = struct.unpack('>iii',
-                                                                  meta_data)[0]
+                    #print "len(metadata %s" % len(meta_data)
+                    #print "METADATA: (%s)" % meta_data
+                    (msg_num, msg_ack, size) = struct.unpack('>iii',
+                                                                  meta_data)
             total_len = 0
             total_data = []
+            recv_size = size
             if recv_size > 524388:
                 recv_size = 524288
             while total_len < size:
@@ -412,11 +440,14 @@ class SDXControllerConnection(Connection):
             if msg_ack > self.msg_num:
                 print "msg_ack from peer went backwards! %d:%d" % (msg_ack,
                                                                    self.msg_num)
-            if msg_num < self.msg_ack
+            if msg_num < self.msg_ack:
                 print "msg_num from peer went backwards! %d:%d" % (msg_num,
                                                                    self.msg_ack)
             self.msg_ack = msg_num
             return data
+        
+        except:
+            raise
 
     def send_protocol(self, sdx_message):
         # Based on Connection.send(), but updated for the additional protocol
@@ -467,10 +498,15 @@ class SDXControllerConnection(Connection):
         # - Receive rule
         # - Send rule to install_rule_callback
         while rule_count_left > 0:
+            print "---LC Rule Count left %s" % rule_count_left
             req = SDXMessageInitialRuleRequest(rule_count_left)
             self.send_protocol(req)
 
+            print "---Sent Request"
+            
             json_msg = self.recv_protocol()
+            print "---Received  %s" % json_msg
+            
             rule = SDXMessageInstallRule(json_msg=json_msg)
 
             #FIXME: should this be the rule?
@@ -524,10 +560,14 @@ class SDXControllerConnection(Connection):
         # Initial Rules Complete should only be received when initial rule list
         # is empty.
         while True:
+            print "###SDX Len of initial_rules: %s" % len(initial_rules)
             json_msg = self.recv_protocol()
+            print "###Received %s" % json_msg.keys()
             if 'INITRREQ' in json_msg.keys():
                 # Send a rule
+                print "####Sending INSTALL RULE"
                 rule = SDXMessageInstallRule(initial_rules[0])
+                self.send_protocol(rule)
                 # Remove that rule form the initial rule list
                 initial_rules = initial_rules[1:]
             elif 'INITCOMP' in json_msg.keys():
@@ -538,6 +578,7 @@ class SDXControllerConnection(Connection):
                 break
 
         # Send Transition to Main Phase, transition to main phase
+        print "####Sending TRANSITION TO MAIN PHASE"
         tmp = SDXMessageTransitionToMainPhase()
         self.send_protocol(tmp)
         self.connection_state = 'MAIN_PHASE'
