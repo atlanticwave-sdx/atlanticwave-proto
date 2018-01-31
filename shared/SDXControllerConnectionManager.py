@@ -1,4 +1,4 @@
-# Copyright 2016 - Sean Donovan
+# Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Commands

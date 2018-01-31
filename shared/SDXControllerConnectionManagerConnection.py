@@ -54,16 +54,13 @@ class SDXMessage(object):
         return json_msg
 
     def parse_json(self, json_msg):
-        #print self.name
         if self.name not in json_msg.keys():
             raise SDXMessageValueError("%s is not in %s: %s" % (self.name,
                                                 self.__class__.__name__,
                                                 json_msg))
-#        print self.data_json_name
-        print "json_msg[self.name] = %s" % json_msg[self.name]
+
         if json_msg[self.name] != None:
             for entry in json_msg[self.name].keys():
-#                print entry
                 if entry not in self.data_json_name:
                     raise SDXMessageValueError("%s is not in %s: %s" % (entry,
                                                 self.data_json_name,
@@ -415,8 +412,6 @@ class SDXControllerConnection(Connection):
                 sock_data = self.sock.recv(12-len(meta_data))
                 meta_data += sock_data
                 if len(meta_data) == 12:
-                    #print "len(metadata %s" % len(meta_data)
-                    #print "METADATA: (%s)" % meta_data
                     (msg_num, msg_ack, size) = struct.unpack('>iii',
                                                                   meta_data)
             total_len = 0
@@ -498,14 +493,10 @@ class SDXControllerConnection(Connection):
         # - Receive rule
         # - Send rule to install_rule_callback
         while rule_count_left > 0:
-            print "---LC Rule Count left %s" % rule_count_left
             req = SDXMessageInitialRuleRequest(rule_count_left)
             self.send_protocol(req)
 
-            print "---Sent Request"
-            
             json_msg = self.recv_protocol()
-            print "---Received  %s" % json_msg
             
             rule = SDXMessageInstallRule(json_msg=json_msg)
 
@@ -526,7 +517,7 @@ class SDXControllerConnection(Connection):
         tmp = SDXMessageTransitionToMainPhase(json_msg=json_msg)
 
         # Transition to main phase
-        self.connection_status = 'MAIN_PHASE'
+        self.connection_state = 'MAIN_PHASE'
 
     def transition_to_main_phase_SDX(self, get_initial_rule_callback):
         # Transition to Initializing
@@ -560,12 +551,9 @@ class SDXControllerConnection(Connection):
         # Initial Rules Complete should only be received when initial rule list
         # is empty.
         while True:
-            print "###SDX Len of initial_rules: %s" % len(initial_rules)
             json_msg = self.recv_protocol()
-            print "###Received %s" % json_msg.keys()
             if 'INITRREQ' in json_msg.keys():
                 # Send a rule
-                print "####Sending INSTALL RULE"
                 rule = SDXMessageInstallRule(initial_rules[0])
                 self.send_protocol(rule)
                 # Remove that rule form the initial rule list
@@ -578,7 +566,6 @@ class SDXControllerConnection(Connection):
                 break
 
         # Send Transition to Main Phase, transition to main phase
-        print "####Sending TRANSITION TO MAIN PHASE"
         tmp = SDXMessageTransitionToMainPhase()
         self.send_protocol(tmp)
         self.connection_state = 'MAIN_PHASE'
