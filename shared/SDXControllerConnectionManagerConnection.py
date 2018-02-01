@@ -16,6 +16,9 @@ STATE_MACHINE_STAGES = [ 'UNCONNECTED',
 class SDXMessageValueError(ValueError):
     pass
 
+class SDXMessageTypeError(TypeError):
+    pass
+
 class SDXMessage(object):
     ''' Used to simplfy sending/receiving messages between SDX Controller and 
         Local Controllers. '''
@@ -377,7 +380,14 @@ SDX_MESSAGE_NAME_TO_CLASS = {'HELLO': SDXMessageHello,
                              'UNKNOWN': SDXMessageUnknownSource,
                              'UNKNOWNL2': SDXMessageL2MultipointUnknownSource,
                              }
-                             
+
+class SDXControllerConnectionValueError(ValueError):
+    pass
+
+class SDXControllerConnectionTypeError(TypeError):
+    pass
+
+
 class SDXControllerConnection(Connection):
     ''' Handles connection state machine for SDX Controller connections.
         Has a very simple protocol:
@@ -403,8 +413,11 @@ class SDXControllerConnection(Connection):
         return self.connection_state
     
     def recv_protocol(self):
-        # Based on Connection.recv(), but updated for the additional protocol
-        # related info.
+        ''' Based on Connection.recv(), but updated for the additional protocol
+            related info.
+            Returns a SDXMessage of the correct type.
+        '''
+        
         try:
             sock_data = ''
             meta_data = ''
@@ -439,7 +452,16 @@ class SDXControllerConnection(Connection):
                 print "msg_num from peer went backwards! %d:%d" % (msg_num,
                                                                    self.msg_ack)
             self.msg_ack = msg_num
-            return data
+
+            # Make the correct SDXMessage out of it.
+            if len(data.keys()) != 1:
+                raise SDXMessageValueError("There were multiple keys in the received data: %s" % data.keys())
+            msgtype = data.keys()[0]
+            msg = SDX_MESSAGE_NAME_TO_CLASS[msgtype](json_msg=data)
+
+            #FIXME: Checking of rule validity
+                                           
+            return msg
         
         except:
             raise
@@ -474,8 +496,9 @@ class SDXControllerConnection(Connection):
         self.connection_state = 'CAPABILITIES'
 
         # Wait for Request Capabilities
-        json_msg = self.recv_protocol()
-        reqcap = SDXMessageCapabilitiesRequest(json_msg=json_msg)
+        reqcap = self.recv_protocol()
+        if not isinstance(reqcap, SDXMessageCapabilitiesRequest):
+            raise SDXControllerConnectionTypeError("SDXMessageCapabilitesRequest not received: %s, %s" % (type(reqcap), reqcap))
 
         # Send Capabilities, transition to Initial Rules
         #FIXME: DOESN'T EXIST RIGHT NOW. Don't need to fill it out
@@ -484,8 +507,10 @@ class SDXControllerConnection(Connection):
         self.connection_state = 'INITIAL_RULES'
 
         # Wait for Initial Rule count
-        json_msg = self.recv_protocol()
-        irc = SDXMessageInitialRuleCount(json_msg=json_msg)
+        irc = self.recv_protocol()
+        if not isinstance(irc, SDXMessageInitialRuleCount):
+            raise SDXControllerConnectionTypeError("SDXMessageInitialRuleCount not received: %s, %s" % (type(irc), irc))
+
         rule_count_left = irc.get_data()['initial_rule_count']
         
         # Loop through initial rules:
@@ -496,9 +521,9 @@ class SDXControllerConnection(Connection):
             req = SDXMessageInitialRuleRequest(rule_count_left)
             self.send_protocol(req)
 
-            json_msg = self.recv_protocol()
-            
-            rule = SDXMessageInstallRule(json_msg=json_msg)
+            rule = self.recv_protocol()
+            if not isinstance(rule, SDXMessageInstallRule):
+                raise SDXControllerConnectionTypeError("SDXMessageInstallRule not received: %s, %s" % (type(rule), rule))
 
             #FIXME: should this be the rule?
             #Should it be the contents of the rule?
@@ -513,8 +538,9 @@ class SDXControllerConnection(Connection):
         self.connection_state = 'INITIAL_RULES_COMPLETE'
 
         # Wait for Transition to main phase
-        json_msg = self.recv_protocol()
-        tmp = SDXMessageTransitionToMainPhase(json_msg=json_msg)
+        tmp = self.recv_protocol()
+        if not isinstance(tmp, SDXMessageTransitionToMainPhase):
+            raise SDXControllerConnectionTypeError("SDXMessageTransitionToMainPhase not received: %s, %s" % (type(tmp), tmp))
 
         # Transition to main phase
         self.connection_state = 'MAIN_PHASE'
@@ -524,8 +550,10 @@ class SDXControllerConnection(Connection):
         self.connection_state = 'INITIALIZING'
 
         # Wait for hello with name, call the get_initial_rule_callback with name
-        json_msg = self.recv_protocol()
-        hello = SDXMessageHello(json_msg=json_msg)
+        hello = self.recv_protocol()
+        if not isinstance(hello, SDXMessageHello):
+            raise SDXControllerConnectionTypeError("SDXMessageHello not received: %s, %s" % (type(hello), hello))
+        
         self.name = hello.get_data()['name']
         initial_rules = get_initial_rule_callback(self.name)
 
@@ -536,8 +564,9 @@ class SDXControllerConnection(Connection):
 
         # Wait for capabilities
         #FIXME: NOTHING REALLY TO DO WITH THIS YET.
-        json_msg = self.recv_protocol()
-        respcap = SDXMessageCapabilitiesResponse(json_msg=json_msg)
+        respcap = self.recv_protocol()
+        if not isinstance(respcap, SDXMessageCapabilitiesResponse):
+            raise SDXControllerConnectionTypeError("SDXMessageCapabilitiesResponse not received: %s, %s" % (type(respcap), respcap))
 
         # Transition to Initial Rules, send Initial Rule count
         self.connection_state = 'INITIAL_RULES'
@@ -551,14 +580,14 @@ class SDXControllerConnection(Connection):
         # Initial Rules Complete should only be received when initial rule list
         # is empty.
         while True:
-            json_msg = self.recv_protocol()
-            if 'INITRREQ' in json_msg.keys():
+            msg = self.recv_protocol()
+            if isinstance(msg, SDXMessageInitialRuleRequest):
                 # Send a rule
                 rule = SDXMessageInstallRule(initial_rules[0])
                 self.send_protocol(rule)
                 # Remove that rule form the initial rule list
                 initial_rules = initial_rules[1:]
-            elif 'INITCOMP' in json_msg.keys():
+            elif isinstance(msg, SDXMessageInitialRulesComplete):
                 # Confirm that we don't have any more rules, then bail out of
                 # loop
                 if len(initial_rules) != 0:
