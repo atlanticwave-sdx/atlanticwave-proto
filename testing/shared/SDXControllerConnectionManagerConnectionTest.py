@@ -98,17 +98,18 @@ class SDXMessageInitTest(unittest.TestCase):
         self.failUnlessEqual(msg, msg2)
 
     def test_UnknownSource_init(self):
-        msg = SDXMessageUnknownSource("11:22:33:44:55:66", 3)
+        msg = SDXMessageUnknownSource("11:22:33:44:55:66", 3, "switch-a")
         json_msg = {'UNKNOWN':{'mac_address':"11:22:33:44:55:66",
-                               'port':3}}
+                               'port':3,
+                               'switch':"switch-a"}}
         msg2 = SDXMessageUnknownSource(json_msg=json_msg)
         self.failUnlessEqual(msg, msg2)
 
-    def test_L2MultipointUnknownSource_init(self):
-        msg = SDXMessageL2MultipointUnknownSource("11:22:33:44:55:66", 3)
-        json_msg = {'UNKNOWNL2':{'mac_address':"11:22:33:44:55:66",
-                               'port':3}}
-        msg2 = SDXMessageL2MultipointUnknownSource(json_msg=json_msg)
+    def test_SwitchChangeCallback_init(self):
+        msg = SDXMessageSwitchChangeCallback(1234,'OPAQUEDATA!')
+        json_msg = {'CALLBACK':{'cookie':1234,
+                                'data':"OPAQUEDATA!"}}
+        msg2 = SDXMessageSwitchChangeCallback(json_msg=json_msg)
         self.failUnlessEqual(msg, msg2)
 
 

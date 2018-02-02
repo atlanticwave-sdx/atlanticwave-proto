@@ -11,7 +11,7 @@ from lib.Singleton import SingletonMixin
 from lib.Connection import select as cxnselect
 from RyuControllerInterface import *
 from shared.SDXControllerConnectionManager import *
-from shared.switch_messages import *
+from switch_messages import *
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
@@ -161,14 +161,22 @@ class LocalController(SingletonMixin):
         pass
     # Is this necessary?
 
-    def switch_message_cb(self, cmd, msg):
-        ''' Called by SwitchConnection to pass information back from the Switch.
-            type is the type of message defined in shared/switch_messages.py.
-            msg is the message that's being sent back, which is type dependant.
+    def switch_message_cb(self, cmd, opaque):
+        ''' Called by SwitchConnection to pass information back from the Switch
+            type is the type of message defined in switch_messages.py.
+            opaque is the message that's being sent back, which is source 
+            dependent.
         '''
-        if (cmd == SM_UNKNOWN_SOURCE or
-            cmd == SM_L2MULTIPOINT_UNKNOWN_SOURCE):
-            self.sdx_connection.send_cmd(cmd, msg)
+        if cmd == SM_UNKNOWN_SOURCE:
+            # Create an SDXMessageUnknownSource and send it.
+            msg = SDXMessageUnknownSource(opaque['src'], opaque['port']
+                                          opaque['switch'])
+            self.sdx_connection.send_protocol(msg)
+        
+        elif cmd == SM_L2MULTIPOINT_UNKNOWN_SOURCE:
+            # Create an SDXMessageSwitchChangeCallback and send it.
+            msg = SDXMessageSwitchChangeCallback(opaque)
+            self.sdx_connection.send_protocol(msg)
 
         #FIXME: Else?
             

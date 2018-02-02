@@ -321,13 +321,15 @@ class SDXMessageUnknownSource(SDXMessage):
     ''' LC sends this back when a new MAC address is seen on a port. Used for 
         learning.
         Valid during Main Phase only
-        Receives a port and MAC address
+        Receives a port, MAC address, and switch.
     '''
     #FIXME: What are failure reasons?
-    def __init__(self, mac_address=None, port=None, json_msg=None):
-        data_json_name = ['mac_address', 'port']
+    def __init__(self, mac_address=None, port=None, switch=None,
+                 json_msg=None):
+        data_json_name = ['mac_address', 'port', 'switch']
         data = {'mac_address':mac_address,
-                'port':port}
+                'port':port,
+                'switch':switch}
         validity = ['MAIN_PHASE']
         if json_msg != None:
             super(SDXMessageUnknownSource, self).__init__('UNKNOWN',
@@ -340,27 +342,31 @@ class SDXMessageUnknownSource(SDXMessage):
                                                           validity,
                                                           data)
 
-class SDXMessageL2MultipointUnknownSource(SDXMessage):
-    ''' LC sends this back when a new MAC address is seen on a port. Used for 
-        learning on L2Multipoint connection.
+class SDXMessageSwitchChangeCallback(SDXMessage):
+    ''' LC sends this back when there's a switch change event that a rule has
+        registered a callback for within the SDX Controller. Sends back a cookie
+        (from the policy - for lookup) and an opaque data structure that's 
+        specific to the particular policy.
+        Used by:
+          - L2MultipointPolicy
         Valid during Main Phase only
-        Receives a port and MAC address
+        Receives a cookie and opaque data.
     '''
     #FIXME: What are failure reasons?
-    def __init__(self, mac_address=None, port=None, json_msg=None):
-        data_json_name = ['mac_address', 'port']
-        data = {'mac_address':mac_address,
-                'port':port}
+    def __init__(self, cookie=None, data=None, json_msg=None):
+        data_json_name = ['cookie', 'data']
+        data = {'cookie':cookie,
+                'data':data}
         validity = ['MAIN_PHASE']
         if json_msg != None:
-            super(SDXMessageL2MultipointUnknownSource, self).__init__(
-                'UNKNOWNL2',
+            super(SDXMessageSwitchChangeCallback, self).__init__(
+                'CALLBACK',
                 data_json_name,
                 validity,
                 data_json=json_msg)
         else:
-            super(SDXMessageL2MultipointUnknownSource, self).__init__(
-                'UNKNOWNL2',
+            super(SDXMessageSwitchChangeCallback, self).__init__(
+                'CALLBACK',
                 data_json_name,
                 validity,
                 data)
@@ -378,7 +384,7 @@ SDX_MESSAGE_NAME_TO_CLASS = {'HELLO': SDXMessageHello,
                              'INSTCOMP': SDXMessageInstallRuleComplete,
                              'INSTFAIL': SDXMessageInstallRuleFailure,
                              'UNKNOWN': SDXMessageUnknownSource,
-                             'UNKNOWNL2': SDXMessageL2MultipointUnknownSource,
+                             'CALLBACK': SDXMessageSwitchChangeCallback,
                              }
 
 class SDXControllerConnectionValueError(ValueError):
@@ -411,6 +417,9 @@ class SDXControllerConnection(Connection):
 
     def get_state(self):
         return self.connection_state
+
+    def get_name(self):
+        return self.name
     
     def recv_protocol(self):
         ''' Based on Connection.recv(), but updated for the additional protocol

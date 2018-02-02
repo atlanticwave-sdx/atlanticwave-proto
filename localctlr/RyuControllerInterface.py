@@ -9,7 +9,7 @@ from ryu.cmd.manager import main
 from lib.Singleton import Singleton
 from lib.Connection import select as cxnselect
 from shared.LCRule import LCRule
-from shared.switch_messages import *
+from switch_messages import *
 
 import threading
 import logging

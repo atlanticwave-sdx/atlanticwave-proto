@@ -1,3 +1,4 @@
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -9,9 +10,9 @@ VLAN_MAX = 4095
 
 class L2MultipointEndpointLCRule(LCRule):
     ''' This structure is used to pass L2Multpoint rules for endpoint switches.
-        If an endpoint exists on a switch, this LCRule will be used. If it is not
-        and endpoint and just passing traffic through, L2MultipointFloodLCRule
-        is to be used.
+        If an endpoint exists on a switch, this LCRule will be used. If it is 
+        not and endpoint and just passing traffic through, 
+        L2MultipointFloodLCRule is to be used.
         Created by L2MultipointPolicy. '''
 
     def __init__(self, switch_id, flooding_ports, endpoint_ports_and_vlans,
@@ -20,14 +21,15 @@ class L2MultipointEndpointLCRule(LCRule):
                 switch_id - Which switch is involved
                 flooding_ports - List of ports connected to the endpoint switch 
                   that are not endpoint ports. Flooding-only port on the 
-                  intermediate VLAN. Can be None, if endpoints are located solely
-                  on one switch. Necessary field as all the ports are potentially
-                  connected when flooding.
-                endpoint_ports_and_vlans - List of tuples of endpoints and their 
+                  intermediate VLAN. Can be None, if endpoints are located 
+                  solely on one switch. Necessary field as all the ports are 
+                  potentially connected when flooding.
+                endpoint_ports_and_vlans - List of tuples of endpoints and their
                   associated VLANs. For example, [(3, 1400), (6, 1200)] would be
                   Port 3 on VLAN 1400 and port 6 on VLAN 1200.
-                intermediate_vlan - VLAN used for traffic between endpoint ports.
-                  Can be None, if endpoints are located solely on one switch.
+                intermediate_vlan - VLAN used for traffic between endpoint 
+                  ports. Can be None, if endpoints are located solely on one 
+                  switch.
                 bandwidth - Amount of bandwidth (in bits per second) allowed.
                   Can be None, if no bandwidth restrictions.
         '''
