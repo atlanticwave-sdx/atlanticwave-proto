@@ -11,7 +11,7 @@ from Queue import Queue, Empty
 from lib.Singleton import SingletonMixin
 from lib.Connection import select as cxnselect
 from shared.SDXControllerConnectionManager import *
-form shared.SDXControllerConnectionManagerConnection import *
+from shared.SDXControllerConnectionManagerConnection import *
 from shared.UserPolicy import UserPolicyBreakdown
 from AuthenticationInspector import *
 from AuthorizationInspector import *
@@ -161,8 +161,7 @@ class SDXController(SingletonMixin):
 
     def _get_existing_rules_by_name(self, name):
         # Goes to the RuleManager to get existing rules for a particular LC
-        pass
-        
+        return self.rm.get_breakdown_rules_by_lc(name)
         
     def _handle_new_connection(self, cxn):
         # Receive name from LocalController, verify that it's in the topology

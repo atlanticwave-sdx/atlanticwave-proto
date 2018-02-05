@@ -188,9 +188,9 @@ class RuleManager(SingletonMixin):
 
     def get_rules_search_fields(self):
         ''' This returns fields that can be used in get_rules()'s filter.
-            Basically, this is any of the columns used in the rule_tyble.insert()
-            action. There is some variation (the rule is pickled, so not useful),
-            but it tracks most of the colunmns. '''
+            Basically, this is any of the columns used in the 
+            rule_table.insert() action. There is some variation (the rule is 
+            pickled, so not useful), but it tracks most of the colunmns. '''
 
         #FIXME: make this more general, so that it can actually search for something like "starts between 8 and 10am". Further, should be able to tell users what values are valid for particular fields. the RuleRegistry should help out here.
 
@@ -238,6 +238,24 @@ class RuleManager(SingletonMixin):
                    STATE_TO_STRING(str(x['state']))) for x in results]
         return retval
 
+    def get_breakdown_rules_by_LC(self, lc):
+        ''' This gets broken down rules for a particular LC. Used at connection 
+            startup by the SDXController. 
+            Returns a list of broken down rules. 
+        '''
+        bd_list = []
+        # Get all rules
+        all_rules = self.rule_table.find()
+        # For each rule, look at each breakdown
+        for table_entry in all_rules:
+            rule = pickle.loads(str(table_entry['rule']))
+            for bd in rule.get_breakdown():
+                # If Breakdown is for this LC, add to bd_list
+                rule_lc = bd.get_lc()
+                if rule_lc == lc:
+                    bd_list.append(bd)
+        return bd_list
+    
     def get_rule_details(self, rule_hash):
         ''' This will return details of a rule, including the rule itself, the 
             local controller breakdowns, and the user who installed the rule. 
