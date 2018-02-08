@@ -260,9 +260,9 @@ class SDXMessageInstallRule(SDXMessage):
         Valid during Initial Rules and Main Phase
         Contains a rule
     '''
-    def __init__(self, rule=None, json_msg=None):
-        data_json_name = ['rule']
-        data = {'rule':rule}
+    def __init__(self, rule=None, switch_id=None, json_msg=None):
+        data_json_name = ['rule', 'switch_id']
+        data = {'rule':rule, 'switch_id':switch_id}
         validity = ['INITIAL_RULES', 'MAIN_PHASE']
         if json_msg != None:
             super(SDXMessageInstallRule, self).__init__('INSTALL',
@@ -313,6 +313,67 @@ class SDXMessageInstallRuleFailure(SDXMessage):
                                                         data_json=json_msg)
         else:
             super(SDXMessageInstallRuleFailure, self).__init__('INSTFAIL',
+                                                        data_json_name,
+                                                        validity,
+                                                        data)
+class SDXMessageRemoveRule(SDXMessage):
+    ''' SDX removing a rule to an LC
+        Valid during Main Phase only
+        Contains a rule
+    '''
+    def __init__(self, cookie=None, switch_id=None, json_msg=None):
+        data_json_name = ['cookie', 'switch_id']
+        data = {'cookie':cookie, 'switch_id':switch_id}
+        validity = ['INITIAL_RULES', 'MAIN_PHASE']
+        if json_msg != None:
+            super(SDXMessageRemoveRule, self).__init__('REMOVE',
+                                                       data_json_name,
+                                                       validity,
+                                                       data_json=json_msg)
+        else:
+            super(SDXMessageRemoveRule, self).__init__('REMOVE',
+                                                       data_json_name,
+                                                       validity,
+                                                       data)
+
+class SDXMessageRemoveRuleComplete(SDXMessage):
+    ''' LC sends this back to SDX on successfully removed a rule.
+        Valid during Main Phase only
+        Contains a reference to the rule
+    '''
+    def __init__(self, cookie=None, json_msg=None):
+        data_json_name = ['cookie']
+        data = {'cookie':cookie}
+        validity = ['MAIN_PHASE']
+        if json_msg != None:
+            super(SDXMessageRemoveRuleComplete, self).__init__('RMCOMP',
+                                                        data_json_name,
+                                                        validity,
+                                                        data_json=json_msg)
+        else:
+            super(SDXMessageRemoveRuleComplete, self).__init__('RMCOMP',
+                                                        data_json_name,
+                                                        validity,
+                                                        data)
+
+class SDXMessageRemoveRuleFailure(SDXMessage):
+    ''' LC sends this back to SDX on fails to remove a rule.
+        Valid during Main Phase only
+        Contains a reference to the rule, and a failure reason
+    '''
+    #FIXME: What are failure reasons?
+    def __init__(self, cookie=None, failure_reason=None, json_msg=None):
+        data_json_name = ['cookie','failure_reason']
+        data = {'cookie':cookie,
+                'failure_reason':failure_reason}
+        validity = ['MAIN_PHASE']
+        if json_msg != None:
+            super(SDXMessageRemoveRuleFailure, self).__init__('RMFAIL',
+                                                        data_json_name,
+                                                        validity,
+                                                        data_json=json_msg)
+        else:
+            super(SDXMessageRemoveRuleFailure, self).__init__('RMFAIL',
                                                         data_json_name,
                                                         validity,
                                                         data)
@@ -383,6 +444,9 @@ SDX_MESSAGE_NAME_TO_CLASS = {'HELLO': SDXMessageHello,
                              'INSTALL': SDXMessageInstallRule,
                              'INSTCOMP': SDXMessageInstallRuleComplete,
                              'INSTFAIL': SDXMessageInstallRuleFailure,
+                             'REMOVE' : SDXMessageRemoveRule,
+                             'RMCOMP': SDXMessageRemoveRuleComplete,
+                             'RMFAIL': SDXMessageRemoveRuleFailure,
                              'UNKNOWN': SDXMessageUnknownSource,
                              'CALLBACK': SDXMessageSwitchChangeCallback,
                              }
@@ -411,6 +475,7 @@ class SDXControllerConnection(Connection):
         self.connection_state = 'UNCONNECTED'
         self.name = None
         self.capabilites = None
+        self.outstanding_hb = False
 
         super(SDXControllerConnection, self).__init__(address, port, sock)
 
@@ -607,3 +672,13 @@ class SDXControllerConnection(Connection):
         tmp = SDXMessageTransitionToMainPhase()
         self.send_protocol(tmp)
         self.connection_state = 'MAIN_PHASE'
+
+    def heartbeat_response_handler(self, hbreq):
+        ''' Handles incoming HeartbeatResponses. '''
+        if not self.outstanding_hb:
+            raise SDXControllerConnectionValueError("There is no oustanding heartbeat request for this connection %s" % self)
+        self.oustanding_hb = False
+
+    def heartbeat_thread(self):
+        ''' Handles automatically sending Heartbeats consistently. '''
+        pass

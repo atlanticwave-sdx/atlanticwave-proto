@@ -6,17 +6,21 @@ import logging
 import threading
 import sys
 import json
+from Queue import Queue, Empty
 
 from lib.Singleton import SingletonMixin
 from lib.Connection import select as cxnselect
 from RyuControllerInterface import *
 from shared.SDXControllerConnectionManager import *
+from shared.SDXControllerConnectionManagerConnection import *
 from switch_messages import *
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
 DEFAULT_OPENFLOW_PORT = 6633
 
+NEW_CXN = "New Connection"
+DEL_CXN = "Remove Connection"
 
 class LocalController(SingletonMixin):
     ''' The Local Controller is responsible for passing messages from the SDX 
@@ -28,6 +32,7 @@ class LocalController(SingletonMixin):
         # Setup logger
         self._setup_logger()
         self.name = options.name
+        self.capabilities = "NOTHING YET" #FIXME: This needs to be updated
         self.logger.info("LocalController %s starting", self.name)
 
         # Parse out the options
@@ -50,8 +55,11 @@ class LocalController(SingletonMixin):
         self.logger.info("RyuControllerInterface setup finish.")
 
         # Setup connection manager
+        self.cxn_q = Queue()
         self.sdx_cm = SDXControllerConnectionManager()
         self.sdx_connection = None
+        self.start_cxn_thread = None
+
         self.logger.info("SDXControllerConnectionManager setup finish.")
         self.logger.debug("SDXControllerConnectionManager - %s" % (self.sdx_cm))
 
@@ -74,36 +82,96 @@ class LocalController(SingletonMixin):
     def _main_loop(self):
         ''' This is the main loop for the Local Controller. User should call 
             start_main_loop() to start it. ''' 
-        rlist = [self.sdx_connection]
+        rlist = []
         wlist = []
         xlist = rlist
+        timeout = 1.0
 
         self.logger.debug("Inside Main Loop, SDX connection: %s" % (self.sdx_connection))
 
         while(True):
-            # Based, in part, on https://pymotw.com/2/select/
+            # Based, in part, on https://pymotw.com/2/select/ and
+            # https://stackoverflow.com/questions/17386487/
+            try:
+                while not self.cxn_q.empty():
+                    (action, dxn) = self.cxn_q.get(False)
+                    if action == NEW_CXN:
+                        if cxn in rlist:
+                            # Already there. Weird, but OK
+                            pass
+                        rlist.append(cxn)
+                        wlist = []
+                        xlist = rlist
+                        
+                    elif action == DEL_CXN:
+                        if cxn in rlist:
+                            rlist.remove(cxn)
+                            wlist = []
+                            xlist = rlist
+            except Queue.Empty as e:
+                # This is raised if the cxn_q is empty of events.
+                # Normal behaviour
+                pass
+ 
+
+            if len(rlist) == 0:
+                sleep(timeout/2)
+                next
+            
             try:
                 readable, writable, exceptional = cxnselect(rlist,
-                                                         wlist,
-                                                         xlist)
+                                                            wlist,
+                                                            xlist,
+                                                            timeout)
             except Exception as e:
                 self.logger.error("Error in select - %s" % (e))
                 
 
             # Loop through readable
             for entry in readable:
-                if entry == self.sdx_connection:
-                    self.logger.debug("Receiving Command on sdx_connection")
-                    cmd, data = self.sdx_connection.recv_cmd()
-                    (switch_id, cmddata) = data
-                    self.logger.debug("Received : %s:%s" % (cmd, data))
-                    if cmd == SDX_NEW_RULE:
-                        self.switch_connection.send_command(switch_id, cmddata)
-                    elif cmd == SDX_RM_RULE:
-                        self.switch_connection.remove_rule(switch_id, cmddata)
-                    self.logger.debug("Sent     : %s:%s" % (cmd, data))
+                # Get Message
+                msg = entry.recv_protocol()
+                self.logger.debug("Received a %s message from %s" %
+                                  (type(msg), entry))
 
-                #elif?
+                #FIXME: Check if the SDXMessage is valid at this stage
+                
+                # If HeartbeatRequest, send a HeartbeatResponse. This doesn't
+                # require tracking anything, unlike when sending out a
+                # HeartbeatRequest ourselves.
+                if type(msg) == SDXMessageHeartbeatRequest:
+                    hbr = SDXMessageHeartbeatResponse()
+                    entry.send_protocol(hbr)
+                
+                # If HeartbeatResponse, call HeartbeatResponseHandler
+                elif type(msg) == SDXMessageHeartbeatResponse:
+                    entry.heartbeat_response_handler(msg)
+
+                # If InstallRule FIXME
+                elif type(msg) == SDXMessageInstallRule:
+                    self.install_rule_sdxmsg(msg)
+                    
+                # If InstallRuleComplete - ERROR! LC shouldn't receive this.
+                # If InstallRuleFailure -  ERROR! LC shouldn't receive this.
+                # If RemoveRuleComplete - ERROR! LC shouldn't receive this.
+                # If RemoveRuleFailure -  ERROR! LC shouldn't receive this.
+                # If UnknownSource - ERROR! LC shouldn't receive this.
+                # If SwitchChangeCallback -  ERROR! LC shouldn't receive this.
+                elif (type(msg) == SDXMessageInstallRuleComplete and
+                      type(msg) == SDXMessageInstallRuleFailure and
+                      type(msg) == SDXMessageRemoveRuleComplete and
+                      type(msg) == SDXMessageRemoveRuleFailure and
+                      type(msg) == SDXMessageUnknownSource and
+                      type(msg) == SDXMessageSwitchChangeCallback):
+                    raise TypeError("msg type %s - not valid: %s" % (type(msg),
+                                                                     msg))
+                
+                # All other types are something that shouldn't be seen, likely
+                # because they're from the a Message that's not currently valid
+                else:
+                    raise TypeError("msg type %s - not valid: %s" % (type(msg),
+                                                                     msg))
+
 
             # Loop through writable
             for entry in writable:
@@ -113,8 +181,13 @@ class LocalController(SingletonMixin):
             # Loop through exceptional
             for entry in exceptional:
                 # FIXME: Handle connection failures
-                pass
-        
+                # Clean up current connection
+                self.sdx_connection.close()
+                self.sdx_connection = None
+                self.cxn_q.put((DEL_CXN, cxn))
+                
+                # Restart new connection
+                self.start_sdx_controller_connection()
 
         
     def _setup_logger(self):
@@ -143,16 +216,35 @@ class LocalController(SingletonMixin):
         self.openflow_port = lcdata['internalconfig']['openflowport']
 
     def start_sdx_controller_connection(self):
+        # Kick off thread to start connection.
+        if self.start_cxn_thread != None:
+            raise Exception("start_cxn_thread %s already exists." % self.start_cxn_thread)
+        self.start_cxn_thread = threading.Thread(target=self._start_sdx_controller_connection_thread)
+        self.start_cxn_thread.daemon = True
+        self.start_cxn_thread.start()
+        self.logger.debug("start_cdx_controller_connection-thread - %s" %
+                          self.start_cxn_thread)
+
+    def _start_sdx_controller_connection_thread(self):
+        # Start connection
         self.logger.debug("About to open SDX Controller Connection to %s:%s" % 
                           (self.sdxip, self.sdxport))
         self.sdx_connection = self.sdx_cm.open_outbound_connection(self.sdxip, 
                                                                    self.sdxport)
         self.logger.debug("SDX Controller Connection - %s" % 
                           (self.sdx_connection))
-        # Send name
-        self.sdx_connection.send_cmd(SDX_IDENTIFY, self.name)
 
-        # FIXME: Credentials exchange
+        # Transition to Main Phase
+        self.sdx_connection.transition_to_main_phase_LC(self.name,
+                                                   self.capabilities,
+                                                   self.install_rule_sdxmsg)
+        
+        # Upon successful return of connection, add NEW_CXN to cxn_q
+        self.cxn_q.put((NEW_CXN, self.sdx_connection))
+
+        # Finish up thread
+        self.start_cxn_thread = None
+        
 
     def start_switch_connection(self):
         pass
@@ -161,6 +253,11 @@ class LocalController(SingletonMixin):
         pass
     # Is this necessary?
 
+    def install_rule_sdxmsg(self, msg):
+        switch_id = msg.get_data()['switch_id']
+        rule = msg.get_data()['rule']
+        self.switch_connection.send_command(switch_id, rule)
+        
     def switch_message_cb(self, cmd, opaque):
         ''' Called by SwitchConnection to pass information back from the Switch
             type is the type of message defined in switch_messages.py.
@@ -169,7 +266,7 @@ class LocalController(SingletonMixin):
         '''
         if cmd == SM_UNKNOWN_SOURCE:
             # Create an SDXMessageUnknownSource and send it.
-            msg = SDXMessageUnknownSource(opaque['src'], opaque['port']
+            msg = SDXMessageUnknownSource(opaque['src'], opaque['port'],
                                           opaque['switch'])
             self.sdx_connection.send_protocol(msg)
         

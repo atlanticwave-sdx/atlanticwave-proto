@@ -79,8 +79,8 @@ class SDXMessageInitTest(unittest.TestCase):
         self.failUnlessEqual(msg, msg2)
 
     def test_InstallRule_init(self):
-        msg = SDXMessageInstallRule("jibberish!")
-        json_msg = {'INSTALL':{'rule':"jibberish!"}}
+        msg = SDXMessageInstallRule("jibberish!", 3)
+        json_msg = {'INSTALL':{'rule':"jibberish!", 'switch_id':3}}
         msg2 = SDXMessageInstallRule(json_msg=json_msg)
         self.failUnlessEqual(msg, msg2)
         
@@ -95,6 +95,25 @@ class SDXMessageInitTest(unittest.TestCase):
         json_msg = {'INSTFAIL':{'cookie':33,
                                 'failure_reason':"some error condition"}}
         msg2 = SDXMessageInstallRuleFailure(json_msg=json_msg)
+        self.failUnlessEqual(msg, msg2)
+
+    def test_RemoveRule_init(self):
+        msg = SDXMessageRemoveRule(4321, 3)
+        json_msg = {'REMOVE':{'cookie':4321, 'switch_id':3}}
+        msg2 = SDXMessageRemoveRule(json_msg=json_msg)
+        self.failUnlessEqual(msg, msg2)
+        
+    def test_RemoveRuleComplete_init(self):
+        msg = SDXMessageRemoveRuleComplete(33)
+        json_msg = {'RMCOMP':{'cookie':33}}
+        msg2 = SDXMessageRemoveRuleComplete(json_msg=json_msg)
+        self.failUnlessEqual(msg, msg2)
+
+    def test_RemoveRuleFailure_init(self):
+        msg = SDXMessageRemoveRuleFailure(33,"some error condition")
+        json_msg = {'RMFAIL':{'cookie':33,
+                              'failure_reason':"some error condition"}}
+        msg2 = SDXMessageRemoveRuleFailure(json_msg=json_msg)
         self.failUnlessEqual(msg, msg2)
 
     def test_UnknownSource_init(self):
