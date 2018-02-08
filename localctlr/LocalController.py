@@ -7,6 +7,7 @@ import threading
 import sys
 import json
 from Queue import Queue, Empty
+from time import sleep
 
 from lib.Singleton import SingletonMixin
 from lib.Connection import select as cxnselect

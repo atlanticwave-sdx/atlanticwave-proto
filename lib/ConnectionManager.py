@@ -6,9 +6,12 @@ from lib.Singleton import Singleton
 from lib.Connection import Connection
 
 import socket
+from socket import error as socket_error
+import errno
 import logging
 from threading import Thread
 from select import select
+from time import sleep
 
 class ConnectionManagerTypeError(TypeError):
     pass
@@ -111,12 +114,22 @@ class ConnectionManager(object):
     def open_outbound_connection(self, ip, port):
         ''' This opens an outbound connection to a given address. Returns a 
             Connection that can be used for sending or receiving. '''
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        timeout = 1.0
 
-        try:
-            sock.connect((ip, port))
-        except:
-            sock.close()
-            raise
-        return self.connection_cls(ip, port, sock)
+        while True:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            try:
+                sock.connect((ip, port))
+            except socket_error as serr:
+                if serr.errno != errno.ECONNREFUSED:
+                    # Not the error we are looking for, re-raise
+                    raise serr
+                print "Caught ECONNREFUSED, trying again after sleeping %s seconds." % timeout
+                sock.close()
+                sleep(timeout)
+                continue
+
+            print "Connection established! %s:%s %s" % (ip, port, sock)
+            return self.connection_cls(ip, port, sock)
 
