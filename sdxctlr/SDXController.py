@@ -260,6 +260,11 @@ class SDXController(SingletonMixin):
             for entry in readable:
                 # Get Message
                 msg = entry.recv_protocol()
+                # Can return None if there was some internal message.
+                if msg == None:
+                    self.logger.debug("Received None from recv_protocol %s" %
+                                      (entry))
+                    continue
                 self.logger.debug("Received a %s message from %s" %
                                   (type(msg), entry))
 

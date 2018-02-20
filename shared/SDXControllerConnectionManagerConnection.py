@@ -5,6 +5,8 @@
 from lib.Connection import Connection
 import cPickle as pickle
 import struct
+import threading
+from time import sleep
 
 # This list of state machien states is primarily a point of reference.
 STATE_MACHINE_STAGES = [ 'UNCONNECTED',
@@ -475,7 +477,13 @@ class SDXControllerConnection(Connection):
         self.connection_state = 'UNCONNECTED'
         self.name = None
         self.capabilites = None
+
+        # Heartbeat tracking
         self.outstanding_hb = False
+        self.hb_thread = None
+        self.heartbeat_sleep_time = 10
+        self._heartbeat_request_sent = 0
+        self._heartbeat_response_sent = 0
 
         super(SDXControllerConnection, self).__init__(address, port, sock)
 
@@ -489,7 +497,8 @@ class SDXControllerConnection(Connection):
     def recv_protocol(self):
         ''' Based on Connection.recv(), but updated for the additional protocol
             related info.
-            Returns a SDXMessage of the correct type.
+            Returns a SDXMessage of the correct type or None if the message was
+            a beartbeat
         '''
         
         try:
@@ -532,6 +541,15 @@ class SDXControllerConnection(Connection):
                 raise SDXMessageValueError("There were multiple keys in the received data: %s" % data.keys())
             msgtype = data.keys()[0]
             msg = SDX_MESSAGE_NAME_TO_CLASS[msgtype](json_msg=data)
+
+            # If it's a heartbeat request/heartbeat_response, send to heartbeat
+            # handler and return None
+            if type(msg) == SDXMessageHeartbeatRequest:
+                self._heartbeat_request_handler(msg)
+                return None
+            elif type(msg) == SDXMessageHeartbeatResponse:
+                self._heartbeat_response_handler(msg)
+                return None
 
             #FIXME: Checking of rule validity
                                            
@@ -616,8 +634,12 @@ class SDXControllerConnection(Connection):
         if not isinstance(tmp, SDXMessageTransitionToMainPhase):
             raise SDXControllerConnectionTypeError("SDXMessageTransitionToMainPhase not received: %s, %s" % (type(tmp), tmp))
 
-        # Transition to main phase
+        # Transition to main phase and start the heartbeat thread
         self.connection_state = 'MAIN_PHASE'
+        self.hb_thread = threading.Thread(target=_heartbeat_thread,
+                                          args=(self,))
+        self.hb_thread.daemon = True
+        self.hb_thread.start()
 
     def transition_to_main_phase_SDX(self, get_initial_rule_callback):
         # Transition to Initializing
@@ -668,17 +690,45 @@ class SDXControllerConnection(Connection):
                     raise ConnectionValueError("initial_rules is not empty (%d: %s) but received InititialRulesComplete" % (len(initial_rules), initial_rules))
                 break
 
-        # Send Transition to Main Phase, transition to main phase
+        # Send Transition to Main Phase, transition to main phase, start
+        # heartbeat thread
         tmp = SDXMessageTransitionToMainPhase()
         self.send_protocol(tmp)
         self.connection_state = 'MAIN_PHASE'
+        self.hb_thread = threading.Thread(target=_heartbeat_thread,
+                                          args=(self,))
+        self.hb_thread.daemon = True
+        self.hb_thread.start()
 
-    def heartbeat_response_handler(self, hbreq):
+    def _heartbeat_response_handler(self, hbresp):
         ''' Handles incoming HeartbeatResponses. '''
         if not self.outstanding_hb:
             raise SDXControllerConnectionValueError("There is no oustanding heartbeat request for this connection %s" % self)
-        self.oustanding_hb = False
+        self.outstanding_hb = False
 
-    def heartbeat_thread(self):
-        ''' Handles automatically sending Heartbeats consistently. '''
-        pass
+    def _heartbeat_request_handler(self, hbreq):
+        ''' Handles incoming HeartbeatRequests. '''
+        resp = SDXMessageHeartbeatResponse()
+        self.send_protocol(resp)
+        self._heartbeat_response_sent += 1
+
+
+def _heartbeat_thread(inst):
+    ''' Handles automatically sending Heartbeats consistently. '''
+    # Get set up
+    
+    # Loop
+    while(True):
+        # Check to see if there's an outstanding HB - there shouldn't be
+        if inst.outstanding_hb == True:
+            print "Closing: Missing a heartbeat on %s" % hex(id(inst))
+            inst.close()
+        # Send a heartbeat request over
+        req = SDXMessageHeartbeatRequest()
+        inst.outstanding_hb = True
+        inst.send_protocol(req)
+        inst._heartbeat_request_sent += 1
+        
+        # Sleep
+        sleep(inst.heartbeat_sleep_time)
+        

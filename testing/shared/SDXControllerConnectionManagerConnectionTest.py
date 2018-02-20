@@ -8,6 +8,7 @@ import threading
 import cPickle as pickle
 from time import sleep
 from shared.SDXControllerConnectionManagerConnection import *
+from lib.Connection import select as cxnselect
 
 def get_initial_rules_5(dummy):
     print "### Getting rules for %s" % dummy
@@ -151,6 +152,10 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
         self.RecvThread.start()
 
     def tearDown(self):
+        if self.ServerCxn != None:
+            self.ServerCxn.close()
+        if self.ClientCxn != None:
+            self.ClientCxn.close()
         self.ReceivingSocket.close()
 
     def receiving_thread(self):
@@ -163,7 +168,7 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
         self.ServerCxn.transition_to_main_phase_SDX(get_initial_rules_5)
         
 
-    def atest_connection_establishment(self):
+    def test_connection_establishment(self):
         print "Beginning connection"
         self.ClientSocket = socket.socket(socket.AF_INET,
                                           socket.SOCK_STREAM)
@@ -196,6 +201,10 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
         self.RecvThread.start()
 
     def tearDown(self):
+        if self.ServerCxn != None:
+            self.ServerCxn.close()
+        if self.ClientCxn != None:
+            self.ClientCxn.close()
         self.ReceivingSocket.close()
 
     def receiving_thread(self):
@@ -221,5 +230,87 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
         self.ClientSocket.close()
         print "close"
 
+
+class SDXConnectionHeartbeatTest(unittest.TestCase):
+    def setUp(self):
+        self.ip = "127.0.0.1"
+        self.port = 5557
+
+        # This is for the listening socket. 
+        self.ReceivingSocket = socket.socket(socket.AF_INET,
+                                             socket.SOCK_STREAM)
+        self.ReceivingSocket.bind((self.ip, self.port))
+
+        #These two will be the client and server side connections.
+        self.ServerCxn = None
+        self.ClientCxn = None
+
+        self.RecvThread = threading.Thread(target=self.receiving_thread)
+        self.RecvThread.daemon = True
+        self.RecvThread.start()
+
+        self.ClientSocket = socket.socket(socket.AF_INET,
+                                          socket.SOCK_STREAM)
+        self.ClientSocket.connect((self.ip, self.port))
+        self.ClientCxn = SDXControllerConnection(self.ip, self.port,
+                                                 self.ClientSocket)
+        self.ClientCxn.transition_to_main_phase_LC('TESTING', "qwerJ:LK",
+                                                   install_rule)
+
+    def tearDown(self):
+        if self.ServerCxn != None:
+            self.ServerCxn.close()
+        if self.ClientCxn != None:
+            self.ClientCxn.close()
+        self.ReceivingSocket.close()
+
+    def receiving_thread(self):
+        self.ReceivingSocket.listen(1)
+        
+        sock, client_address = self.ReceivingSocket.accept()
+
+        self.ServerCxn = SDXControllerConnection(self.ip, self.port,
+                                                        sock)
+        self.ServerCxn.transition_to_main_phase_SDX(get_initial_rules_5)
+
+
+        cxns = [self.ServerCxn, self.ClientCxn]
+        while True:
+            try:
+                r,w,e = cxnselect(cxns, [], cxns)
+            except Exception as e:
+                raise
+
+            for entry in r:
+                msg = entry.recv_protocol()
+                if msg != None:
+                    raise Exception("Not supposted to receive anything %s:%s" %
+                                    (entry, msg))
+                #print "Received an empty message (Heartbeat!) %s" % hex(id(entry))
+                
+    def test_heartbeat(self):
+        # Confirm that connections are established, get current heartbeat counts
+        self.failUnlessEqual(self.ClientCxn.get_state(),  "MAIN_PHASE")
+        self.failUnlessEqual(self.ServerCxn.get_state(),  "MAIN_PHASE")
+        init_client_req_count = self.ClientCxn._heartbeat_request_sent
+        init_client_resp_count = self.ClientCxn._heartbeat_response_sent
+        init_server_req_count = self.ServerCxn._heartbeat_request_sent
+        init_server_resp_count = self.ServerCxn._heartbeat_response_sent
+
+        # 2 heartbeats + 10%
+        sleep(22)
+        
+        # Confirm that heartbeat counts have incremented by 2
+        end_client_req_count = self.ClientCxn._heartbeat_request_sent
+        end_client_resp_count = self.ClientCxn._heartbeat_response_sent
+        end_server_req_count = self.ServerCxn._heartbeat_request_sent
+        end_server_resp_count = self.ServerCxn._heartbeat_response_sent
+
+        self.assertGreaterEqual(end_client_req_count, init_client_req_count+2)
+        self.assertGreaterEqual(end_client_resp_count, init_client_resp_count+2)
+        self.assertGreaterEqual(end_server_req_count, init_server_req_count+2)
+        self.assertGreaterEqual(end_server_resp_count, init_server_resp_count+2)
+
+        
 if __name__ == '__main__':
     unittest.main()
