@@ -261,12 +261,11 @@ class SDXController(SingletonMixin):
                 # Get Message
                 try:
                     msg = entry.recv_protocol()
-                except socket.error as e:
-                    if e.errno == 104: # Connection reset by peer
-                        # Connection needs to be disconnected.
-                        self.cxn_q.put((DEL_CXN, entry))
-                        entry.close()
-                        continue
+                except SDXMessageConnectionFailure as e:
+                    # Connection needs to be disconnected.
+                    self.cxn_q.put((DEL_CXN, entry))
+                    entry.close()
+                    continue
                 except:
                     raise
 

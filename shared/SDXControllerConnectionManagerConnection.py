@@ -6,7 +6,9 @@ from lib.Connection import Connection
 import cPickle as pickle
 import struct
 import threading
+import socket
 from time import sleep
+
 
 # This list of state machien states is primarily a point of reference.
 STATE_MACHINE_STAGES = [ 'UNCONNECTED',
@@ -19,6 +21,9 @@ class SDXMessageValueError(ValueError):
     pass
 
 class SDXMessageTypeError(TypeError):
+    pass
+
+class SDXMessageConnectionFailure(EnvironmentError):
     pass
 
 class SDXMessage(object):
@@ -267,7 +272,6 @@ class SDXMessageInstallRule(SDXMessage):
     def __init__(self, rule=None, switch_id=None, json_msg=None):
         data_json_name = ['rule', 'switch_id']
         data = {'rule':rule, 'switch_id':switch_id}
-        print ">>>>>> InstallRule for switch %s: %s" % (switch_id, rule)
         validity = ['INITIAL_RULES', 'MAIN_PHASE']
         if json_msg != None:
             super(SDXMessageInstallRule, self).__init__('INSTALL',
@@ -501,9 +505,14 @@ class SDXControllerConnection(Connection):
         ''' Based on Connection.recv(), but updated for the additional protocol
             related info.
             Returns a SDXMessage of the correct type or None if the message was
-            a beartbeat
+            a heartbeat
         '''
         
+        # If the socket is closed unexpectedly, it's possible the socket just
+        # disappears. Annoying. Very annoying.
+        if self.sock == None:
+            raise SDXMessageConnectionFailure("sock == None - %s" % self)
+            
         try:
             sock_data = ''
             meta_data = ''
@@ -558,12 +567,29 @@ class SDXControllerConnection(Connection):
                                            
             return msg
         
+        except socket.error as e:
+            if (e.errno == 104 or  # Connection reset by peer 
+                e.errno == 9):     # Bad File Descriptor
+                raise SDXMessageConnectionFailure("Connection reset by peer - %s"
+                                                  % self)
+            else:
+                raise
+        except AttributeError as e:
+            raise SDXMessageConnectionFailure("Connection == None - %s"
+                                                  % self)
+            
         except:
             raise
 
     def send_protocol(self, sdx_message):
         # Based on Connection.send(), but updated for the additional protocol
         # related info.
+        
+        # If the socket is closed unexpectedly, it's possible the socket just
+        # disappears. Annoying. Very annoying.
+        if self.sock == None:
+            raise SDXMessageConnectionFailure("sock == None - %s" % self)
+
         data = sdx_message.get_json()
         try:
             data_raw = pickle.dumps(data)
@@ -573,6 +599,18 @@ class SDXControllerConnection(Connection):
                                           len(data_raw)) + data_raw)
             # Update msg_num
             self.msg_num += 1
+
+        except socket.error as e:
+            if (e.errno == 104 or  # Connection reset by peer 
+                e.errno == 9):     # Bad File Descriptor
+                raise SDXMessageConnectionFailure("Connection reset by peer - %s"
+                                                  % self)
+            else:
+                raise
+        except AttributeError as e:
+            raise SDXMessageConnectionFailure("Connection == None - %s"
+                                                  % self)
+            
         except:
             raise
 
@@ -723,15 +761,20 @@ def _heartbeat_thread(inst):
     # Loop
     while(True):
         # Check to see if there's an outstanding HB - there shouldn't be
-        if inst.outstanding_hb == True:
-            print "Closing: Missing a heartbeat on %s" % hex(id(inst))
-            inst.close()
-        # Send a heartbeat request over
-        req = SDXMessageHeartbeatRequest()
-        inst.outstanding_hb = True
-        inst.send_protocol(req)
-        inst._heartbeat_request_sent += 1
+        try:
+            if inst.outstanding_hb == True:
+                print "Closing: Missing a heartbeat on %s" % hex(id(inst))
+                inst.close()
+            # Send a heartbeat request over
+            req = SDXMessageHeartbeatRequest()
+            inst.outstanding_hb = True
+            inst.send_protocol(req)
+            inst._heartbeat_request_sent += 1
         
-        # Sleep
-        sleep(inst.heartbeat_sleep_time)
+            # Sleep
+            sleep(inst.heartbeat_sleep_time)
+        except:
+            # Need to signal that the cxn is closed.
+            #FIXME
+            raise
         

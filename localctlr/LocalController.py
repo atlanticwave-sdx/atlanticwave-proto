@@ -131,7 +131,16 @@ class LocalController(SingletonMixin):
             # Loop through readable
             for entry in readable:
                 # Get Message
-                msg = entry.recv_protocol()
+                try:
+                    msg = entry.recv_protocol()
+                except SDXMessageConnectionFailure as e:
+                    # Connection needs to be disconnected.
+                    self.cxn_q.put((DEL_CXN, entry))
+                    entry.close()
+                    continue
+                except:
+                    raise
+
                  # Can return None if there was some internal message.
                 if msg == None:
                     self.logger.debug("Received None from recv_protocol %s" %
