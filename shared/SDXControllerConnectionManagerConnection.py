@@ -49,6 +49,8 @@ class SDXMessage(object):
                                  self.data_json_name, self.data)
 
     def __eq__(self, other):
+        if other == None:
+            return False
         return ((self.name == other.name) and
                 (self.validity == other.validity) and
                 (self.data_json_name == other.data_json_name) and
@@ -265,6 +267,7 @@ class SDXMessageInstallRule(SDXMessage):
     def __init__(self, rule=None, switch_id=None, json_msg=None):
         data_json_name = ['rule', 'switch_id']
         data = {'rule':rule, 'switch_id':switch_id}
+        print ">>>>>> InstallRule for switch %s: %s" % (switch_id, rule)
         validity = ['INITIAL_RULES', 'MAIN_PHASE']
         if json_msg != None:
             super(SDXMessageInstallRule, self).__init__('INSTALL',

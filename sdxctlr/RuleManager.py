@@ -253,7 +253,7 @@ class RuleManager(SingletonMixin):
                 # If Breakdown is for this LC, add to bd_list
                 rule_lc = bd.get_lc()
                 if rule_lc == lc:
-                    bd_list.append(bd)
+                    bd_list += bd.get_list_of_rules()
         return bd_list
     
     def get_rule_details(self, rule_hash):

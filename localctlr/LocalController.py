@@ -95,7 +95,7 @@ class LocalController(SingletonMixin):
             # https://stackoverflow.com/questions/17386487/
             try:
                 while not self.cxn_q.empty():
-                    (action, dxn) = self.cxn_q.get(False)
+                    (action, cxn) = self.cxn_q.get(False)
                     if action == NEW_CXN:
                         if cxn in rlist:
                             # Already there. Weird, but OK
@@ -109,7 +109,7 @@ class LocalController(SingletonMixin):
                             rlist.remove(cxn)
                             wlist = []
                             xlist = rlist
-            except Queue.Empty as e:
+            except Empty as e:
                 # This is raised if the cxn_q is empty of events.
                 # Normal behaviour
                 pass
@@ -133,7 +133,7 @@ class LocalController(SingletonMixin):
                 # Get Message
                 msg = entry.recv_protocol()
                  # Can return None if there was some internal message.
-                if msg = None:
+                if msg == None:
                     self.logger.debug("Received None from recv_protocol %s" %
                                       (entry))
                     continue

@@ -97,15 +97,4 @@ class SDXControllerConnectionManager(ConnectionManager):
             More hacky than I'd like it to be. '''
         self.associations[name] = cxn
         #FIXME: Should this check to make sure that the cxn is in self.clients?
-        # Clean up queues for the new connection.
-        if name in self.non_connected_queues.keys():
-            q = self.non_connected_queues[name]
-            del self.non_connected_queues[name]
-            while not q.empty():
-                (bd, add_or_remove) = q.get()
-                if add_or_remove == SDX_NEW_RULE:
-                    self.send_breakdown_rule_add(bd)
-                elif add_or_remove == SDX_RM_RULE:
-                    self.send_breakdown_rule_rm(bd)
-        
 
