@@ -492,6 +492,10 @@ class SDXControllerConnection(Connection):
         self._heartbeat_request_sent = 0
         self._heartbeat_response_sent = 0
 
+        # Callbacks
+        self._del_callback = None
+        self._new_callback = None
+
         super(SDXControllerConnection, self).__init__(address, port, sock)
 
 
@@ -500,6 +504,12 @@ class SDXControllerConnection(Connection):
 
     def get_name(self):
         return self.name
+
+    def set_delete_callback(self, cb):
+        self._del_callback = cb
+
+    def set_new_callback(self, cb):
+        self._new_callback = cb
     
     def recv_protocol(self):
         ''' Based on Connection.recv(), but updated for the additional protocol
@@ -511,6 +521,7 @@ class SDXControllerConnection(Connection):
         # If the socket is closed unexpectedly, it's possible the socket just
         # disappears. Annoying. Very annoying.
         if self.sock == None:
+            self._del_callback(self)
             raise SDXMessageConnectionFailure("sock == None - %s" % self)
             
         try:
@@ -570,11 +581,13 @@ class SDXControllerConnection(Connection):
         except socket.error as e:
             if (e.errno == 104 or  # Connection reset by peer 
                 e.errno == 9):     # Bad File Descriptor
+                self._del_callback(self)
                 raise SDXMessageConnectionFailure("Connection reset by peer - %s"
                                                   % self)
             else:
                 raise
         except AttributeError as e:
+            self._del_callback(self)
             raise SDXMessageConnectionFailure("Connection == None - %s"
                                                   % self)
             
@@ -588,6 +601,7 @@ class SDXControllerConnection(Connection):
         # If the socket is closed unexpectedly, it's possible the socket just
         # disappears. Annoying. Very annoying.
         if self.sock == None:
+            self._del_callback(self)
             raise SDXMessageConnectionFailure("sock == None - %s" % self)
 
         data = sdx_message.get_json()
@@ -603,11 +617,13 @@ class SDXControllerConnection(Connection):
         except socket.error as e:
             if (e.errno == 104 or  # Connection reset by peer 
                 e.errno == 9):     # Bad File Descriptor
+                self._del_callback(self)
                 raise SDXMessageConnectionFailure("Connection reset by peer - %s"
                                                   % self)
             else:
                 raise
         except AttributeError as e:
+            self._del_callback(self)
             raise SDXMessageConnectionFailure("Connection == None - %s"
                                                   % self)
             
@@ -682,6 +698,9 @@ class SDXControllerConnection(Connection):
         self.hb_thread.daemon = True
         self.hb_thread.start()
 
+        # Add connection!
+        self._new_callback(self)
+
     def transition_to_main_phase_SDX(self, get_initial_rule_callback):
         # Transition to Initializing
         self.connection_state = 'INITIALIZING'
@@ -741,6 +760,10 @@ class SDXControllerConnection(Connection):
         self.hb_thread.daemon = True
         self.hb_thread.start()
 
+        # Add connection!
+        self._new_callback(self)
+
+
     def _heartbeat_response_handler(self, hbresp):
         ''' Handles incoming HeartbeatResponses. '''
         if not self.outstanding_hb:
@@ -775,6 +798,5 @@ def _heartbeat_thread(inst):
             sleep(inst.heartbeat_sleep_time)
         except:
             # Need to signal that the cxn is closed.
-            #FIXME
-            raise
+            self._del_callback(self)
         

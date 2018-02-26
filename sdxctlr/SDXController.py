@@ -35,11 +35,6 @@ from shared.FloodTreePolicy import *
 from shared.SDXPolicy import SDXEgressPolicy, SDXIngressPolicy
 
 
-# Connection Queue actions defininition
-NEW_CXN = "New Connection"
-DEL_CXN = "Remove Connection"
-
-
 
 class SDXControllerError(Exception):
     ''' Parent class, can be used as a catch-all for other errors '''
@@ -100,7 +95,6 @@ class SDXController(SingletonMixin):
         # Set up the connection-related nonsense - Have a connection event queue
         self.ip = options.host
         self.port = options.lcport
-        self.cxn_q = Queue()
         self.connections = {}
         self.sdx_cm = SDXControllerConnectionManager()
         self.cm_thread = threading.Thread(target=self._cm_thread)
@@ -168,8 +162,6 @@ class SDXController(SingletonMixin):
         self.logger.critical("Handling new connection %s" % cxn)
         print("Handling new connection %s" % cxn)
 
-        # Get connection to main phase
-        cxn.transition_to_main_phase_SDX(self._get_existing_rules_by_name)
         
         # Associate connection with name
         name = cxn.get_name()
@@ -177,7 +169,9 @@ class SDXController(SingletonMixin):
                          name)
         self.connections[name] = cxn
         self.sdx_cm.associate_cxn_with_name(name, cxn)
-        self.cxn_q.put((NEW_CXN, cxn))
+
+        # Get connection to main phase
+        cxn.transition_to_main_phase_SDX(self._get_existing_rules_by_name)
 
         # Update to Rule Manager
         #FIXME: This is to update the Rule Manager. It seems that whenever a callback is set, it gets a static image of that function/object. That seems incorrect. This should be a workaround.
@@ -223,6 +217,7 @@ class SDXController(SingletonMixin):
         while True:
             # Handle event queue messages
             try:
+                
                 while not self.cxn_q.empty():
                     (action, cxn) = self.cxn_q.get(False)
                     if action == NEW_CXN:
@@ -263,7 +258,6 @@ class SDXController(SingletonMixin):
                     msg = entry.recv_protocol()
                 except SDXMessageConnectionFailure as e:
                     # Connection needs to be disconnected.
-                    self.cxn_q.put((DEL_CXN, entry))
                     entry.close()
                     continue
                 except:

@@ -24,6 +24,11 @@ from shared.UserPolicy import UserPolicyBreakdown
 
 from Queue import Queue
 
+# Connection Queue actions defininition
+NEW_CXN = "New Connection"
+DEL_CXN = "Remove Connection"
+
+
 class SDXControllerConnectionManagerNotConnectedError(ConnectionManagerValueError):
     pass
 
@@ -38,6 +43,10 @@ class SDXControllerConnectionManager(ConnectionManager):
         
         # associations contains name:Connection pairs
         self.associations = {}
+
+        # Connection action queue
+        self.cxn_q = Queue()
+        
 
     def send_breakdown_rule_add(self, bd):
         ''' This takes in a UserPolicyBreakdown and send it to the Local
@@ -97,4 +106,51 @@ class SDXControllerConnectionManager(ConnectionManager):
             More hacky than I'd like it to be. '''
         self.associations[name] = cxn
         #FIXME: Should this check to make sure that the cxn is in self.clients?
+
+    def get_cxn_queue_element(self):
+        ''' This returns a tuple (action,connection) or None if there aren't any
+            cxn actions. The Action is of the list, defined up above:
+               NEW_CXN
+               DEL_CXN
+            The connection is a SDXControllerConnectionManagerConnection that
+            the action applies to.
+        '''
+        try:
+            if self.cxn_q.empty():
+                return None
+            return self.cxn_q.get(False)
+        except Queue.Empty as e:
+            # This is raised if the cxn_q is empty of events.
+            # Normal behaviour
+            return None
+        except:
+            raise
+
+    def add_new_cxn_to_queue(self, cxn):
+        ''' Used by Connections to add themselves to the queue. '''
+        self.cxn_q.put((NEW_CXN, cxn))
+    
+    def add_del_cxn_to_queue(self, cxn):
+        ''' Used by Connections when they are closing. '''
+        self.cxn_q.put((DEL_CXN, cxn))
+    
+    def _internal_new_connection(self, sock, address):
+        ''' This is a wrapper for ConnectionManager._internal_new_connection()
+            that adds some callbacks to SDXControllerConnectionManagerConnection
+            to kick things to the connection queue. '''
+        cxn = super(SDXControllerConnectionManager,
+                    self)._internal_new_connection(sock, address)
+        cxn.set_delete_callback(self.add_del_cxn_to_queue)
+        cxn.set_new_callback(self.add_new_cxn_to_queue)
+        return cxn
+
+    def open_outbound_connection(self, ip, port):
+        ''' This is a wrapper for ConnectionManager.open_outbound_connection
+            that adds some callbacks to SDXControllerConnectionManagerConnection
+            to kick things to the connection queue. '''
+        cxn = super(SDXControllerConnectionManager,
+                    self).open_outbound_connection(ip, port)
+        cxn.set_delete_callback(self.add_del_cxn_to_queue)
+        cxn.set_new_callback(self.add_new_cxn_to_queue)
+        return cxn
 
