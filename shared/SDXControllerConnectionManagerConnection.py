@@ -498,7 +498,6 @@ class SDXControllerConnection(Connection):
 
         super(SDXControllerConnection, self).__init__(address, port, sock)
 
-
     def get_state(self):
         return self.connection_state
 
@@ -527,12 +526,18 @@ class SDXControllerConnection(Connection):
         try:
             sock_data = ''
             meta_data = ''
-            while len(meta_data) < 12:
+            meta_tries = 0
+            while (len(meta_data) < 12 and
+                   meta_tries < 10):
                 sock_data = self.sock.recv(12-len(meta_data))
                 meta_data += sock_data
                 if len(meta_data) == 12:
                     (msg_num, msg_ack, size) = struct.unpack('>iii',
                                                                   meta_data)
+                meta_tries += 1
+            # So we don't just keep spinning when there's actually nothing there
+            if meta_tries == 10:
+                return None
             total_len = 0
             total_data = []
             recv_size = size
@@ -579,6 +584,7 @@ class SDXControllerConnection(Connection):
             return msg
         
         except socket.error as e:
+            print "SOCKET ERROR BLOCK %s ON CXN %s" % (e.errno, self)
             if (e.errno == 104 or  # Connection reset by peer 
                 e.errno == 9):     # Bad File Descriptor
                 self._del_callback(self)
@@ -587,6 +593,7 @@ class SDXControllerConnection(Connection):
             else:
                 raise
         except AttributeError as e:
+            print "ATTRIBUTE ERROR %s ON CXN %s" % (e, self)
             self._del_callback(self)
             raise SDXMessageConnectionFailure("Connection == None - %s"
                                                   % self)
@@ -700,6 +707,8 @@ class SDXControllerConnection(Connection):
 
         # Add connection!
         self._new_callback(self)
+        self.sock.setblocking(0)
+
 
     def transition_to_main_phase_SDX(self, get_initial_rule_callback):
         # Transition to Initializing
@@ -762,6 +771,7 @@ class SDXControllerConnection(Connection):
 
         # Add connection!
         self._new_callback(self)
+        self.sock.setblocking(0)
 
 
     def _heartbeat_response_handler(self, hbresp):
@@ -787,7 +797,8 @@ def _heartbeat_thread(inst):
         try:
             if inst.outstanding_hb == True:
                 print "Closing: Missing a heartbeat on %s" % hex(id(inst))
-                inst.close()
+                raise SDXMessageConnectionFailure("Missing heartbeat on %s" % 
+                                                  hex(id(inst)))
             # Send a heartbeat request over
             req = SDXMessageHeartbeatRequest()
             inst.outstanding_hb = True
@@ -798,5 +809,7 @@ def _heartbeat_thread(inst):
             sleep(inst.heartbeat_sleep_time)
         except:
             # Need to signal that the cxn is closed.
-            self._del_callback(self)
+            print "Heartbeat Closing due to error on %s" % hex(id(inst))
+            inst._del_callback(inst)
+            return
         

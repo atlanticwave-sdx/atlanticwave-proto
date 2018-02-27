@@ -20,8 +20,6 @@ LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
 DEFAULT_OPENFLOW_PORT = 6633
 
-NEW_CXN = "New Connection"
-DEL_CXN = "Remove Connection"
 
 class LocalController(SingletonMixin):
     ''' The Local Controller is responsible for passing messages from the SDX 
@@ -94,9 +92,11 @@ class LocalController(SingletonMixin):
             # Based, in part, on https://pymotw.com/2/select/ and
             # https://stackoverflow.com/questions/17386487/
             try:
-                while not self.cxn_q.empty():
-                    (action, cxn) = self.cxn_q.get(False)
+                q_ele = self.sdx_cm.get_cxn_queue_element()
+                while q_ele != None:
+                    (action, cxn) = q_ele
                     if action == NEW_CXN:
+                        self.logger.warning("Adding connection %s" % cxn)
                         if cxn in rlist:
                             # Already there. Weird, but OK
                             pass
@@ -105,10 +105,15 @@ class LocalController(SingletonMixin):
                         xlist = rlist
                         
                     elif action == DEL_CXN:
+                        self.logger.warning("Removing connection %s" % cxn)
                         if cxn in rlist:
                             rlist.remove(cxn)
                             wlist = []
                             xlist = rlist
+                            self.start_sdx_controller_connection() #Restart!
+
+                    # Next queue element
+                    q_ele = self.sdx_cm.get_cxn_queue_element()
             except Empty as e:
                 # This is raised if the cxn_q is empty of events.
                 # Normal behaviour

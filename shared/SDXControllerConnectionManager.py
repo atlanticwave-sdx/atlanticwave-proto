@@ -22,7 +22,7 @@ from lib.Connection import Connection
 from shared.SDXControllerConnectionManagerConnection import *
 from shared.UserPolicy import UserPolicyBreakdown
 
-from Queue import Queue
+from Queue import Queue, Empty
 
 # Connection Queue actions defininition
 NEW_CXN = "New Connection"
@@ -119,7 +119,7 @@ class SDXControllerConnectionManager(ConnectionManager):
             if self.cxn_q.empty():
                 return None
             return self.cxn_q.get(False)
-        except Queue.Empty as e:
+        except Empty as e:
             # This is raised if the cxn_q is empty of events.
             # Normal behaviour
             return None
@@ -135,14 +135,14 @@ class SDXControllerConnectionManager(ConnectionManager):
         self.cxn_q.put((DEL_CXN, cxn))
     
     def _internal_new_connection(self, sock, address):
-        ''' This is a wrapper for ConnectionManager._internal_new_connection()
+        ''' This is a rewrite of ConnectionManager._internal_new_connection()
             that adds some callbacks to SDXControllerConnectionManagerConnection
             to kick things to the connection queue. '''
-        cxn = super(SDXControllerConnectionManager,
-                    self)._internal_new_connection(sock, address)
-        cxn.set_delete_callback(self.add_del_cxn_to_queue)
-        cxn.set_new_callback(self.add_new_cxn_to_queue)
-        return cxn
+        client_ip, client_port = address
+        client_connection = self.connection_cls(client_ip, client_port, sock)
+        client_connection.set_delete_callback(self.add_del_cxn_to_queue)
+        client_connection.set_new_callback(self.add_new_cxn_to_queue)
+        self.listening_callback(client_connection)
 
     def open_outbound_connection(self, ip, port):
         ''' This is a wrapper for ConnectionManager.open_outbound_connection
