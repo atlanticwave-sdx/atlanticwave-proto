@@ -68,6 +68,8 @@ class ConnectionManager(object):
         self.listening_address = ip
         self.listening_port = port
         self.listening_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.listening_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 
         try:
             self.listening_sock.bind((self.listening_address,
