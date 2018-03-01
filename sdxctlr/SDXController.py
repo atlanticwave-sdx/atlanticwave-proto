@@ -65,6 +65,7 @@ class SDXController(SingletonMixin):
         # Start DB connection. Used by other modules. details on the setup:
         # https://dataset.readthedocs.io/en/latest/api.html
         # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
+        self.logger.critical("Connection to DB: %s" % db)
         self.db = dataset.connect('sqlite:///' + db, 
                                   engine_kwargs={'connect_args':
                                                  {'check_same_thread':False}})

@@ -32,6 +32,7 @@ class UserManager(SingletonMixin):
             return
         # If DB is empty, parse manifest file that's passed in
         else:
+            self.logger.info("Loading users from the Manifest")
             self._parse_manifest(manifest)
 
     def _parse_db(self):
