@@ -37,7 +37,8 @@ class UserManager(SingletonMixin):
     def _parse_db(self):
         # This needs to check to see if the list of users is empty.
         count = 0
-        for entry in self.user_table.find():
+        for user in self.user_table.find():
+            self._send_to_AA(user)
             count += 1
 
         self.logger.info("There are %d users in the user table" % count)
