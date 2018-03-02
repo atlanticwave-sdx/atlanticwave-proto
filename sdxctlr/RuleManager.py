@@ -80,16 +80,6 @@ class RuleManager(SingletonMixin):
                  send_user_rule_breakdown_remove=TESTING_CALL):
         # The params are used in order to maintain import hierarchy.
         
-        # Start database/dictionary
-        self.db = database
-        self.rule_table = self.db['rules']        # All the rules live here.
-        self.config_table = self.db['config']     # Key-value configuration DB
-
-        # Used for filtering.
-        self._valid_table_columns = ['hash', 'ruletype', 'user',
-                                     'state', 'starttime', 'stoptime']
-
-
         # Setup timers and their associated locks.
         # Timer code in part based on https://github.com/sdonovan1985/py-timer
         self.install_timer = None
@@ -99,6 +89,39 @@ class RuleManager(SingletonMixin):
         self.remove_next_time = None
         self.remove_lock = Lock()
         
+
+        # Start database/dictionary
+        self.db = database
+        # Rule Table
+        try:
+            print "Trying to load rule_table from DB"
+            self.rule_table = self.db.load_table('rules')
+            print "Successfully loaded rule_table from DB"
+        except:
+            # If load_table() fails, that's fine! It means that the rule_table
+            # doesn't yet exist. So, create it.
+            print "Failed to load rule_table from DB, creating new table"
+            self.rule_table = self.db['rules']
+
+        print "Rules present at initialization:"
+        for rule in self.rule_table:
+            print "   - %s" % rule
+        # Used for filtering of rule_table
+        self._valid_table_columns = ['hash', 'ruletype', 'user',
+                                     'state', 'starttime', 'stoptime']
+
+
+        # Configuration Table
+        try:
+            print "Trying to load config_table from DB"
+            self.config_table = self.db.load_table('config')
+            print "Successfully loaded config_table from DB"
+        except:
+            # If load_table() fails, that's fine! It means that the config_table
+            # doesn't yet exist. So, create it.
+            print "Failed to load config_table from DB, creating new table"
+            self.config_table = self.db['config']
+
         # Initialize rule counter. Used to track the rules as they are installed
         # It may be in the DB.
         rulenum = self.config_table.find_one(key='rule_number')
@@ -108,7 +131,8 @@ class RuleManager(SingletonMixin):
                                       'value':self.rule_number})
         else:
             self.rule_number = rulenum['value']
-        
+
+        print "Rule number = %d" % self.rule_number
 
         # Use these to send the rule to the Local Controller
         self.set_send_add_rule(send_user_rule_breakdown_add)
