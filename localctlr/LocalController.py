@@ -167,9 +167,13 @@ class LocalController(SingletonMixin):
                 elif type(msg) == SDXMessageHeartbeatResponse:
                     entry.heartbeat_response_handler(msg)
 
-                # If InstallRule FIXME
+                # If InstallRule
                 elif type(msg) == SDXMessageInstallRule:
                     self.install_rule_sdxmsg(msg)
+
+                # If RemoveRule
+                elif type(msg) == SDXMessageRemoveRule:
+                    self.remove_rule_sdxmsg(msg)
                     
                 # If InstallRuleComplete - ERROR! LC shouldn't receive this.
                 # If InstallRuleFailure -  ERROR! LC shouldn't receive this.
@@ -277,6 +281,11 @@ class LocalController(SingletonMixin):
         switch_id = msg.get_data()['switch_id']
         rule = msg.get_data()['rule']
         self.switch_connection.send_command(switch_id, rule)
+
+    def remove_rule_sdxmsg(self, msg):
+        switch_id = msg.get_data()['switch_id']
+        cookie = msg.get_data()['cookie']
+        self.switch_connection.remove_rule(switch_id, cookie)
         
     def switch_message_cb(self, cmd, opaque):
         ''' Called by SwitchConnection to pass information back from the Switch
