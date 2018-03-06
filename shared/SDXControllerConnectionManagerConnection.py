@@ -638,7 +638,8 @@ class SDXControllerConnection(Connection):
             raise
 
     def transition_to_main_phase_LC(self, name, capabilities,
-                                    install_rule_callback):
+                                    install_rule_callback,
+                                    initial_rules_complete_callback=None):
         #FIXME: These messages should check state.
         # Transition to Initializing
         self.connection_state = 'INITIALIZING'
@@ -691,6 +692,8 @@ class SDXControllerConnection(Connection):
         # Send Initial Rules Complete, Transition to Initial Rules Complete
         irc = SDXMessageInitialRulesComplete()
         self.send_protocol(irc)
+        if initial_rules_complete_callback != None:
+            initial_rules_complete_callback()
         self.connection_state = 'INITIAL_RULES_COMPLETE'
 
         # Wait for Transition to main phase
