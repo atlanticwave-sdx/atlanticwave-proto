@@ -1214,6 +1214,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Get the Rules based on the it.
         (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie)
 
+        if (swcookie == None and 
+            sdxrule == None and 
+            swrules == None and
+            table == None):
+            self.logger.info("No rule to remove for sdx_cookie %s" % sdx_cookie)
+            
         try:
             # Remove flows
             for rule in swrules:

@@ -520,6 +520,7 @@ class SDXControllerConnection(Connection):
         # If the socket is closed unexpectedly, it's possible the socket just
         # disappears. Annoying. Very annoying.
         if self.sock == None:
+            self.close()
             self._del_callback(self)
             raise SDXMessageConnectionFailure("sock == None - %s" % self)
             
@@ -586,7 +587,9 @@ class SDXControllerConnection(Connection):
         except socket.error as e:
             print "SOCKET ERROR BLOCK %s ON CXN %s" % (e.errno, self)
             if (e.errno == 104 or  # Connection reset by peer 
-                e.errno == 9):     # Bad File Descriptor
+                e.errno == 9 or    # Bad File Descriptor
+                e.errno == 32):    # Broken Pipe
+                self.close()
                 self._del_callback(self)
                 raise SDXMessageConnectionFailure("Connection reset by peer - %s"
                                                   % self)
@@ -594,6 +597,7 @@ class SDXControllerConnection(Connection):
                 raise
         except AttributeError as e:
             print "ATTRIBUTE ERROR %s ON CXN %s" % (e, self)
+            self.close()
             self._del_callback(self)
             raise SDXMessageConnectionFailure("Connection == None - %s"
                                                   % self)
@@ -608,6 +612,7 @@ class SDXControllerConnection(Connection):
         # If the socket is closed unexpectedly, it's possible the socket just
         # disappears. Annoying. Very annoying.
         if self.sock == None:
+            self.close()
             self._del_callback(self)
             raise SDXMessageConnectionFailure("sock == None - %s" % self)
 
@@ -623,13 +628,16 @@ class SDXControllerConnection(Connection):
 
         except socket.error as e:
             if (e.errno == 104 or  # Connection reset by peer 
-                e.errno == 9):     # Bad File Descriptor
+                e.errno == 9 or    # Bad File Descriptor
+                e.errno == 32):    # Broken Pipe
+                self.close()
                 self._del_callback(self)
-                raise SDXMessageConnectionFailure("Connection reset by peer - %s"
-                                                  % self)
+                raise SDXMessageConnectionFailure("Connection reset by peer %d - %s"
+                                                  % (e.errno, self))
             else:
                 raise
         except AttributeError as e:
+            self.close()
             self._del_callback(self)
             raise SDXMessageConnectionFailure("Connection == None - %s"
                                                   % self)
@@ -752,6 +760,7 @@ class SDXControllerConnection(Connection):
             if isinstance(msg, SDXMessageInitialRuleRequest):
                 # Send a rule
                 rule = SDXMessageInstallRule(initial_rules[0])
+                print "^^^^^^ Sending Initial Rule - %s" % rule
                 self.send_protocol(rule)
                 # Remove that rule form the initial rule list
                 initial_rules = initial_rules[1:]
@@ -813,6 +822,7 @@ def _heartbeat_thread(inst):
         except:
             # Need to signal that the cxn is closed.
             print "Heartbeat Closing due to error on %s" % hex(id(inst))
+            inst.close()
             inst._del_callback(inst)
             return
         

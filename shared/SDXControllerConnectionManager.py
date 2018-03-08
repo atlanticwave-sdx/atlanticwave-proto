@@ -85,6 +85,10 @@ class SDXControllerConnectionManager(ConnectionManager):
         except SDXControllerConnectionManagerNotConnectedError as e:
             # Connection doesn't yet exist. Nothing to do.
             pass
+        except SDXMessageConnectionFailure:
+            # Connection has failed. No big deal: since we were removing
+            # a rule, this isn't a real issue.
+            pass
             
         except Exception as e: raise
 

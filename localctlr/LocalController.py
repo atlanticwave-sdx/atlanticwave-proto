@@ -296,33 +296,33 @@ class LocalController(SingletonMixin):
         switch_id = msg.get_data()['switch_id']
         rule = msg.get_data()['rule']
         cookie = rule.get_cookie()
-        self.rule_table['cookie'] = {'status':RULE_STATUS_INSTALLING,
+        self.rule_table[cookie] = {'status':RULE_STATUS_INSTALLING,
                                      'rule': rule}
         self.switch_connection.send_command(switch_id, rule)
 
+        
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been installed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
-        self.rule_table['cookie']['status'] = RULE_STATUS_ACTIVE
+        self.rule_table[cookie]['status'] = RULE_STATUS_ACTIVE
 
     def remove_rule_sdxmsg(self, msg):
         switch_id = msg.get_data()['switch_id']
         cookie = msg.get_data()['cookie']
-        self.rule_table['cookie']['status'] = RULE_STATUS_DELETING
+        self.rule_table[cookie]['status'] = RULE_STATUS_DELETING
         self.switch_connection.remove_rule(switch_id, cookie)
 
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been removed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
-        self.rule_table['cookie']['status'] = RULE_STATUS_REMOVED
-        del self.rule_table['cookie']
+        self.rule_table[cookie]['status'] = RULE_STATUS_REMOVED
+        del self.rule_table[cookie]
 
     def _initial_rule_install(self, rule):
         ''' This builds up a list of rules to be installed. 
             _install_rules_complete() actually kicks off the install.
         '''
-        self._initial_rules_dict[rule.get_data()['rule']] = rule
-        
+        self._initial_rules_dict[rule.get_data()['rule'].get_cookie()] = rule
 
     def _initial_rules_complete(self):
         ''' This takes the list created by _initial_rule_install(), checks it 
@@ -362,7 +362,7 @@ class LocalController(SingletonMixin):
 
         for key in self._initial_rules_dict:
             add_list.append(self._initial_rules_dict[key])
-            del self._initial_rules_dict[entry_rule]
+        self._initial_rules_dict = []
             
         for entry in add_list:
             self.install_rule_sdxmsg(entry)
