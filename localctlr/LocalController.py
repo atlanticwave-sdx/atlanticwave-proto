@@ -124,7 +124,6 @@ class LocalController(SingletonMixin):
                             rlist.remove(cxn)
                             wlist = []
                             xlist = rlist
-                            self.start_sdx_controller_connection() #Restart!
 
                     # Next queue element
                     q_ele = self.sdx_cm.get_cxn_queue_element()
@@ -133,6 +132,11 @@ class LocalController(SingletonMixin):
                 # Normal behaviour
                 pass
  
+
+            # Restart SDX Connection if it's failed.
+            if (self.sdx_connection == None and
+                self.start_cxn_thread == None):
+                self.start_sdx_controller_connection() #Restart!
 
             if len(rlist) == 0:
                 sleep(timeout/2)
@@ -273,17 +277,27 @@ class LocalController(SingletonMixin):
                           (self.sdx_connection))
 
         # Transition to Main Phase
-        self.sdx_connection.transition_to_main_phase_LC(self.name,
+        try:
+            self.sdx_connection.transition_to_main_phase_LC(self.name,
                                                 self.capabilities,
                                                 self._initial_rule_install,
                                                 self._initial_rules_complete)
+        except Exception as e:
+            # This can happen. In this case, we need to close the connection,
+            # null out the connection, and end the thread.
+            self.logger.error("SDX Connection transition to main phase failed. %s : %s" %
+                              (self.sdx_connection, e))
+            self.sdx_connection.close()
+            self.sdx_connection = None
+            self.start_cxn_thread = None
+            return        
         
         # Upon successful return of connection, add NEW_CXN to cxn_q
         self.cxn_q.put((NEW_CXN, self.sdx_connection))
 
         # Finish up thread
         self.start_cxn_thread = None
-        
+        return
 
     def start_switch_connection(self):
         pass

@@ -677,7 +677,7 @@ class SDXControllerConnection(Connection):
             raise SDXControllerConnectionTypeError("SDXMessageInitialRuleCount not received: %s, %s" % (type(irc), irc))
 
         rule_count_left = irc.get_data()['initial_rule_count']
-        
+
         # Loop through initial rules:
         # - Request rule
         # - Receive rule
@@ -720,7 +720,6 @@ class SDXControllerConnection(Connection):
         self._new_callback(self)
         self.sock.setblocking(0)
 
-
     def transition_to_main_phase_SDX(self, get_initial_rule_callback):
         # Transition to Initializing
         self.connection_state = 'INITIALIZING'
@@ -760,7 +759,6 @@ class SDXControllerConnection(Connection):
             if isinstance(msg, SDXMessageInitialRuleRequest):
                 # Send a rule
                 rule = SDXMessageInstallRule(initial_rules[0])
-                print "^^^^^^ Sending Initial Rule - %s" % rule
                 self.send_protocol(rule)
                 # Remove that rule form the initial rule list
                 initial_rules = initial_rules[1:]
@@ -770,6 +768,11 @@ class SDXControllerConnection(Connection):
                 if len(initial_rules) != 0:
                     raise ConnectionValueError("initial_rules is not empty (%d: %s) but received InititialRulesComplete" % (len(initial_rules), initial_rules))
                 break
+            else:
+                # This is an error! Protocol violation. 
+                # Need to raise an exception
+                raise SDXMessageTypeError("Expecting InitialRUleRequest or InitialRulesComplete, received %s: %s" % 
+                                          (type(msg), str(msg)))
 
         # Send Transition to Main Phase, transition to main phase, start
         # heartbeat thread
@@ -784,7 +787,6 @@ class SDXControllerConnection(Connection):
         # Add connection!
         self._new_callback(self)
         self.sock.setblocking(0)
-
 
     def _heartbeat_response_handler(self, hbresp):
         ''' Handles incoming HeartbeatResponses. '''
