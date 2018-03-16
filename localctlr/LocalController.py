@@ -121,9 +121,13 @@ class LocalController(SingletonMixin):
                     elif action == DEL_CXN:
                         self.logger.warning("Removing connection %s" % cxn)
                         if cxn in rlist:
+                            # Need to clean up the sdx_connection, as it has
+                            # already failed and been (mostly) cleaned up.
+                            self.sdx_connection = None
                             rlist.remove(cxn)
                             wlist = []
                             xlist = rlist
+
 
                     # Next queue element
                     q_ele = self.sdx_cm.get_cxn_queue_element()
@@ -132,15 +136,17 @@ class LocalController(SingletonMixin):
                 # Normal behaviour
                 pass
  
-
+            if self.sdx_connection == None:
+                print "SDX_CXN = None, start_cxn_thread = %s" % str(self.start_cxn_thread)
             # Restart SDX Connection if it's failed.
             if (self.sdx_connection == None and
                 self.start_cxn_thread == None):
+                self.logger.info("Restarting SDX Connection")
                 self.start_sdx_controller_connection() #Restart!
 
             if len(rlist) == 0:
                 sleep(timeout/2)
-                next
+                continue
             
             try:
                 readable, writable, exceptional = cxnselect(rlist,
@@ -277,20 +283,33 @@ class LocalController(SingletonMixin):
                           (self.sdx_connection))
 
         # Transition to Main Phase
+            
         try:
             self.sdx_connection.transition_to_main_phase_LC(self.name,
                                                 self.capabilities,
                                                 self._initial_rule_install,
                                                 self._initial_rules_complete)
-        except Exception as e:
+
+        except (SDXControllerConnectionTypeError,
+                SDXControllerConnectionValueError) as e:
             # This can happen. In this case, we need to close the connection,
             # null out the connection, and end the thread.
-            self.logger.error("SDX Connection transition to main phase failed. %s : %s" %
+            self.logger.error("SDX Connection transition to main phase failed with possible benign error. %s : %s" %
                               (self.sdx_connection, e))
             self.sdx_connection.close()
             self.sdx_connection = None
             self.start_cxn_thread = None
             return        
+        except Exception as e:
+            # We need to clean up the connection as in the errors above, 
+            # then raise this error, as this *is* a problem that we need more 
+            # info on.
+            self.logger.error("SDX Connection transition to main phase failed with unhandled exception %s : %s" %
+                              (self.sdx_connection, e))
+            self.sdx_connection.close()
+            self.sdx_connection = None
+            self.start_cxn_thread = None
+            raise     
         
         # Upon successful return of connection, add NEW_CXN to cxn_q
         self.cxn_q.put((NEW_CXN, self.sdx_connection))
@@ -334,9 +353,10 @@ class LocalController(SingletonMixin):
 
     def _initial_rule_install(self, rule):
         ''' This builds up a list of rules to be installed. 
-            _install_rules_complete() actually kicks off the install.
+            _initial_rules_complete() actually kicks off the install.
         '''
-        self._initial_rules_dict[rule.get_data()['rule'].get_cookie()] = rule
+        k = rule.get_data()['rule'].get_cookie()
+        self._initial_rules_dict[k] = rule
 
     def _initial_rules_complete(self):
         ''' This takes the list created by _initial_rule_install(), checks it 
@@ -357,27 +377,16 @@ class LocalController(SingletonMixin):
         # Empty the _initial_rules_list for the next reconnection.
         # NOTE: _initial_rules_list is a list of SDXMessageInstallRules
         
-        
-        for entry in self.rule_table.keys():
-            entry_dict = self.rule_table[entry]
-            entry_rule = entry_dict['rule']
-            
-            if entry_dict['status'] != RULE_STATUS_ACTIVE:
-                continue
-            
-            if entry_dict['rule'] in self._initial_rules_dict.keys():
-                install_rule = self._initial_rules_dict[entry_rule]
-                do_nothing_list.append(install_rule)
-                del self._initial_rules_dict[entry_rule]
-            else:
-                install_rule = self._initial_rules_dict[entry_rule]
-                delete_list.append(install_rule)
-                del self._initial_rules_dict[entry_rule]
+        for index in self.rule_table.keys():
+            if index not in self._initial_rules_dict.keys():
+                rule = self.rule_table[index]['rule']
+                delete_list.append(rule)
 
-        for key in self._initial_rules_dict:
-            add_list.append(self._initial_rules_dict[key])
-        self._initial_rules_dict = []
-            
+        for index in self._initial_rules_dict.keys():
+            if index not in self.rule_table.keys():
+                rule = self._initial_rules_dict[index]
+                add_list.append(rule)
+
         for entry in add_list:
             self.install_rule_sdxmsg(entry)
             
@@ -389,8 +398,7 @@ class LocalController(SingletonMixin):
             # Create the RemoveRule to send to self.remove_rule_sdxmsg()
             msg = SDXMessageRemoveRule(cookie, switch_id)
             self.remove_rule_sdxmsg(msg)
-        
-        pass
+
 
 
     def switch_message_cb(self, cmd, opaque):

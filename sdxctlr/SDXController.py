@@ -165,12 +165,22 @@ class SDXController(SingletonMixin):
         # Get connection to main phase
         try:
             cxn.transition_to_main_phase_SDX(self._get_existing_rules_by_name)
-        except Exception as e:
-            # This can happen. In this case, we need to close the connection.
+        except (SDXControllerConnectionTypeError,
+                SDXControllerConnectionValueError) as e:
+            # These error can happen, and their not the end of the world. In 
+            # this case, we need to close the connection.
             self.logger.error("Connection transition to main phase failed. %s: %s" %
                               (cxn, e))
             cxn.close()
             return
+
+        except Exception as e:
+            # We need to close the connection, and raise the exception as this 
+            # is unhandled.
+            self.logger.error("Connection transition to main phase failed. %s: %s" %
+                              (cxn, e))
+            cxn.close()
+            raise
 
         
         # Associate connection with name

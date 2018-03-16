@@ -766,12 +766,12 @@ class SDXControllerConnection(Connection):
                 # Confirm that we don't have any more rules, then bail out of
                 # loop
                 if len(initial_rules) != 0:
-                    raise ConnectionValueError("initial_rules is not empty (%d: %s) but received InititialRulesComplete" % (len(initial_rules), initial_rules))
+                    raise SDXControllerConnectionValueError("initial_rules is not empty (%d: %s) but received InititialRulesComplete" % (len(initial_rules), initial_rules))
                 break
             else:
                 # This is an error! Protocol violation. 
                 # Need to raise an exception
-                raise SDXMessageTypeError("Expecting InitialRUleRequest or InitialRulesComplete, received %s: %s" % 
+                raise SDXControllerConnectionTypeError("Expecting InitialRUleRequest or InitialRulesComplete, received %s: %s" % 
                                           (type(msg), str(msg)))
 
         # Send Transition to Main Phase, transition to main phase, start
