@@ -110,6 +110,13 @@ class SDXControllerConnectionManager(ConnectionManager):
             More hacky than I'd like it to be. '''
         self.associations[name] = cxn
         #FIXME: Should this check to make sure that the cxn is in self.clients?
+    
+    def dissociate_name_with_cxn(self, name):
+        ''' This is used to dissociate a connection upon connection disconnect.
+            This will prevent silly things like trying to send data out dead 
+            connections. '''
+        if name in self.associations.keys():
+            del self.associations[name]
 
     def get_cxn_queue_element(self):
         ''' This returns a tuple (action,connection) or None if there aren't any

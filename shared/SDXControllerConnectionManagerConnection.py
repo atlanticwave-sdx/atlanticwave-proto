@@ -571,6 +571,10 @@ class SDXControllerConnection(Connection):
             msgtype = data.keys()[0]
             msg = SDX_MESSAGE_NAME_TO_CLASS[msgtype](json_msg=data)
 
+            # These are handy logs when needing to look at *everything*
+            #print ">>>> RECEIVED %s" % msg
+            #print ">>>>     JSON %s\n\n" % msg.get_json()
+
             # If it's a heartbeat request/heartbeat_response, send to heartbeat
             # handler and return None
             if type(msg) == SDXMessageHeartbeatRequest:
@@ -618,6 +622,9 @@ class SDXControllerConnection(Connection):
 
         data = sdx_message.get_json()
         try:
+            # These are handy logs when needing to look at *everything*
+            #print ">>>> SENDING %s" % sdx_message
+            #print ">>>>    JSON %s\n\n" % sdx_message.get_json()
             data_raw = pickle.dumps(data)
             self.sock.sendall(struct.pack('>iii',
                                           self.msg_num,
@@ -720,7 +727,8 @@ class SDXControllerConnection(Connection):
         self._new_callback(self)
         self.sock.setblocking(0)
 
-    def transition_to_main_phase_SDX(self, get_initial_rule_callback):
+    def transition_to_main_phase_SDX(self, set_name_callback,
+                                     get_initial_rule_callback):
         # Transition to Initializing
         self.connection_state = 'INITIALIZING'
 
@@ -730,6 +738,7 @@ class SDXControllerConnection(Connection):
             raise SDXControllerConnectionTypeError("SDXMessageHello not received: %s, %s" % (type(hello), hello))
         
         self.name = hello.get_data()['name']
+        set_name_callback(self.name)
         initial_rules = get_initial_rule_callback(self.name)
 
         # Transition to Capabilities, send request capabilities

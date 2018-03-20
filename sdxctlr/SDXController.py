@@ -157,6 +157,16 @@ class SDXController(SingletonMixin):
     def _get_existing_rules_by_name(self, name):
         # Goes to the RuleManager to get existing rules for a particular LC
         return self.rm.get_breakdown_rules_by_LC(name)
+
+    def _clean_up_oustanding_cxn(self, name):
+        # Check to see if there's an existing connection. If there is, close it.
+        if name in self.connections.keys():
+            old_cxn = self.connections[name]
+            self.logger.warning("Closing old connection for %s : %s" %
+                                (name, old_cxn))
+            self._handle_connection_loss(old_cxn)
+
+        
         
     def _handle_new_connection(self, cxn):
         # Receive name from LocalController, verify that it's in the topology
@@ -164,7 +174,8 @@ class SDXController(SingletonMixin):
 
         # Get connection to main phase
         try:
-            cxn.transition_to_main_phase_SDX(self._get_existing_rules_by_name)
+            cxn.transition_to_main_phase_SDX(self._clean_up_oustanding_cxn,
+                                             self._get_existing_rules_by_name)
         except (SDXControllerConnectionTypeError,
                 SDXControllerConnectionValueError) as e:
             # These error can happen, and their not the end of the world. In 
@@ -217,7 +228,9 @@ class SDXController(SingletonMixin):
 
         # Get LC name
         name = cxn.get_name()
-        
+
+        # Delete connections associations
+        self.sdx_cm.dissociate_name_with_cxn(name)
         # Get all EdgePort policies
         all_edgeport_policies = self.rm.get_rules({'ruletype':'EdgePort'})
         
@@ -285,10 +298,11 @@ class SDXController(SingletonMixin):
                                                             xlist,
                                                             timeout)
             except Exception as e:
-                self.logger.warning("select returned errror: %s" % e)
+                self.logger.warning("select returned error: %s" % e)
                 # This can happen if, say, there's a disconnection that hasn't
                 # cleaned up or occured *during* the timeout period. This is due
                 # to select failing.
+                sleep(timeout/2)
                 continue
 
             # Loop through readable

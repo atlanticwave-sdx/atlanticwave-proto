@@ -1218,8 +1218,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
             sdxrule == None and 
             swrules == None and
             table == None):
-            self.logger.info("No rule to remove for sdx_cookie %s" % sdx_cookie)
-            
+            self.logger.error("No rule to remove for sdx_cookie %s" % 
+                              sdx_cookie)
+            return
+
+
         try:
             # Remove flows
             for rule in swrules:
@@ -1229,7 +1232,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     # Currently, don't have to do anything here.
                     pass
         except Exception as e:
-            self.logger.error("Error in remove_rule")
+            self.logger.error("Error in remove_rule %s:%s" % (sdx_cookie, 
+                                                              of_cookie))
             self.logger.error("  swcookie: %s" % swcookie)
             self.logger.error("  sdxrule: %s" % sdxrule)
             self.logger.error("  swrules: %s" % swrules)

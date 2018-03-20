@@ -340,8 +340,17 @@ class LocalController(SingletonMixin):
         self.rule_table[cookie]['status'] = RULE_STATUS_ACTIVE
 
     def remove_rule_sdxmsg(self, msg):
+        ''' Removes rules based on cookie sent from the SDX Controller. If we do
+            not have a rule under that cookie, odds are it's for the previous 
+            instance of this LC. Log and drop it.
+        '''
         switch_id = msg.get_data()['switch_id']
         cookie = msg.get_data()['cookie']
+
+        if cookie not in self.rule_table.keys():
+            self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
+            return
+
         self.rule_table[cookie]['status'] = RULE_STATUS_DELETING
         self.switch_connection.remove_rule(switch_id, cookie)
 
@@ -376,7 +385,9 @@ class LocalController(SingletonMixin):
         # Anything left over in the _initial_rules_list is now the add_list
         # Empty the _initial_rules_list for the next reconnection.
         # NOTE: _initial_rules_list is a list of SDXMessageInstallRules
-        
+        self.logger.debug("IRC RULE_TABLE %s" % self.rule_table)
+        self.logger.debug("IRC _INITIAL_RULES_DICT %s\n\n\n" % 
+                          self._initial_rules_dict)
         for index in self.rule_table.keys():
             if index not in self._initial_rules_dict.keys():
                 rule = self.rule_table[index]['rule']
