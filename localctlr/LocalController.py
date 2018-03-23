@@ -6,6 +6,10 @@ import logging
 import threading
 import sys
 import json
+import signal
+import os
+import atexit
+import traceback
 from Queue import Queue, Empty
 from time import sleep
 
@@ -50,6 +54,10 @@ class LocalController(SingletonMixin):
         self.openflow_port = DEFAULT_OPENFLOW_PORT
         if self.manifest != None:
             self._import_configuration()
+
+        # Signal Handling
+        signal.signal(signal.SIGINT, receive_signal)
+        atexit.register(self.receive_exit)
 
         # Rules "database"
         # Each entry looks like the following:
@@ -430,7 +438,21 @@ class LocalController(SingletonMixin):
             self.sdx_connection.send_protocol(msg)
 
         #FIXME: Else?
-            
+
+    def get_ryu_process(self):
+        return self.switch_connection.get_ryu_process()
+
+    def receive_exit(self):
+        print "EXIT RECEIVED"
+        print "\n\n%d\n\n" % self.get_ryu_process().pid
+        os.killpg(self.get_ryu_process().pid, signal.SIGKILL)
+
+# Cleanup related functions
+def receive_signal(signum, stack):
+    print "Caught signal %d" % signum
+    print "stack: \n" + "".join(traceback.format_stack(stack))
+    exit()        
+
 
 if __name__ == '__main__':
 
