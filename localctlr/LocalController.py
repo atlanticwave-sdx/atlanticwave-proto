@@ -16,6 +16,7 @@ from time import sleep
 from lib.Singleton import SingletonMixin
 from lib.Connection import select as cxnselect
 from RyuControllerInterface import *
+from LCRuleManager import *
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
 from switch_messages import *
@@ -23,12 +24,6 @@ from switch_messages import *
 LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
 DEFAULT_OPENFLOW_PORT = 6633
-
-# List of rule statuses
-RULE_STATUS_ACTIVE       = 1
-RULE_STATUS_DELETING     = 2
-RULE_STATUS_INSTALLING   = 3
-RULE_STATUS_REMOVED      = 4
 
 class LocalController(SingletonMixin):
     ''' The Local Controller is responsible for passing messages from the SDX 
@@ -59,11 +54,8 @@ class LocalController(SingletonMixin):
         signal.signal(signal.SIGINT, receive_signal)
         atexit.register(self.receive_exit)
 
-        # Rules "database"
-        # Each entry looks like the following:
-        # {cookie_value : {'status': RULE_STATUS_ACTIVE,
-        #                  'rule': rule_value}}
-        self.rule_table = {}
+        # Rules DB
+        self.rm = LCRuleManager()
 
         # Initial Rules
         self._initial_rules_dict = {}
@@ -337,15 +329,15 @@ class LocalController(SingletonMixin):
         switch_id = msg.get_data()['switch_id']
         rule = msg.get_data()['rule']
         cookie = rule.get_cookie()
-        self.rule_table[cookie] = {'status':RULE_STATUS_INSTALLING,
-                                     'rule': rule}
+
+        self.rm.add_rule(cookie, lcrule), RULE_STATUS_INSTALLING)
         self.switch_connection.send_command(switch_id, rule)
 
         
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been installed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
-        self.rule_table[cookie]['status'] = RULE_STATUS_ACTIVE
+        self.rm.set_status(cookie, RULE_STATUS_ACTIVE)
 
     def remove_rule_sdxmsg(self, msg):
         ''' Removes rules based on cookie sent from the SDX Controller. If we do
@@ -354,57 +346,35 @@ class LocalController(SingletonMixin):
         '''
         switch_id = msg.get_data()['switch_id']
         cookie = msg.get_data()['cookie']
+        rule = self.rm.get_rule(cookie)
 
-        if cookie not in self.rule_table.keys():
+        if rule == None:
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
             return
-
-        self.rule_table[cookie]['status'] = RULE_STATUS_DELETING
+        self.rm.set_status(cookie, RULE_STATUS_DELETING)
         self.switch_connection.remove_rule(switch_id, cookie)
 
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been removed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
-        self.rule_table[cookie]['status'] = RULE_STATUS_REMOVED
-        del self.rule_table[cookie]
+        self.rm.set_status(cookie, RULE_STATUS_REMOVED)
+        self.rm.rm_rule(cookie)
 
     def _initial_rule_install(self, rule):
         ''' This builds up a list of rules to be installed. 
             _initial_rules_complete() actually kicks off the install.
         '''
         k = rule.get_data()['rule'].get_cookie()
-        self._initial_rules_dict[k] = rule
+        self.rm.add_initial_rule(rule, k)
 
     def _initial_rules_complete(self):
-        ''' This takes the list created by _initial_rule_install(), checks it 
-            against the currently installed rules, and makes install/delete
-            decisions based on what the SDX Controller thinks should be 
-            installed.
+        ''' Calls the LCRuleManager to get delete and add rule lists, then 
+            deletes outdated rules and adds new rule.
         '''
         delete_list = []
         add_list = []
-        do_nothing_list = []
 
-        # Build up the delete_list:
-        # Go through all installed rules. If it's not in the
-        # _initial_rules_list, add to delete list.
-        # Build the do_nothing_list: if it is in the _initial_rules_list, move
-        # from the _initial_rules_list to the do_nothing_list
-        # Anything left over in the _initial_rules_list is now the add_list
-        # Empty the _initial_rules_list for the next reconnection.
-        # NOTE: _initial_rules_list is a list of SDXMessageInstallRules
-        self.logger.debug("IRC RULE_TABLE %s" % self.rule_table)
-        self.logger.debug("IRC _INITIAL_RULES_DICT %s\n\n\n" % 
-                          self._initial_rules_dict)
-        for index in self.rule_table.keys():
-            if index not in self._initial_rules_dict.keys():
-                rule = self.rule_table[index]['rule']
-                delete_list.append(rule)
-
-        for index in self._initial_rules_dict.keys():
-            if index not in self.rule_table.keys():
-                rule = self._initial_rules_dict[index]
-                add_list.append(rule)
+        (delete_list, add_list) = self.rm.initial_rules_complete()
 
         for entry in add_list:
             self.install_rule_sdxmsg(entry)
@@ -417,8 +387,6 @@ class LocalController(SingletonMixin):
             # Create the RemoveRule to send to self.remove_rule_sdxmsg()
             msg = SDXMessageRemoveRule(cookie, switch_id)
             self.remove_rule_sdxmsg(msg)
-
-
 
     def switch_message_cb(self, cmd, opaque):
         ''' Called by SwitchConnection to pass information back from the Switch
