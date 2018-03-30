@@ -376,12 +376,12 @@ class LocalController(SingletonMixin):
 
         (delete_list, add_list) = self.rm.initial_rules_complete()
 
-        for entry in add_list:
+        for (entry, cookie) in add_list:
+            # Cookie isn't needed
             self.install_rule_sdxmsg(entry)
             
-        for entry in delete_list:
-            # Extract the cookie, switch_id
-            cookie = entry.get_cookie()
+        for (entry, cookie) in delete_list:
+            # Extract the switch_id
             switch_id = entry.get_switch_id()
 
             # Create the RemoveRule to send to self.remove_rule_sdxmsg()
