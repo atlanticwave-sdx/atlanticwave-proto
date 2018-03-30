@@ -1,8 +1,9 @@
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
-
+import logging
 import dataset
+from lib.Singleton import SingletonMixin
 
 # List of rule statuses
 RULE_STATUS_ACTIVE       = 1
@@ -21,6 +22,8 @@ class LCRuleManagerError(Exception):
 class LCRuleManagerTypeError(TypeError):
     pass
 class LCRuleManagerValidationError(LCRuleManagerError):
+    pass
+class LCRuleManagerDeletionError(LCRuleManagerError):
     pass
 
 class LCRuleManager(SingletonMixin):
@@ -44,8 +47,8 @@ class LCRuleManager(SingletonMixin):
         # Details on the setup:
         # https://dataset.readthedocs.io/en/latest/api.html
         # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
-        self.logger.critical("Connection to DB: %s" % db)
-        self.db = dataset.connect('sqlite:///' + db, 
+        self.logger.critical("Connection to DB: %s" % db_filename)
+        self.db = dataset.connect('sqlite:///' + db_filename, 
                                   engine_kwargs={'connect_args':
                                                  {'check_same_thread':False}})
 
@@ -78,8 +81,16 @@ class LCRuleManager(SingletonMixin):
         self.logger.addHandler(console)
         self.logger.addHandler(logfile)
         
-    def add_rule(self, cookie, lcrule, status=RULE_STATUS_INSTALLING)
+    def add_rule(self, cookie, lcrule, status=RULE_STATUS_INSTALLING):
         # Insert LC rule into db, using the cookie as an index
+        # Validate status
+        if status not in VALID_RULE_STATUSES:
+            raise LCRuleManagerTypeError("Status not valid: %s" % status)
+
+        # Confirm that we're not inserting a duplicate
+        if self.get_rule(cookie) != None:
+            raise LCRuleManagerValidationError("Duplicate add_rule for %s" %
+                                               cookie)
         self.rule_table.insert({'cookie':cookie,
                                 'status':status,
                                 'rule':lcrule})
@@ -89,6 +100,9 @@ class LCRuleManager(SingletonMixin):
         record = self.rule_table.find_one(cookie=cookie)
         if record != None:
             self.rule_table.delete(cookie=cookie)
+        else:
+            raise LCRuleManagerDeletionError("Cannot delete %s: doesn't exist" %
+                                             cookie)
 
     def set_status(self, cookie, status):
         if status not in VALID_RULE_STATUSES:
@@ -126,11 +140,19 @@ class LCRuleManager(SingletonMixin):
         return retval
         
 
-    def get_rule(self, cookie):
+    def get_rule(self, cookie, full_tuple=False):
+        ''' Returns either the rule itself, or a tuple (cookie, rule, status) 
+        '''
         # Get the rule specified by cookie
-        rule_entry = self.rule_table.find_one(cookie=index)
+        rule_entry = self.rule_table.find_one(cookie=cookie)
         if rule_entry != None:
-            return rule_entry['rule']
+            if full_tuple:
+                retval = (rule_entry['cookie'],
+                          rule_entry['rule'],
+                          rule_entry['status'])
+                return retval
+            else:
+                return rule_entry['rule']
         return None
 
     def add_initial_rule(self, rule, cookie):
@@ -143,6 +165,7 @@ class LCRuleManager(SingletonMixin):
         ''' Returns two lists: rules for deletion, rules to be added. None of 
             the rules in either of these lists are added or removed from this 
             DB. This is just a service for the LC to make life a bit easier.
+            NOTE: clear_initial_rules() *must* be called afterwards.
         '''
         delete_list = []
         add_list = []
@@ -156,17 +179,17 @@ class LCRuleManager(SingletonMixin):
         self.logger.debug("IRC RULE_TABLE %s" % self.rule_table)
         self.logger.debug("IRC _INITIAL_RULES_DICT %s\n\n\n" % 
                           self._initial_rules_dict)
-        list_of_cookies = [x['cookie'] for x in table.find()]
+        list_of_cookies = [x['cookie'] for x in self.rule_table.find()]
         
         for index in list_of_cookies:
             if index not in self._initial_rules_dict.keys():
                 rule = self.rule_table.find_one(cookie=index)['rule']
-                delete_list.append(rule)
+                delete_list.append((rule,index))
 
         for index in self._initial_rules_dict.keys():
             if index not in list_of_cookies:
                 rule = self._initial_rules_dict[index]
-                add_list.append(rule)
+                add_list.append((rule,index))
 
         return (delete_list, add_list)
 
