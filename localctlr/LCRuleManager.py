@@ -3,6 +3,7 @@
 
 import logging
 import dataset
+import cPickle as pickle
 from lib.Singleton import SingletonMixin
 
 # List of rule statuses
@@ -38,10 +39,10 @@ class LCRuleManager(SingletonMixin):
         # Setup DB.
         self._initialize_db(db_filename)
 
-        self._valid_table_columns = ['cookie','status','rule']
+        self._valid_table_columns = ['cookie','switch_id','status','rule']
 
         # Setup initial rules related stuff.
-        self._initial_rules_dict = {}
+        self._initial_rules_list = []
         
     def _initialize_db(self, db_filename):
         # Details on the setup:
@@ -81,43 +82,58 @@ class LCRuleManager(SingletonMixin):
         self.logger.addHandler(console)
         self.logger.addHandler(logfile)
         
-    def add_rule(self, cookie, lcrule, status=RULE_STATUS_INSTALLING):
-        # Insert LC rule into db, using the cookie as an index
+    def add_rule(self, cookie, switch_id, lcrule, 
+                 status=RULE_STATUS_INSTALLING):
+        # Insert LC rule into db, using the cookie and switch_id as the index
         # Validate status
         if status not in VALID_RULE_STATUSES:
             raise LCRuleManagerTypeError("Status not valid: %s" % status)
 
-        # Confirm that we're not inserting a duplicate
-        if self.get_rule(cookie) != None:
-            raise LCRuleManagerValidationError("Duplicate add_rule for %s" %
-                                               cookie)
+        textrule = pickle.dumps(lcrule)
+
+        # Confirm that we're not inserting a duplicate rule.
+        dupes = self._find_rules({'cookie':cookie,
+                                  'switch_id':switch_id})
+        if dupes != None:
+            for dupe in dupes:
+                (c,sid,lcr,stat) = dupe
+                if lcr == lcrule:
+                    raise LCRuleManagerValidationError(
+                        "Duplicate add_rule for %s:%s:%s" %
+                        (cookie, switch_id, str(lcrule)))
+
+        # Translate rule into a string so it can be stored
         self.rule_table.insert({'cookie':cookie,
+                                'switch_id':switch_id,
                                 'status':status,
-                                'rule':lcrule})
+                                'rule':textrule})
 
-    def rm_rule(self, cookie):
-        # Remove LC rule identified by cookie
-        record = self.rule_table.find_one(cookie=cookie)
+    def rm_rule(self, cookie, switch_id):
+        # Remove LC rule identified by cookie and switch_id
+        
+        record = self.rule_table.find_one(cookie=cookie, switch_id=switch_id)
         if record != None:
-            self.rule_table.delete(cookie=cookie)
+            self.rule_table.delete(cookie=cookie, switch_id=switch_id)
         else:
-            raise LCRuleManagerDeletionError("Cannot delete %s: doesn't exist" %
-                                             cookie)
+            raise LCRuleManagerDeletionError(
+                "Cannot delete %s:%s: doesn't exist" %
+                (cookie, switch_id))
 
-    def set_status(self, cookie, status):
+    def set_status(self, cookie, switch_id, status):
         if status not in VALID_RULE_STATUSES:
             raise LCRuleManagerValidationError(
                 "Invalid Rule Status provided: %s" % status)
         # Changes the status of a particular rule
-        record = self.rule_table.find_one(cookie=cookie)
+        record = self.rule_table.find_one(cookie=cookie, switch_id=switch_id)
         if record != None:
             self.rule_table.update({'cookie':cookie,
+                                    'switch_id':switch_id,
                                     'status':status},
                                    ['cookie'])
 
-    def find_rules(self, filter={}):
+    def _find_rules(self, filter={}):
         # If filter=={}, return all rules.
-        # Returns a list of (cookie, rule, status) tuples
+        # Returns a list of (cookie, switch_id, rule, status) tuples
 
         # Validate the filter
         if filter != None:
@@ -135,31 +151,37 @@ class LCRuleManager(SingletonMixin):
 
         # Send Back results.
         retval = [(x['cookie'],
-                   x['rule'],
+                   x['switch_id'],
+                   pickle.loads(str(x['rule'])),
                    x['status']) for x in results]
         return retval
         
 
-    def get_rule(self, cookie, full_tuple=False):
-        ''' Returns either the rule itself, or a tuple (cookie, rule, status) 
+    def get_rules(self, cookie, switch_id, full_tuple=False):
+        ''' Returns a list of all rules matching cookie and switch_id. 
+            Generally, there will be only one rule, but there could be multiple.
+            If  full_tuple==True, then a list of tuples will be returned:
+                (cookie, switch_id, rule, status)
         '''
         # Get the rule specified by cookie
-        rule_entry = self.rule_table.find_one(cookie=cookie)
-        if rule_entry != None:
-            if full_tuple:
-                retval = (rule_entry['cookie'],
-                          rule_entry['rule'],
-                          rule_entry['status'])
-                return retval
-            else:
-                return rule_entry['rule']
-        return None
+        rules = self.rule_table.find(cookie=cookie, switch_id=switch_id)
 
-    def add_initial_rule(self, rule, cookie):
+        if full_tuple:
+            retval = [(x['cookie'],
+                       x['switch_id'],
+                       pickle.loads(str(x['rule'])),
+                       x['status']) for x in rules]
+            return retval
+
+        retval = [pickle.loads(str(x['rule'])) for x in rules]
+        return retval
+
+    def add_initial_rule(self, rule, cookie, switch_id):
         # Used during initial rule stage of inialization.
-        self.logger.debug("Adding a new rule to the _initial_rules_dict: %s" %
-                          cookie)
-        self._initial_rules_dict[cookie] = rule
+        self.logger.debug(
+            "Adding a new rule to the _initial_rules_list: %s:%s" %
+            (cookie, switch_id))
+        self._initial_rules_list.append((cookie, switch_id, rule))
 
     def initial_rules_complete(self):
         ''' Returns two lists: rules for deletion, rules to be added. None of 
@@ -177,19 +199,27 @@ class LCRuleManager(SingletonMixin):
         # Empty the _initial_rules_list for the next reconnection.
         # NOTE: _initial_rules_list is a list of SDXMessageInstallRules
         self.logger.debug("IRC RULE_TABLE %s" % self.rule_table)
-        self.logger.debug("IRC _INITIAL_RULES_DICT %s\n\n\n" % 
-                          self._initial_rules_dict)
-        list_of_cookies = [x['cookie'] for x in self.rule_table.find()]
+        self.logger.debug("IRC _INITIAL_RULES_LIST %s\n\n\n" % 
+                          self._initial_rules_list)
         
-        for index in list_of_cookies:
-            if index not in self._initial_rules_dict.keys():
-                rule = self.rule_table.find_one(cookie=index)['rule']
-                delete_list.append((rule,index))
+        list_of_c_and_s = [(x['cookie'], x['switch_id'])
+                           for x in self.rule_table.find()]
+        c_and_s_from_irl = [(c,s) for (c,s,r) in self._initial_rules_list]
 
-        for index in self._initial_rules_dict.keys():
-            if index not in list_of_cookies:
-                rule = self._initial_rules_dict[index]
-                add_list.append((rule,index))
+        for t in list_of_c_and_s:
+            if t not in c_and_s_from_irl:
+                (c,s) = t
+                rules = self.get_rules(c,s, True)
+                for rule in rules:
+                    (c,s,r,t) = rule
+                    delete_list.append((r,c,s))
+
+        for t in c_and_s_from_irl:
+            if t not in list_of_c_and_s:
+                (c,s) = t
+                for (c1,s1,r1) in self._initial_rules_list:
+                    if (c==c1 and s==s1):
+                        add_list.append((r1,c1,s1))
 
         return (delete_list, add_list)
 
@@ -200,5 +230,5 @@ class LCRuleManager(SingletonMixin):
             be a weird side effect that is dirty. As such, separate function. A 
             very complicated separate function.
         '''
-        self.logger.debug("Clearning _initial_rules_dict")
-        self._initial_rules_dict = {}
+        self.logger.debug("Clearning _initial_rules_list")
+        self._initial_rules_list = []

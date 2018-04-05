@@ -330,14 +330,14 @@ class LocalController(SingletonMixin):
         rule = msg.get_data()['rule']
         cookie = rule.get_cookie()
 
-        self.rm.add_rule(cookie, lcrule), RULE_STATUS_INSTALLING)
+        self.rm.add_rule(cookie, switch_id, rule, RULE_STATUS_INSTALLING)
         self.switch_connection.send_command(switch_id, rule)
 
         
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been installed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
-        self.rm.set_status(cookie, RULE_STATUS_ACTIVE)
+        self.rm.set_status(cookie, switch_id, RULE_STATUS_ACTIVE)
 
     def remove_rule_sdxmsg(self, msg):
         ''' Removes rules based on cookie sent from the SDX Controller. If we do
@@ -346,26 +346,29 @@ class LocalController(SingletonMixin):
         '''
         switch_id = msg.get_data()['switch_id']
         cookie = msg.get_data()['cookie']
-        rule = self.rm.get_rule(cookie)
+        rules = self.rm.get_rules(cookie, switch_id)
 
-        if rule == None:
+        if rules == []:
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
             return
-        self.rm.set_status(cookie, RULE_STATUS_DELETING)
+
+        self.rm.set_status(cookie, switch_id, RULE_STATUS_DELETING)
         self.switch_connection.remove_rule(switch_id, cookie)
 
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been removed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
-        self.rm.set_status(cookie, RULE_STATUS_REMOVED)
-        self.rm.rm_rule(cookie)
+        self.rm.set_status(cookie, switch_id, RULE_STATUS_REMOVED)
+        self.rm.rm_rule(cookie, switch_id)
 
     def _initial_rule_install(self, rule):
         ''' This builds up a list of rules to be installed. 
             _initial_rules_complete() actually kicks off the install.
         '''
-        k = rule.get_data()['rule'].get_cookie()
-        self.rm.add_initial_rule(rule, k)
+        c = rule.get_data()['rule'].get_cookie()
+        sw = rule.get_data()['rule'].get_switch_id()
+
+        self.rm.add_initial_rule(rule, c, sw)
 
     def _initial_rules_complete(self):
         ''' Calls the LCRuleManager to get delete and add rule lists, then 
@@ -375,15 +378,13 @@ class LocalController(SingletonMixin):
         add_list = []
 
         (delete_list, add_list) = self.rm.initial_rules_complete()
+        self.rm.clear_initial_rules()
 
-        for (entry, cookie) in add_list:
+        for (entry, cookie, switch_id) in add_list:
             # Cookie isn't needed
             self.install_rule_sdxmsg(entry)
             
-        for (entry, cookie) in delete_list:
-            # Extract the switch_id
-            switch_id = entry.get_switch_id()
-
+        for (entry, cookie, switch_id) in delete_list:
             # Create the RemoveRule to send to self.remove_rule_sdxmsg()
             msg = SDXMessageRemoveRule(cookie, switch_id)
             self.remove_rule_sdxmsg(msg)

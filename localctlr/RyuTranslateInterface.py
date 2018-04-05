@@ -1086,7 +1086,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         out_port = ofproto.OFPP_ANY
         table = ofproto.OFPTT_ALL
 
-        mod = parser.OFPFlowMod(datapath=datapath, table_id=table
+        mod = parser.OFPFlowMod(datapath=datapath, table_id=table,
                                 command=command, out_group=out_group,
                                 out_port=out_port)
         datapath.send_msg(mod)
