@@ -11,6 +11,7 @@ import os
 import atexit
 import traceback
 import dataset
+import cPickle as pickle
 from Queue import Queue, Empty
 from time import sleep
 
@@ -274,17 +275,16 @@ class LocalController(SingletonMixin):
         # key: "<switch_name>_switchinfo"
         # value: <switch_config>
         key = switch_name + "_switchinfo"
+        value = pickle.dumps(switch_config)
         if self._get_switch_config_in_db(switch_name) == None:
             self.logger.info("Adding new switch configuration for switch %s" %
                              switch_name)
-            self.config_table.insert({'key':key,
-                                      'value':switch_config})
+            self.config_table.insert({'key':key, 'value':value})
         else:
             # Already exists, must update.
             self.logger.info("Updating switch configuration for switch %s" %
                              switch_name)
-            self.config_table.update({'key':key,
-                                      'value':switch_config},
+            self.config_table.update({'key':key, 'value':value},
                                      ['key'])
 
     def _add_ryu_config_to_db(self, ryu_config):
@@ -292,17 +292,16 @@ class LocalController(SingletonMixin):
         # key: "ryu_config"
         # value: ryu_config
         key = 'ryu_config'
+        value = pickle.dumps(ryu_config)
         if self._get_ryu_config_in_db() == None:
             self.logger.info("Adding new Ryu configuration %s" %
                              ryu_config)
-            self.config_table.insert({'key':key,
-                                      'value':ryu_config})
+            self.config_table.insert({'key':key, 'value':value})
         else:
             # Already exists, must update.
             self.logger.info("Updating Ryu configuration %s" %
                              ryu_config)
-            self.config_table.update({'key':key,
-                                      'value':ryu_config},
+            self.config_table.update({'key':key, 'value':value},
                                      ['key'])
 
     def _add_LC_config_to_db(self, lc_config):
@@ -310,17 +309,16 @@ class LocalController(SingletonMixin):
         # key: "lc_config"
         # value: lc_config
         key = 'lc_config'
+        value = pickle.dumps(lc_config)
         if self._get_LC_config_in_db() == None:
             self.logger.info("Adding new LC configuration %s" %
                              lc_config)
-            self.config_table.insert({'key':key,
-                                      'value':lc_config})
+            self.config_table.insert({'key':key, 'value':value})
         else:
             # Already exists, must update.
             self.logger.info("Updating LC configuration %s" %
                              lc_config)
-            self.config_table.update({'key':key,
-                                      'value':lc_config},
+            self.config_table.update({'key':key, 'value':value},
                                      ['key'])
 
     def _add_SDX_config_to_db(self, sdx_config):
@@ -328,17 +326,16 @@ class LocalController(SingletonMixin):
         # key: "sdx_config"
         # value: sdx_config
         key = 'sdx_config'
+        value = pickle.dumps(sdx_config)
         if self._get_SDX_config_in_db() == None:
             self.logger.info("Adding new SDX configuration %s" %
                              sdx_config)
-            self.config_table.insert({'key':key,
-                                      'value':sdx_config})
+            self.config_table.insert({'key':key, 'value':value})
         else:
             # Already exists, must update.
             self.logger.info("Updating SDX configuration %s" %
                              sdx_config)
-            self.config_table.update({'key':key,
-                                      'value':sdx_config},
+            self.config_table.update({'key':key, 'value':value},
                                      ['key'])
     
 
@@ -346,26 +343,37 @@ class LocalController(SingletonMixin):
         # Returns a switch configuration dictionary if one exists or None if one
         # does not.
         key = switch_name + "_switchinfo"
-        return self.config_table.find_one(key=key)
+        val = self.config_table.find_one(key=key)
+        if val == None:
+            return val
+        return pickle.loads(str(val))
 
     def _get_ryu_config_in_db(self):
         # Returns the ryu configuration dictionary if it exists or None if it
         # does not.
         key = 'ryu_config'
-        return self.config_table.find_one(key=key)
+        val = self.config_table.find_one(key=key)
+        if val == None:
+            return val
+        return pickle.loads(str(val))
 
     def _get_LC_config_in_db(self):
         # Returns the LC configuration dictionary if it exists or None if it
         # does not.
         key = 'lc_config'
-        return self.config_table.find_one(key=key)
+        val = self.config_table.find_one(key=key)
+        if val == None:
+            return val
+        return pickle.loads(str(val))
     
     def _get_SDX_config_in_db(self):
         # Returns the SDX configuration dictionary if it exists or None if it
         # does not.
         key = 'sdx_config'
-        return self.config_table.find_one(key=key)
-
+        val = self.config_table.find_one(key=key)
+        if val == None:
+            return val
+        return pickle.loads(str(val))
 
     def _setup(self, options):
         self.manifest = options.manifest
@@ -400,7 +408,7 @@ class LocalController(SingletonMixin):
         else:
             self.ryu_cxn_port = lcdata['internalconfig']['ryucxninternalport']
             self.openflow_port = lcdata['internalconfig']['openflowport']
-            self._add_ryu_config_in_db({'ryucxninternalport':self.ryu_cxn_port,
+            self._add_ryu_config_to_db({'ryucxninternalport':self.ryu_cxn_port,
                                         'openflowport':self.openflow_port})
 
         # LC Config
@@ -409,7 +417,7 @@ class LocalController(SingletonMixin):
             self.lcip = config['lcip']
         else:
             self.lcip = lcdata['lcip']
-            self._add_ryu_config_in_db({'lcip':self.lcip})
+            self._add_LC_config_to_db({'lcip':self.lcip})
             
         # SDX Config
         config = self._get_SDX_config_in_db()
@@ -420,7 +428,7 @@ class LocalController(SingletonMixin):
             # Well, not quite the manifest...
             self.sdxip = options.host
             self.sdxport = options.sdxport
-            self._add_ryu_config_in_db({'sdxip':self.sdxip,
+            self._add_SDX_config_to_db({'sdxip':self.sdxip,
                                         'sdxport':self.sdxport})        
 
             
