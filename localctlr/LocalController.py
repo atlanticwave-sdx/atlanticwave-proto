@@ -10,6 +10,7 @@ import signal
 import os
 import atexit
 import traceback
+import dataset
 from Queue import Queue, Empty
 from time import sleep
 
@@ -38,18 +39,11 @@ class LocalController(SingletonMixin):
         self.capabilities = "NOTHING YET" #FIXME: This needs to be updated
         self.logger.info("LocalController %s starting", self.name)
 
-        # Parse out the options
-        # Import configuration information
-        self.manifest = options.manifest
-        self.sdxip = options.host
-        self.sdxport = options.sdxport
-
-        self.lcip = LOCALHOST
-        self.ryu_cxn_port = DEFAULT_RYU_CXN_PORT
-        self.openflow_port = DEFAULT_OPENFLOW_PORT
-        if self.manifest != None:
-            self._import_configuration()
-
+        # Import configuration information - this includes pulling information
+        # from the stored DB (if there is anything), and from the options passed
+        # in during startup (including the manifest file)
+        self._setup(options)
+        
         # Signal Handling
         signal.signal(signal.SIGINT, receive_signal)
         atexit.register(self.receive_exit)
@@ -251,18 +245,185 @@ class LocalController(SingletonMixin):
         self.logger = logging.getLogger('localcontroller')
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(console)
-        self.logger.addHandler(logfile) 
+        self.logger.addHandler(logfile)
+        
+    def _initialize_db(self, db_filename):
+        # Details on the setup:
+        # https://dataset.readthedocs.io/en/latest/api.html
+        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
+        self.logger.critical("Connection to DB: %s" % db_filename)
+        self.db = dataset.connect('sqlite:///' + db_filename, 
+                                  engine_kwargs={'connect_args':
+                                                 {'check_same_thread':False}})
+        #Try loading the tables, if they don't exist, create them.
+        # <lcname>-config - Columns are 'key' and 'value'
+        config_table_name = self.name + "-config"
+        try:
+            self.logger.info("Trying to load %s from DB" % config_table_name)
+            self.config_table = self.db.load_table(config_table_name)
+        except:
+            # If load_table() fails, that's fine! It means that the table
+            # doesn't yet exist. So, create it.
+            self.logger.info("Failed to load %s from DB, creating new table" %
+                             config_table_name)
+            self.config_table = self.db[config_table_name]
 
-    def _import_configuration(self):
-        with open(self.manifest) as data_file:
-            data = json.load(data_file)
 
-        # Look at information under the self.name entry
-        lcdata = data['localcontrollers'][self.name]
-        self.lcip = lcdata['lcip']
-        self.ryu_cxn_port = lcdata['internalconfig']['ryucxninternalport']
-        self.openflow_port = lcdata['internalconfig']['openflowport']
+    def _add_switch_config_to_db(self, switch_name, switch_config):
+        # Pushes a switch info dictionary from manifest.
+        # key: "<switch_name>_switchinfo"
+        # value: <switch_config>
+        key = switch_name + "_switchinfo"
+        if self._get_switch_config_in_db(switch_name) == None:
+            self.logger.info("Adding new switch configuration for switch %s" %
+                             switch_name)
+            self.config_table.insert({'key':key,
+                                      'value':switch_config})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating switch configuration for switch %s" %
+                             switch_name)
+            self.config_table.update({'key':key,
+                                      'value':switch_config},
+                                     ['key'])
 
+    def _add_ryu_config_to_db(self, ryu_config):
+        # Pushes Ryu network configuration info into the DB.
+        # key: "ryu_config"
+        # value: ryu_config
+        key = 'ryu_config'
+        if self._get_ryu_config_in_db() == None:
+            self.logger.info("Adding new Ryu configuration %s" %
+                             ryu_config)
+            self.config_table.insert({'key':key,
+                                      'value':ryu_config})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating Ryu configuration %s" %
+                             ryu_config)
+            self.config_table.update({'key':key,
+                                      'value':ryu_config},
+                                     ['key'])
+
+    def _add_LC_config_to_db(self, lc_config):
+        # Pushes LC network configuration info into the DB.
+        # key: "lc_config"
+        # value: lc_config
+        key = 'lc_config'
+        if self._get_LC_config_in_db() == None:
+            self.logger.info("Adding new LC configuration %s" %
+                             lc_config)
+            self.config_table.insert({'key':key,
+                                      'value':lc_config})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating LC configuration %s" %
+                             lc_config)
+            self.config_table.update({'key':key,
+                                      'value':lc_config},
+                                     ['key'])
+
+    def _add_SDX_config_to_db(self, sdx_config):
+        # Pushes SDX network configuration info into the DB.
+        # key: "sdx_config"
+        # value: sdx_config
+        key = 'sdx_config'
+        if self._get_SDX_config_in_db() == None:
+            self.logger.info("Adding new SDX configuration %s" %
+                             sdx_config)
+            self.config_table.insert({'key':key,
+                                      'value':sdx_config})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating SDX configuration %s" %
+                             sdx_config)
+            self.config_table.update({'key':key,
+                                      'value':sdx_config},
+                                     ['key'])
+    
+
+    def _get_switch_config_in_db(self, switch_name):
+        # Returns a switch configuration dictionary if one exists or None if one
+        # does not.
+        key = switch_name + "_switchinfo"
+        return self.config_table.find_one(key=key)
+
+    def _get_ryu_config_in_db(self):
+        # Returns the ryu configuration dictionary if it exists or None if it
+        # does not.
+        key = 'ryu_config'
+        return self.config_table.find_one(key=key)
+
+    def _get_LC_config_in_db(self):
+        # Returns the LC configuration dictionary if it exists or None if it
+        # does not.
+        key = 'lc_config'
+        return self.config_table.find_one(key=key)
+    
+    def _get_SDX_config_in_db(self):
+        # Returns the SDX configuration dictionary if it exists or None if it
+        # does not.
+        key = 'sdx_config'
+        return self.config_table.find_one(key=key)
+
+
+    def _setup(self, options):
+        self.manifest = options.manifest
+        dbname = options.database
+
+        # Get DB connection and tables setup.
+        self._initialize_db(dbname)
+
+        # Get Manifest, if it exists
+        try:
+            self.logger.info("Opening manifest file %s" % self.manifest)
+            with open(self.manifest) as data_file:
+                data = json.load(data_file)
+            lcdata = data['localcontrollers'][self.name]
+        except Exception as e:
+            self.logger.warning("Exception when opening manifest file: %s" %
+                                str(e))
+            lcdata = None
+        
+        # Check if things are stored in the db. If they are, use them.
+        # If not, load from the manifest and store to DB.
+
+        # Switch Config
+        #FIXME: This isn't used here. It's used in RyuTranslateInterface.
+        #Not storing it for now, despite having the helper functions written.
+
+        # Ryu Config
+        config = self._get_ryu_config_in_db()
+        if config != None:
+            self.ryu_cxn_port = config['ryucxninternalport']
+            self.openflow_port = config['openflowport']
+        else:
+            self.ryu_cxn_port = lcdata['internalconfig']['ryucxninternalport']
+            self.openflow_port = lcdata['internalconfig']['openflowport']
+            self._add_ryu_config_in_db({'ryucxninternalport':self.ryu_cxn_port,
+                                        'openflowport':self.openflow_port})
+
+        # LC Config
+        config = self._get_LC_config_in_db()
+        if config != None:
+            self.lcip = config['lcip']
+        else:
+            self.lcip = lcdata['lcip']
+            self._add_ryu_config_in_db({'lcip':self.lcip})
+            
+        # SDX Config
+        config = self._get_SDX_config_in_db()
+        if config != None:
+            self.sdxip = config['sdxip']
+            self.sdxport = config['sdxport']
+        else:
+            # Well, not quite the manifest...
+            self.sdxip = options.host
+            self.sdxport = options.sdxport
+            self._add_ryu_config_in_db({'sdxip':self.sdxip,
+                                        'sdxport':self.sdxport})        
+
+            
     def start_sdx_controller_connection(self):
         # Kick off thread to start connection.
         if self.start_cxn_thread != None:
@@ -428,6 +589,9 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    parser.add_argument("-d", "--database", dest="database", type=str, 
+                        action="store", help="Specifies the database ", 
+                        default=":memory:")
     parser.add_argument("-m", "--manifest", dest="manifest", type=str,
                         action="store", help="specifies the manifest")
     parser.add_argument("-n", "--name", dest="name", type=str,
