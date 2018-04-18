@@ -71,7 +71,8 @@
       <input type="hidden" id="count" name="count" value="0" />
       <span id="myForm"> </span>
       
-      <button type="button" onclick="multipointFunction()">+</button>
+      <button type="button" onclick="multipointAddFcn()">+</button>
+      <button type="button" onclick="multipointDeleteFcn()">-</button>
 
       <p>Bandwidth: <input type="number" id="bandwidth" name="bandwidth" required="required"></p>
     </div>
@@ -116,9 +117,11 @@
       <input type="hidden" id="action_count" name="action_count" value="0" />
       <span id="myForm"> </span>
       
-      <button type="button" onclick="sdxmatchFunction()">+Match</button>
+      <button type="button" onclick="sdxmatchAddFcn()">+Match</button>
+      <button type="button" onclick="sdxmatchDeleteFcn()">-Match</button>
       <br>
-      <button type="button" onclick="sdxactionFunction()">+Action</button>
+      <button type="button" onclick="sdxactionAddFcn()">+Action</button>
+      <button type="button" onclick="sdxactionDeleteFcn()">-Action</button>
     </div>
     <br>
     <button type="submit">Submit</button>

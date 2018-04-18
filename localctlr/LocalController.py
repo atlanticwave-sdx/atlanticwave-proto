@@ -338,50 +338,91 @@ class LocalController(SingletonMixin):
             self.config_table.update({'key':key, 'value':value},
                                      ['key'])
     
+    def _add_manifest_filename_to_db(self, manifest_filename):
+        # Pushes LC network configuration info into the DB.
+        # key: "manifest_filename"
+        # value: manifest_filename
+        key = 'manifest_filename'
+        value = pickle.dumps(manifest_filename)
+        if self._get_manifest_filename_in_db() == None:
+            self.logger.info("Adding new manifest filename %s" %
+                             manifest_filename)
+            self.config_table.insert({'key':key, 'value':value})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating manifest filename %s" %
+                             manifest_filename)
+            self.config_table.update({'key':key, 'value':value},
+                                     ['key'])
 
     def _get_switch_config_in_db(self, switch_name):
         # Returns a switch configuration dictionary if one exists or None if one
         # does not.
         key = switch_name + "_switchinfo"
-        val = self.config_table.find_one(key=key)
-        if val == None:
-            return val
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
         return pickle.loads(str(val))
 
     def _get_ryu_config_in_db(self):
         # Returns the ryu configuration dictionary if it exists or None if it
         # does not.
         key = 'ryu_config'
-        val = self.config_table.find_one(key=key)
-        if val == None:
-            return val
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
         return pickle.loads(str(val))
 
     def _get_LC_config_in_db(self):
         # Returns the LC configuration dictionary if it exists or None if it
         # does not.
         key = 'lc_config'
-        val = self.config_table.find_one(key=key)
-        if val == None:
-            return val
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
         return pickle.loads(str(val))
     
     def _get_SDX_config_in_db(self):
         # Returns the SDX configuration dictionary if it exists or None if it
         # does not.
         key = 'sdx_config'
-        val = self.config_table.find_one(key=key)
-        if val == None:
-            return val
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
         return pickle.loads(str(val))
 
-    def _setup(self, options):
+    def _get_manifest_filename_in_db(self):
+        # Returns the manifest filename if it exists or None if it does not.
+        key = 'manifest_filename'
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+    def _setup(self, options): 
         self.manifest = options.manifest
         dbname = options.database
 
         # Get DB connection and tables setup.
         self._initialize_db(dbname)
 
+        # If manifest is None, try to get the name from the DB. This is needed
+        # for the LC's RyuTranslateInterface
+        if self.manifest == None:
+            self.manifest = self._get_manifest_filename_in_db()
+        elif (self.manifest != self._get_manifest_filename_in_db() and
+              None != self._get_manifest_filename_in_db()):
+            # Make sure it matches!
+            #FIXME: Should we force evertying to be imported if different.
+            raise Exception("Stored and passed in manifest filenames don't match up %s:%s" %
+                            (str(self.manifest),
+                             str(self._get_manifest_filename_in_db())))
+        
         # Get Manifest, if it exists
         try:
             self.logger.info("Opening manifest file %s" % self.manifest)
@@ -392,7 +433,8 @@ class LocalController(SingletonMixin):
             self.logger.warning("Exception when opening manifest file: %s" %
                                 str(e))
             lcdata = None
-        
+        self._add_manifest_filename_to_db(self.manifest)
+
         # Check if things are stored in the db. If they are, use them.
         # If not, load from the manifest and store to DB.
 
@@ -614,7 +656,8 @@ if __name__ == '__main__':
     options = parser.parse_args()
     print options
 
-    if not options.manifest or not options.name:
+    config_info_present = options.manifest or options.database
+    if not config_info_present or not options.name:
         parser.print_help()
         exit()
 

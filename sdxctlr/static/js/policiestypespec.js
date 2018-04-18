@@ -35,56 +35,65 @@ Functions that will be called upon, when user click on the Name text field.
 
 ----------------------------------------------------------------------------
 */
-function multipointFunction(){
+function multipointAddFcn(){
     var r = document.createElement('span');
     var y = document.createElement("input");
     y.setAttribute("type", "text");
     y.setAttribute("placeholder", "Name");
-    var g = document.createElement("IMG");
-    g.setAttribute("src", "delete.png");
     i += 1;
     y.setAttribute("Name", "multipointelement_" + i);
     r.innerHTML = "Endpoint,port,VLAN"
     r.appendChild(y);
-    g.setAttribute("onclick", "removeElement('myForm','endpoint_" + i + "')");
-    r.appendChild(g);
     r.setAttribute("id", "endpoint_" + i);
     document.getElementById("myForm").appendChild(r);
     document.getElementById("count").value = i
 }
+function multipointDeleteFcn(){
+    var p = document.getElementById("myForm");
+    var c = document.getElementById("endpoint_"+i);
+    p.removeChild(c);
+    i -= 1;
+    document.getElementById("count").value = i;
+}
 
-function sdxmatchFunction(){
+function sdxmatchAddFcn(){
     var r = document.createElement('span');
     var y = document.createElement("input");
     y.setAttribute("type", "text");
     y.setAttribute("placeholder", "Name");
-    var g = document.createElement("IMG");
-    g.setAttribute("src", "delete.png");
     m += 1;
     y.setAttribute("Name", "match_" + m);
     r.innerHTML = "MATCH,value"
     r.appendChild(y);
-    g.setAttribute("onclick", "removeElement('myForm','match_" + m + "')");
-    r.appendChild(g);
     r.setAttribute("id", "match_" + m);
     document.getElementById("myForm").appendChild(r);
     document.getElementById("match_count").value = m
 }
+function sdxmatchDeleteFcn(){
+    var p = document.getElementById("myForm");
+    var c = document.getElementById("match_"+m);
+    p.removeChild(c);
+    m -= 1;
+    document.getElementById("match_count").value = m;
+}
 
-function sdxactionFunction(){
+function sdxactionAddFcn(){
     var r = document.createElement('span');
     var y = document.createElement("input");
     y.setAttribute("type", "text");
     y.setAttribute("placeholder", "Name");
-    var g = document.createElement("IMG");
-    g.setAttribute("src", "delete.png");
-    m += 1;
+    a += 1;
     y.setAttribute("Name", "action_" + a);
     r.innerHTML = "ACTION,newvalue"
     r.appendChild(y);
-    g.setAttribute("onclick", "removeElement('myForm','action_" + a + "')");
-    r.appendChild(g);
     r.setAttribute("id", "action_" + a);
     document.getElementById("myForm").appendChild(r);
     document.getElementById("action_count").value = a
+}
+function sdxactionDeleteFcn(){
+    var p = document.getElementById("myForm");
+    var c = document.getElementById("action_"+a);
+    p.removeChild(c);
+    a -= 1;
+    document.getElementById("action_count").value = a;
 }
