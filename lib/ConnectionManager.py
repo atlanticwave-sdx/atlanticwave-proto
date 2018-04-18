@@ -6,9 +6,12 @@ from lib.Singleton import Singleton
 from lib.Connection import Connection
 
 import socket
+from socket import error as socket_error
+import errno
 import logging
 from threading import Thread
 from select import select
+from time import sleep
 
 class ConnectionManagerTypeError(TypeError):
     pass
@@ -23,9 +26,13 @@ class ConnectionManager(object):
         be subclassed, even though much will be in common. Singleton. '''
     __metaclass__ = Singleton
 
-    def __init__(self):
+    def __init__(self, connection_cls=Connection):
         self.listening_sock = None
         self.clients = []
+        if not issubclass(connection_cls, Connection):
+            raise TypeError("%s is not a Connection type." %
+                            str(connection_cls))
+        self.connection_cls = connection_cls
 
     def __repr__(self):
         clientstr = ""
@@ -61,6 +68,8 @@ class ConnectionManager(object):
         self.listening_address = ip
         self.listening_port = port
         self.listening_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.listening_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 
         try:
             self.listening_sock.bind((self.listening_address,
@@ -100,19 +109,29 @@ class ConnectionManager(object):
             passes this to the saved new connection handling function. 
             Private. '''
         client_ip, client_port = address
-        client_connection = Connection(client_ip, client_port, sock)
+        client_connection = self.connection_cls(client_ip, client_port, sock)
         self.clients.append(client_connection)
         self.listening_callback(client_connection)
         
     def open_outbound_connection(self, ip, port):
         ''' This opens an outbound connection to a given address. Returns a 
             Connection that can be used for sending or receiving. '''
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        timeout = 1.0
 
-        try:
-            sock.connect((ip, port))
-        except:
-            sock.close()
-            raise
-        return Connection(ip, port, sock)
+        while True:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            try:
+                sock.connect((ip, port))
+            except socket_error as serr:
+                if serr.errno != errno.ECONNREFUSED:
+                    # Not the error we are looking for, re-raise
+                    raise serr
+                print "Caught ECONNREFUSED, trying again after sleeping %s seconds." % timeout
+                sock.close()
+                sleep(timeout)
+                continue
+
+            print "Connection established! %s:%s %s" % (ip, port, sock)
+            return self.connection_cls(ip, port, sock)
 

@@ -319,6 +319,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
     def _new_switch_bootstrapping(self, ev):
         ''' This bootstraps new switches when they come online. '''
+        # Null out all tables
         # Install default rules on all tables
         # For ALL tables except the last table:
         #   - Create a MatchActionLCRule to send to next table. Priority 0
@@ -327,6 +328,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         switch_id = 0  # This is unimportant:
                        # it's never used in the translation
         datapath = ev.msg.datapath
+
+        self.remove_all_flows(datapath)
+        
         of_cookie = self._get_new_OF_cookie(-1) #FIXME: magic number
         results = []
         for table in ALL_TABLES_EXCEPT_LAST:
@@ -1073,8 +1077,19 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 match=match)
         datapath.send_msg(mod)
 
+    def remove_all_flows(self, datapath):
+        #BASED ON: https://github.com/FlowForwarding/LINC-Switch/blob/master/scripts/ryu/remove_flows_v1_3.py
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        command = ofproto.OFPFC_DELETE
+        out_group = ofproto.OFPG_ANY
+        out_port = ofproto.OFPP_ANY
+        table = ofproto.OFPTT_ALL
 
-
+        mod = parser.OFPFlowMod(datapath=datapath, table_id=table,
+                                command=command, out_group=out_group,
+                                out_port=out_port)
+        datapath.send_msg(mod)
         
 
     def install_rule(self, datapath, sdx_rule):
@@ -1214,6 +1229,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Get the Rules based on the it.
         (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie)
 
+        if (swcookie == None and 
+            sdxrule == None and 
+            swrules == None and
+            table == None):
+            self.logger.error("No rule to remove for sdx_cookie %s" % 
+                              sdx_cookie)
+            return
+
+
         try:
             # Remove flows
             for rule in swrules:
@@ -1223,7 +1247,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     # Currently, don't have to do anything here.
                     pass
         except Exception as e:
-            self.logger.error("Error in remove_rule")
+            self.logger.error("Error in remove_rule %s:%s" % (sdx_cookie, 
+                                                              of_cookie))
             self.logger.error("  swcookie: %s" % swcookie)
             self.logger.error("  sdxrule: %s" % sdxrule)
             self.logger.error("  swrules: %s" % swrules)

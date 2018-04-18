@@ -713,7 +713,7 @@ class RestAPI(SingletonMixin):
 
                     pns = "port"+str(portnum) # port number string
                     portinfo = topo.edge[node_id][neighbor]
-                    retdict[pns] = {'href': base_url + "/ports/" + str(portnum),
+                    retdict[pns] = {'href': base_url,
                                     'portnumber': portnum,
                                     'speed': portinfo['weight'],
                                     'destination': neighbor,

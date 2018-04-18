@@ -9,7 +9,7 @@ from ryu.cmd.manager import main
 from lib.Singleton import Singleton
 from lib.Connection import select as cxnselect
 from shared.LCRule import LCRule
-from shared.switch_messages import *
+from switch_messages import *
 
 import threading
 import logging
@@ -43,6 +43,7 @@ class RyuControllerInterface(ControllerInterface):
         self.ryu_cxn_port = ryu_cxn_port
         self.openflow_port = openflow_port
         self.lc_callback = lc_callback
+        self.ryu_process = None
 
         # Set up server connection for RyuTranslateInterface to connect to.
         self.inter_cm = InterRyuControllerConnectionManager()
@@ -65,7 +66,9 @@ class RyuControllerInterface(ControllerInterface):
         # this, thus one long string.
         self.logger.debug("About to start ryu-manager.")
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % (current_dir, self.openflow_port, self.lcname, self.conffile)], shell=True)
+        self.ryu_process = subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % (current_dir, self.openflow_port, self.lcname, self.conffile)], 
+                                            shell=True,
+                                            preexec_fn=os.setsid)
 
         self.logger.debug("Started ryu-manager.")
         # Don't complete until the connection is received by inter_cm ...
@@ -106,6 +109,9 @@ class RyuControllerInterface(ControllerInterface):
     def remove_rule(self, switch_id, sdxcookie):
         #self.logger.debug("Removing old cmd to RyuTranslateInterface: %s:%s" % (switch_id, sdxcookie))
         self.inter_cm_cxn.send_cmd(ICX_REMOVE, (switch_id, str(sdxcookie)))
+
+    def get_ryu_process(self):
+        return self.ryu_process
 
     def _setup_logger(self):
         ''' Internal function for setting up the logger formats. '''

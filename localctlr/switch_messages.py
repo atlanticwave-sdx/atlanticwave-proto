@@ -1,8 +1,9 @@
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
-# This defines messages from the LC to the SDX Controller. These messages are
-# generated at the LC, but at any layer in the LC.
+# This defines messages between different parts of the LC. Primarily, they're
+# used for passing information between the core of the LC and the Switch
+# Interface.
 
 
 # Receives a dictionary {'switch':name, 'port':number, 'src':address}

@@ -11,6 +11,7 @@ from Queue import Queue, Empty
 from lib.Singleton import SingletonMixin
 from lib.Connection import select as cxnselect
 from shared.SDXControllerConnectionManager import *
+from shared.SDXControllerConnectionManagerConnection import *
 from shared.UserPolicy import UserPolicyBreakdown
 from AuthenticationInspector import *
 from AuthorizationInspector import *
@@ -32,14 +33,6 @@ from shared.EdgePortPolicy import *
 from shared.LearnedDestinationPolicy import *
 from shared.FloodTreePolicy import *
 from shared.SDXPolicy import SDXEgressPolicy, SDXIngressPolicy
-
-# Switch Messages
-from shared.switch_messages import *
-
-
-# Connection Queue actions defininition
-NEW_CXN = "New Connection"
-DEL_CXN = "Remove Connection"
 
 
 
@@ -72,6 +65,7 @@ class SDXController(SingletonMixin):
         # Start DB connection. Used by other modules. details on the setup:
         # https://dataset.readthedocs.io/en/latest/api.html
         # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
+        self.logger.critical("Connection to DB: %s" % db)
         self.db = dataset.connect('sqlite:///' + db, 
                                   engine_kwargs={'connect_args':
                                                  {'check_same_thread':False}})
@@ -102,7 +96,6 @@ class SDXController(SingletonMixin):
         # Set up the connection-related nonsense - Have a connection event queue
         self.ip = options.host
         self.port = options.lcport
-        self.cxn_q = Queue()
         self.connections = {}
         self.sdx_cm = SDXControllerConnectionManager()
         self.cm_thread = threading.Thread(target=self._cm_thread)
@@ -160,50 +153,97 @@ class SDXController(SingletonMixin):
         self.logger.critical("Listening on %s:%d" % (self.ip, self.port))
         print("Listening on %s:%d" % (self.ip, self.port))
         pass
+
+    def _get_existing_rules_by_name(self, name):
+        # Goes to the RuleManager to get existing rules for a particular LC
+        return self.rm.get_breakdown_rules_by_LC(name)
+
+    def _clean_up_oustanding_cxn(self, name):
+        # Check to see if there's an existing connection. If there is, close it.
+        if name in self.connections.keys():
+            old_cxn = self.connections[name]
+            self.logger.warning("Closing old connection for %s : %s" %
+                                (name, old_cxn))
+            self._handle_connection_loss(old_cxn)
+
+        
         
     def _handle_new_connection(self, cxn):
         # Receive name from LocalController, verify that it's in the topology
         self.logger.critical("Handling new connection %s" % cxn)
-        print("Handling new connection %s" % cxn)
-        cmd,name = cxn.recv_cmd()
 
-        if cmd != SDX_IDENTIFY:
-            #FIXME: raise some sort of error here.
-            self.logger.error("LocalController not identifying correctly: %s, %s" % (cmd, name))
+        # Get connection to main phase
+        try:
+            cxn.transition_to_main_phase_SDX(self._clean_up_oustanding_cxn,
+                                             self._get_existing_rules_by_name)
+        except (SDXControllerConnectionTypeError,
+                SDXControllerConnectionValueError) as e:
+            # These error can happen, and their not the end of the world. In 
+            # this case, we need to close the connection.
+            self.logger.error("Connection transition to main phase failed. %s: %s" %
+                              (cxn, e))
+            cxn.close()
             return
+
+        except Exception as e:
+            # We need to close the connection, and raise the exception as this 
+            # is unhandled.
+            self.logger.error("Connection transition to main phase failed. %s: %s" %
+                              (cxn, e))
+            cxn.close()
+            raise
+
         
-        lcs = self.tm.get_lcs()
-
-        self.logger.info("LocalController attempting to log in with name %s." % 
+        # Associate connection with name
+        name = cxn.get_name()
+        self.logger.info("LocalController attempting to log in with name %s." %
                          name)
-
-        if name not in lcs:
-            self.logger.error("LocalController with name %s attempting to get in. Only known nodes: %s" % (name, lcs))
-            return
-        # FIXME: Credentials exchange
-
-        # Add connection to connections list
         self.connections[name] = cxn
         self.sdx_cm.associate_cxn_with_name(name, cxn)
-        self.cxn_q.put((NEW_CXN, cxn))
-        #FIXME: Send this to the LocalControllerManager
 
+        # Update to Rule Manager
         #FIXME: This is to update the Rule Manager. It seems that whenever a callback is set, it gets a static image of that function/object. That seems incorrect. This should be a workaround.
         if self.run_topo:
             self.rm.set_send_add_rule(self.sdx_cm.send_breakdown_rule_add)
             self.rm.set_send_rm_rule(self.sdx_cm.send_breakdown_rule_rm)
 
+        
+        # Create EdgePortPolicy
         # Install an EdgePortPolicy per switch connected to this LC. This
         # installs basic rules for edge ports that are automatically determined
         # during breakdown of the rule
         topo = self.tm.get_topology()
+        self.logger.warning("New connection - name %s details %s" % (name, cxn))
         for switch in topo.node[name]['switches']:
-            json_rule = {"edgeport":{"switch":switch}}
+            json_rule = {"EdgePort":{"switch":switch}}
             epp = EdgePortPolicy(AUTOGENERATED_USERNAME, json_rule)
             self.rm.add_rule(epp)
-        
+
     def _handle_connection_loss(self, cxn):
         #FIXME: Send this to the LocalControllerManager
+        # Remove connection association
+        # Update the Rule Manager
+        # Remove rules that are installed at startup
+        # - Edgeport rules
+
+        # Get LC name
+        name = cxn.get_name()
+
+        # Delete connections associations
+        self.sdx_cm.dissociate_name_with_cxn(name)
+        # Get all EdgePort policies
+        all_edgeport_policies = self.rm.get_rules({'ruletype':'EdgePort'})
+        
+        # for each switch owned by a particular LC, delete that particular rule
+        topo = self.tm.get_topology()
+        for switch in topo.node[name]['switches']:
+            json_rule = {"EdgePort":{"switch":switch}}
+            for p in all_edgeport_policies:
+                (rule_hash, json_ver, ruletype, user, state) = p
+                if json_rule == json_ver:
+                    self.rm.remove_rule(rule_hash, user)
+
+
         pass
 
     def start_main_loop(self):
@@ -219,13 +259,16 @@ class SDXController(SingletonMixin):
         xlist = rlist
         timeout = 2.0
 
-        # Main loop - Have a ~500ms timer on the select call to handle cxn events
+        # Main loop - Have a ~500ms timer on the select call to handle cxn 
+        # events
         while True:
             # Handle event queue messages
             try:
-                while not self.cxn_q.empty():
-                    (action, cxn) = self.cxn_q.get(False)
+                q_ele = self.sdx_cm.get_cxn_queue_element()
+                while q_ele != None:
+                    (action, cxn) = q_ele
                     if action == NEW_CXN:
+                        self.logger.warning("Adding connection %s" % cxn)
                         if cxn in rlist:
                             # Already there. Weird, but OK
                             pass
@@ -234,18 +277,20 @@ class SDXController(SingletonMixin):
                         xlist = rlist
                         
                     elif action == DEL_CXN:
+                        self.logger.warning("Removing connection %s" % cxn)
                         if cxn in rlist:
+                            self._handle_connection_loss(cxn)
                             rlist.remove(cxn)
                             wlist = []
                             xlist = rlist
-                            
-            except Queue.Empty as e:
+                    # Next queue element
+                    q_ele = self.sdx_cm.get_cxn_queue_element()
+            except:
+                raise
                 # This is raised if the cxn_q is empty of events.
                 # Normal behaviour
                 pass
                 
-
-            
             # Dispatch messages as appropriate
             try: 
                 readable, writable, exceptional = cxnselect(rlist,
@@ -253,22 +298,43 @@ class SDXController(SingletonMixin):
                                                             xlist,
                                                             timeout)
             except Exception as e:
-                raise
-
+                self.logger.warning("select returned error: %s" % e)
+                # This can happen if, say, there's a disconnection that hasn't
+                # cleaned up or occured *during* the timeout period. This is due
+                # to select failing.
+                sleep(timeout/2)
+                continue
 
             # Loop through readable
             for entry in readable:
-                cmd, data = entry.recv_cmd()
-                self.logger.debug("Received from %s : %s:%s" % 
-                                  (entry, cmd, data))
+                # Get Message
+                try:
+                    msg = entry.recv_protocol()
+                except SDXMessageConnectionFailure as e:
+                    # Connection needs to be disconnected.
+                    entry.close()
+                    continue
+                except:
+                    raise
 
-                # Send command to handling function
-                if cmd == SM_UNKNOWN_SOURCE:
-                    self._switch_message_unknown_source(data)
-                # This should be expanded for furture commands. Currently only
-                # handles SM_L2MULTIPOINT_UNKNOWN_SOURCE.
-                elif cmd == SM_L2MULTIPOINT_UNKNOWN_SOURCE:
-                    self._switch_change_callback_handler(data)
+                # Can return None if there was some internal message.
+                if msg == None:
+                    self.logger.debug("Received None from recv_protocol %s" %
+                                      (entry))
+                    continue
+                self.logger.debug("Received a %s message from %s" %
+                                  (type(msg), entry))
+
+                # If message is UnknownSource or L2MultipointUnknownSource,
+                # Send the appropriate handler.
+                if isinstance(msg, SDXMessageUnknownSource):
+                    self._switch_message_unknown_source(msg)
+                elif isinstance(msg, SDXMessageL2MultipointUnknownSource):
+                    self._switch_change_callback_handler(msg)
+
+                # Else: Log an error
+                else:
+                    self.logger.error("Message %s is not valid" % msg)
 
             # Loop through writable
             for entry in writable:
@@ -280,25 +346,28 @@ class SDXController(SingletonMixin):
                 # FIXME: Handle connection failures
                 pass
 
-    def _switch_message_unknown_source(self, data):
-        ''' This handles an SM_UNKNOWN_SOURCE message. 'data' is a dictionary of
-            the following pattern - see shared/switch_messages.py:
+    def _switch_message_unknown_source(self, msg):
+        ''' This handles SDXMessageUnknownSource messages.
+            'data' is a dictionary of the following pattern - see 
+            shared/SDXControllerConnectionManagerConnection.py:
               {'switch':name, 'port':number, 'src':address}
         '''
+        data = msg.get_data()
         json_rule = {"learneddest":{"dstswitch":data['switch'],
                                     "dstport":data['port'],
                                     "dstaddress":data['src']}}
         ldp = LearnedDestinationPolicy(AUTOGENERATED_USERNAME, json_rule)
         self.rm.add_rule(ldp)
 
-    def _switch_change_callback_handler(self, data):
+    def _switch_change_callback_handler(self, msg):
         ''' This handles any message for switch_change_callbacks. 'data' is a 
-            dictionary of the following pattern - see shared/switch_messages.py:
+            dictionary of the following pattern:
               {'cookie':cookie, 'data':opaque data for handler}
             The cookie is for looking up the policy that needs to handle this
             callback. data is opaque data that is passed to the 
             UserPolicy.switch_change_callback() function.
         '''
+        data = msg.get_data()
         cookie = data['cookie']
         opaque = data['data']
 
@@ -306,7 +375,11 @@ class SDXController(SingletonMixin):
         
     def _prep_switches(self):
         ''' This sends any rules that are necessary to the switches, such as 
-            installing broadcast flooding rules. '''
+            installing broadcast flooding rules. 
+            FIXME: Will need to be updated to accomodate dynamic topologies.
+            Also need to deal with deleting this when  there's a topology 
+            change.
+        '''
         json_rule = {FloodTreePolicy.get_policy_name():None}
         ftp = FloodTreePolicy(AUTOGENERATED_USERNAME, json_rule)
         self.rm.add_rule(ftp)

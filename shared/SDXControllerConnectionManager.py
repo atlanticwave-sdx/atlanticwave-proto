@@ -1,4 +1,4 @@
-# Copyright 2016 - Sean Donovan
+# Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Commands
@@ -19,9 +19,15 @@ PORT = 5555
 
 from lib.ConnectionManager import *
 from lib.Connection import Connection
+from shared.SDXControllerConnectionManagerConnection import *
 from shared.UserPolicy import UserPolicyBreakdown
 
-from Queue import Queue
+from Queue import Queue, Empty
+
+# Connection Queue actions defininition
+NEW_CXN = "New Connection"
+DEL_CXN = "Remove Connection"
+
 
 class SDXControllerConnectionManagerNotConnectedError(ConnectionManagerValueError):
     pass
@@ -29,22 +35,18 @@ class SDXControllerConnectionManagerNotConnectedError(ConnectionManagerValueErro
 class SDXControllerConnectionManager(ConnectionManager):
     ''' Used to manage the connection with the SDX Controller. '''
 
-    def __init__(self, *args, **kwargs):
-        super(SDXControllerConnectionManager, self).__init__(*args, **kwargs)
+    def __init__(self):
+        super(SDXControllerConnectionManager, self).__init__(
+            SDXControllerConnection)
         # associations are for easy lookup of connections based on the name of
         # the Local Controller.
         
         # associations contains name:Connection pairs
         self.associations = {}
 
-        # When a message arrives for a non-connected Local Controller, rather
-        # than failing the installation of the rule, queue it until the LC has
-        # connected. Once connected, install rules and empty out the queue.
+        # Connection action queue
+        self.cxn_q = Queue()
         
-        # non_connected_queues contains name:(rule, type) queues for 
-        # added/removed rules that are sent before a connection is established.
-        # Entries deleted once emptied.
-        self.non_connected_queues = {}
 
     def send_breakdown_rule_add(self, bd):
         ''' This takes in a UserPolicyBreakdown and send it to the Local
@@ -56,11 +58,12 @@ class SDXControllerConnectionManager(ConnectionManager):
             # Send rules
             for rule in bd.get_list_of_rules():
                 switch_id = rule.get_switch_id()
-                lc_cxn.send_cmd(SDX_NEW_RULE, (switch_id, rule))
+                msg = SDXMessageInstallRule(rule, switch_id)
+                lc_cxn.send_protocol(msg)
 
         except SDXControllerConnectionManagerNotConnectedError as e:
-            # Connection doesn't yet exist.
-            self._queue_rule_for_connection(bd.get_lc(), bd, SDX_NEW_RULE)
+            # Connection doesn't yet exist. Nothing to do.
+            pass
         
         except Exception as e: raise
 
@@ -76,11 +79,17 @@ class SDXControllerConnectionManager(ConnectionManager):
             for rule in bd.get_list_of_rules():
                 switch_id = rule.get_switch_id()
                 rule_cookie = rule.get_cookie()
-                lc_cxn.send_cmd(SDX_RM_RULE, (switch_id, rule_cookie))
+                msg = SDXMessageRemoveRule(rule_cookie, switch_id)
+                lc_cxn.send_protocol(msg)
 
         except SDXControllerConnectionManagerNotConnectedError as e:
-            # Connection doesn't yet exist.
-            self._queue_rule_for_connection(bd.get_lc(), bd, SDX_RM_RULE)
+            # Connection doesn't yet exist. Nothing to do.
+            pass
+        except SDXMessageConnectionFailure:
+            # Connection has failed. No big deal: since we were removing
+            # a rule, this isn't a real issue.
+            pass
+            
         except Exception as e: raise
 
     def _find_lc_cxn(self, bd):
@@ -101,26 +110,58 @@ class SDXControllerConnectionManager(ConnectionManager):
             More hacky than I'd like it to be. '''
         self.associations[name] = cxn
         #FIXME: Should this check to make sure that the cxn is in self.clients?
-        # Clean up queues for the new connection.
-        if name in self.non_connected_queues.keys():
-            q = self.non_connected_queues[name]
-            del self.non_connected_queues[name]
-            while not q.empty():
-                (bd, add_or_remove) = q.get()
-                if add_or_remove == SDX_NEW_RULE:
-                    self.send_breakdown_rule_add(bd)
-                elif add_or_remove == SDX_RM_RULE:
-                    self.send_breakdown_rule_rm(bd)
-        
+    
+    def dissociate_name_with_cxn(self, name):
+        ''' This is used to dissociate a connection upon connection disconnect.
+            This will prevent silly things like trying to send data out dead 
+            connections. '''
+        if name in self.associations.keys():
+            del self.associations[name]
 
-    def _queue_rule_for_connection(self, name, bd, add_or_remove):
-        ''' This queues a rule for a connection that doesn't yet exist. Queue 
-            may not exist, so may need to create it. 
-            add_or_remove is either SDX_NEW_RULE or SDX_RM_RULE, as appropriate.
+    def get_cxn_queue_element(self):
+        ''' This returns a tuple (action,connection) or None if there aren't any
+            cxn actions. The Action is of the list, defined up above:
+               NEW_CXN
+               DEL_CXN
+            The connection is a SDXControllerConnectionManagerConnection that
+            the action applies to.
         '''
-        if name not in self.non_connected_queues.keys():
-            #FIXME: this probably should have a max length, otherwise we could
-            #get a resource exhaustion situation.
-            self.non_connected_queues[name] = Queue()
-        self.non_connected_queues[name].put((bd, add_or_remove))
+        try:
+            if self.cxn_q.empty():
+                return None
+            return self.cxn_q.get(False)
+        except Empty as e:
+            # This is raised if the cxn_q is empty of events.
+            # Normal behaviour
+            return None
+        except:
+            raise
+
+    def add_new_cxn_to_queue(self, cxn):
+        ''' Used by Connections to add themselves to the queue. '''
+        self.cxn_q.put((NEW_CXN, cxn))
+    
+    def add_del_cxn_to_queue(self, cxn):
+        ''' Used by Connections when they are closing. '''
+        self.cxn_q.put((DEL_CXN, cxn))
+    
+    def _internal_new_connection(self, sock, address):
+        ''' This is a rewrite of ConnectionManager._internal_new_connection()
+            that adds some callbacks to SDXControllerConnectionManagerConnection
+            to kick things to the connection queue. '''
+        client_ip, client_port = address
+        client_connection = self.connection_cls(client_ip, client_port, sock)
+        client_connection.set_delete_callback(self.add_del_cxn_to_queue)
+        client_connection.set_new_callback(self.add_new_cxn_to_queue)
+        self.listening_callback(client_connection)
+
+    def open_outbound_connection(self, ip, port):
+        ''' This is a wrapper for ConnectionManager.open_outbound_connection
+            that adds some callbacks to SDXControllerConnectionManagerConnection
+            to kick things to the connection queue. '''
+        cxn = super(SDXControllerConnectionManager,
+                    self).open_outbound_connection(ip, port)
+        cxn.set_delete_callback(self.add_del_cxn_to_queue)
+        cxn.set_new_callback(self.add_new_cxn_to_queue)
+        return cxn
 

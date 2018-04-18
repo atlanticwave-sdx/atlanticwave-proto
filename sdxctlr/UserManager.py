@@ -27,8 +27,26 @@ class UserManager(SingletonMixin):
                                      'organization', 'contact',
                                      'permitted_actions', 'restrictions']
 
-        # Parse manifest file that's passed in
-        self._parse_manifest(manifest)
+        # Check to see if there's anything in the DB, if so, we're done.
+        if self._parse_db() != None:
+            return
+        # If DB is empty, parse manifest file that's passed in
+        else:
+            self.logger.info("Loading users from the Manifest")
+            self._parse_manifest(manifest)
+
+    def _parse_db(self):
+        # This needs to check to see if the list of users is empty.
+        count = 0
+        for user in self.user_table.find():
+            self._send_to_AA(user)
+            count += 1
+
+        self.logger.info("There are %d users in the user table" % count)
+
+        if count == 0:
+            return None
+        return count                         
 
     def _parse_manifest(self, manifest_filename):
         with open(manifest_filename) as data_file:
