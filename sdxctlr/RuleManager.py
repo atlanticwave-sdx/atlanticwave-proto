@@ -447,6 +447,8 @@ class RuleManager(SingletonMixin):
     def _install_rule(self, rule):
         ''' Helper function that installs a rule into the switch. '''
         try:
+            self.logger.debug("_install_rule")
+            print ">>>>> _install_rule"
             self._install_breakdown(rule.get_breakdown())
         except Exception as e: raise
         self._restart_remove_timer()
@@ -454,6 +456,9 @@ class RuleManager(SingletonMixin):
     def _install_breakdown(self, breakdown):
         try:
             for bd in breakdown:
+                self.logger.debug("Sending breakdown: %s" % bd)
+                for rule in bd.get_list_of_rules():
+                    self.logger.debug("    %s" % str(rule))
                 self.send_user_add_rule(bd)
         except Exception as e: raise
 
@@ -614,6 +619,7 @@ class RuleManager(SingletonMixin):
         if breakdown == None:
             return
 
+        self.logger.debug("_change_callback_dispath")
         self._install_breakdown(breakdown)
 
         extendedbd = pickle.loads(str(table_entry['extendedbd']))
