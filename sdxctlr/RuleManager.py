@@ -2,6 +2,7 @@
 # AtlanticWave/SDX Project
 
 
+import logging
 import dataset
 import cPickle as pickle
 
@@ -88,6 +89,9 @@ class RuleManager(SingletonMixin):
         self.remove_timer = None
         self.remove_next_time = None
         self.remove_lock = Lock()
+
+        # Set Up Logger
+        self._setup_logger()
         
 
         # Start database/dictionary
@@ -141,6 +145,21 @@ class RuleManager(SingletonMixin):
         self.set_send_add_rule(send_user_rule_breakdown_add)
         self.set_send_rm_rule(send_user_rule_breakdown_remove)
 
+    def _setup_logger(self):
+        ''' Internal function for setting up the logger formats. '''
+        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.WARNING)
+        console.setFormatter(formatter)
+        logfile = logging.FileHandler('sdxcontroller.log')
+        logfile.setLevel(logging.DEBUG)
+        logfile.setFormatter(formatter)
+        self.logger = logging.getLogger('sdxcontroller.RuleManager')
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.addHandler(console)
+        self.logger.addHandler(logfile)
+        
     def set_send_add_rule(self, fcn):
         self.send_user_add_rule = fcn
 
