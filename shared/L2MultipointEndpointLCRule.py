@@ -1,4 +1,3 @@
-12345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -6,7 +5,7 @@
 from LCRule import *
 
 VLAN_MIN = 0
-VLAN_MAX = 4095
+VLAN_MAX = 4080
 
 class L2MultipointEndpointLCRule(LCRule):
     ''' This structure is used to pass L2Multpoint rules for endpoint switches.

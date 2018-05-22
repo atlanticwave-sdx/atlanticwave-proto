@@ -36,7 +36,7 @@ from shared.L2MultipointEndpointLCRule import *
 from shared.L2MultipointFloodLCRule import *
 from shared.L2MultipointLearnedDestinationLCRule import *
 from shared.FloodTreeLCRule import *
-
+from shared.ManagementVLANLCRule import *
 
 LOCALHOST = "127.0.0.1"
 
@@ -880,7 +880,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                      priority)
         return results
 
-    
+
     def _translate_FloodTreeLCRule(self, datapath, switch_table,
                                    of_cookie, ftrule):
         ''' This translate FloodTreeLCRules. FloodTreeLCRules are for ports on a
@@ -910,8 +910,35 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          marule,
                                                          priority)
         return results
-            
-                                   
+
+    
+    def _translate_ManagementVLANLCRule(self, datapath, switch_table, of_cookie,
+                                        mvrule):
+        ''' This translates ManagementVLANLCRUles. This will generate one rule. 
+            For non-endpoints, this will forward along the intermediate VLAN
+            that's being used for the L2MultipointPolicy.
+            For endpoints, this will translate VLAN to the destination VLAN, 
+            then forward.
+        '''
+        results = []
+        switch_id = 0 # This is unimportant: it's never used in the translation
+        mgmt_vlan = mvrule.get_mgmt_vlan()
+        priority = PRIORITY_MGMT_VLAN
+        
+        for vlan_port in mvrule.get_mgmt_vlan_ports():
+            matches = [VLAN_VID(mgmt_vlan), IN_PORT(vlan_port)]
+            actions = []
+            for out_port in mvrule.get_mgmt_vlan_ports():
+                if out_port != vlan_port:
+                    actions.append(Forward(out_port))
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         switch_table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+        return results
+                                       
         
     def _translate_LCMatch(self, datapath, matches, table):
         args = {}
@@ -1197,7 +1224,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                            switch_table,
                                                            of_cookie,
                                                            sdx_rule)
-
+            
+        elif isinstance(sdx_rule, ManagementVLANLCRule):
+            switch_table = L2TUNNELTABLE
+            switch_rules = self._translate_ManagementVLANLCRule(datapath,
+                                                                switch_table,
+                                                                of_cookie,
+                                                                sdx_rule)
         
             
 

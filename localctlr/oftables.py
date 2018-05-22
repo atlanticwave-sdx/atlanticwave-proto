@@ -32,6 +32,7 @@ PRIORITY_DEFAULT                       = 0
 PRIORITY_DEFAULT_L2TABLE               = 0
 PRIORITY_L2TUNNEL                      = 1
 PRIORITY_L2MULTIPOINT                  = 1
+PRIORITY_MGMT_VLAN                     = 100
 
 #SDXEGRESSRULETABLE - Table 1
 PRIORITY_DEFAULT_SDXEGRESS             = 0
