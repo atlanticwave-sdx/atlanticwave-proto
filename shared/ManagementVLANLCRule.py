@@ -3,6 +3,29 @@
 
 from LCRule import *
 
+# Some noteson the current implementation:
+# - This version is a first pass at implementing the Management VLAN. There are
+#   a number of features that are skipped or implemented differently.
+#   - This version, like other parts of the controller, is not resillient in
+#     the face of failures. That is, a link failure may take down the
+#     management VLAN if that link was integral to the Management VLAN spanning
+#     tree.
+#   - Spanning Tree is necessary to avoid cycles. Cycles are *bad*. 
+#   - The Spanning Tree that is used is manually configured in the manifest.
+#   - All messages are flooded
+# - Future changes that are necessary:
+#   - Implement localized Spanning Tree Protocol for Management VLAN
+#     - This need not be 802.1 STP, but we need to be able to distributedly
+#       build a spanning tree.
+#   - When Spanning Tree is rebuilt due to failure, Updates to the rules are
+#     needed
+#   - Flooding should be updated to be learned. This probably will need to be
+#     internal to the LC.
+#   - This would require certain updates to the RyuTranslateInterface to handle
+#     all this new functionality.
+#     - Learning
+#     - Connect/disconnect
+
 MANAGEMENT_VLAN_MIN = 4080
 MANAGEMENT_VLAN_MAX = 4089
 class ManagementVLANLCRule(LCRule):

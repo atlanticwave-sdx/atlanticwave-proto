@@ -356,12 +356,26 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                      of_cookie,
                                                      marule,
                                                      priority)
+        
+        # In-band Communication
+        # If the management VLAN needs to be setup, set it up.
+        internal_config = self._get_switch_internal_config(datapath)
+        if 'managementvlan' in internal_config.keys():
+            managementvlan = internal_config['managementvlan']
+            managementvlanports = internal_config['managementvlanports']
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          managementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
         # Install default rules
         for rule in results:
             self.add_flow(datapath, rule)
-                            
-        
-        #FIXME: in-band communication
+            
     
     def _translate_MatchActionLCRule(self, datapath, table,
                                      of_cookie, marule, priority=100):
