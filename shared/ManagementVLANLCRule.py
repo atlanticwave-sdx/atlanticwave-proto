@@ -41,7 +41,7 @@ class ManagementVLANLCRule(LCRule):
                 mgmt_vlan_ports - List of ports connected on the Management 
                   VLAN. 
         '''
-        super(IBMBootstrappingLCRule, self).__init__(switch_id)
+        super(ManagementVLANLCRule, self).__init__(switch_id)
 
         # Validate inputs
         if type(mgmt_vlan) != int:
