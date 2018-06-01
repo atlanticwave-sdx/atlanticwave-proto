@@ -151,31 +151,17 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Configuration file + parsing
         self.name = CONF['atlanticwave']['lcname']
         self.conf_file = CONF['atlanticwave']['conffile']
-        self._import_configuration()
+        self.db_name = CONF['atlanticwave']['dbfile']
 
-
-        # Start up Database connection
-        # DB is in-memory, as this probalby doesn't need to be tracked through
-        # reboots. details on the setup:
-        # https://dataset.readthedocs.io/en/latest/api.html
-        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
-        # https://www.sqlite.org/inmemorydb.html
-        # FIXME: May need to reconsider this in the future, especially for
-        # optimization (reducing translations is a good step in optimizing).
-        dblocation = "sqlite:///:memory:"
-        self.db = dataset.connect(dblocation,
-                                  engine_kwargs={'connect_args':
-                                                 {'check_same_thread':False}})
-        # Database Tables
-        self.rule_table = self.db['rules']
-
-        #FIXME: Do I want to mirror the RuleManager's config_table?
+        # Import configuration information - this includes pulling information
+        # from the stored DB (if there is anything), and from the options passed
+        # in during startup (including the manifest file)
+        self._setup()
         
-
         # Establish connection to RyuControllerInterface
         self.inter_cm = InterRyuControllerConnectionManager()
         self.inter_cm_cxn = self.inter_cm.open_outbound_connection(self.lcip,
-                                                                   self.ryu_cxn_port)
+                                                            self.ryu_cxn_port)
 
         self.datapaths = {}
         self.current_of_cookie = 0
@@ -212,42 +198,205 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.logger.addHandler(console)
         self.logger.addHandler(logfile)
 
-    def _import_configuration(self):
-        ''' Imports configuration parameters from the passed in configuration
-            file. '''
-        with open(self.conf_file) as data_file:
-            data = json.load(data_file)
+    def _initialize_db(self, db_filename):
+        # Details on the setup:
+        # https://dataset.readthedocs.io/en/latest/api.html
+        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
+        self.logger.critical("Connection to DB: %s" % db_filename)
+        self.db = dataset.connect('sqlite:///' + db_filename, 
+                                  engine_kwargs={'connect_args':
+                                                 {'check_same_thread':False}})
+        #Try loading the tables, if they don't exist, create them.
+        # <lcname>-config - Columns are 'key' and 'value'
+        config_table_name = self.name + "-config"
+        rule_table_name = self.name + "-rule"
+        try:
+            self.logger.info("Trying to load %s from DB" % config_table_name)
+            self.config_table = self.db.load_table(config_table_name)
+            self.logger.info("Trying to load %s from DB" % rule_table_name)
+            self.rule_table = self.db.load_table(rule_table_name)
+        except:
+            # If load_table() fails, that's fine! It means that the table
+            # doesn't yet exist. So, create it.
+            self.logger.info("Failed to load %s from DB, creating new table" %
+                             config_table_name)
+            self.config_table = self.db[config_table_name]
+            self.rule_table = self.db[rule_table_name]
+            
+    def _add_switch_internal_config_to_db(self, dpid, internal_config):
+        # Pushes a switch internal_config into the db.
+        # key: "<dpid>"
+        # value: <internal_config>
+        key = dpid
+        value = pickle.dumps(internal_config)
+        if self._get_switch_internal_config() == None:
+            self.logger.info("Adding new internal_config for DPID %s" % dpid)
+            self.config_table.insert({'key':key, 'value':value})
+        else:
+            # Already exists, must update
+            self.logger.info("updating internal_config for DPID %s" % dpid)
+            self.config_table.update({'key':key, 'value':value},
+                                     ['key'])
 
-        # Look at information under the self.name entry, then look at only
-        # data relevant to us.
-        lcdata = data['localcontrollers'][self.name]
-        self.lcip = lcdata['lcip']
-        
-        ofdata = lcdata['internalconfig']
-        self.ryu_cxn_port = ofdata['ryucxninternalport']
+    def _add_config_filename_to_db(self, manifest_filename):
+        # Pushes LC network configuration info into the DB.
+        # key: "manifest_filename"
+        # value: manifest_filename
+        key = 'manifest_filename'
+        value = pickle.dumps(manifest_filename)
+        if self._get_manifest_filename_in_db() == None:
+            self.logger.info("Adding new manifest filename %s" %
+                             manifest_filename)
+            self.config_table.insert({'key':key, 'value':value})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating manifest filename %s" %
+                             manifest_filename)
+            self.config_table.update({'key':key, 'value':value},
+                                     ['key'])
+            
+    def _add_lcip_to_db(self, lcip):
+        # Pushes LC IP info into the DB.
+        # key: "lcip"
+        # value: lcip
+        key = 'lcip'
+        value = pickle.dumps(lcip)
+        if self._get_lcip_in_db() == None:
+            self.logger.info("Adding new lcip %s" %
+                             lcip)
+            self.config_table.insert({'key':key, 'value':value})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating lcip %s" %
+                             lcip)
+            self.config_table.update({'key':key, 'value':value},
+                                     ['key'])
 
-        # Get the DPID to name of the various switches this LC controls
-        self.dpid_data = {}
-        for entry in lcdata['switchinfo']:
-            dpid = str(entry['dpid'])
-            self.dpid_data[dpid] = {}
-            self.dpid_data[dpid]['name'] = entry['name']
-            print entry['internalconfig']
-            self.dpid_data[dpid]['internalconfig'] = entry['internalconfig']
-
+    def _add_ryu_cxn_port_to_db(self, ryucxnport):
+        # Pushes Ryu Cxn Port info into the DB.
+        # key: "ryucxnport"
+        # value: ryucxnport
+        key = 'ryucxnport'
+        value = pickle.dumps(ryucxnport)
+        if self._get_lcip_in_db() == None:
+            self.logger.info("Adding new ryucxnport %s" %
+                             ryucxnport)
+            self.config_table.insert({'key':key, 'value':value})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating ryucxnport %s" %
+                             ryucxnport)
+            self.config_table.update({'key':key, 'value':value},
+                                     ['key'])
+            
     def _get_switch_internal_config(self, datapath):
         ''' Gets switch internal config information based on datapath passed in
+            Pulls information from the DB.
         '''
-        dpid = str(datapath.id)
+        key = str(datapath.id)
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
 
-        import pprint
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(self.dpid_data)
+    def _get_switch_internal_config_count(self):
+        # Returns a count of internal configs.
+        d = self.config_table.find()
+        count = 0
+        for entry in d:
+            if (entry['key'] == 'lcip' or
+                entry['key'] == 'manifest_filename' or
+                entry['key'] == 'ryucxnport'):
+                continue
+            count++
+        return count
 
-        if dpid in self.dpid_data.keys():
-            return self.dpid_data[dpid]['internalconfig']
-        raise ValueError("%s is not in the dpid_data: %s" % (dpid,
-                                                    self.dpid_data.keys()))
+    def _get_config_filename_in_db(self):
+        # Returns the manifest filename if it exists or None if it does not.
+        key = 'manifest_filename'
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+
+    def _get_lcip_in_db(self):
+        # Returns the lcip if it exists or None if it does not.
+        key = 'lcip'
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+    def _get_ryu_cxn_port_in_db(self):
+        # Returns the Ryu Cxn Port if it exists or None if it does not.
+        key = 'ryucxnport'
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+
+    def _setup(self):
+        dbname = self.db_name
+
+        # Get DB connection and tables set up.
+        self._initialize_db(dbname)
+
+        # If the conf_name is None, try to get the name from the DB.
+        if self.conf_file == None:
+            self.conf_file = self._get_config_filename_in_db()
+        elif (self.conf_file != self._get_config_filename_in_db() and
+              None != self._get_config_filename_in_db()):
+            # Make sure it matches!
+            #FIXME: Should we force everything to be imported if different.
+            raise Exception("Stored and passed in manifest filenames don't match up %s:%s" %
+                            (str(self.conf_file),
+                             str(self._get_config_filename_in_db())))
+
+        # Get config file, if it exists
+        try:
+            self.logger.info("Opening config file %s" % self.conf_file)
+            with open(self.conf_file) as data_file:
+                data = json.load(data_file)
+            lcdata = data['localcontrollers'][self.name]
+        except Exception as e:
+            self.logger.warning("exception when opening config file: %s"  %
+                                str(e))
+
+            # Check if things are stored in the db. If they are, use them.
+            # If  not, load from the config file and store to the DB.
+
+            # LCIP
+            config = self._get_lcip_in_db()
+            if config != None:
+                self.lcip = config
+            if self.lcip == None:
+                self.lcip = lcdata['lcip']
+                self._add_lcip_to_db(self.lcip)
+
+            # Ryu Connection Port
+            config = self._get_ryu_cxn_port_in_db()
+            if config != None:
+                self.ryu_cxn_port = config
+            if self.ryu_cxn_port == None:
+                self.ryu_cxn_port=lcdata['internalconfig']['ryucxninternalport']
+                self._add_ryu_cxn_port_to_db(self.ryu_cxn_port)
+            
+            # OpenFlow/Switch configuration data
+            config_count = self._get_switch_internal_config_count()
+            if config_count == 0:
+                # Nothing configured, get configs from config file
+                for entry in lcdata['switchinfo']:
+                    dpid = str(entry['dpid'])
+                    ic = entry['internalconfig']
+                    ic['name'] = entry['name']
+                    self._add_switch_internal_config_to_db(dpid, ic)
+
 
     def main_loop(self):
         ''' This is the main loop that reads and works with the data coming from
@@ -360,6 +509,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
         internal_config = self._get_switch_internal_config(datapath)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
         if 'managementvlan' in internal_config.keys():
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
@@ -408,6 +560,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
         results = []
         internal_config = self._get_switch_internal_config(datapath)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+
 
         # Create Outbound Rule
         # There are two options here: Corsa or Non-Corsa. Non-Corsa is for
@@ -629,6 +785,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
         results = []
         internal_config = self._get_switch_internal_config(datapath)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+
         switch_id = 0 # This is unimportant: it's never used in the translation
         intermediate_vlan = mperule.get_intermediate_vlan()
 
@@ -1399,7 +1559,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                        # it's never used in the translation
 
         datapath = ev.msg.datapath
-        switch_name = self.dpid_data[str(datapath.id)]['name']
+        switch_name = self._get_switch_internal_config(datapath)['name']
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -1434,7 +1594,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                        # it's never used in the translation
 
         datapath = ev.msg.datapath
-        switch_name = self.dpid_data[str(datapath.id)]['name']
+        switch_name = self._get_switch_internal_config(datapath)['name']
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]

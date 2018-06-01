@@ -408,7 +408,7 @@ class LocalController(SingletonMixin):
         self.manifest = options.manifest
         dbname = options.database
 
-        # Get DB connection and tables setup.
+        # Get DB connection and tables set up.
         self._initialize_db(dbname)
 
         # If manifest is None, try to get the name from the DB. This is needed
