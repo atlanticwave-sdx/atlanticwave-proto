@@ -152,6 +152,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.name = CONF['atlanticwave']['lcname']
         self.conf_file = CONF['atlanticwave']['conffile']
         self.db_name = CONF['atlanticwave']['dbfile']
+        if self.db_name == "":
+            self.db_name = ":memory:"
 
         # Import configuration information - this includes pulling information
         # from the stored DB (if there is anything), and from the options passed
@@ -229,7 +231,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # value: <internal_config>
         key = dpid
         value = pickle.dumps(internal_config)
-        if self._get_switch_internal_config() == None:
+        if self._get_switch_internal_config(dpid) == None:
             self.logger.info("Adding new internal_config for DPID %s" % dpid)
             self.config_table.insert({'key':key, 'value':value})
         else:
@@ -289,11 +291,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
             self.config_table.update({'key':key, 'value':value},
                                      ['key'])
             
-    def _get_switch_internal_config(self, datapath):
+    def _get_switch_internal_config(self, dpid):
         ''' Gets switch internal config information based on datapath passed in
             Pulls information from the DB.
         '''
-        key = str(datapath.id)
+        key = str(dpid)
         d = self.config_table.find_one(key=key)
         if d == None:
             return None
@@ -309,7 +311,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 entry['key'] == 'manifest_filename' or
                 entry['key'] == 'ryucxnport'):
                 continue
-            count++
+            count += 1
         return count
 
     def _get_config_filename_in_db(self):
@@ -368,34 +370,34 @@ class RyuTranslateInterface(app_manager.RyuApp):
             self.logger.warning("exception when opening config file: %s"  %
                                 str(e))
 
-            # Check if things are stored in the db. If they are, use them.
-            # If  not, load from the config file and store to the DB.
+        # Check if things are stored in the db. If they are, use them.
+        # If  not, load from the config file and store to the DB.
 
-            # LCIP
-            config = self._get_lcip_in_db()
-            if config != None:
-                self.lcip = config
-            if self.lcip == None:
-                self.lcip = lcdata['lcip']
-                self._add_lcip_to_db(self.lcip)
+        # LCIP
+        config = self._get_lcip_in_db()
+        if config != None:
+            self.lcip = config
+        else: 
+            self.lcip = lcdata['lcip']
+            self._add_lcip_to_db(self.lcip)
 
-            # Ryu Connection Port
-            config = self._get_ryu_cxn_port_in_db()
-            if config != None:
-                self.ryu_cxn_port = config
-            if self.ryu_cxn_port == None:
-                self.ryu_cxn_port=lcdata['internalconfig']['ryucxninternalport']
-                self._add_ryu_cxn_port_to_db(self.ryu_cxn_port)
+        # Ryu Connection Port
+        config = self._get_ryu_cxn_port_in_db()
+        if config != None:
+            self.ryu_cxn_port = config
+        else:
+            self.ryu_cxn_port=lcdata['internalconfig']['ryucxninternalport']
+            self._add_ryu_cxn_port_to_db(self.ryu_cxn_port)
             
-            # OpenFlow/Switch configuration data
-            config_count = self._get_switch_internal_config_count()
-            if config_count == 0:
-                # Nothing configured, get configs from config file
-                for entry in lcdata['switchinfo']:
-                    dpid = str(entry['dpid'])
-                    ic = entry['internalconfig']
-                    ic['name'] = entry['name']
-                    self._add_switch_internal_config_to_db(dpid, ic)
+        # OpenFlow/Switch configuration data
+        config_count = self._get_switch_internal_config_count()
+        if config_count == 0:
+            # Nothing configured, get configs from config file
+            for entry in lcdata['switchinfo']:
+                dpid = str(entry['dpid'])
+                ic = entry['internalconfig']
+                ic['name'] = entry['name']
+                self._add_switch_internal_config_to_db(dpid, ic)
 
 
     def main_loop(self):
@@ -508,7 +510,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
-        internal_config = self._get_switch_internal_config(datapath)
+        internal_config = self._get_switch_internal_config(datapath.id)
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
@@ -559,7 +561,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             Returns a list of TranslatedLCRuleContainers
         '''
         results = []
-        internal_config = self._get_switch_internal_config(datapath)
+        internal_config = self._get_switch_internal_config(datapath.id)
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
@@ -784,7 +786,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             Returns a list of TranslatedRuleContainers
         '''
         results = []
-        internal_config = self._get_switch_internal_config(datapath)
+        internal_config = self._get_switch_internal_config(datapath.id)
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
@@ -1559,7 +1561,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                        # it's never used in the translation
 
         datapath = ev.msg.datapath
-        switch_name = self._get_switch_internal_config(datapath)['name']
+        switch_name = self._get_switch_internal_config(datapath.id)['name']
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -1594,7 +1596,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                        # it's never used in the translation
 
         datapath = ev.msg.datapath
-        switch_name = self._get_switch_internal_config(datapath)['name']
+        switch_name = self._get_switch_internal_config(datapath.id)['name']
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]

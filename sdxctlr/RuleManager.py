@@ -2,6 +2,7 @@
 # AtlanticWave/SDX Project
 
 
+import logging
 import dataset
 import cPickle as pickle
 
@@ -80,6 +81,7 @@ class RuleManager(SingletonMixin):
                  send_user_rule_breakdown_remove=TESTING_CALL):
         # The params are used in order to maintain import hierarchy.
         
+        self._setup_logger()
         # Setup timers and their associated locks.
         # Timer code in part based on https://github.com/sdonovan1985/py-timer
         self.install_timer = None
@@ -140,6 +142,22 @@ class RuleManager(SingletonMixin):
         # Use these to send the rule to the Local Controller
         self.set_send_add_rule(send_user_rule_breakdown_add)
         self.set_send_rm_rule(send_user_rule_breakdown_remove)
+
+    def _setup_logger(self):
+        ''' Internal function for setting up the logger formats. '''
+        # This is from LocalController
+        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.WARNING)
+        console.setFormatter(formatter)
+        logfile = logging.FileHandler('sdxcontroller.log')
+        logfile.setLevel(logging.DEBUG)
+        logfile.setFormatter(formatter)
+        self.logger = logging.getLogger('sdxcontroller.rulemanager')
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.addHandler(console)
+        self.logger.addHandler(logfile)
 
     def set_send_add_rule(self, fcn):
         self.send_user_add_rule = fcn
@@ -448,7 +466,6 @@ class RuleManager(SingletonMixin):
         ''' Helper function that installs a rule into the switch. '''
         try:
             self.logger.debug("_install_rule")
-            print ">>>>> _install_rule"
             self._install_breakdown(rule.get_breakdown())
         except Exception as e: raise
         self._restart_remove_timer()
