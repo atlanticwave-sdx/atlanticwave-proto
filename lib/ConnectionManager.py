@@ -33,6 +33,7 @@ class ConnectionManager(object):
             raise TypeError("%s is not a Connection type." %
                             str(connection_cls))
         self.connection_cls = connection_cls
+        self.listening_callback = None
 
     def __repr__(self):
         clientstr = ""
