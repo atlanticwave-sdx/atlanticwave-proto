@@ -4,6 +4,7 @@
 
 from lib.Singleton import Singleton
 from lib.Connection import Connection
+from AtlanticWaveModule import *
 
 import socket
 from socket import error as socket_error
@@ -13,20 +14,24 @@ from threading import Thread
 from select import select
 from time import sleep
 
-class ConnectionManagerTypeError(TypeError):
+class ConnectionManagerTypeError(AtlanticWaveModuleTypeError):
     pass
 
-class ConnectionManagerValueError(ValueError):
+class ConnectionManagerValueError(AtlanticWaveModuleValueError):
     pass
 
-class ConnectionManager(object):
+class AtlanticWaveConnectionManager(AtlanticWaveModule):
     ''' This is a parent class for handling connections, dispatching the new 
         connection to handling functions, and otherwise tracking what's going 
         on. One per incoming connection. One for outbound connections. Needs to
         be subclassed, even though much will be in common. Singleton. '''
-    __metaclass__ = Singleton
 
-    def __init__(self, connection_cls=Connection):
+    def __init__(self, loggerid, logfilename, debuglogfilename=None,
+                 connection_cls=Connection):
+        
+        super(AtlanticWaveConnectionManager, self).__init__(loggerid,
+                                                            logfilename,
+                                                            debuglogfilename)
         self.listening_sock = None
         self.clients = []
         if not issubclass(connection_cls, Connection):
