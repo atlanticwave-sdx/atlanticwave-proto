@@ -12,7 +12,6 @@ from shared.LCRule import LCRule
 from switch_messages import *
 
 import threading
-import logging
 import subprocess
 import sys
 import os
@@ -32,10 +31,10 @@ class RyuControllerInterface(ControllerInterface):
 
 
     def __init__(self, lcname, conffile, lcip,
-                 ryu_cxn_port, openflow_port, lc_callback):
-        super(RyuControllerInterface, self).__init__()
-
-        self._setup_logger()
+                 ryu_cxn_port, openflow_port, lc_callback,
+                 logfilename, loggeridprefix='localcontroller'):
+        loggerid = loggeridprefix + '.ryucontrollerinterface'
+        super(RyuControllerInterface, self).__init__(loggerid, logfilename)
 
         self.lcname = lcname
         self.conffile = conffile
@@ -112,22 +111,6 @@ class RyuControllerInterface(ControllerInterface):
 
     def get_ryu_process(self):
         return self.ryu_process
-
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # This is from LocalController
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('localcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('localcontroller.ryucontrollerinterface')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
 
     def start_main_loop(self):
         self.main_loop_thread = threading.Thread(target=self._main_loop)

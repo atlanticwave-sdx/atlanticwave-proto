@@ -10,12 +10,11 @@ import signal
 import os
 import atexit
 import traceback
-import dataset
 import cPickle as pickle
 from Queue import Queue, Empty
 from time import sleep
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
 from RyuControllerInterface import *
 from LCRuleManager import *
@@ -27,15 +26,17 @@ LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
 DEFAULT_OPENFLOW_PORT = 6633
 
-class LocalController(SingletonMixin):
+class LocalController(AtlanticWaveModule):
     ''' The Local Controller is responsible for passing messages from the SDX 
         Controller to the switch. It needs two connections to both the SDX 
         controller and switch(es).
         Singleton. ''' 
 
     def __init__(self, runloop=False, options=None):
-        # Setup logger
-        self._setup_logger()
+        loggerid = 'localcontroller'
+        logfilename = 'localcontroller.log'
+        super(LocalController, self).__init__(loggerid, logfilename)
+        
         self.name = options.name
         self.capabilities = "NOTHING YET" #FIXME: This needs to be updated
         self.logger.info("LocalController %s starting", self.name)
@@ -50,7 +51,7 @@ class LocalController(SingletonMixin):
         atexit.register(self.receive_exit)
 
         # Rules DB
-        self.rm = LCRuleManager()
+        self.rm = LCRuleManager(logfilename, loggerid)
 
         # Initial Rules
         self._initial_rules_dict = {}
@@ -59,7 +60,8 @@ class LocalController(SingletonMixin):
         self.switch_connection = RyuControllerInterface(self.name,
                                     self.manifest, self.lcip,
                                     self.ryu_cxn_port, self.openflow_port,
-                                    self.switch_message_cb)
+                                    self.switch_message_cb,
+                                    logfilename, loggerid)
         self.logger.info("RyuControllerInterface setup finish.")
 
         # Setup connection manager
@@ -232,44 +234,6 @@ class LocalController(SingletonMixin):
                 # Restart new connection
                 self.start_sdx_controller_connection()
 
-        
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('localcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('localcontroller')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
-        
-    def _initialize_db(self, db_filename):
-        # Details on the setup:
-        # https://dataset.readthedocs.io/en/latest/api.html
-        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
-        self.logger.critical("Connection to DB: %s" % db_filename)
-        self.db = dataset.connect('sqlite:///' + db_filename, 
-                                  engine_kwargs={'connect_args':
-                                                 {'check_same_thread':False}})
-        #Try loading the tables, if they don't exist, create them.
-        # <lcname>-config - Columns are 'key' and 'value'
-        config_table_name = self.name + "-config"
-        try:
-            self.logger.info("Trying to load %s from DB" % config_table_name)
-            self.config_table = self.db.load_table(config_table_name)
-        except:
-            # If load_table() fails, that's fine! It means that the table
-            # doesn't yet exist. So, create it.
-            self.logger.info("Failed to load %s from DB, creating new table" %
-                             config_table_name)
-            self.config_table = self.db[config_table_name]
-
-
     def _add_switch_config_to_db(self, switch_name, switch_config):
         # Pushes a switch info dictionary from manifest.
         # key: "<switch_name>_switchinfo"
@@ -409,7 +373,8 @@ class LocalController(SingletonMixin):
         dbname = options.database
 
         # Get DB connection and tables set up.
-        self._initialize_db(dbname)
+        db_tuples = [('config_table', self.name+"-config")]
+        self._initialize_db(dbname, db_tuples)
 
         # If manifest is None, try to get the name from the DB. This is needed
         # for the LC's RyuTranslateInterface

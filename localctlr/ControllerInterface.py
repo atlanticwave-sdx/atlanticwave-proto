@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveModule import *
 
 class ControllerInterfaceTypeError(TypeError):
     pass
@@ -10,7 +10,7 @@ class ControllerInterfaceTypeError(TypeError):
 class ControllerInterfaceValueError(ValueError):
     pass
 
-class ControllerInterface(SingletonMixin):
+class ControllerInterface(AtlanticWaveModule):
     ''' This parent class is meant to act as a standard interface between a 
         particular OpenFlow speaker and the LocalController class. It isolates
         LocalController from the specifics of the speaker that is being used. 
@@ -18,7 +18,9 @@ class ControllerInterface(SingletonMixin):
         Singleton. '''
     
 
-    def __init__(self):
+    def __init__(self, loggerid, logfilename, debuglogfilename=None):
+        super(ControllerInterface, self).__init__(loggerid, logfilename,
+                                                  debuglogfilename)
         pass
     
     def send_command(self, switch_id, rule):

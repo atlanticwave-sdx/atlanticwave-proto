@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from lib.ConnectionManager import ConnectionManager
+from lib.AtlanticWaveConnectionManager import AtlanticWaveConnectionManager
 
 # Commands
 # RyuControllerInterface to RyuTranslateInterface
@@ -17,7 +17,7 @@ ICX_UNKNOWN_SOURCE = "UNKNOWN_SOURCE"
 ICX_L2MULTIPOINT_UNKNOWN_SOURCE = "L2MULTIPOINT_UNKNOWN_SOURCE"
 
 
-class InterRyuControllerConnectionManager(ConnectionManager):
+class InterRyuControllerConnectionManager(AtlanticWaveConnectionManager):
     ''' Used to manage the connection between parts of the Local Controller. '''
 
     def __init__(self, *args, **kwargs):
