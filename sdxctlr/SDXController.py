@@ -2,13 +2,11 @@
 # AtlanticWave/SDX Project
 
 
-import logging
 import threading
 import sys
-import dataset
 from Queue import Queue, Empty
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
@@ -44,31 +42,25 @@ class SDXControllerConnectionError(SDXControllerError):
     ''' When there's an error with a connection. '''
     pass
 
-class SDXController(SingletonMixin):
+class SDXController(AtlanticWaveModule):
     ''' This is the main coordinating module of the SDX controller. It mostly 
         provides startup and coordination, rather than performan many actions by
         itself.
         Singleton. ''' 
 
     def __init__(self, runloop=True, options=None):
-        ''' The bulk of the work happens here. This initializes nearly everything
-            and starts up the main processing loop for the entire SDX
+        ''' The bulk of the work happens here. This initializes nearly 
+            everything and starts up the main processing loop for the entire SDX
             Controller. '''
-
-        self._setup_logger()
+        self.loggerid = 'sdxcontroller'
+        self.loggerfilename = 'sdxcontroller.log'
+        super(SDXController, self).__init__(self.loggerid, self.loggerfilename)
 
         mani = options.manifest
         db = options.database
         run_topo = options.topo
 
-
-        # Start DB connection. Used by other modules. details on the setup:
-        # https://dataset.readthedocs.io/en/latest/api.html
-        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
-        self.logger.critical("Connection to DB: %s" % db)
-        self.db = dataset.connect('sqlite:///' + db, 
-                                  engine_kwargs={'connect_args':
-                                                 {'check_same_thread':False}})
+        self.db_filename = db
 
         # self.run_topo decides whether or not to send rules.
         self.run_topo = run_topo
@@ -131,21 +123,6 @@ class SDXController(SingletonMixin):
         # Go to main loop 
         if runloop:
             self._main_loop()
-
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('sdxcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('sdxcontroller')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
 
     def _cm_thread(self):
         self.sdx_cm.new_connection_callback(self._handle_new_connection)

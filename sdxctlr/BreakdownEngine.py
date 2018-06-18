@@ -2,11 +2,11 @@
 # AtlanticWave/SDX Project
 
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveModule import AtlanticWaveModule
 from AuthorizationInspector import AuthorizationInspector
 from TopologyManager import TopologyManager
 
-class BreakdownEngine(SingletonMixin):
+class BreakdownEngine(AtlanticWaveModule):
     ''' The BreakdownEngine is one of the more complex pieces of the SDX 
         controller. It takes participant-level rules and breaks them down into 
         per-local controller rules. In the future, failover considerations will
@@ -14,8 +14,11 @@ class BreakdownEngine(SingletonMixin):
         added as a standard feature.
         Singleton. '''
     
-    def __init__(self):
-        pass
+    def __init__(self, logfilename, loggeridprefix='sdxcontroller'):
+        loggerid = loggeridprefix + '.breakdownengine'
+        super(BreakdownEngine, self).__init__(loggerid, logfilename)
+
+        self.logger.debug("BreakdownEngine initialized.")
         
     def get_breakdown(self, rule):
         ''' Breaks down the given rule to rules that each local controller can 

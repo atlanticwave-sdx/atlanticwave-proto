@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveInspector import AtlanticWaveInspector
 from AuthorizationInspector import AuthorizationInspector 
 from TopologyManager import TopologyManager
 
@@ -19,7 +19,7 @@ class ValidityInspectorOverlappingRule(ValidityInspectorError):
         Rule can be installed, but may not have the indented effect. '''
     pass
 
-class ValidityInspector(SingletonMixin):
+class ValidityInspector(AtlanticWaveInspector):
     ''' The ValidityInspector will verify that a particular rule is valid. For 
         instance, confirming that port 16 exists at a given location. To handle 
         validation, external information will be needed. As an example, 
@@ -28,8 +28,9 @@ class ValidityInspector(SingletonMixin):
         writing, and may introduce more links into the diagram above.
         Singleton. '''
 
-    def __init__(self):
-        pass
+    def __init__(self, logfilename, loggeridprefix='sdxcontroller'):
+        loggerid = loggeridprefix + '.validityinspector'
+        super(ValidityInspector, self).__init__(loggerid, logfilename)
     
     def is_valid_rule(self, rule):
         ''' Checks to see if a rule is valid. True if valid. Raises error 

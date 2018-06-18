@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveManager import AtlanticWaveManager
 from threading import Lock
 import networkx as nx
 import json
@@ -15,7 +15,7 @@ class TopologyManagerError(Exception):
     ''' Parent class as a catch-all for other errors '''
     pass
 
-class TopologyManager(SingletonMixin):
+class TopologyManager(AtlanticWaveManager):
     ''' The TopologyManager handles the topology of the network. Initially, this
         will be very simple, as there will only be three switches, and ~100 
         ports total.
@@ -25,7 +25,11 @@ class TopologyManager(SingletonMixin):
         its JSON generation abilities.
         Singleton. '''
     
-    def __init__(self, topology_file=MANIFEST_FILE):
+    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
+                 topology_file=MANIFEST_FILE):
+        loggerid = loggeridprefix + ".topologymanager"
+        super(TopologyManager, self).__init__(loggerid, logfilename)
+        
         # Initialize topology
         self.topo = nx.Graph()
         self.lcs = []         # This probably should end up as a list of dicts.

@@ -2,8 +2,8 @@
 # AtlanticWave/SDX Project
 
 
-import json, logging
-from lib.Singleton import SingletonMixin
+import json
+from lib.AtlanticWaveManager import AtlanticWaveManager
 from AuthenticationInspector import AuthenticationInspector
 #from TopologyManager import TopologyManager
 
@@ -13,7 +13,7 @@ MANIFEST_FILE = '../manifests/localcontroller.manifest'
 class LocalControllerManagerValueError(ValueError):
     pass
 
-class LocalControllerManager(SingletonMixin):
+class LocalControllerManager(AtlanticWaveManager):
     ''' The LocalControllerManager is responsible for keeping track of local 
         controller information, in particular authorization information for 
         different local controllers. In the future, this may also include 
@@ -39,16 +39,17 @@ class LocalControllerManager(SingletonMixin):
             self.connected = True
         
     
-    def __init__(self, manifest=MANIFEST_FILE):
+    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
+                 manifest=MANIFEST_FILE):
         ''' The bulk of work is handled at initialization and pushing user 
             information to both the AuthenticationInspector and 
             AuthorizationInspector. '''
-
-        # Setup logging
-        self._setup_logger()
+        loggerid = loggeridprefix + '.localctlrmgr'
+        super(LocalCOntrollerManager, self).__init__(loggerid, logfilename)
 
         # Setup database. Currently just a dictionary. Probably to be an actual
         # database in the future.
+        #FIXME: use _initialize_db() and use proper DB.
         self.localctlr_db = {}
 
         # Parse the manifest into local database
@@ -61,21 +62,6 @@ class LocalControllerManager(SingletonMixin):
             ctlr = self.localctlr_db[ctlrname]
             self._send_to_AI(ctlr)
 
-
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('sdxcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('sdxcontroller.localctlrmgr')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile) 
 
     def add_controller(self, controller, credentials, lcip, switchips):
         ''' This adds users to the LocalControllerManager's database, which will 

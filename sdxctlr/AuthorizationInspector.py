@@ -3,8 +3,7 @@
 
 
 import logging
-from lib.Singleton import SingletonMixin
-
+from lib.AtlanticWaveInspector import AtlanticWaveInspector
 
 class AuthorizationInspectorError(Exception):
     ''' Parent class, can be used as a catch-all for the other errors '''
@@ -18,7 +17,7 @@ class AuthorizationInspectorRuleNotAuthorized(AuthorizationInspectorError):
     ''' Raised when a rule installation is not authorized. '''
     pass
 
-class AuthorizationInspector(SingletonMixin):
+class AuthorizationInspector(AtlanticWaveInspector):
     ''' The AuthorizationInspector is responsible for authorizing actions. 
         Actions include viewing status of the network, viewing rules of the
         network, pushing rules to network, removing own rules from network, and 
@@ -30,8 +29,11 @@ class AuthorizationInspector(SingletonMixin):
         significantly.
         Singleton. '''
 
-    def __init__(self):
-        pass
+    def __init__(self, logfilename, loggeridprefix='sdxcontroller'):
+        loggerid = loggeridprefix + ".authorization"
+        super(AuthorizationInspector, self).__init__(loggerid, logfilename)
+
+        self.logger.debug("AuthorizationInspector initialized.")
 
 
     def is_authorized(self, username, action, **kwargs):

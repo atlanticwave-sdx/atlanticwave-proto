@@ -3,24 +3,24 @@
 
 import os
 
-import dataset
 import cPickle as pickle
-import logging
 import json
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveManager import AtlanticWaveManager
 from AuthorizationInspector import AuthorizationInspector
 from AuthenticationInspector import AuthenticationInspector
 
 
-class UserManager(SingletonMixin):
+class UserManager(AtlanticWaveManager):
     
-    def __init__(self, database, manifest):
-        self._setup_logger()
+    def __init__(self, db_filename, manifest, logfilename,
+                 loggeridprefix='sdxcontroller'):
+        loggerid = loggeridprefix + '.usermanager'
+        super(UserManager, self).__init__(loggerid, logfilename)
 
-        # Start database/dictionary
-        self.db = database
-        self.user_table = self.db['users']        # All the find live here.
+        # Start database
+        db_tuples = [('user_table', 'users')]
+        self._initialize_db(db_filename, db_tuples)
 
         # Used for filtering.
         self._valid_table_columns = ['username', 'credentials',
@@ -112,18 +112,3 @@ class UserManager(SingletonMixin):
         AuthorizationInspector.instance().set_user_authorization(
                                                     user['username'],
                                                     user['permitted_actions'])
-
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('sdxcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('sdxcontroller.localctlrmgr')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
