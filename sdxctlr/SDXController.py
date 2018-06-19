@@ -53,8 +53,10 @@ class SDXController(AtlanticWaveModule):
             everything and starts up the main processing loop for the entire SDX
             Controller. '''
         self.loggerid = 'sdxcontroller'
-        self.loggerfilename = 'sdxcontroller.log'
-        super(SDXController, self).__init__(self.loggerid, self.loggerfilename)
+        self.logfilename = 'sdxcontroller.log'
+        self.debuglogfilename = None
+        super(SDXController, self).__init__(self.loggerid, self.logfilename,
+                                            self.debuglogfilename)
 
         mani = options.manifest
         db = options.database
@@ -66,21 +68,29 @@ class SDXController(AtlanticWaveModule):
         self.run_topo = run_topo
 
         # Modules with configuration files
-        self.tm = TopologyManager.instance(mani)
+        self.tm = TopologyManager(self.logfilename, self.loggerid,
+                                  self.debuglogfilename, mani)
 
         # Initialize all the modules - Ordering is relatively important here
-        self.aci = AuthenticationInspector.instance()
-        self.azi = AuthorizationInspector.instance()
-        self.be = BreakdownEngine.instance()
-        self.rr = RuleRegistry.instance()
-        self.vi = ValidityInspector.instance()
-        self.um = UserManager.instance(self.db, mani)
-
+        self.aci = AuthenticationInspector(self.logfilename, self.loggerid,
+                                           self.debuglogfilename)
+        self.azi = AuthorizationInspector(self.logfilename, self.loggerid,
+                                          self.debuglogfilename)
+        self.be = BreakdownEngine(self.logfilename, self.loggerid,
+                                  self.debuglogfilename)
+        self.rr = RuleRegistry(self.logfilename, self.loggerid,
+                               self.debuglogfilename)
+        self.vi = ValidityInspector(self.logfilename, self.loggerid,
+                                  self.debuglogfilename)
+        self.um = UserManager(self.db, mani, self.logfilename, self.loggerid,
+                              self.debuglogfilename)
 
         if mani != None:
-            self.lcm = LocalControllerManager.instance(mani)
+            self.lcm = LocalControllerManager(self.logfilename, self.loggerid,
+                                              self.debuglogfilename, mani)
         else: 
-            self.lcm = LocalControllerManager.instance()
+            self.lcm = LocalControllerManager(self.logfilename, self.loggerid,
+                                              self.debuglogfilename)
 
         topo = self.tm.get_topology()
 
@@ -89,7 +99,9 @@ class SDXController(AtlanticWaveModule):
         self.ip = options.host
         self.port = options.lcport
         self.connections = {}
-        self.sdx_cm = SDXControllerConnectionManager()
+        self.sdx_cm = SDXControllerConnectionManager(self.logfilename,
+                                                     self.loggerid,
+                                                     self.debuglogfilename)
         self.cm_thread = threading.Thread(target=self._cm_thread)
         self.cm_thread.daemon = True
         self.cm_thread.start()
@@ -106,13 +118,15 @@ class SDXController(AtlanticWaveModule):
 
         # Start these modules last!
         if self.run_topo:
-            self.rm = RuleManager.instance(self.db,
-                                           self.sdx_cm.send_breakdown_rule_add,
-                                           self.sdx_cm.send_breakdown_rule_rm)
+            self.rm = RuleManager(self.db, self.logfilename, self.loggerid,
+                                  self.debuglogfilename,
+                                  self.sdx_cm.send_breakdown_rule_add,
+                                  self.sdx_cm.send_breakdown_rule_rm)
         else:
-            self.rm = RuleManager.instance(self.db,
-                                           send_no_rules,
-                                           send_no_rules)
+            self.rm = RuleManager(self.db, self.logfilename, self.loggerid,
+                                  self.debuglogfilename,
+                                  send_no_rules,
+                                  send_no_rules)
 
         self.rapi = RestAPI.instance(options.host,options.port,options.shib)
 
@@ -120,6 +134,8 @@ class SDXController(AtlanticWaveModule):
         # Install any rules switches will need. 
         self._prep_switches()
 
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
         # Go to main loop 
         if runloop:
             self._main_loop()

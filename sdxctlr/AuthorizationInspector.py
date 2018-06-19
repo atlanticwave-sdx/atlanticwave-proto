@@ -29,12 +29,14 @@ class AuthorizationInspector(AtlanticWaveInspector):
         significantly.
         Singleton. '''
 
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller'):
+    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
+                 debuglogfilename=None):
         loggerid = loggeridprefix + ".authorization"
-        super(AuthorizationInspector, self).__init__(loggerid, logfilename)
+        super(AuthorizationInspector, self).__init__(loggerid, logfilename,
+                                                     debuglogfilename)
 
-        self.logger.debug("AuthorizationInspector initialized.")
-
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
     def is_authorized(self, username, action, **kwargs):
         ''' Returns true if user is allowed to take a particular action, false 

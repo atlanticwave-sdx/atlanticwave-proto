@@ -32,9 +32,11 @@ class RyuControllerInterface(ControllerInterface):
 
     def __init__(self, lcname, conffile, lcip,
                  ryu_cxn_port, openflow_port, lc_callback,
-                 logfilename, loggeridprefix='localcontroller'):
+                 logfilename, loggeridprefix='localcontroller',
+                 debuglogfilename=None):
         loggerid = loggeridprefix + '.ryucontrollerinterface'
-        super(RyuControllerInterface, self).__init__(loggerid, logfilename)
+        super(RyuControllerInterface, self).__init__(loggerid, logfilename,
+                                                     debuglogfilename)
 
         self.lcname = lcname
         self.conffile = conffile
@@ -81,7 +83,8 @@ class RyuControllerInterface(ControllerInterface):
         # FIXME: This cannot be permanent. Each piece should be opened up
         # seperately...
         
-        self.logger.info("RyuControllerInterface initialized.")
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
         # Start Main Loop
         self.start_main_loop()

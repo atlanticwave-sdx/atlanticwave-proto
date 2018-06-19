@@ -35,9 +35,11 @@ class SDXControllerConnectionManagerNotConnectedError(ConnectionManagerValueErro
 class SDXControllerConnectionManager(ConnectionManager):
     ''' Used to manage the connection with the SDX Controller. '''
 
-    def __init__(self):
-        super(SDXControllerConnectionManager, self).__init__(
-            SDXControllerConnection)
+    def __init__(self, logfilename, loggeridprefix, debuglogfilename=None):
+        loggerid = loggeridprefix + '.sdxctlrcxnmgr'
+        super(SDXControllerConnectionManager, self).__init__(loggerid,
+                                                             logfilename,
+                                                             debuglogfilename)
         # associations are for easy lookup of connections based on the name of
         # the Local Controller.
         
@@ -46,7 +48,10 @@ class SDXControllerConnectionManager(ConnectionManager):
 
         # Connection action queue
         self.cxn_q = Queue()
-        
+
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
+
 
     def send_breakdown_rule_add(self, bd):
         ''' This takes in a UserPolicyBreakdown and send it to the Local

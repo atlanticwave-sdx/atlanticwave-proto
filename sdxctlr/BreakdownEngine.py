@@ -14,12 +14,15 @@ class BreakdownEngine(AtlanticWaveModule):
         added as a standard feature.
         Singleton. '''
     
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller'):
+    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
+                 debuglogfilname=None):
         loggerid = loggeridprefix + '.breakdownengine'
-        super(BreakdownEngine, self).__init__(loggerid, logfilename)
+        super(BreakdownEngine, self).__init__(loggerid, logfilename,
+                                              debuglogfilename)
 
-        self.logger.debug("BreakdownEngine initialized.")
-        
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
+
     def get_breakdown(self, rule):
         ''' Breaks down the given rule to rules that each local controller can 
             handle. Requires a user to verify that the user had the correct 

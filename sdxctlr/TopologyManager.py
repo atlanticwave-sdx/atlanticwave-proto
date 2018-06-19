@@ -26,9 +26,10 @@ class TopologyManager(AtlanticWaveManager):
         Singleton. '''
     
     def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 topology_file=MANIFEST_FILE):
+                 debuglogfilename=None, topology_file=MANIFEST_FILE):
         loggerid = loggeridprefix + ".topologymanager"
-        super(TopologyManager, self).__init__(loggerid, logfilename)
+        super(TopologyManager, self).__init__(loggerid, logfilename,
+                                              debuglogfilename)
         
         # Initialize topology
         self.topo = nx.Graph()
@@ -39,6 +40,9 @@ class TopologyManager(AtlanticWaveManager):
 
         #FIXME: Static topology right now.
         self._import_topology(topology_file)
+
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
     def get_topology(self):
         ''' Returns the topology with all details. 

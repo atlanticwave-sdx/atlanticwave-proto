@@ -13,16 +13,19 @@ class AuthenticationInspector(AtlanticWaveInspector):
         local controllers, respectively.
         Singleton. ''' 
 
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller'):
+    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
+                 debuglogfilename=None):
         loggerid = loggeridprefix + '.authentication'
-        super(AuthenticationInspector, self).__init__(loggerid, logfilename)
+        super(AuthenticationInspector, self).__init__(loggerid, logfilename,
+                                                      debuglogfilename)
 
         # Initialize the credential store
         self._credential_store = {}
 
-        self.logger.debug("AuthenticationInspector initialized.")
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
-
+        
     def is_authenticated(self, username, credentials):
         ''' Returns true if user is authenticated, False otherwise. Credentials 
             may change over time, for instance, for the initial deployment, 

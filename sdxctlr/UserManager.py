@@ -14,9 +14,10 @@ from AuthenticationInspector import AuthenticationInspector
 class UserManager(AtlanticWaveManager):
     
     def __init__(self, db_filename, manifest, logfilename,
-                 loggeridprefix='sdxcontroller'):
+                 loggeridprefix='sdxcontroller', debuglogfilename=None):
         loggerid = loggeridprefix + '.usermanager'
-        super(UserManager, self).__init__(loggerid, logfilename)
+        super(UserManager, self).__init__(loggerid, logfilename,
+                                          debuglogfilename)
 
         # Start database
         db_tuples = [('user_table', 'users')]
@@ -34,6 +35,9 @@ class UserManager(AtlanticWaveManager):
         else:
             self.logger.info("Loading users from the Manifest")
             self._parse_manifest(manifest)
+
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
     def _parse_db(self):
         # This needs to check to see if the list of users is empty.

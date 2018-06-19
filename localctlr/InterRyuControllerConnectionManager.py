@@ -20,6 +20,11 @@ ICX_L2MULTIPOINT_UNKNOWN_SOURCE = "L2MULTIPOINT_UNKNOWN_SOURCE"
 class InterRyuControllerConnectionManager(AtlanticWaveConnectionManager):
     ''' Used to manage the connection between parts of the Local Controller. '''
 
-    def __init__(self, *args, **kwargs):
-        super(InterRyuControllerConnectionManager, self).__init__(*args, **kwargs)
+    def __init__(self, logfilename, loggeridprefix='localcontroller',
+                 debuglogfilename=None):
+        loggerid = loggeridprefix + '.interryucontrollercxnmgr'
+        super(InterRyuControllerConnectionManager, self).__init__(loggerid,
+                                           logfilename, debuglogfilename)
 
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))

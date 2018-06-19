@@ -31,7 +31,7 @@ class LCRuleManager(AtlanticWaveManager):
         Singleton. '''
 
     def __init__(self, logfilename, loggeridprefix='localcontroller',
-                 db_filename=':memory:'):
+                 debuglogfilename=None, db_filename=':memory:'):
         loggerid = loggeridprefix + '.lcrulemanager'
         super(LCRuleManager, self).__init__(loggerid, logfilename)
         
@@ -46,6 +46,9 @@ class LCRuleManager(AtlanticWaveManager):
 
         # Setup initial rules related stuff.
         self._initial_rules_list = []
+
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
 
     def add_rule(self, cookie, switch_id, lcrule, 

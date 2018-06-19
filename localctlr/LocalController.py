@@ -33,9 +33,11 @@ class LocalController(AtlanticWaveModule):
         Singleton. ''' 
 
     def __init__(self, runloop=False, options=None):
-        loggerid = 'localcontroller'
-        logfilename = 'localcontroller.log'
-        super(LocalController, self).__init__(loggerid, logfilename)
+        self.loggerid = 'localcontroller'
+        self.logfilename = 'localcontroller.log'
+        self.debuglogfilename = None
+        super(LocalController, self).__init__(self.loggerid, self.logfilename,
+                                              self.debuglogfilename)
         
         self.name = options.name
         self.capabilities = "NOTHING YET" #FIXME: This needs to be updated
@@ -51,7 +53,8 @@ class LocalController(AtlanticWaveModule):
         atexit.register(self.receive_exit)
 
         # Rules DB
-        self.rm = LCRuleManager(logfilename, loggerid)
+        self.rm = LCRuleManager(self.logfilename, self.loggerid,
+                                self.debuglogfilename)
 
         # Initial Rules
         self._initial_rules_dict = {}
@@ -61,12 +64,15 @@ class LocalController(AtlanticWaveModule):
                                     self.manifest, self.lcip,
                                     self.ryu_cxn_port, self.openflow_port,
                                     self.switch_message_cb,
-                                    logfilename, loggerid)
+                                    self.logfilename, self.loggerid,
+                                    self.debuglogfilename)
         self.logger.info("RyuControllerInterface setup finish.")
 
         # Setup connection manager
         self.cxn_q = Queue()
-        self.sdx_cm = SDXControllerConnectionManager()
+        self.sdx_cm = SDXControllerConnectionManager(self.logfilename,
+                                                     self.loggerid,
+                                                     self.debuglogfilename)
         self.sdx_connection = None
         self.start_cxn_thread = None
 
@@ -77,6 +83,9 @@ class LocalController(AtlanticWaveModule):
         self.start_switch_connection()
         self.start_sdx_controller_connection() # Blocking call
         self.logger.info("SDX Controller Connection established.")
+
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
         # Start main loop
         if runloop:

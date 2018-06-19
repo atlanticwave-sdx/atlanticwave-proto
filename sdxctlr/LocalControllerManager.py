@@ -40,7 +40,7 @@ class LocalControllerManager(AtlanticWaveManager):
         
     
     def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 manifest=MANIFEST_FILE):
+                 debuglogfilename=None, manifest=MANIFEST_FILE):
         ''' The bulk of work is handled at initialization and pushing user 
             information to both the AuthenticationInspector and 
             AuthorizationInspector. '''
@@ -61,6 +61,9 @@ class LocalControllerManager(AtlanticWaveManager):
         for ctlrname in self.localctlr_db.keys():
             ctlr = self.localctlr_db[ctlrname]
             self._send_to_AI(ctlr)
+
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
 
     def add_controller(self, controller, credentials, lcip, switchips):
