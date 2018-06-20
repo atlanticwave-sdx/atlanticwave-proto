@@ -146,7 +146,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(RyuTranslateInterface, self).__init__(*args, **kwargs)
 
-        self._setup_logger()
+        loggerid = 'localcontroller.ryutranslateinterface'
+        logfilename = 'localcontroller.log'
+        debuglogfilename = 'debug'+logfilename
+        self._setup_logger(loggerid, logfilename)
+        self._setup_debug_logger(loggerid, debuglogfilename)
 
         # Configuration file + parsing
         self.name = CONF['atlanticwave']['lcname']
@@ -180,26 +184,52 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 
         # TODO: Reestablish connection? Do I have to do anything?
-        
-        pass
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
 
-    def _setup_logger(self):
+    # The two _setup_logger functions are from lib/AtlanticWaveModule.py.
+    # This cannot inherit from AtlanticWaveModule or any of it's children, so we
+    # need to manually include some of it's functionality.
+    def _setup_logger(self, loggerid, logfilename):
         ''' Internal function for setting up the logger formats. '''
-        # This is from LocalController
         # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
         console = logging.StreamHandler()
         console.setLevel(logging.WARNING)
         console.setFormatter(formatter)
-        logfile = logging.FileHandler('localcontroller.log')
+        logfile = logging.FileHandler(logfilename)
         logfile.setLevel(logging.DEBUG)
         logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('localcontroller.ryutranslateinterface')
+        self.logger = logging.getLogger(loggerid)
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(console)
         self.logger.addHandler(logfile)
+        
+    def _setup_debug_logger(self, loggerid, debuglogfilename):
+        ''' Internal function for setting up the logger formats. '''
+        # This is from LocalController
+        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        logfile = logging.FileHandler(debuglogfilename)
+        logfile.setLevel(logging.DEBUG)
+        logfile.setFormatter(formatter)
+        self.dlogger = logging.getLogger(loggerid)
+        self.dlogger.setLevel(logging.DEBUG)
+        self.dlogger.addHandler(console)
+        self.dlogger.addHandler(logfile)
 
+    def dlogger_tb(self):
+        ''' Print out the current traceback. '''
+        tbs = format_stack()
+        all_tb = "Traceback: id: %s\n" % str(hex(id(self)))
+        for line in tbs:
+            all_tb = all_tb + line
+        self.dlogger.warning(all_tb)
+        
     def _initialize_db(self, db_filename):
         # Details on the setup:
         # https://dataset.readthedocs.io/en/latest/api.html

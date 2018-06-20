@@ -128,7 +128,9 @@ class SDXController(AtlanticWaveModule):
                                   send_no_rules,
                                   send_no_rules)
 
-        self.rapi = RestAPI.instance(options.host,options.port,options.shib)
+        self.rapi = RestAPI(self.logfilename, self.loggerid,
+                            self.debuglogfilename,
+                            options.host, options.port, options.shib)
 
 
         # Install any rules switches will need. 
