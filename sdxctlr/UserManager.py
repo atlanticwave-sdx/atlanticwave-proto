@@ -111,8 +111,7 @@ class UserManager(AtlanticWaveManager):
     def _send_to_AA(self, user):
         print "Sending %s:%s to AuthenticationInspector" % (user['username'],
                                                             user['credentials'])
-        AuthenticationInspector.instance().add_user(user['username'],
-                                                    user['credentials'])
-        AuthorizationInspector.instance().set_user_authorization(
-                                                    user['username'],
-                                                    user['permitted_actions'])
+        AuthenticationInspector().add_user(user['username'],
+                                           user['credentials'])
+        AuthorizationInspector().set_user_authorization(
+            user['username'], user['permitted_actions'])

@@ -41,6 +41,6 @@ class ValidityInspector(AtlanticWaveInspector):
         ''' Checks to see if a rule is valid. True if valid. Raises error 
             describing problem if invalid. '''
         #FIXME: I am confused. I cannot find an object named 'rule' anywhere and doing a search in the filesystem for objects that call "check_validity" just takes me back here. I need some clarification please.
-        return rule.check_validity(TopologyManager.instance().get_topology(),
-                                   AuthorizationInspector.instance().is_authorized)
+        return rule.check_validity(TopologyManager().get_topology(),
+                                   AuthorizationInspector().is_authorized)
 

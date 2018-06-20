@@ -17,7 +17,7 @@ SDX_IDENTIFY = "IDENTIFY"
 IPADDR = '127.0.0.1'
 PORT = 5555
 
-from lib.ConnectionManager import *
+from lib.AtlanticWaveConnectionManager import *
 from lib.Connection import Connection
 from shared.SDXControllerConnectionManagerConnection import *
 from shared.UserPolicy import UserPolicyBreakdown
@@ -32,7 +32,7 @@ DEL_CXN = "Remove Connection"
 class SDXControllerConnectionManagerNotConnectedError(ConnectionManagerValueError):
     pass
 
-class SDXControllerConnectionManager(ConnectionManager):
+class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
     ''' Used to manage the connection with the SDX Controller. '''
 
     def __init__(self, logfilename, loggeridprefix, debuglogfilename=None):

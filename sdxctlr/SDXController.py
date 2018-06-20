@@ -82,8 +82,8 @@ class SDXController(AtlanticWaveModule):
                                self.debuglogfilename)
         self.vi = ValidityInspector(self.logfilename, self.loggerid,
                                   self.debuglogfilename)
-        self.um = UserManager(self.db, mani, self.logfilename, self.loggerid,
-                              self.debuglogfilename)
+        self.um = UserManager(self.db_filename, mani, self.logfilename,
+                              self.loggerid, self.debuglogfilename)
 
         if mani != None:
             self.lcm = LocalControllerManager(self.logfilename, self.loggerid,
@@ -118,13 +118,13 @@ class SDXController(AtlanticWaveModule):
 
         # Start these modules last!
         if self.run_topo:
-            self.rm = RuleManager(self.db, self.logfilename, self.loggerid,
-                                  self.debuglogfilename,
+            self.rm = RuleManager(self.db_filename, self.logfilename,
+                                  self.loggerid, self.debuglogfilename,
                                   self.sdx_cm.send_breakdown_rule_add,
                                   self.sdx_cm.send_breakdown_rule_rm)
         else:
-            self.rm = RuleManager(self.db, self.logfilename, self.loggerid,
-                                  self.debuglogfilename,
+            self.rm = RuleManager(self.db_filename, self.logfilename,
+                                  self.loggerid, self.debuglogfilename,
                                   send_no_rules,
                                   send_no_rules)
 

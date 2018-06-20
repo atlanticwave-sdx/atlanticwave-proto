@@ -8,7 +8,7 @@ from lib.AtlanticWaveRegistry import AtlanticWaveRegistry
 class RuleRegistryTypeError(TypeError):
     pass
 
-class RuleRegistry(AtlanticWaveRegistry)
+class RuleRegistry(AtlanticWaveRegistry):
     ''' The RuleRegistry provides a centralized lookup service for converting 
         user rules into the class that implements them. 
         Singleton. '''

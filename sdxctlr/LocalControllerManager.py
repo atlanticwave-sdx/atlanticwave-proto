@@ -45,7 +45,8 @@ class LocalControllerManager(AtlanticWaveManager):
             information to both the AuthenticationInspector and 
             AuthorizationInspector. '''
         loggerid = loggeridprefix + '.localctlrmgr'
-        super(LocalCOntrollerManager, self).__init__(loggerid, logfilename)
+        super(LocalControllerManager, self).__init__(loggerid, logfilename,
+                                                     debuglogfilename)
 
         # Setup database. Currently just a dictionary. Probably to be an actual
         # database in the future.
@@ -125,5 +126,4 @@ class LocalControllerManager(AtlanticWaveManager):
             self.localctlr_db[shortname] = rec
         
     def _send_to_AI(self, ctlr):
-        AuthenticationInspector.instance().add_user(ctlr.shortname,
-                                                    ctlr.credentials)
+        AuthenticationInspector().add_user(ctlr.shortname, ctlr.credentials)

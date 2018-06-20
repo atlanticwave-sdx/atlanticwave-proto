@@ -15,7 +15,7 @@ class BreakdownEngine(AtlanticWaveModule):
         Singleton. '''
     
     def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 debuglogfilname=None):
+                 debuglogfilename=None):
         loggerid = loggeridprefix + '.breakdownengine'
         super(BreakdownEngine, self).__init__(loggerid, logfilename,
                                               debuglogfilename)
@@ -30,8 +30,8 @@ class BreakdownEngine(AtlanticWaveModule):
             rules (e.g., if a user cannot create paths through a particular LC, 
             reroute around that LC). '''
         try:
-            tm = TopologyManager.instance()
-            ai = AuthorizationInspector.instance()
+            tm = TopologyManager()
+            ai = AuthorizationInspector()
             return rule.breakdown_rule(tm, ai)
         except Exception as e:
             raise
