@@ -13,11 +13,9 @@ class RuleRegistry(AtlanticWaveRegistry):
         user rules into the class that implements them. 
         Singleton. '''
 
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 debuglogfilename=None):
+    def __init__(self, loggeridprefix='sdxcontroller'):
         loggerid = loggeridprefix + '.ruleregistry'
-        super(RuleRegistry, self).__init__(loggerid, logfilename,
-                                           debuglogfilename)
+        super(RuleRegistry, self).__init__(loggerid)
 
         # Initialize rule DB
         self.ruletype_db = {}

@@ -28,11 +28,9 @@ class ValidityInspector(AtlanticWaveInspector):
         writing, and may introduce more links into the diagram above.
         Singleton. '''
 
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 debuglogfilename=None):
+    def __init__(self, loggeridprefix='sdxcontroller'):
         loggerid = loggeridprefix + '.validityinspector'
-        super(ValidityInspector, self).__init__(loggerid, logfilename,
-                                                debuglogfilename)
+        super(ValidityInspector, self).__init__(loggerid)
         
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))

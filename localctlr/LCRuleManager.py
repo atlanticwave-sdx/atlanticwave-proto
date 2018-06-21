@@ -30,10 +30,10 @@ class LCRuleManager(AtlanticWaveManager):
         filtering.
         Singleton. '''
 
-    def __init__(self, logfilename, loggeridprefix='localcontroller',
-                 debuglogfilename=None, db_filename=':memory:'):
+    def __init__(self, loggeridprefix='localcontroller',
+                 db_filename=':memory:'):
         loggerid = loggeridprefix + '.lcrulemanager'
-        super(LCRuleManager, self).__init__(loggerid, logfilename)
+        super(LCRuleManager, self).__init__(loggerid)
         
         # Setup DB.
         db_tuples = [('rule_table', 'lcrules')] 

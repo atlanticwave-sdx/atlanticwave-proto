@@ -53,8 +53,7 @@ class LocalController(AtlanticWaveModule):
         atexit.register(self.receive_exit)
 
         # Rules DB
-        self.rm = LCRuleManager(self.logfilename, self.loggerid,
-                                self.debuglogfilename)
+        self.rm = LCRuleManager(self.loggerid)
 
         # Initial Rules
         self._initial_rules_dict = {}
@@ -64,15 +63,12 @@ class LocalController(AtlanticWaveModule):
                                     self.manifest, self.lcip,
                                     self.ryu_cxn_port, self.openflow_port,
                                     self.switch_message_cb,
-                                    self.logfilename, self.loggerid,
-                                    self.debuglogfilename)
+                                    self.loggerid)
         self.logger.info("RyuControllerInterface setup finish.")
 
         # Setup connection manager
         self.cxn_q = Queue()
-        self.sdx_cm = SDXControllerConnectionManager(self.logfilename,
-                                                     self.loggerid,
-                                                     self.debuglogfilename)
+        self.sdx_cm = SDXControllerConnectionManager(self.loggerid)
         self.sdx_connection = None
         self.start_cxn_thread = None
 

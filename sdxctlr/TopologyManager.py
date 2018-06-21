@@ -25,11 +25,10 @@ class TopologyManager(AtlanticWaveManager):
         its JSON generation abilities.
         Singleton. '''
     
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 debuglogfilename=None, topology_file=MANIFEST_FILE):
+    def __init__(self, loggeridprefix='sdxcontroller',
+                 topology_file=MANIFEST_FILE):
         loggerid = loggeridprefix + ".topologymanager"
-        super(TopologyManager, self).__init__(loggerid, logfilename,
-                                              debuglogfilename)
+        super(TopologyManager, self).__init__(loggerid)
         
         # Initialize topology
         self.topo = nx.Graph()

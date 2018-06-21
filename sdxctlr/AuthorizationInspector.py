@@ -29,11 +29,9 @@ class AuthorizationInspector(AtlanticWaveInspector):
         significantly.
         Singleton. '''
 
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 debuglogfilename=None):
+    def __init__(self, loggeridprefix='sdxcontroller'):
         loggerid = loggeridprefix + ".authorization"
-        super(AuthorizationInspector, self).__init__(loggerid, logfilename,
-                                                     debuglogfilename)
+        super(AuthorizationInspector, self).__init__(loggerid)
 
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))

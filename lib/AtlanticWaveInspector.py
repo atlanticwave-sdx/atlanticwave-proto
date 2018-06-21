@@ -11,6 +11,5 @@
 from AtlanticWaveModule import AtlanticWaveModule
 
 class AtlanticWaveInspector(AtlanticWaveModule):
-    def __init__(self, loggerid, logfilename, debuglogfilename=None):
-        super(AtlanticWaveInspector, self).__init__(loggerid, logfilename,
-                                                    debuglogfilename)
+    def __init__(self, loggerid):
+        super(AtlanticWaveInspector, self).__init__(loggerid)

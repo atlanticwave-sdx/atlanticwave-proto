@@ -18,9 +18,8 @@ class ControllerInterface(AtlanticWaveModule):
         Singleton. '''
     
 
-    def __init__(self, loggerid, logfilename, debuglogfilename=None):
-        super(ControllerInterface, self).__init__(loggerid, logfilename,
-                                                  debuglogfilename)
+    def __init__(self, loggerid):
+        super(ControllerInterface, self).__init__(loggerid)
         pass
     
     def send_command(self, switch_id, rule):

@@ -13,11 +13,9 @@ from AuthenticationInspector import AuthenticationInspector
 
 class UserManager(AtlanticWaveManager):
     
-    def __init__(self, db_filename, manifest, logfilename,
-                 loggeridprefix='sdxcontroller', debuglogfilename=None):
+    def __init__(self, db_filename, manifest, loggeridprefix='sdxcontroller'):
         loggerid = loggeridprefix + '.usermanager'
-        super(UserManager, self).__init__(loggerid, logfilename,
-                                          debuglogfilename)
+        super(UserManager, self).__init__(loggerid)
 
         # Start database
         db_tuples = [('user_table', 'users')]

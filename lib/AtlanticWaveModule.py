@@ -20,7 +20,7 @@ class AtlanticWaveModuleTypeError(TypeError):
 class AtlanticWaveModule(object):
     __metaclass__ = Singleton
 
-    def __init__(self, loggerid, logfilename, debuglogfilename=None):
+    def __init__(self, loggerid, logfilename=None, debuglogfilename=None):
         ''' Takes two mandatory parameters to properly setup logging, with one
             optional parameter for secondary logging:
               loggerid - name to log under.
@@ -34,54 +34,47 @@ class AtlanticWaveModule(object):
         super(AtlanticWaveModule, self).__init__()
         
         # Check inputs
-        if logfilename == debuglogfilename:
-            raise AtlanticWaveModuleValueError(
-                "logfilename and debuglogfilename must be different: %s" %
-                logfilename)
-        if logfilename == None:
-            raise AtlanticWaveModuleValueError(
-                "logfilename must not be None: %s" % logfilename)
+        if (logfilename != None):
+            if (logfilename == debuglogfilename):
+                raise AtlanticWaveModuleValueError(
+                    "logfilename and debuglogfilename must be different: %s" %
+                    logfilename)
+            if debuglogfilename == None:
+                debuglogfilename = "debug" + logfilename
 
-        # Setup logger
-        self._setup_logger(loggerid, logfilename)
-        
-        # if debuglogfilename is None, sent to /tmp/<logfilename.debug>,
-        # Setup debug logger
-        if debuglogfilename == None:
-            debuglogfilename = "/tmp/" + logfilename + ".debug"
-        self._setup_debug_logger(loggerid, debuglogfilename)
+        # Setup loggers
+        self._setup_loggers(loggerid, logfilename, debuglogfilename)
         
 
-    def _setup_logger(self, loggerid, logfilename):
+    def _setup_loggers(self, loggerid, logfilename=None, debuglogfilename=None):
         ''' Internal function for setting up the logger formats. '''
         # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler(logfilename)
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
+        # Modified based on https://stackoverflow.com/questions/7173033/
         self.logger = logging.getLogger(loggerid)
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
+        self.dlogger = logging.getLogger("debug." + loggerid)
+        if logfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.WARNING)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(logfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.logger.setLevel(logging.DEBUG)
+            self.logger.addHandler(console)
+            self.logger.addHandler(logfile)
 
-    def _setup_debug_logger(self, loggerid, debuglogfilename):
-        ''' Internal function for setting up the logger formats. '''
-        # This is from LocalController
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.DEBUG)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler(debuglogfilename)
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.dlogger = logging.getLogger(loggerid)
-        self.dlogger.setLevel(logging.DEBUG)
-        self.dlogger.addHandler(console)
-        self.dlogger.addHandler(logfile)
+        if debuglogfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.DEBUG)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(debuglogfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.dlogger.setLevel(logging.DEBUG)
+            self.dlogger.addHandler(console)
+            self.dlogger.addHandler(logfile)
 
     def dlogger_tb(self):
         ''' Print out the current traceback. '''

@@ -68,29 +68,20 @@ class SDXController(AtlanticWaveModule):
         self.run_topo = run_topo
 
         # Modules with configuration files
-        self.tm = TopologyManager(self.logfilename, self.loggerid,
-                                  self.debuglogfilename, mani)
+        self.tm = TopologyManager(self.loggerid, mani)
 
         # Initialize all the modules - Ordering is relatively important here
-        self.aci = AuthenticationInspector(self.logfilename, self.loggerid,
-                                           self.debuglogfilename)
-        self.azi = AuthorizationInspector(self.logfilename, self.loggerid,
-                                          self.debuglogfilename)
-        self.be = BreakdownEngine(self.logfilename, self.loggerid,
-                                  self.debuglogfilename)
-        self.rr = RuleRegistry(self.logfilename, self.loggerid,
-                               self.debuglogfilename)
-        self.vi = ValidityInspector(self.logfilename, self.loggerid,
-                                  self.debuglogfilename)
-        self.um = UserManager(self.db_filename, mani, self.logfilename,
-                              self.loggerid, self.debuglogfilename)
+        self.aci = AuthenticationInspector(self.loggerid)
+        self.azi = AuthorizationInspector(self.loggerid)
+        self.be = BreakdownEngine(self.loggerid)
+        self.rr = RuleRegistry(self.loggerid)
+        self.vi = ValidityInspector(self.loggerid)
+        self.um = UserManager(self.db_filename, mani, self.loggerid)
 
         if mani != None:
-            self.lcm = LocalControllerManager(self.logfilename, self.loggerid,
-                                              self.debuglogfilename, mani)
+            self.lcm = LocalControllerManager(self.loggerid, mani)
         else: 
-            self.lcm = LocalControllerManager(self.logfilename, self.loggerid,
-                                              self.debuglogfilename)
+            self.lcm = LocalControllerManager(self.loggerid)
 
         topo = self.tm.get_topology()
 
@@ -99,9 +90,7 @@ class SDXController(AtlanticWaveModule):
         self.ip = options.host
         self.port = options.lcport
         self.connections = {}
-        self.sdx_cm = SDXControllerConnectionManager(self.logfilename,
-                                                     self.loggerid,
-                                                     self.debuglogfilename)
+        self.sdx_cm = SDXControllerConnectionManager(self.loggerid)
         self.cm_thread = threading.Thread(target=self._cm_thread)
         self.cm_thread.daemon = True
         self.cm_thread.start()
@@ -118,18 +107,15 @@ class SDXController(AtlanticWaveModule):
 
         # Start these modules last!
         if self.run_topo:
-            self.rm = RuleManager(self.db_filename, self.logfilename,
-                                  self.loggerid, self.debuglogfilename,
+            self.rm = RuleManager(self.db_filename, self.loggerid,
                                   self.sdx_cm.send_breakdown_rule_add,
                                   self.sdx_cm.send_breakdown_rule_rm)
         else:
-            self.rm = RuleManager(self.db_filename, self.logfilename,
-                                  self.loggerid, self.debuglogfilename,
+            self.rm = RuleManager(self.db_filename, self.loggerid,
                                   send_no_rules,
                                   send_no_rules)
 
-        self.rapi = RestAPI(self.logfilename, self.loggerid,
-                            self.debuglogfilename,
+        self.rapi = RestAPI(self.loggerid,
                             options.host, options.port, options.shib)
 
 
@@ -138,6 +124,7 @@ class SDXController(AtlanticWaveModule):
 
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
+
         # Go to main loop 
         if runloop:
             self._main_loop()

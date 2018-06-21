@@ -26,12 +26,10 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
         on. One per incoming connection. One for outbound connections. Needs to
         be subclassed, even though much will be in common. Singleton. '''
 
-    def __init__(self, loggerid, logfilename, debuglogfilename=None,
-                 connection_cls=Connection):
+    def __init__(self, loggerid, connection_cls=Connection):
         
-        super(AtlanticWaveConnectionManager, self).__init__(loggerid,
-                                                            logfilename,
-                                                            debuglogfilename)
+        super(AtlanticWaveConnectionManager, self).__init__(loggerid)
+        
         self.listening_sock = None
         self.clients = []
         if not issubclass(connection_cls, Connection):

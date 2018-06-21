@@ -39,14 +39,12 @@ class LocalControllerManager(AtlanticWaveManager):
             self.connected = True
         
     
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 debuglogfilename=None, manifest=MANIFEST_FILE):
+    def __init__(self, loggeridprefix='sdxcontroller', manifest=MANIFEST_FILE):
         ''' The bulk of work is handled at initialization and pushing user 
             information to both the AuthenticationInspector and 
             AuthorizationInspector. '''
         loggerid = loggeridprefix + '.localctlrmgr'
-        super(LocalControllerManager, self).__init__(loggerid, logfilename,
-                                                     debuglogfilename)
+        super(LocalControllerManager, self).__init__(loggerid)
 
         # Setup database. Currently just a dictionary. Probably to be an actual
         # database in the future.

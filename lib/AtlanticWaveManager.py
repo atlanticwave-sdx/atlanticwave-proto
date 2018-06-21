@@ -10,12 +10,10 @@
 from AtlanticWaveModule import AtlanticWaveModule
 
 class AtlanticWaveManager(AtlanticWaveModule):
-    def __init__(self, loggerid, logfilename, db_tables_tuples,
-                 db_filename=":memory:",debuglogfilename=None):
+    def __init__(self, loggerid, db_filename=":memory:"):
 
         ''' db_tables_tuples - (attribute_name, db_table_name)
         '''
-        super(AtlanticWaveManager, self).__init__(loggerid, logfilename,
-                                                  debuglogfilename)
+        super(AtlanticWaveManager, self).__init__(loggerid)
         self.db = None
 

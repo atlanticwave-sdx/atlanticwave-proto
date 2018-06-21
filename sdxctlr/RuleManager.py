@@ -74,15 +74,12 @@ class RuleManager(AtlanticWaveManager):
         Singleton. ''' 
     
     
-    def __init__(self, db_filename,
-                 logfilename, loggeridprefix='sdxcontroller',
-                 debuglogfilename=None,
+    def __init__(self, db_filename, loggeridprefix='sdxcontroller',
                  send_user_rule_breakdown_add=TESTING_CALL,
                  send_user_rule_breakdown_remove=TESTING_CALL):
         # The params are used in order to maintain import hierarchy.
         loggerid = loggeridprefix + ".rulemanager"
-        super(RuleManager, self).__init__(loggerid, logfilename,
-                                          debuglogfilename)
+        super(RuleManager, self).__init__(loggerid)
         
         # Setup timers and their associated locks.
         # Timer code in part based on https://github.com/sdonovan1985/py-timer

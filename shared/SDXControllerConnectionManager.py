@@ -35,11 +35,9 @@ class SDXControllerConnectionManagerNotConnectedError(ConnectionManagerValueErro
 class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
     ''' Used to manage the connection with the SDX Controller. '''
 
-    def __init__(self, logfilename, loggeridprefix, debuglogfilename=None):
+    def __init__(self, loggeridprefix):
         loggerid = loggeridprefix + '.sdxctlrcxnmgr'
-        super(SDXControllerConnectionManager, self).__init__(loggerid,
-                                                             logfilename,
-                                                             debuglogfilename)
+        super(SDXControllerConnectionManager, self).__init__(loggerid)
         # associations are for easy lookup of connections based on the name of
         # the Local Controller.
         

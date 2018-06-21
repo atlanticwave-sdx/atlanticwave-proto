@@ -32,11 +32,9 @@ class RyuControllerInterface(ControllerInterface):
 
     def __init__(self, lcname, conffile, lcip,
                  ryu_cxn_port, openflow_port, lc_callback,
-                 logfilename, loggeridprefix='localcontroller',
-                 debuglogfilename=None):
+                 loggeridprefix='localcontroller'):
         loggerid = loggeridprefix + '.ryucontrollerinterface'
-        super(RyuControllerInterface, self).__init__(loggerid, logfilename,
-                                                     debuglogfilename)
+        super(RyuControllerInterface, self).__init__(loggerid)
 
         self.lcname = lcname
         self.conffile = conffile

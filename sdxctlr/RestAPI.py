@@ -136,10 +136,10 @@ class RestAPI(AtlanticWaveModule):
         login_manager.init_app(app)
         app.run(host=self.host, port=self.port)
 
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 debuglogfilename= None, host='0.0.0.0', port=5000, shib=False):
+    def __init__(self, loggeridprefix='sdxcontroller',
+                 host='0.0.0.0', port=5000, shib=False):
         loggerid = loggeridprefix + ".rest"
-        super(RestAPI, self).__init__(loggerid, logfilename, debuglogfilename)
+        super(RestAPI, self).__init__(loggerid)
         
         global shibboleth
         shibboleth = shib

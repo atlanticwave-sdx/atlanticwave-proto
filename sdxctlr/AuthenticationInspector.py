@@ -13,11 +13,9 @@ class AuthenticationInspector(AtlanticWaveInspector):
         local controllers, respectively.
         Singleton. ''' 
 
-    def __init__(self, logfilename, loggeridprefix='sdxcontroller',
-                 debuglogfilename=None):
+    def __init__(self, loggeridprefix='sdxcontroller'):
         loggerid = loggeridprefix + '.authentication'
-        super(AuthenticationInspector, self).__init__(loggerid, logfilename,
-                                                      debuglogfilename)
+        super(AuthenticationInspector, self).__init__(loggerid)
 
         # Initialize the credential store
         self._credential_store = {}
