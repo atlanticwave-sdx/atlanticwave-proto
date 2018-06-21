@@ -37,7 +37,8 @@ class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
 
     def __init__(self, loggeridprefix):
         loggerid = loggeridprefix + '.sdxctlrcxnmgr'
-        super(SDXControllerConnectionManager, self).__init__(loggerid)
+        super(SDXControllerConnectionManager, self).__init__(
+            loggerid, SDXControllerConnection)
         # associations are for easy lookup of connections based on the name of
         # the Local Controller.
         
