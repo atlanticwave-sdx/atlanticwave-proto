@@ -149,8 +149,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         loggerid = 'localcontroller.ryutranslateinterface'
         logfilename = 'localcontroller.log'
         debuglogfilename = 'debug'+logfilename
-        self._setup_logger(loggerid, logfilename)
-        self._setup_debug_logger(loggerid, debuglogfilename)
+        self._setup_loggers(loggerid, logfilename, debuglogfilename)
 
         # Configuration file + parsing
         self.name = CONF['atlanticwave']['lcname']
@@ -188,39 +187,36 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                     hex(id(self))))
 
 
-    # The two _setup_logger functions are from lib/AtlanticWaveModule.py.
+    # The two _setup_loggers function is from lib/AtlanticWaveModule.py.
     # This cannot inherit from AtlanticWaveModule or any of it's children, so we
     # need to manually include some of it's functionality.
-    def _setup_logger(self, loggerid, logfilename):
+    def _setup_loggers(self, loggerid, logfilename=None, debuglogfilename=None):
         ''' Internal function for setting up the logger formats. '''
         # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler(logfilename)
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
+        # Modified based on https://stackoverflow.com/questions/7173033/
         self.logger = logging.getLogger(loggerid)
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
-        
-    def _setup_debug_logger(self, loggerid, debuglogfilename):
-        ''' Internal function for setting up the logger formats. '''
-        # This is from LocalController
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.DEBUG)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler(debuglogfilename)
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.dlogger = logging.getLogger(loggerid)
-        self.dlogger.setLevel(logging.DEBUG)
-        self.dlogger.addHandler(console)
-        self.dlogger.addHandler(logfile)
+        self.dlogger = logging.getLogger("debug." + loggerid)
+        if logfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.WARNING)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(logfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.logger.setLevel(logging.DEBUG)
+            self.logger.addHandler(console)
+            self.logger.addHandler(logfile)
+
+        if debuglogfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.DEBUG)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(debuglogfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.dlogger.setLevel(logging.DEBUG)
 
     def dlogger_tb(self):
         ''' Print out the current traceback. '''
