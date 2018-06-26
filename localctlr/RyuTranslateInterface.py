@@ -1264,6 +1264,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def add_flow(self, datapath, rc):
         ''' Ease-of-use wrapper for adding flows. ''' 
         parser = datapath.ofproto_parser
+    
+        self.logger.debug("add_flow for %d:%d:%d:%s:%s" % (
+            rc.get_cookie(),
+            rc.get_table(),
+            rc.get_priority(),
+            rc.get_match(),
+            rc.get_instructions()))
 
         if rc.get_buffer_id() != None:
             mod = parser.OFPFlowMod(datapath=datapath,

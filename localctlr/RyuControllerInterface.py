@@ -103,11 +103,13 @@ class RyuControllerInterface(ControllerInterface):
             raise ControllerInterfaceTypeError("rule is not of type LCRule: " + str(type(rule)) + 
                                                "\n    Value: " + str(rule))
 
-        #self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s:%s" % (switch_id, rule))
+        self.logger.debug("Sending  new cmd to RTI: %s:%s" % 
+                          (switch_id, rule))
         self.inter_cm_cxn.send_cmd(ICX_ADD, (switch_id, rule))
 
     def remove_rule(self, switch_id, sdxcookie):
-        #self.logger.debug("Removing old cmd to RyuTranslateInterface: %s:%s" % (switch_id, sdxcookie))
+        self.logger.debug("Removing old cmd to RTI: %s:%s" % 
+                          (switch_id, sdxcookie))
         self.inter_cm_cxn.send_cmd(ICX_REMOVE, (switch_id, str(sdxcookie)))
 
     def get_ryu_process(self):
@@ -143,9 +145,9 @@ class RyuControllerInterface(ControllerInterface):
             # Loop through readable
             for entry in readable:
                 if entry == self.inter_cm_cxn:
-                    self.logger.debug("Receiving Command on inter_cm_cxn")
                     cmd, data = self.inter_cm_cxn.recv_cmd()
-                    self.logger.debug("Received : %s:%s" % (cmd, data))
+                    self.logger.debug("Received on inter_cm_cxn : %s:%s" % 
+                                      (cmd, data))
                     if cmd == ICX_UNKNOWN_SOURCE:
                         self.lc_callback(SM_UNKNOWN_SOURCE, data)
                     elif cmd == ICX_L2MULTIPOINT_UNKNOWN_SOURCE:

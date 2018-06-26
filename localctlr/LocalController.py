@@ -177,8 +177,6 @@ class LocalController(AtlanticWaveModule):
                     #self.logger.debug("Received None from recv_protocol %s" %
                     #                  (entry))
                     continue
-                self.logger.debug("Received a %s message from %s" %
-                                  (type(msg), entry))
 
                 #FIXME: Check if the SDXMessage is valid at this stage
                 
@@ -186,19 +184,28 @@ class LocalController(AtlanticWaveModule):
                 # require tracking anything, unlike when sending out a
                 # HeartbeatRequest ourselves.
                 if type(msg) == SDXMessageHeartbeatRequest:
+                    self.logger.debug("Received a HBREQ message from %s" %
+                                      hex(id(entry)))
+
                     hbr = SDXMessageHeartbeatResponse()
                     entry.send_protocol(hbr)
                 
                 # If HeartbeatResponse, call HeartbeatResponseHandler
                 elif type(msg) == SDXMessageHeartbeatResponse:
+                    self.logger.debug("Received a HBRES message from %s" %
+                                      hex(id(entry)))
                     entry.heartbeat_response_handler(msg)
 
                 # If InstallRule
                 elif type(msg) == SDXMessageInstallRule:
+                    self.logger.debug("Received a INSTL message from %s" %
+                                      hex(id(entry)))
                     self.install_rule_sdxmsg(msg)
 
                 # If RemoveRule
                 elif type(msg) == SDXMessageRemoveRule:
+                    self.logger.debug("Received a REMOV message from %s" %
+                                      hex(id(entry)))
                     self.remove_rule_sdxmsg(msg)
                     
                 # If InstallRuleComplete - ERROR! LC shouldn't receive this.
@@ -460,8 +467,8 @@ class LocalController(AtlanticWaveModule):
                           (self.sdxip, self.sdxport))
         self.sdx_connection = self.sdx_cm.open_outbound_connection(self.sdxip, 
                                                                    self.sdxport)
-        self.logger.debug("SDX Controller Connection - %s" % 
-                          (self.sdx_connection))
+        self.logger.debug("SDX Controller Connection - %s: %s" % 
+                          (hex(id(self.sdx_connection)), self.sdx_connection))
 
         # Transition to Main Phase
             
@@ -511,6 +518,10 @@ class LocalController(AtlanticWaveModule):
         rule = msg.get_data()['rule']
         cookie = rule.get_cookie()
 
+        self.logger.debug("install_rule_sdxmsg: %d:%s:%s" % (cookie, 
+                                                             switch_id, 
+                                                             rule))
+
         self.rm.add_rule(cookie, switch_id, rule, RULE_STATUS_INSTALLING)
         self.switch_connection.send_command(switch_id, rule)
 
@@ -528,6 +539,10 @@ class LocalController(AtlanticWaveModule):
         switch_id = msg.get_data()['switch_id']
         cookie = msg.get_data()['cookie']
         rules = self.rm.get_rules(cookie, switch_id)
+
+        self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
+                                                             switch_id, 
+                                                             rule))
 
         if rules == []:
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
