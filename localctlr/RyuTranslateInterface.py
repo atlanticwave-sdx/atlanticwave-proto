@@ -1350,6 +1350,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # types of supported LCRules for individual translation.
         switch_rules = None
         switch_table = None
+
+        self.logger.debug("SDX Rule %s being installed in datapath %s" %
+                          (sdx_rule, datapath))
+
         if isinstance(sdx_rule, MatchActionLCRule):
             if sdx_rule.get_ingress == True:
                 # Ingress rules are applied right before being sent to the
@@ -1444,18 +1448,26 @@ class RyuTranslateInterface(app_manager.RyuApp):
             
 
         if switch_rules == None or switch_table == None:
+            self.logger.error(
+                "switch_rules or switch_table is None for msg: %s" %
+                sdx_rules)
             #FIXME: This shouldn't happen...
             pass
         
         # Save off instructions to local database.
+        self.logger.debug("Inserting into switch table %d switch rules %s" %
+                          (switch_table, switch_rules))
         self._install_rule_in_db(sdx_rule.get_cookie(), of_cookie,
                                  sdx_rule, switch_rules, switch_table)
 
         # Send instructions to the switch.
+        self.logger.debug("Calling add_flow on the following:")
         for rule in switch_rules:
             if type(rule) == TranslatedLCRuleContainer:
+                self.logger.debug("  %s" % rule)
                 self.add_flow(datapath, rule)
             elif type(rule) == TranslatedCorsaRuleContainer:
+                self.logger.debug("  %s - CORSA_REST_CMD" % rule)
                 self.corsa_rest_cmd(rule)
 
 
@@ -1574,11 +1586,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def _register_packet_in_cb(self, cookie_id, function):
         ''' Used for registeringcookies for packet_in callbacks. Function is 
             called with the packet_in event. '''
-        self.logger.warning("Registering cookie 0x%02x to function %s for packet_in handling" % (cookie_id, function))
+        self.logger.debug("Registering cookie 0x%02x to function %s for packet_in handling" % (cookie_id, function))
         self.packet_in_cbs[cookie_id] = function
 
     def _deregister_packet_in_cb(self, cookie_id):
         ''' Used for deregistering cookies for packet_in callbacks. '''
+        self.logger.debug("Deregistering cookie 0x%02x" % cookie_id)
         del self.packet_in_cbs[cookie_id]
 
         
