@@ -148,8 +148,8 @@ class LCRuleManager(AtlanticWaveManager):
     def add_initial_rule(self, rule, cookie, switch_id):
         # Used during initial rule stage of inialization.
         self.logger.debug(
-            "Adding a new rule to the _initial_rules_list: %s:%s" %
-            (cookie, switch_id))
+            "Adding a new rule to the _initial_rules_list: %s:%s:%s" %
+            (cookie, switch_id, rule.get_data()['rule']))
         self._initial_rules_list.append((cookie, switch_id, rule))
 
     def initial_rules_complete(self):
@@ -168,7 +168,8 @@ class LCRuleManager(AtlanticWaveManager):
         # Empty the _initial_rules_list for the next reconnection.
         # NOTE: _initial_rules_list is a list of SDXMessageInstallRules
         self.logger.debug("IRC RULE_TABLE %s" % self.rule_table)
-        self.logger.debug("IRC _INITIAL_RULES_LIST %s\n\n\n" % 
+        
+        self.logger.debug("IRC _INITIAL_RULES_LIST %s" % 
                           self._initial_rules_list)
         
         list_of_c_and_s = [(x['cookie'], x['switch_id'])
@@ -199,5 +200,5 @@ class LCRuleManager(AtlanticWaveManager):
             be a weird side effect that is dirty. As such, separate function. A 
             very complicated separate function.
         '''
-        self.logger.debug("Clearning _initial_rules_list")
+        self.logger.debug("Clearing _initial_rules_list")
         self._initial_rules_list = []

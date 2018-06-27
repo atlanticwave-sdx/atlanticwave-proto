@@ -68,6 +68,8 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
                                                self.buffer_id,
                                                self.idle_timeout,
                                                self.hard_timeout)
+    def __repr__(self):
+        return "%s:%s:%s" % (self.cookie, self.match, self.instructions)
 
     def get_cookie(self):
         return self.cookie
@@ -450,6 +452,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
             event_type, event_data = self.inter_cm_cxn.recv_cmd()
             (switch_id, event) = event_data
             if switch_id not in self.datapaths.keys():
+                self.logging.warning("switch_id %s does not match known switches: %s" %
+                                     (switch_id, self.datapaths.keys()))
+                                     
                 # FIXME - Need to update this for sending errors back
                 continue
                 
@@ -1352,7 +1357,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         switch_table = None
 
         self.logger.debug("SDX Rule %s being installed in datapath %s" %
-                          (sdx_rule, datapath))
+                          (sdx_rule, datapath.id))
 
         if isinstance(sdx_rule, MatchActionLCRule):
             if sdx_rule.get_ingress == True:

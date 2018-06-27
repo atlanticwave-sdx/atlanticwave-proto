@@ -301,11 +301,11 @@ class SDXController(AtlanticWaveModule):
 
                 # Can return None if there was some internal message.
                 if msg == None:
-                    self.logger.debug("Received None from recv_protocol %s" %
-                                      (entry))
+                    self.logger.debug("Received internal message from recv_protocol %s" %
+                                      hex(id(entry)))
                     continue
                 self.logger.debug("Received a %s message from %s" %
-                                  (type(msg), entry))
+                                  (type(msg), hex(id(entry))))
 
                 # If message is UnknownSource or L2MultipointUnknownSource,
                 # Send the appropriate handler.
