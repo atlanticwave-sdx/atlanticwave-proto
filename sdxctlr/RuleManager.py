@@ -182,14 +182,14 @@ class RuleManager(AtlanticWaveManager):
         rule = pickle.loads(str(self.rule_table.find_one(hash=rule_hash)['rule']))
         authorized = None
         try:
-            authorized = AuthorizationInspector.instance().is_authorized(user, rule) #FIXME
+            authorized = AuthorizationInspector().is_authorized(user, rule) #FIXME
         except Exception as e:
             raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s with exception %s" % (user, rule_hash, str(e)))
         if authorized != True:
             raise RuleManagerAuthorizationError("User %s is not authorized to remove rule %s" % (user, rule_hash))
 
-        rule.pre_remove_callback(TopologyManager.instance(),
-                                 AuthorizationInspector.instance())
+        rule.pre_remove_callback(TopologyManager(),
+                                 AuthorizationInspector())
         self._rm_rule_from_db(rule)
 
     def remove_all_rules(self, user):
