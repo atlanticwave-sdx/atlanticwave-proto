@@ -301,8 +301,8 @@ class SDXController(AtlanticWaveModule):
 
                 # Can return None if there was some internal message.
                 if msg == None:
-                    self.logger.debug("Received internal message from recv_protocol %s" %
-                                      hex(id(entry)))
+                    #self.logger.debug("Received internal message from recv_protocol %s" %
+                    #                  hex(id(entry)))
                     continue
                 self.logger.debug("Received a %s message from %s" %
                                   (type(msg), hex(id(entry))))
