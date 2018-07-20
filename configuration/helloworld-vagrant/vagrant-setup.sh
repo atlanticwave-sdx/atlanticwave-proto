@@ -13,8 +13,8 @@ git clone https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 
 # Docker work: build SDX Controller and Local Controller containers
 cd ~/atlanticwave-proto/
-cp configuration/helloworld-multi/helloworld.manifest docker/sdx_container/
-cp configuration/helloworld-multi/helloworld.manifest docker/lc_container/
+cp configuration/helloworld-vagrant/helloworld.manifest docker/sdx_container/
+cp configuration/helloworld-vagrant/helloworld.manifest docker/lc_container/
 
 sudo service docker restart
 
@@ -27,6 +27,8 @@ sudo docker build -t lc_container .
 rm helloworld.manifest
 
 # Copy over run scripts
-cd ~/atlanticwave-proto/configuration/helloworld-multi
-cp 1-start-controller.sh ~
-cp 2-start-topology.sh ~
+cd ~/atlanticwave-proto/configuration/helloworld-vagrant
+cp 1-start-sdxctlr.sh ~
+cp 2-start-lcctlr.sh ~
+cp 3-start-mininet.sh ~
+cp 4-get-ip.sh ~
