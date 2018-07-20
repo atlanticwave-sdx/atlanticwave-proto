@@ -548,10 +548,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if 'managementvlan' in internal_config.keys():
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in internal_config.keys():
+                untaggedmanagementvlanports = intern_config['untaggedmanagementvlanports']  
+            
             table = L2TUNNELTABLE
             mvrule = ManagementVLANLCRule(switch_id,
                                           managementvlan,
-                                          managementvlanports)
+                                          managementvlanports,
+                                          untaggedmanagementvlanports)
             results += self._translate_ManagementVLANLCRule(datapath,
                                                             table,
                                                             of_cookie,
@@ -1129,21 +1134,38 @@ class RyuTranslateInterface(app_manager.RyuApp):
         '''
         results = []
         switch_id = 0 # This is unimportant: it's never used in the translation
-        mgmt_vlan = mvrule.get_mgmt_vlan()
         priority = PRIORITY_MGMT_VLAN
+
+        mgmt_vlan = mvrule.get_mgmt_vlan()
+        mgmt_ports = mvrule.get_mgmt_vlan_ports()
+        untagged_mgmt_ports = mvrule.get_untagged_mgmt_vlan_ports()
         
-        for vlan_port in mvrule.get_mgmt_vlan_ports():
-            matches = [VLAN_VID(mgmt_vlan), IN_PORT(vlan_port)]
-            actions = []
-            for out_port in mvrule.get_mgmt_vlan_ports():
+        for vlan_port in (mgmt_ports + untaged_mgmt_ports):
+            if vlan_port in mgmt_ports:
+                matches = [VLAN_VID(mgmt_vlan), IN_PORT(vlan_port)]
+                actions = []
+            else:
+                matches = [IN_PORT(vlan_port)]
+                actions = [PushVLAN(mgmt_vlan)]
+
+            # Tagged ports - Forward with already setup VLAN
+            for out_port in mgmt_ports:
                 if out_port != vlan_port:
                     actions.append(Forward(out_port))
+            # Untagged ports - clear the VLAN first, then forward
+            if len(untagged_mgmt_ports) > 0:
+                actions.append(PopVLAN())
+            for out_port in untagged_mgmt_ports:
+                if out_port != vlan_port:
+                    actions.append(Forward(out_port))
+                    
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
                                                          switch_table,
                                                          of_cookie,
                                                          marule,
                                                          priority)
+
         return results
                                        
         

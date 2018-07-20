@@ -34,12 +34,16 @@ class ManagementVLANLCRule(LCRule):
         forwarding will be handled exclusively through MAC learning in this 
         itteration, much like how L2Multipoint is handled. '''
 
-    def __init__(self, switch_id, mgmt_vlan, mgmt_vlan_ports):
+    def __init__(self, switch_id, mgmt_vlan, mgmt_vlan_ports,
+                 untagged_mgmt_vlan_ports=[]):
         ''' Field descriptions:
                 switch_id - The switch involved
                 mgmt_vlan - VLAN ID of Managment VLAN
                 mgmt_vlan_ports - List of ports connected on the Management 
                   VLAN. 
+                untagged_mgmt_vlan_ports - List of untagged port connected to
+                  the Management VLAN. All untagged traffic on these ports is
+                  tagged on ingress and untagged on egress.
         '''
         super(ManagementVLANLCRule, self).__init__(switch_id)
 
@@ -62,14 +66,26 @@ class ManagementVLANLCRule(LCRule):
             if type(p) != int:
                 raise LCRuleTypeError("port in mgmt_vlan_ports is not an int: %s, %s" %
                                       (p, type(p)))
-            
+
+        if type(untagged_mgmt_vlan_ports) != list:
+            raise LCRuleTypeError(
+                "untagged_mgmt_vlan_ports is not a list: %s, %s" %
+                (untagged_mgmt_vlan_ports, type(untagged_mgmt_vlan_ports)))
+
+        for p in untagged_mgmt_vlan_ports:
+            if type(p) != int:
+                raise LCRuleTypeError(
+                    "port in untagged_mgmt_vlan_ports is not an int: %s, %s" %
+                    (p, type(p)))
         # Save off inputs
         self.mgmt_vlan = mgmt_vlan
         self.mgmt_vlan_ports = mgmt_vlan_ports
+        self.untagged_mgmt_vlan_ports = untagged_mgmt_vlan_ports
 
     def __str__(self):
-        retstr = ("ManagementVLANLCRule: switch %s: %s, %s" %
-                  (self.switch_id, self.mgmt_vlan, self.mgmt_vlan_ports))
+        retstr = ("ManagementVLANLCRule: switch %s: %s, (%s), (%s)" %
+                  (self.switch_id, self.mgmt_vlan, self.mgmt_vlan_ports,
+                   self.untagged_mgmt_vlan_ports))
         return retstr
 
     def get_mgmt_vlan(self):
@@ -77,3 +93,7 @@ class ManagementVLANLCRule(LCRule):
 
     def get_mgmt_vlan_ports(self):
         return self.mgmt_vlan_ports
+
+    def get_untagged_mgmt_vlan_ports(self):
+        return self.untagged_mgmt_vlan_ports
+    
