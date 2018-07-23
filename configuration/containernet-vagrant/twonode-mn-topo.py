@@ -5,6 +5,8 @@ from mininet.util import custom
 from mininet.node import RemoteController, Host
 from mininet.cli import CLI
 
+from docker.types import Mount
+
 # This runs multiple switch, each with three hosts at easy to read formats.
 # LAX and NYC have their own Local Controllers, while ORD and ATL share a
 # single local controller
@@ -97,20 +99,26 @@ def MultiSite():
     sdx_env = {"MANIFEST":"/containernet.manifest", "IPADDR":"0.0.0.0",
                "PORT":"5000", "LCPORT":"5555"}
     sdx_pbs = {5000:5000}
+    sdx_mounts = [Mount("/dev", "~/dev", "bind")]
     sdxctlr = net.addDocker('sdxctlr', ip='10.0.0.200', dimage="sdx_container",
-                            environment=sdx_env, port_bindings=sdx_pbs)
+                            environment=sdx_env, port_bindings=sdx_pbs,
+                            mounts=sdx_mounts)
     
     lc1_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
-                  "SDXIP":"10.0.0.200"}
+               "SDXIP":"10.0.0.200"}
     lc1_pbs = {6680:6680}
+    lc1_mounts = sdx_mounts
     lc1 = net.addDocker('westctlr', ip='10.0.0.100', dimage="lc_container",
-                           environment=lc1_env, port_bindings=lc1pbs)
+                        environment=lc1_env, port_bindings=lc1pbs,
+                        mounts=lc1_mounts)
 
     lc2_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
                   "SDXIP":"10.0.0.200"}
     lc2_pbs = {6681:6681}
+    lc2_mounts = sdx_mounts
     lc2 = net.addDocker('centctlr', ip='10.0.0.101', dimage="lc_container",
-                           environmeqnt=lc2_env, port_bindings=lc2pbs)
+                        environmeqnt=lc2_env, port_bindings=lc2pbs,
+                        mounts=lc2_mounts)
 
 
     # Host Wiring

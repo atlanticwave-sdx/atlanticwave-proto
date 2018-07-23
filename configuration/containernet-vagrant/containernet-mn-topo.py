@@ -5,6 +5,8 @@ from mininet.util import custom
 from mininet.node import RemoteController, Host
 from mininet.cli import CLI
 
+from docker.types import Mount
+
 # This runs multiple switch, each with three hosts at easy to read formats.
 # LAX and NYC have their own Local Controllers, while ORD and ATL share a
 # single local controller
@@ -131,23 +133,31 @@ def MultiSite():
     sdx_env = {"MANIFEST":"/containernet.manifest", "IPADDR":"0.0.0.0",
                "PORT":"5000", "LCPORT":"5555"}
     sdx_pbs = {5000:5000}
+    sdx_mounts = [Mount("/dev", "~/dev", "bind")]
     sdxctlr = net.addDocker('sdxctlr', ip='10.0.0.200', dimage="sdx_container",
-                            environment=sdx_env, port_bindings=sdx_pbs)
+                            environment=sdx_env, port_bindings=sdx_pbs,
+                            mounts=sdx_mounts)
     westlc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
                   "SDXIP":"10.0.0.200"}
     westlc_pbs = {6680:6680}
+    westlc_mounts = sdx_mounts
     westlc = net.addDocker('westctlr', ip='10.0.0.100', dimage="lc_container",
-                           environment=westlc_env, port_bindings=westlcpbs)
+                           environment=westlc_env, port_bindings=westlcpbs,
+                           mounts=westlc_mounts)
     centlc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
                   "SDXIP":"10.0.0.200"}
     centlc_pbs = {6681:6681}
+    centlc_mounts = sdx_mounts
     centlc = net.addDocker('centctlr', ip='10.0.0.101', dimage="lc_container",
-                           environmeqnt=centlc_env, port_bindings=centlcpbs)
+                           environmeqnt=centlc_env, port_bindings=centlcpbs,
+                           mounts=centlc_mounts)
     eastlc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
                   "SDXIP":"10.0.0.200"}
     eastlc_pbs = {6682:6682}
+    eastlc_mounts = sdx_mounts
     eastlc = net.addDocker('eastctlr', ip='10.0.0.102', dimage="lc_container",
-                           environment=eastlc_env, port_bindings=eastlcpbs)
+                           environment=eastlc_env, port_bindings=eastlcpbs,
+                           mounts=eastlc_mounts)
 
 
     # Host Wiring
