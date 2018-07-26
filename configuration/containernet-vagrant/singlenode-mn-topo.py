@@ -6,6 +6,7 @@ from mininet.node import RemoteController, Host
 from mininet.cli import CLI
 
 from docker.types import Mount
+import sys
 
 # This runs multiple switch, each with three hosts at easy to read formats.
 # LAX and NYC have their own Local Controllers, while ORD and ATL share a
@@ -51,7 +52,7 @@ class VLANHost( Host ):
 
 hosts = { 'vlan': VLANHost }
 
-def SingleNodeSite():
+def SingleNodeSite(dir):
     ''' This is the topology that we will be building here.
 
 
@@ -90,23 +91,24 @@ def SingleNodeSite():
     sdx_env = {"MANIFEST":"/containernet.manifest", "IPADDR":"0.0.0.0",
                "PORT":"5000", "LCPORT":"5555"}
     sdx_pbs = {5000:5000}
-    sdx_mounts = [Mount("/dev", "~/dev", "bind")]
-    sdxctlr = net.addDocker('sdxctlr', ip='10.0.0.200', dimage="sdx_container",
+    sdx_volumes = [dir + ":/development:rw"]
+    sdxctlr = net.addDocker('sdx', ip='10.0.0.200', dimage="sdx_container",
                             environment=sdx_env, port_bindings=sdx_pbs,
-                            mounts=sdx_mounts) 
-    lc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
+                            volumes=sdx_volumes) 
+    lc_env = {"MANIFEST":"/containernet.manifest", "SITE":"localcontroller",
                   "SDXIP":"10.0.0.200"}
     lc_pbs = {6680:6680}
-    lc_mounts = sdx_mounts
-    lc = net.addDocker('westctlr', ip='10.0.0.100', dimage="lc_container",
-                       environment=lc_env, port_bindings=lclcpbs,
-                       mounts=lc_mounts
+    lc_volumes = sdx_volumes
+    lc = net.addDocker('lc', ip='10.0.0.100',
+                       dimage="lc_container",
+                       environment=lc_env, port_bindings=lc_pbs,
+                       volumes=lc_volumes)
 
 
     # Host Wiring
     net.addLink(s1switch, h1, port1=1)
-    net.addLink(s2switch, h2, port1=2)
-    net.addLink(s2switch, h3, port1=3)
+    net.addLink(s1switch, h2, port1=2)
+    net.addLink(s1switch, h3, port1=3)
 
     # Controller wiring
     net.addLink(s1switch, lc, port1=10)
@@ -131,4 +133,9 @@ def SingleNodeSite():
 
 
 if __name__ == '__main__':
-    SingleNodeSite()
+    print "USAGE: python singlenode-mn-topo.py </absolute/path/to/local/AWave/directory>"
+    print "    Path is optional"
+    dir = "/home/ubuntu/dev"
+    if len(sys.argv) > 1:
+        dir = sys.argv[1]
+    SingleNodeSite(dir)

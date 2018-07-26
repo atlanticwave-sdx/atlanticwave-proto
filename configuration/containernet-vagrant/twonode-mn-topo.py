@@ -6,6 +6,7 @@ from mininet.node import RemoteController, Host
 from mininet.cli import CLI
 
 from docker.types import Mount
+import sys
 
 # This runs multiple switch, each with three hosts at easy to read formats.
 # LAX and NYC have their own Local Controllers, while ORD and ATL share a
@@ -51,7 +52,7 @@ class VLANHost( Host ):
 
 hosts = { 'vlan': VLANHost }
 
-def MultiSite():
+def MultiSite(dir):
     ''' This is the topology that we will be building here.
 
 
@@ -99,26 +100,26 @@ def MultiSite():
     sdx_env = {"MANIFEST":"/containernet.manifest", "IPADDR":"0.0.0.0",
                "PORT":"5000", "LCPORT":"5555"}
     sdx_pbs = {5000:5000}
-    sdx_mounts = [Mount("/dev", "~/dev", "bind")]
+    sdx_volumes = [dir + ":/development:rw"]
     sdxctlr = net.addDocker('sdxctlr', ip='10.0.0.200', dimage="sdx_container",
                             environment=sdx_env, port_bindings=sdx_pbs,
-                            mounts=sdx_mounts)
+                            volumes=sdx_volumes)
     
     lc1_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
                "SDXIP":"10.0.0.200"}
     lc1_pbs = {6680:6680}
-    lc1_mounts = sdx_mounts
+    lc1_volumes = sdx_volumes
     lc1 = net.addDocker('westctlr', ip='10.0.0.100', dimage="lc_container",
                         environment=lc1_env, port_bindings=lc1pbs,
-                        mounts=lc1_mounts)
+                        volumes=lc1_volumes)
 
     lc2_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
                   "SDXIP":"10.0.0.200"}
     lc2_pbs = {6681:6681}
-    lc2_mounts = sdx_mounts
+    lc2_volumes = sdx_volumes
     lc2 = net.addDocker('centctlr', ip='10.0.0.101', dimage="lc_container",
                         environmeqnt=lc2_env, port_bindings=lc2pbs,
-                        mounts=lc2_mounts)
+                        volumes=lc2_volumes)
 
 
     # Host Wiring
@@ -157,5 +158,10 @@ def MultiSite():
     print "net.stop"
 
 
-if __name__ == '__main__':
-    MultiSite()
+if __name__ == '__main__': 
+    print "USAGE: python twonode-mn-topo.py </absolute/path/to/local/AWave/directory>"
+    print "    Path is optional"
+    dir = "/home/ubuntu/dev"
+    if len(sys.argv) > 1:
+        dir = sys.argv[1]               
+    MultiSite(dir)

@@ -406,6 +406,8 @@ class LocalController(AtlanticWaveModule):
             with open(self.manifest) as data_file:
                 data = json.load(data_file)
             lcdata = data['localcontrollers'][self.name]
+            self.logger.info("Successfully opened manifest file %s" %
+                             self.manifest)
         except Exception as e:
             self.logger.warning("Exception when opening manifest file: %s" %
                                 str(e))

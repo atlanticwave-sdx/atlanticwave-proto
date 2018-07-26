@@ -6,6 +6,7 @@ from mininet.node import RemoteController, Host
 from mininet.cli import CLI
 
 from docker.types import Mount
+import sys
 
 # This runs multiple switch, each with three hosts at easy to read formats.
 # LAX and NYC have their own Local Controllers, while ORD and ATL share a
@@ -51,7 +52,7 @@ class VLANHost( Host ):
 
 hosts = { 'vlan': VLANHost }
 
-def MultiSite():
+def MultiSite(dir):
     ''' This is the topology that we will be building here.
 
 
@@ -133,31 +134,31 @@ def MultiSite():
     sdx_env = {"MANIFEST":"/containernet.manifest", "IPADDR":"0.0.0.0",
                "PORT":"5000", "LCPORT":"5555"}
     sdx_pbs = {5000:5000}
-    sdx_mounts = [Mount("/dev", "~/dev", "bind")]
+    sdx_volumes = [dir + ":/development:rw"]
     sdxctlr = net.addDocker('sdxctlr', ip='10.0.0.200', dimage="sdx_container",
                             environment=sdx_env, port_bindings=sdx_pbs,
-                            mounts=sdx_mounts)
+                            volumes=sdx_volumes)
     westlc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
                   "SDXIP":"10.0.0.200"}
     westlc_pbs = {6680:6680}
-    westlc_mounts = sdx_mounts
+    westlc_volumes = sdx_volumes
     westlc = net.addDocker('westctlr', ip='10.0.0.100', dimage="lc_container",
                            environment=westlc_env, port_bindings=westlcpbs,
-                           mounts=westlc_mounts)
+                           volumes=westlc_volumes)
     centlc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
                   "SDXIP":"10.0.0.200"}
     centlc_pbs = {6681:6681}
-    centlc_mounts = sdx_mounts
+    centlc_volumes = sdx_volumes
     centlc = net.addDocker('centctlr', ip='10.0.0.101', dimage="lc_container",
                            environmeqnt=centlc_env, port_bindings=centlcpbs,
-                           mounts=centlc_mounts)
+                           volumes=centlc_volumes)
     eastlc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
                   "SDXIP":"10.0.0.200"}
     eastlc_pbs = {6682:6682}
-    eastlc_mounts = sdx_mounts
+    eastlc_volumes = sdx_volumes
     eastlc = net.addDocker('eastctlr', ip='10.0.0.102', dimage="lc_container",
                            environment=eastlc_env, port_bindings=eastlcpbs,
-                           mounts=eastlc_mounts)
+                           volumes=eastlc_volumes)
 
 
     # Host Wiring
@@ -185,7 +186,7 @@ def MultiSite():
     net.addLink(laxswitch, westlc, port1=10)
     net.addLink(atlswitch, centlc, port1=10)
     net.addLink(atlswitch, sdxctlr, port1=11)
-    net.addLink(nycswitch, eastlc, port1=10
+    net.addLink(nycswitch, eastlc, port1=10)
 
     # Add controllers
     # https://stackoverflow.com/questions/23677291/how-to-connect-different-switches-to-different-remote-controllers-in-mininet
@@ -208,4 +209,9 @@ def MultiSite():
 
 
 if __name__ == '__main__':
-    MultiSite()
+    print "USAGE: python containernet-mn-topo.py </absolute/path/to/local/AWave/directory>"
+    print "    Path is optional"
+    dir = "/home/ubuntu/dev"
+    if len(sys.argv) > 1:
+        dir = sys.argv[1]
+    MultiSite(dir)
