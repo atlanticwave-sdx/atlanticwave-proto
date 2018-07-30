@@ -126,6 +126,7 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             try:
+                self.logger.info("Connecting to %s:%s" % (ip, port))
                 sock.connect((ip, port))
             except socket_error as serr:
                 if serr.errno != errno.ECONNREFUSED:

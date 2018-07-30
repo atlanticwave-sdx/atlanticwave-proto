@@ -24,8 +24,13 @@ then
 fi
 echo "LC Port: $LCPORT"
 
-cd atlanticwave-proto/
-git pull
+if ! test $AWAVEDIR
+then
+  cd atlanticwave-proto/
+  git pull
+else
+  cd $AWAVEDIR
+fi
 
 cd sdxctlr/
 python SDXController.py -m $MANIFEST -H $IPADDR -p $PORT -l $LCPORT

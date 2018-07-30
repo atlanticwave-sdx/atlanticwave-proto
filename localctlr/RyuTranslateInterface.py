@@ -550,7 +550,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             managementvlanports = internal_config['managementvlanports']
             untaggedmanagementvlanports = []
             if 'untaggedmanagementvlanports' in internal_config.keys():
-                untaggedmanagementvlanports = intern_config['untaggedmanagementvlanports']  
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']  
             
             table = L2TUNNELTABLE
             mvrule = ManagementVLANLCRule(switch_id,
@@ -1140,13 +1140,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
         mgmt_ports = mvrule.get_mgmt_vlan_ports()
         untagged_mgmt_ports = mvrule.get_untagged_mgmt_vlan_ports()
         
-        for vlan_port in (mgmt_ports + untaged_mgmt_ports):
+        for vlan_port in (mgmt_ports + untagged_mgmt_ports):
             if vlan_port in mgmt_ports:
                 matches = [VLAN_VID(mgmt_vlan), IN_PORT(vlan_port)]
                 actions = []
             else:
                 matches = [IN_PORT(vlan_port)]
-                actions = [PushVLAN(mgmt_vlan)]
+                actions = [PushVLAN(),
+                           SetField(VLAN_VID(mgmt_vlan))]
 
             # Tagged ports - Forward with already setup VLAN
             for out_port in mgmt_ports:
@@ -1210,7 +1211,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 aa_results.append(parser.OFPActionPushVlan())
                 continue
             elif isinstance(action, PopVLAN):
-                aa_results.append(parser.OFPActionPushVlan())
+                aa_results.append(parser.OFPActionPopVlan())
                 continue
             # If we've gotten this far, that means the next action is *not* a
             # Forward, SetField, PushVLAN, or PopVLAN action, but will use a

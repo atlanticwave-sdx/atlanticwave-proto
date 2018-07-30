@@ -21,7 +21,7 @@
       "shortname": "localcontroller",
       "credentials": "pwd",
       "location": "0,0",
-      "lcip": "127.0.0.1",
+      "lcip": "172.17.0.3",
       "internalconfig": {
         "ryucxninternalport": 55780,
         "openflowport": 6680

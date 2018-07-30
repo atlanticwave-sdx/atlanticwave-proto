@@ -88,21 +88,29 @@ def SingleNodeSite(dir):
                      cls=VLANHost, vlan=13)
 
     # Controller containers
-    sdx_env = {"MANIFEST":"/containernet.manifest", "IPADDR":"0.0.0.0",
-               "PORT":"5000", "LCPORT":"5555"}
+    sdx_env = {"MANIFEST":"/development/configuration/containernet-vagrant/singlenode.manifest",
+               "IPADDR":"0.0.0.0", "PORT":"5000", "LCPORT":"5555",
+               "PYTHONPATH":".:/development/", "AWAVEDIR":"/development"}
     sdx_pbs = {5000:5000}
     sdx_volumes = [dir + ":/development:rw"]
-    sdxctlr = net.addDocker('sdx', ip='10.0.0.200', dimage="sdx_container",
+    sdx_cmd = "/run_sdx.sh"
+    sdxctlr = net.addDocker('sdx', ip='192.168.0.200', dimage="sdx_container",
                             environment=sdx_env, port_bindings=sdx_pbs,
-                            volumes=sdx_volumes) 
-    lc_env = {"MANIFEST":"/containernet.manifest", "SITE":"localcontroller",
-                  "SDXIP":"10.0.0.200"}
+                            #volumes=sdx_volumes)
+                            volumes=sdx_volumes, dcmd=sdx_cmd)
+    
+    lc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/singlenode.manifest",
+              "SITE":"localcontroller", "PYTHONPATH":".:/development/",
+              "SDXIP":"192.168.0.200", "AWAVEDIR":"/development"}
+
     lc_pbs = {6680:6680}
     lc_volumes = sdx_volumes
-    lc = net.addDocker('lc', ip='10.0.0.100',
+    lc_cmd = "/run_lc.sh"
+    lc = net.addDocker('lc', ip='192.168.0.100',
                        dimage="lc_container",
                        environment=lc_env, port_bindings=lc_pbs,
-                       volumes=lc_volumes)
+                       #volumes=lc_volumes)
+                       volumes=lc_volumes, dcmd=lc_cmd)
 
 
     # Host Wiring
@@ -119,7 +127,7 @@ def SingleNodeSite(dir):
     # https://stackoverflow.com/questions/23677291/how-to-connect-different-switches-to-different-remote-controllers-in-mininet
 
     localctlr = net.addController('c1', controller=RemoteController, 
-                                  ip='127.0.0.1', port=6680)
+                                  ip='172.17.0.3', port=6680)
 
     net.build()
     print "net.build"

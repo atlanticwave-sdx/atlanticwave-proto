@@ -131,34 +131,47 @@ def MultiSite(dir):
                         cls=VLANHost, vlan=43)
 
     # Controller containers
-    sdx_env = {"MANIFEST":"/containernet.manifest", "IPADDR":"0.0.0.0",
-               "PORT":"5000", "LCPORT":"5555"}
+    sdx_env = {"MANIFEST":"/development/configuration/containernet-vagrant/containernet.manifest",
+               "IPADDR":"0.0.0.0", "PORT":"5000", "LCPORT":"5555",
+               "PYTHONPATH":".:/development/", "AWAVEDIR":"/development"}
     sdx_pbs = {5000:5000}
     sdx_volumes = [dir + ":/development:rw"]
-    sdxctlr = net.addDocker('sdxctlr', ip='10.0.0.200', dimage="sdx_container",
+    sdx_cmd = "/run_sdx.sh"
+    sdxctlr = net.addDocker('sdxctlr', ip='192.168.0.200',
+                            dimage="sdx_container",
                             environment=sdx_env, port_bindings=sdx_pbs,
-                            volumes=sdx_volumes)
-    westlc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
-                  "SDXIP":"10.0.0.200"}
+                            volumes=sdx_volumes, dcmd=sdx_cmd)
+    westlc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/singlenode.manifest",
+                  "SITE":"westctlr", "PYTHONPATH":".:/development/",
+                  "SDXIP":"192.168.0.200", "AWAVEDIR":"/development"}
+
     westlc_pbs = {6680:6680}
     westlc_volumes = sdx_volumes
-    westlc = net.addDocker('westctlr', ip='10.0.0.100', dimage="lc_container",
+    westlc_cmd = "/run_lc.sh"
+    westlc = net.addDocker('westctlr', ip='192.168.0.100',
+                           dimage="lc_container",
                            environment=westlc_env, port_bindings=westlcpbs,
-                           volumes=westlc_volumes)
-    centlc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
-                  "SDXIP":"10.0.0.200"}
+                           volumes=westlc_volumes, dcmd=westlc_cmd)
+    centlc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/singlenode.manifest",
+                  "SITE":"centctlr", "PYTHONPATH":".:/development/",
+                  "SDXIP":"192.168.0.200", "AWAVEDIR":"/development"}
     centlc_pbs = {6681:6681}
     centlc_volumes = sdx_volumes
-    centlc = net.addDocker('centctlr', ip='10.0.0.101', dimage="lc_container",
+    centlc_cmd = "/run_lc.sh"
+    centlc = net.addDocker('centctlr', ip='192.168.0.101',
+                           dimage="lc_container",
                            environmeqnt=centlc_env, port_bindings=centlcpbs,
-                           volumes=centlc_volumes)
-    eastlc_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
-                  "SDXIP":"10.0.0.200"}
+                           volumes=centlc_volumes, dcmd=centlc_cmd)
+    eastlc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/singlenode.manifest",
+                  "SITE":"eastctlr", "PYTHONPATH":".:/development/",
+                  "SDXIP":"192.168.0.200", "AWAVEDIR":"/development"}
     eastlc_pbs = {6682:6682}
     eastlc_volumes = sdx_volumes
-    eastlc = net.addDocker('eastctlr', ip='10.0.0.102', dimage="lc_container",
+    eastlc_cmd = "/run_lc.sh"
+    eastlc = net.addDocker('eastctlr', ip='192.168.0.102',
+                           dimage="lc_container",
                            environment=eastlc_env, port_bindings=eastlcpbs,
-                           volumes=eastlc_volumes)
+                           volumes=eastlc_volumes, dcmd=eastlc_cmd)
 
 
     # Host Wiring
@@ -190,13 +203,13 @@ def MultiSite(dir):
 
     # Add controllers
     # https://stackoverflow.com/questions/23677291/how-to-connect-different-switches-to-different-remote-controllers-in-mininet
-
+    #FIXME: Check these IPs!
     westctlr = net.addController('c1', controller=RemoteController, 
-                                 ip='127.0.0.1', port=6680)
+                                 ip='172.17.0.3', port=6680)
     centctlr = net.addController('c2', controller=RemoteController, 
-                                 ip='127.0.0.1', port=6681)
+                                 ip='172.17.0.4', port=6681)
     eastctlr = net.addController('c3', controller=RemoteController, 
-                                 ip='127.0.0.1', port=6682)
+                                 ip='172.17.0.5', port=6682)
     net.build()
     print "net.build"
     

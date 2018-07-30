@@ -97,29 +97,36 @@ def MultiSite(dir):
                         cls=VLANHost, vlan=23)
 
     # Controller containers
-    sdx_env = {"MANIFEST":"/containernet.manifest", "IPADDR":"0.0.0.0",
-               "PORT":"5000", "LCPORT":"5555"}
+    sdx_env = {"MANIFEST":"/development/configuration/containernet-vagrant/containernet.manifest",
+               "IPADDR":"0.0.0.0", "PORT":"5000", "LCPORT":"5555",
+               "PYTHONPATH":".:/development", "AWAVEDIR":"/development"}
     sdx_pbs = {5000:5000}
     sdx_volumes = [dir + ":/development:rw"]
-    sdxctlr = net.addDocker('sdxctlr', ip='10.0.0.200', dimage="sdx_container",
+    sdx_cmd = "/run_sdx.sh"
+    sdxctlr = net.addDocker('sdxctlr', ip='192.168.0.200',
+                            dimage="sdx_container",
                             environment=sdx_env, port_bindings=sdx_pbs,
-                            volumes=sdx_volumes)
+                            volumes=sdx_volumes, dcmd=sdx_cmd)
     
-    lc1_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
-               "SDXIP":"10.0.0.200"}
+    lc1_env = {"MANIFEST":"/development/configuration/containernet-vagrant/containernet.manifest",
+               "SITE":"lc1", "PYTHONPATH":".:/development/",
+               "SDXIP":"192.168.0.200", "AWAVEDIR":"/development"}
     lc1_pbs = {6680:6680}
     lc1_volumes = sdx_volumes
-    lc1 = net.addDocker('westctlr', ip='10.0.0.100', dimage="lc_container",
+    lc1_cmd = "/run_lc.sh"
+    lc1 = net.addDocker('westctlr', ip='192.168.0.100', dimage="lc_container",
                         environment=lc1_env, port_bindings=lc1pbs,
-                        volumes=lc1_volumes)
+                        volumes=lc1_volumes, dcmd=lc1_cmd)
 
-    lc2_env = {"MANIFEST":"/containernet.manifest", "SITE":"westctlr",
-                  "SDXIP":"10.0.0.200"}
+    lc2_env = {"MANIFEST":"/development/configuration/containernet-vagrant/containernet.manifest",
+               "SITE":"lc2", "PYTHONPATH":".:/development/",
+               "SDXIP":"192.168.0.200", "AWAVEDIR":"/development"}
     lc2_pbs = {6681:6681}
     lc2_volumes = sdx_volumes
-    lc2 = net.addDocker('centctlr', ip='10.0.0.101', dimage="lc_container",
+    lc2_cmd = "/run_lc.sh"
+    lc2 = net.addDocker('centctlr', ip='192.168.0.101', dimage="lc_container",
                         environmeqnt=lc2_env, port_bindings=lc2pbs,
-                        volumes=lc2_volumes)
+                        volumes=lc2_volumes, dcmd=lc2_cmd)
 
 
     # Host Wiring
@@ -142,10 +149,11 @@ def MultiSite(dir):
     # Add controllers
     # https://stackoverflow.com/questions/23677291/how-to-connect-different-switches-to-different-remote-controllers-in-mininet
 
+    #FIXME: Check these IPs.
     lc1ctlr = net.addController('c1', controller=RemoteController, 
-                                 ip='127.0.0.1', port=6680)
+                                 ip='172.17.0.3', port=6680)
     lc2ctlr = net.addController('c2', controller=RemoteController, 
-                                 ip='127.0.0.1', port=6681)
+                                 ip='127.17.0.4', port=6681)
 
     net.build()
     print "net.build"
