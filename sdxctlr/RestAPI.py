@@ -144,6 +144,9 @@ class RestAPI(AtlanticWaveModule):
 
         self.host=host
         self.port=port
+
+        self.logger.critical("Opening socket %s:%s" % (self.host, self.port))
+
         
         p = Thread(target=self.api_process)
         p.daemon = True
@@ -1464,7 +1467,7 @@ class RestAPI(AtlanticWaveModule):
             # else: HTML
             return flask.redirect(policy_url, code=303)
         
-        except RuleRegistryTypeError as e:
+        except RuleRegistryTypeError:
             #FIXME - proper response
             if request_wants_json(request):
                 return make_response(jsonify({}), 404)

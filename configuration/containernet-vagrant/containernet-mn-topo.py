@@ -210,8 +210,12 @@ def MultiSite(dir):
                                  ip='172.17.0.4', port=6681)
     eastctlr = net.addController('c3', controller=RemoteController, 
                                  ip='172.17.0.5', port=6682)
-    net.build()
+    #net.build()
     print "net.build"
+    laxswitch.start([westctlr])
+    ordswitch.start([centctlr])
+    nycswitch.start([eastctlr])
+    atlswitch.start([centctlr])
     
     net.start()
     print "net.start"

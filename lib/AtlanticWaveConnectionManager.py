@@ -74,7 +74,8 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
         self.listening_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listening_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-
+        self.logger.critical("Opening listening socket: %s:%s" %
+                         (self.listening_address, self.listening_port))
         try:
             self.listening_sock.bind((self.listening_address,
                                       self.listening_port))
@@ -126,7 +127,7 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             try:
-                self.logger.info("Connecting to %s:%s" % (ip, port))
+                self.logger.critical("Connecting to %s:%s" % (ip, port))
                 sock.connect((ip, port))
             except socket_error as serr:
                 if serr.errno != errno.ECONNREFUSED:

@@ -34,7 +34,7 @@ class LocalController(AtlanticWaveModule):
 
     def __init__(self, runloop=False, options=None):
         self.loggerid = 'localcontroller'
-        self.logfilename = 'localcontroller.log'
+        self.logfilename = 'localcontroller-%s.log' % options.name
         self.debuglogfilename = None
         super(LocalController, self).__init__(self.loggerid, self.logfilename,
                                               self.debuglogfilename)

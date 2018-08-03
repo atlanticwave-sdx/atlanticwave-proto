@@ -149,7 +149,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         super(RyuTranslateInterface, self).__init__(*args, **kwargs)
 
         loggerid = 'localcontroller.ryutranslateinterface'
-        logfilename = 'localcontroller.log'
+        logfilename = 'localcontroller-%s.log' % CONF['atlanticwave']['lcname']
         debuglogfilename = 'debug'+logfilename
         self._setup_loggers(loggerid, logfilename, debuglogfilename)
 

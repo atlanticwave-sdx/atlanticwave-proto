@@ -89,6 +89,7 @@ def SingleNodeSite(dir):
 
     # Controller containers
     sdx_env = {"MANIFEST":"/development/configuration/containernet-vagrant/singlenode.manifest",
+               #"IPADDR":"172.17.0.2", "PORT":"5000", "LCPORT":"5555",
                "IPADDR":"0.0.0.0", "PORT":"5000", "LCPORT":"5555",
                "PYTHONPATH":".:/development/", "AWAVEDIR":"/development"}
     sdx_pbs = {5000:5000}

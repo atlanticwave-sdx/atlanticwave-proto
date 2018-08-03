@@ -58,7 +58,7 @@
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "2"
+              "destination": "h2"
             },
             {
       	      "portnumber": 3,
@@ -69,6 +69,7 @@
               "portnumber": 5,
 	          "speed": 8000000000,
 	          "destination": "s2"
+            }
 	        ],
           "internalconfig": {
             "corsaurl": "",
