@@ -101,12 +101,11 @@ def MultiSite(dir):
     # Controller containers
     sdx_env = {"MANIFEST":"/development/configuration/containernet-vagrant/twonode.manifest",
                "IPADDR":"0.0.0.0", "PORT":"5000", "LCPORT":"5555",
-               "PYTHONPATH":".:/development", "AWAVEDIR":"/development"}
+               "PYTHONPATH":".:/development/", "AWAVEDIR":"/development"}
     sdx_pbs = {5000:5000}
     sdx_volumes = [dir + ":/development:rw"]
     sdx_cmd = "/run_sdx.sh"
-    sdxctlr = net.addDocker('sdxctlr', ip='192.168.0.200',
-                            dimage="sdx_container",
+    sdxctlr = net.addDocker('sdx', ip='192.168.0.200', dimage="sdx_container",
                             environment=sdx_env, port_bindings=sdx_pbs,
                             volumes=sdx_volumes, dcmd=sdx_cmd)
                             #volumes=sdx_volumes)
@@ -130,8 +129,8 @@ def MultiSite(dir):
     lc2_cmd = "/run_lc.sh"
     lc2 = net.addDocker('lc2', ip='192.168.0.101', dimage="lc_container",
                         environment=lc2_env, port_bindings=lc2_pbs,
-                        #volumes=lc2_volumes, dcmd=lc2_cmd)
-                        volumes=lc2_volumes)
+                        volumes=lc2_volumes, dcmd=lc2_cmd)
+                        #volumes=lc2_volumes)
 
 
     # Host Wiring
@@ -160,7 +159,7 @@ def MultiSite(dir):
     lc2ctlr = net.addController('c2', controller=RemoteController, 
                                  ip='172.17.0.4', port=6681)
 
-    #net.build()
+    net.build()
     print "net.build"
     s1switch.start([lc1ctlr])
     s2switch.start([lc2ctlr])

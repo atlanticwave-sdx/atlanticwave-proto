@@ -107,8 +107,7 @@ def SingleNodeSite(dir):
     lc_pbs = {6680:6680}
     lc_volumes = sdx_volumes
     lc_cmd = "/run_lc.sh"
-    lc = net.addDocker('lc', ip='192.168.0.100',
-                       dimage="lc_container",
+    lc = net.addDocker('lc', ip='192.168.0.100', dimage="lc_container",
                        environment=lc_env, port_bindings=lc_pbs,
                        #volumes=lc_volumes)
                        volumes=lc_volumes, dcmd=lc_cmd)

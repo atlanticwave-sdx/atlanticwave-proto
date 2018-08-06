@@ -137,11 +137,12 @@ def MultiSite(dir):
     sdx_pbs = {5000:5000}
     sdx_volumes = [dir + ":/development:rw"]
     sdx_cmd = "/run_sdx.sh"
-    sdxctlr = net.addDocker('sdxctlr', ip='192.168.0.200',
-                            dimage="sdx_container",
+    sdxctlr = net.addDocker('sdx', ip='192.168.0.200', dimage="sdx_container",
                             environment=sdx_env, port_bindings=sdx_pbs,
                             volumes=sdx_volumes, dcmd=sdx_cmd)
-    westlc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/singlenode.manifest",
+                            #volumes=sdx_volumes)
+    
+    westlc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/containernet.manifest",
                   "SITE":"westctlr", "PYTHONPATH":".:/development/",
                   "SDXIP":"192.168.0.200", "AWAVEDIR":"/development"}
 
@@ -150,9 +151,11 @@ def MultiSite(dir):
     westlc_cmd = "/run_lc.sh"
     westlc = net.addDocker('westctlr', ip='192.168.0.100',
                            dimage="lc_container",
-                           environment=westlc_env, port_bindings=westlcpbs,
+                           environment=westlc_env, port_bindings=westlc_pbs,
                            volumes=westlc_volumes, dcmd=westlc_cmd)
-    centlc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/singlenode.manifest",
+                           #volumes=westlc_volumes)
+                           
+    centlc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/containernet.manifest",
                   "SITE":"centctlr", "PYTHONPATH":".:/development/",
                   "SDXIP":"192.168.0.200", "AWAVEDIR":"/development"}
     centlc_pbs = {6681:6681}
@@ -160,9 +163,11 @@ def MultiSite(dir):
     centlc_cmd = "/run_lc.sh"
     centlc = net.addDocker('centctlr', ip='192.168.0.101',
                            dimage="lc_container",
-                           environmeqnt=centlc_env, port_bindings=centlcpbs,
+                           environment=centlc_env, port_bindings=centlc_pbs,
                            volumes=centlc_volumes, dcmd=centlc_cmd)
-    eastlc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/singlenode.manifest",
+                           #volumes=centlc_volumes)
+    
+    eastlc_env = {"MANIFEST":"/development/configuration/containernet-vagrant/containernet.manifest",
                   "SITE":"eastctlr", "PYTHONPATH":".:/development/",
                   "SDXIP":"192.168.0.200", "AWAVEDIR":"/development"}
     eastlc_pbs = {6682:6682}
@@ -170,8 +175,9 @@ def MultiSite(dir):
     eastlc_cmd = "/run_lc.sh"
     eastlc = net.addDocker('eastctlr', ip='192.168.0.102',
                            dimage="lc_container",
-                           environment=eastlc_env, port_bindings=eastlcpbs,
+                           environment=eastlc_env, port_bindings=eastlc_pbs,
                            volumes=eastlc_volumes, dcmd=eastlc_cmd)
+                           #volumes=eastlc_volumes)
 
 
     # Host Wiring
@@ -210,14 +216,14 @@ def MultiSite(dir):
                                  ip='172.17.0.4', port=6681)
     eastctlr = net.addController('c3', controller=RemoteController, 
                                  ip='172.17.0.5', port=6682)
-    #net.build()
+    net.build()
     print "net.build"
     laxswitch.start([westctlr])
     ordswitch.start([centctlr])
     nycswitch.start([eastctlr])
     atlswitch.start([centctlr])
     
-    net.start()
+    #net.start()
     print "net.start"
     CLI(net)
     print "CLI(net)"
