@@ -13,11 +13,11 @@ Once installed, you must clone the atlanticwave-proto repository, then create th
 
 ``` bash
 git clone https://github.com/atlanticwave-sdx/atlanticwave-proto.git
-cd atlanticwave-proto/configuration/helloworld
+cd atlanticwave-proto/configuration/helloworld-vagrant
 vagrant up
 ```
 
-Get comfortable, as the VM takes a few minutes to complete building. Once the VM is created, you need to create four different terminals. Create each terminal from the `atlanticwave-proto/configuration/helloworld` directory. In each terminal issue the `vagrant ssh` command to connect to the newly created VM. Each terminal serves a different function:
+Get comfortable, as the VM takes a few minutes to complete building. Once the VM is created, you need to create four different terminals. Create each terminal from the `atlanticwave-proto/configuration/helloworld-vagrant` directory. In each terminal issue the `vagrant ssh` command to connect to the newly created VM. Each terminal serves a different function:
 
 1. SDX Controller
 2. Local Controller

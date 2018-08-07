@@ -17,10 +17,18 @@ if ! test $SDXIP
 then 
   SDXIP="127.0.0.1"
 fi
-echo "SDXIP: $SDXIP"
+  echo "SDXIP: $SDXIP"
 
-cd atlanticwave-proto/
-git pull
+if ! test $AWAVEDIR
+then
+  cd atlanticwave-proto/
+  git pull
+else
+  rm `pip show ryu | grep Location: | awk '{print $NF}'`/ryu/flags.py
+  cp `pip show ryu | grep Location: | awk '{print $NF}'`/ryu/flags.orig `pip show ryu | grep Location: | awk '{print $NF}'`/ryu/flags.py
+  cd $AWAVEDIR
+  ./vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
+fi
 
 cd localctlr/
 python LocalController.py -n $SITE -m $MANIFEST -H $SDXIP

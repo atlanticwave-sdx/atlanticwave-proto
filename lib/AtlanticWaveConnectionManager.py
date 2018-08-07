@@ -4,6 +4,7 @@
 
 from lib.Singleton import Singleton
 from lib.Connection import Connection
+from AtlanticWaveModule import *
 
 import socket
 from socket import error as socket_error
@@ -13,26 +14,29 @@ from threading import Thread
 from select import select
 from time import sleep
 
-class ConnectionManagerTypeError(TypeError):
+class ConnectionManagerTypeError(AtlanticWaveModuleTypeError):
     pass
 
-class ConnectionManagerValueError(ValueError):
+class ConnectionManagerValueError(AtlanticWaveModuleValueError):
     pass
 
-class ConnectionManager(object):
+class AtlanticWaveConnectionManager(AtlanticWaveModule):
     ''' This is a parent class for handling connections, dispatching the new 
         connection to handling functions, and otherwise tracking what's going 
         on. One per incoming connection. One for outbound connections. Needs to
         be subclassed, even though much will be in common. Singleton. '''
-    __metaclass__ = Singleton
 
-    def __init__(self, connection_cls=Connection):
+    def __init__(self, loggerid, connection_cls=Connection):
+        
+        super(AtlanticWaveConnectionManager, self).__init__(loggerid)
+        
         self.listening_sock = None
         self.clients = []
         if not issubclass(connection_cls, Connection):
             raise TypeError("%s is not a Connection type." %
                             str(connection_cls))
         self.connection_cls = connection_cls
+        self.listening_callback = None
 
     def __repr__(self):
         clientstr = ""
@@ -70,7 +74,8 @@ class ConnectionManager(object):
         self.listening_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listening_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-
+        self.logger.critical("Opening listening socket: %s:%s" %
+                         (self.listening_address, self.listening_port))
         try:
             self.listening_sock.bind((self.listening_address,
                                       self.listening_port))
@@ -122,6 +127,7 @@ class ConnectionManager(object):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             try:
+                self.logger.critical("Connecting to %s:%s" % (ip, port))
                 sock.connect((ip, port))
             except socket_error as serr:
                 if serr.errno != errno.ECONNREFUSED:

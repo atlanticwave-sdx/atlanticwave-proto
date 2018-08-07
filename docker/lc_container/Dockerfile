@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 
-RUN apt update && apt install -y git python-virtualenv pypy python-pip
+RUN apt update && apt install -y git python-virtualenv pypy python-pip net-tools
 
 # This really should point to a particular version
 RUN git clone https://github.com/atlanticwave-sdx/atlanticwave-proto.git
@@ -16,7 +16,7 @@ RUN pip install ryu
 RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
 
 # Setup the PYTHONPATH script
-ENV PYTHONPATH $PYTHONPATH:/atlanticwave-proto
+ENV PYTHONPATH $PYTHONPATH:.:/atlanticwave-proto
 
 COPY run_lc.sh .
 COPY ./*.manifest .

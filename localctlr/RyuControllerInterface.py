@@ -12,7 +12,6 @@ from shared.LCRule import LCRule
 from switch_messages import *
 
 import threading
-import logging
 import subprocess
 import sys
 import os
@@ -32,10 +31,10 @@ class RyuControllerInterface(ControllerInterface):
 
 
     def __init__(self, lcname, conffile, lcip,
-                 ryu_cxn_port, openflow_port, lc_callback):
-        super(RyuControllerInterface, self).__init__()
-
-        self._setup_logger()
+                 ryu_cxn_port, openflow_port, lc_callback,
+                 loggeridprefix='localcontroller'):
+        loggerid = loggeridprefix + '.ryucontrollerinterface'
+        super(RyuControllerInterface, self).__init__(loggerid)
 
         self.lcname = lcname
         self.conffile = conffile
@@ -82,7 +81,8 @@ class RyuControllerInterface(ControllerInterface):
         # FIXME: This cannot be permanent. Each piece should be opened up
         # seperately...
         
-        self.logger.info("RyuControllerInterface initialized.")
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
         # Start Main Loop
         self.start_main_loop()
@@ -103,31 +103,17 @@ class RyuControllerInterface(ControllerInterface):
             raise ControllerInterfaceTypeError("rule is not of type LCRule: " + str(type(rule)) + 
                                                "\n    Value: " + str(rule))
 
-        #self.logger.debug("Sending  new cmd to RyuTranslateInterface: %s:%s" % (switch_id, rule))
+        self.logger.debug("Sending  new cmd to RTI: %s:%s" % 
+                          (switch_id, rule))
         self.inter_cm_cxn.send_cmd(ICX_ADD, (switch_id, rule))
 
     def remove_rule(self, switch_id, sdxcookie):
-        #self.logger.debug("Removing old cmd to RyuTranslateInterface: %s:%s" % (switch_id, sdxcookie))
+        self.logger.debug("Removing old cmd to RTI: %s:%s" % 
+                          (switch_id, sdxcookie))
         self.inter_cm_cxn.send_cmd(ICX_REMOVE, (switch_id, str(sdxcookie)))
 
     def get_ryu_process(self):
         return self.ryu_process
-
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # This is from LocalController
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('localcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('localcontroller.ryucontrollerinterface')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
 
     def start_main_loop(self):
         self.main_loop_thread = threading.Thread(target=self._main_loop)
@@ -159,9 +145,9 @@ class RyuControllerInterface(ControllerInterface):
             # Loop through readable
             for entry in readable:
                 if entry == self.inter_cm_cxn:
-                    self.logger.debug("Receiving Command on inter_cm_cxn")
                     cmd, data = self.inter_cm_cxn.recv_cmd()
-                    self.logger.debug("Received : %s:%s" % (cmd, data))
+                    self.logger.debug("Received on inter_cm_cxn : %s:%s" % 
+                                      (cmd, data))
                     if cmd == ICX_UNKNOWN_SOURCE:
                         self.lc_callback(SM_UNKNOWN_SOURCE, data)
                     elif cmd == ICX_L2MULTIPOINT_UNKNOWN_SOURCE:

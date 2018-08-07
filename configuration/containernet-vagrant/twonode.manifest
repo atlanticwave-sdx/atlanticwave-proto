@@ -1,27 +1,39 @@
 {
   "endpoints": {
-    "atl": {
-      "type":"host",
-      "friendlyname":"atl",
-      "location":"0,0"},
-    "atldtn": {
+    "h1": {
       "type":"dtn",
-      "friendlyname":"atldtn",
+      "friendlyname":"h1",
       "location":"0,0",
-      "vlan":2345},
-    "mia": {
-      "type":"host",
-      "friendlyname":"mia",
-      "location":"0,0"},
-    "miadtn": {
+      "vlan":11},
+    "h2": {
       "type":"dtn",
-      "friendlyname":"miadtn",
+      "friendlyname":"h2",
       "location":"0,0",
-      "vlan":2345}
+      "vlan":12},
+    "h3": {
+      "type":"dtn",
+      "friendlyname":"h3",
+      "location":"0,0",
+      "vlan":13},
+    "h4": {
+      "type":"dtn",
+      "friendlyname":"h4",
+      "location":"0,0",
+      "vlan":21},
+    "h5": {
+      "type":"dtn",
+      "friendlyname":"h6",
+      "location":"0,0",
+      "vlan":22},
+    "h6": {
+      "type":"dtn",
+      "friendlyname":"h6",
+      "location":"0,0",
+      "vlan":23}
   },
   "localcontrollers": {
-    "oneLC":{
-      "shortname": "oneLC",
+    "lc1":{
+      "shortname": "lc1",
       "credentials": "pwd",
       "location": "0,0",
       "lcip": "127.0.0.1",
@@ -31,9 +43,9 @@
       },
       "switchinfo": [
         {
-          "name":"br1",
-          "friendlyname":"br1",
-          "ip": "127.0.0.1",
+          "name":"s1",
+          "friendlyname":"s1",
+          "ip": "128.61.159.153",
           "dpid":"1",
           "brand":"Open vSwitch",
           "model": "2.3.0",
@@ -41,18 +53,23 @@
             {
       	      "portnumber": 1,
               "speed": 8000000000,
-              "destination": "atl"
+              "destination": "h1"
 	        },
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "atldtn"
+              "destination": "h2"
             },
             {
       	      "portnumber": 3,
 	          "speed": 8000000000,
-	          "destination": "br2"
-	        }
+	          "destination": "h3"
+	        },
+            {
+              "portnumber": 5,
+	          "speed": 8000000000,
+	          "destination": "s2"
+            }
 	        ],
           "internalconfig": {
             "corsaurl": "",
@@ -63,13 +80,31 @@
             "corsaratelimiterbridge":"br21",
             "corsaratelimiterports":[21,22],
             "managementvlan":4085,
-            "managementvlanports":[3,4]
+            "managementvlanports":[5],
+            "untaggedmanagementvlanports":[10,11]
           }
-        },
+	    }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "lc2":{
+      "shortname": "lc2",
+      "credentials": "pwd",
+      "location": "0,0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55781,
+        "openflowport": 6681
+      },
+      "switchinfo": [
         {
-          "name":"br2",
-          "friendlyname":"br2",
-          "ip": "127.0.0.1",
+          "name":"s2",
+          "friendlyname":"s2",
+          "ip": "128.61.159.153",
           "dpid":"2",
           "brand":"Open vSwitch",
           "model": "2.3.0",
@@ -77,18 +112,23 @@
             {
       	      "portnumber": 1,
               "speed": 8000000000,
-              "destination": "mia"
+              "destination": "h4"
 	        },
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "miadtn"
+              "destination": "h5"
             },
             {
       	      "portnumber": 3,
 	          "speed": 8000000000,
-	          "destination": "br1"
-	        }
+	          "destination": "h6"
+	        },
+            {
+              "portnumber": 5,
+              "speed": 8000000000,
+              "destination": "s1"
+            }
 	        ],
           "internalconfig": {
             "corsaurl": "",
@@ -99,9 +139,10 @@
             "corsaratelimiterbridge":"br21",
             "corsaratelimiterports":[21,22],
             "managementvlan":4085,
-            "managementvlanports":[3,4]
+            "managementvlanports":[5],
+            "untaggedmanagementvlanports":[10]
           }
-        }
+	    }
       ],
       "operatorinfo": {
         "organization": "Georgia Tech/RNOC",
@@ -116,18 +157,6 @@
       "organization": "Georgia Tech/RNOC",
       "contact": "sdonovan@gatech.edu",
       "type": "administrator",
-      "permitted_actions": [
-        "tbd"
-      ],
-      "restrictions": [
-        "tbd"
-      ]
-    },
-    "jchung": {
-      "credentials": "4321",
-      "organization": "Georgia Tech/RNOC",
-      "contact": "jchung@gatech.edu",
-      "type": "user",
       "permitted_actions": [
         "tbd"
       ],

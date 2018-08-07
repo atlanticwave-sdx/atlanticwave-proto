@@ -12,8 +12,9 @@
 
 import threading
 
-class Singleton(type):
+class SingletonMT(type):
     ''' This metaclass is used to define singleton classes. 
+    Thread safe?
     This doesn't work for nested Singletons! '''
 
     _instances_lock = threading.Lock()
@@ -25,16 +26,9 @@ class Singleton(type):
                     cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
-
-class SingletonMixin(object):
-	__singleton_lock = threading.Lock()
-	__singleton_instance = None
-
-	@classmethod
-	def instance(cls, *args, **kwargs):
-            if not cls.__singleton_instance:
-                with cls.__singleton_lock:
-                    if not cls.__singleton_instance:
-                        cls.__singleton_instance = cls(*args, **kwargs)
-            return cls.__singleton_instance
-
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]

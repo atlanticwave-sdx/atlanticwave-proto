@@ -767,7 +767,8 @@ class SDXControllerConnection(Connection):
             msg = self.recv_protocol()
             if isinstance(msg, SDXMessageInitialRuleRequest):
                 # Send a rule
-                rule = SDXMessageInstallRule(initial_rules[0])
+                r = initial_rules[0]
+                rule = SDXMessageInstallRule(r, r.get_switch_id())
                 self.send_protocol(rule)
                 # Remove that rule form the initial rule list
                 initial_rules = initial_rules[1:]

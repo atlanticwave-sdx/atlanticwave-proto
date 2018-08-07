@@ -36,7 +36,7 @@ from shared.L2MultipointEndpointLCRule import *
 from shared.L2MultipointFloodLCRule import *
 from shared.L2MultipointLearnedDestinationLCRule import *
 from shared.FloodTreeLCRule import *
-
+from shared.ManagementVLANLCRule import *
 
 LOCALHOST = "127.0.0.1"
 
@@ -68,6 +68,8 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
                                                self.buffer_id,
                                                self.idle_timeout,
                                                self.hard_timeout)
+    def __repr__(self):
+        return "%s:%s:%s" % (self.cookie, self.match, self.instructions)
 
     def get_cookie(self):
         return self.cookie
@@ -146,36 +148,27 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(RyuTranslateInterface, self).__init__(*args, **kwargs)
 
-        self._setup_logger()
+        loggerid = 'localcontroller.ryutranslateinterface'
+        logfilename = 'localcontroller-%s.log' % CONF['atlanticwave']['lcname']
+        debuglogfilename = 'debug'+logfilename
+        self._setup_loggers(loggerid, logfilename, debuglogfilename)
 
         # Configuration file + parsing
         self.name = CONF['atlanticwave']['lcname']
         self.conf_file = CONF['atlanticwave']['conffile']
-        self._import_configuration()
+        self.db_name = CONF['atlanticwave']['dbfile']
+        if self.db_name == "":
+            self.db_name = ":memory:"
 
-
-        # Start up Database connection
-        # DB is in-memory, as this probalby doesn't need to be tracked through
-        # reboots. details on the setup:
-        # https://dataset.readthedocs.io/en/latest/api.html
-        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
-        # https://www.sqlite.org/inmemorydb.html
-        # FIXME: May need to reconsider this in the future, especially for
-        # optimization (reducing translations is a good step in optimizing).
-        dblocation = "sqlite:///:memory:"
-        self.db = dataset.connect(dblocation,
-                                  engine_kwargs={'connect_args':
-                                                 {'check_same_thread':False}})
-        # Database Tables
-        self.rule_table = self.db['rules']
-
-        #FIXME: Do I want to mirror the RuleManager's config_table?
+        # Import configuration information - this includes pulling information
+        # from the stored DB (if there is anything), and from the options passed
+        # in during startup (including the manifest file)
+        self._setup()
         
-
         # Establish connection to RyuControllerInterface
         self.inter_cm = InterRyuControllerConnectionManager()
         self.inter_cm_cxn = self.inter_cm.open_outbound_connection(self.lcip,
-                                                                   self.ryu_cxn_port)
+                                                            self.ryu_cxn_port)
 
         self.datapaths = {}
         self.current_of_cookie = 0
@@ -192,62 +185,248 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 
         # TODO: Reestablish connection? Do I have to do anything?
-        
-        pass
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
 
-    def _setup_logger(self):
+    # The two _setup_loggers function is from lib/AtlanticWaveModule.py.
+    # This cannot inherit from AtlanticWaveModule or any of it's children, so we
+    # need to manually include some of it's functionality.
+    def _setup_loggers(self, loggerid, logfilename=None, debuglogfilename=None):
         ''' Internal function for setting up the logger formats. '''
-        # This is from LocalController
         # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('localcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('localcontroller.ryutranslateinterface')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
+        # Modified based on https://stackoverflow.com/questions/7173033/
+        self.logger = logging.getLogger(loggerid)
+        self.dlogger = logging.getLogger("debug." + loggerid)
+        if logfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.WARNING)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(logfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.logger.setLevel(logging.DEBUG)
+            self.logger.addHandler(console)
+            self.logger.addHandler(logfile)
 
-    def _import_configuration(self):
-        ''' Imports configuration parameters from the passed in configuration
-            file. '''
-        with open(self.conf_file) as data_file:
-            data = json.load(data_file)
+        if debuglogfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.DEBUG)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(debuglogfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.dlogger.setLevel(logging.DEBUG)
 
-        # Look at information under the self.name entry, then look at only
-        # data relevant to us.
-        lcdata = data['localcontrollers'][self.name]
-        self.lcip = lcdata['lcip']
+    def dlogger_tb(self):
+        ''' Print out the current traceback. '''
+        tbs = format_stack()
+        all_tb = "Traceback: id: %s\n" % str(hex(id(self)))
+        for line in tbs:
+            all_tb = all_tb + line
+        self.dlogger.warning(all_tb)
         
-        ofdata = lcdata['internalconfig']
-        self.ryu_cxn_port = ofdata['ryucxninternalport']
+    def _initialize_db(self, db_filename):
+        # Details on the setup:
+        # https://dataset.readthedocs.io/en/latest/api.html
+        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
+        self.logger.critical("Connection to DB: %s" % db_filename)
+        self.db = dataset.connect('sqlite:///' + db_filename, 
+                                  engine_kwargs={'connect_args':
+                                                 {'check_same_thread':False}})
+        #Try loading the tables, if they don't exist, create them.
+        # <lcname>-config - Columns are 'key' and 'value'
+        config_table_name = self.name + "-config"
+        rule_table_name = self.name + "-rule"
+        try:
+            self.logger.info("Trying to load %s from DB" % config_table_name)
+            self.config_table = self.db.load_table(config_table_name)
+            self.logger.info("Trying to load %s from DB" % rule_table_name)
+            self.rule_table = self.db.load_table(rule_table_name)
+        except:
+            # If load_table() fails, that's fine! It means that the table
+            # doesn't yet exist. So, create it.
+            self.logger.info("Failed to load %s from DB, creating new table" %
+                             config_table_name)
+            self.config_table = self.db[config_table_name]
+            self.rule_table = self.db[rule_table_name]
+            
+    def _add_switch_internal_config_to_db(self, dpid, internal_config):
+        # Pushes a switch internal_config into the db.
+        # key: "<dpid>"
+        # value: <internal_config>
+        key = dpid
+        value = pickle.dumps(internal_config)
+        if self._get_switch_internal_config(dpid) == None:
+            self.logger.info("Adding new internal_config for DPID %s" % dpid)
+            self.config_table.insert({'key':key, 'value':value})
+        else:
+            # Already exists, must update
+            self.logger.info("updating internal_config for DPID %s" % dpid)
+            self.config_table.update({'key':key, 'value':value},
+                                     ['key'])
 
-        # Get the DPID to name of the various switches this LC controls
-        self.dpid_data = {}
-        for entry in lcdata['switchinfo']:
-            dpid = str(entry['dpid'])
-            self.dpid_data[dpid] = {}
-            self.dpid_data[dpid]['name'] = entry['name']
-            print entry['internalconfig']
-            self.dpid_data[dpid]['internalconfig'] = entry['internalconfig']
+    def _add_config_filename_to_db(self, manifest_filename):
+        # Pushes LC network configuration info into the DB.
+        # key: "manifest_filename"
+        # value: manifest_filename
+        key = 'manifest_filename'
+        value = pickle.dumps(manifest_filename)
+        if self._get_manifest_filename_in_db() == None:
+            self.logger.info("Adding new manifest filename %s" %
+                             manifest_filename)
+            self.config_table.insert({'key':key, 'value':value})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating manifest filename %s" %
+                             manifest_filename)
+            self.config_table.update({'key':key, 'value':value},
+                                     ['key'])
+            
+    def _add_lcip_to_db(self, lcip):
+        # Pushes LC IP info into the DB.
+        # key: "lcip"
+        # value: lcip
+        key = 'lcip'
+        value = pickle.dumps(lcip)
+        if self._get_lcip_in_db() == None:
+            self.logger.info("Adding new lcip %s" %
+                             lcip)
+            self.config_table.insert({'key':key, 'value':value})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating lcip %s" %
+                             lcip)
+            self.config_table.update({'key':key, 'value':value},
+                                     ['key'])
 
-    def _get_switch_internal_config(self, datapath):
+    def _add_ryu_cxn_port_to_db(self, ryucxnport):
+        # Pushes Ryu Cxn Port info into the DB.
+        # key: "ryucxnport"
+        # value: ryucxnport
+        key = 'ryucxnport'
+        value = pickle.dumps(ryucxnport)
+        if self._get_lcip_in_db() == None:
+            self.logger.info("Adding new ryucxnport %s" %
+                             ryucxnport)
+            self.config_table.insert({'key':key, 'value':value})
+        else:
+            # Already exists, must update.
+            self.logger.info("Updating ryucxnport %s" %
+                             ryucxnport)
+            self.config_table.update({'key':key, 'value':value},
+                                     ['key'])
+            
+    def _get_switch_internal_config(self, dpid):
         ''' Gets switch internal config information based on datapath passed in
+            Pulls information from the DB.
         '''
-        dpid = str(datapath.id)
+        key = str(dpid)
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
 
-        import pprint
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(self.dpid_data)
+    def _get_switch_internal_config_count(self):
+        # Returns a count of internal configs.
+        d = self.config_table.find()
+        count = 0
+        for entry in d:
+            if (entry['key'] == 'lcip' or
+                entry['key'] == 'manifest_filename' or
+                entry['key'] == 'ryucxnport'):
+                continue
+            count += 1
+        return count
 
-        if dpid in self.dpid_data.keys():
-            return self.dpid_data[dpid]['internalconfig']
-        raise ValueError("%s is not in the dpid_data: %s" % (dpid,
-                                                    self.dpid_data.keys()))
+    def _get_config_filename_in_db(self):
+        # Returns the manifest filename if it exists or None if it does not.
+        key = 'manifest_filename'
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+
+    def _get_lcip_in_db(self):
+        # Returns the lcip if it exists or None if it does not.
+        key = 'lcip'
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+    def _get_ryu_cxn_port_in_db(self):
+        # Returns the Ryu Cxn Port if it exists or None if it does not.
+        key = 'ryucxnport'
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+
+    def _setup(self):
+        dbname = self.db_name
+
+        # Get DB connection and tables set up.
+        self._initialize_db(dbname)
+
+        # If the conf_name is None, try to get the name from the DB.
+        if self.conf_file == None:
+            self.conf_file = self._get_config_filename_in_db()
+        elif (self.conf_file != self._get_config_filename_in_db() and
+              None != self._get_config_filename_in_db()):
+            # Make sure it matches!
+            #FIXME: Should we force everything to be imported if different.
+            raise Exception("Stored and passed in manifest filenames don't match up %s:%s" %
+                            (str(self.conf_file),
+                             str(self._get_config_filename_in_db())))
+
+        # Get config file, if it exists
+        try:
+            self.logger.info("Opening config file %s" % self.conf_file)
+            with open(self.conf_file) as data_file:
+                data = json.load(data_file)
+            lcdata = data['localcontrollers'][self.name]
+        except Exception as e:
+            self.logger.warning("exception when opening config file: %s"  %
+                                str(e))
+
+        # Check if things are stored in the db. If they are, use them.
+        # If  not, load from the config file and store to the DB.
+
+        # LCIP
+        config = self._get_lcip_in_db()
+        if config != None:
+            self.lcip = config
+        else: 
+            self.lcip = lcdata['lcip']
+            self._add_lcip_to_db(self.lcip)
+
+        # Ryu Connection Port
+        config = self._get_ryu_cxn_port_in_db()
+        if config != None:
+            self.ryu_cxn_port = config
+        else:
+            self.ryu_cxn_port=lcdata['internalconfig']['ryucxninternalport']
+            self._add_ryu_cxn_port_to_db(self.ryu_cxn_port)
+            
+        # OpenFlow/Switch configuration data
+        config_count = self._get_switch_internal_config_count()
+        if config_count == 0:
+            # Nothing configured, get configs from config file
+            for entry in lcdata['switchinfo']:
+                dpid = str(entry['dpid'])
+                ic = entry['internalconfig']
+                ic['name'] = entry['name']
+                self._add_switch_internal_config_to_db(dpid, ic)
+
 
     def main_loop(self):
         ''' This is the main loop that reads and works with the data coming from
@@ -273,6 +452,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
             event_type, event_data = self.inter_cm_cxn.recv_cmd()
             (switch_id, event) = event_data
             if switch_id not in self.datapaths.keys():
+                self.logging.warning("switch_id %s does not match known switches: %s" %
+                                     (switch_id, self.datapaths.keys()))
+                                     
                 # FIXME - Need to update this for sending errors back
                 continue
                 
@@ -356,12 +538,34 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                      of_cookie,
                                                      marule,
                                                      priority)
+        
+        # In-band Communication
+        # If the management VLAN needs to be setup, set it up.
+        internal_config = self._get_switch_internal_config(datapath.id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+        if 'managementvlan' in internal_config.keys():
+            managementvlan = internal_config['managementvlan']
+            managementvlanports = internal_config['managementvlanports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in internal_config.keys():
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']  
+            
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          managementvlanports,
+                                          untaggedmanagementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
         # Install default rules
         for rule in results:
             self.add_flow(datapath, rule)
-                            
-        
-        #FIXME: in-band communication
+            
     
     def _translate_MatchActionLCRule(self, datapath, table,
                                      of_cookie, marule, priority=100):
@@ -393,7 +597,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
             Returns a list of TranslatedLCRuleContainers
         '''
         results = []
-        internal_config = self._get_switch_internal_config(datapath)
+        internal_config = self._get_switch_internal_config(datapath.id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+
 
         # Create Outbound Rule
         # There are two options here: Corsa or Non-Corsa. Non-Corsa is for
@@ -614,7 +822,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
             Returns a list of TranslatedRuleContainers
         '''
         results = []
-        internal_config = self._get_switch_internal_config(datapath)
+        internal_config = self._get_switch_internal_config(datapath.id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+
         switch_id = 0 # This is unimportant: it's never used in the translation
         intermediate_vlan = mperule.get_intermediate_vlan()
 
@@ -880,7 +1092,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                      priority)
         return results
 
-    
+
     def _translate_FloodTreeLCRule(self, datapath, switch_table,
                                    of_cookie, ftrule):
         ''' This translate FloodTreeLCRules. FloodTreeLCRules are for ports on a
@@ -910,8 +1122,53 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          marule,
                                                          priority)
         return results
-            
-                                   
+
+    
+    def _translate_ManagementVLANLCRule(self, datapath, switch_table, of_cookie,
+                                        mvrule):
+        ''' This translates ManagementVLANLCRUles. This will generate one rule. 
+            For non-endpoints, this will forward along the intermediate VLAN
+            that's being used for the L2MultipointPolicy.
+            For endpoints, this will translate VLAN to the destination VLAN, 
+            then forward.
+        '''
+        results = []
+        switch_id = 0 # This is unimportant: it's never used in the translation
+        priority = PRIORITY_MGMT_VLAN
+
+        mgmt_vlan = mvrule.get_mgmt_vlan()
+        mgmt_ports = mvrule.get_mgmt_vlan_ports()
+        untagged_mgmt_ports = mvrule.get_untagged_mgmt_vlan_ports()
+        
+        for vlan_port in (mgmt_ports + untagged_mgmt_ports):
+            if vlan_port in mgmt_ports:
+                matches = [VLAN_VID(mgmt_vlan), IN_PORT(vlan_port)]
+                actions = []
+            else:
+                matches = [IN_PORT(vlan_port)]
+                actions = [PushVLAN(),
+                           SetField(VLAN_VID(mgmt_vlan))]
+
+            # Tagged ports - Forward with already setup VLAN
+            for out_port in mgmt_ports:
+                if out_port != vlan_port:
+                    actions.append(Forward(out_port))
+            # Untagged ports - clear the VLAN first, then forward
+            if len(untagged_mgmt_ports) > 0:
+                actions.append(PopVLAN())
+            for out_port in untagged_mgmt_ports:
+                if out_port != vlan_port:
+                    actions.append(Forward(out_port))
+                    
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         switch_table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+
+        return results
+                                       
         
     def _translate_LCMatch(self, datapath, matches, table):
         args = {}
@@ -954,7 +1211,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 aa_results.append(parser.OFPActionPushVlan())
                 continue
             elif isinstance(action, PopVLAN):
-                aa_results.append(parser.OFPActionPushVlan())
+                aa_results.append(parser.OFPActionPopVlan())
                 continue
             # If we've gotten this far, that means the next action is *not* a
             # Forward, SetField, PushVLAN, or PopVLAN action, but will use a
@@ -1035,6 +1292,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def add_flow(self, datapath, rc):
         ''' Ease-of-use wrapper for adding flows. ''' 
         parser = datapath.ofproto_parser
+    
+        self.logger.debug("add_flow for %d:%d:%d:%s:%s" % (
+            rc.get_cookie(),
+            rc.get_table(),
+            rc.get_priority(),
+            rc.get_match(),
+            rc.get_instructions()))
 
         if rc.get_buffer_id() != None:
             mod = parser.OFPFlowMod(datapath=datapath,
@@ -1114,6 +1378,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # types of supported LCRules for individual translation.
         switch_rules = None
         switch_table = None
+
+        self.logger.debug("SDX Rule %s being installed in datapath %s" %
+                          (sdx_rule, datapath.id))
+
         if isinstance(sdx_rule, MatchActionLCRule):
             if sdx_rule.get_ingress == True:
                 # Ingress rules are applied right before being sent to the
@@ -1197,23 +1465,37 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                            switch_table,
                                                            of_cookie,
                                                            sdx_rule)
-
+            
+        elif isinstance(sdx_rule, ManagementVLANLCRule):
+            switch_table = L2TUNNELTABLE
+            switch_rules = self._translate_ManagementVLANLCRule(datapath,
+                                                                switch_table,
+                                                                of_cookie,
+                                                                sdx_rule)
         
             
 
         if switch_rules == None or switch_table == None:
+            self.logger.error(
+                "switch_rules or switch_table is None for msg: %s" %
+                sdx_rules)
             #FIXME: This shouldn't happen...
             pass
         
         # Save off instructions to local database.
+        self.logger.debug("Inserting into switch table %d switch rules %s" %
+                          (switch_table, switch_rules))
         self._install_rule_in_db(sdx_rule.get_cookie(), of_cookie,
                                  sdx_rule, switch_rules, switch_table)
 
         # Send instructions to the switch.
+        self.logger.debug("Calling add_flow on the following:")
         for rule in switch_rules:
             if type(rule) == TranslatedLCRuleContainer:
+                self.logger.debug("  %s" % rule)
                 self.add_flow(datapath, rule)
             elif type(rule) == TranslatedCorsaRuleContainer:
+                self.logger.debug("  %s - CORSA_REST_CMD" % rule)
                 self.corsa_rest_cmd(rule)
 
 
@@ -1332,11 +1614,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def _register_packet_in_cb(self, cookie_id, function):
         ''' Used for registeringcookies for packet_in callbacks. Function is 
             called with the packet_in event. '''
-        self.logger.warning("Registering cookie 0x%02x to function %s for packet_in handling" % (cookie_id, function))
+        self.logger.debug("Registering cookie 0x%02x to function %s for packet_in handling" % (cookie_id, function))
         self.packet_in_cbs[cookie_id] = function
 
     def _deregister_packet_in_cb(self, cookie_id):
         ''' Used for deregistering cookies for packet_in callbacks. '''
+        self.logger.debug("Deregistering cookie 0x%02x" % cookie_id)
         del self.packet_in_cbs[cookie_id]
 
         
@@ -1352,7 +1635,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                        # it's never used in the translation
 
         datapath = ev.msg.datapath
-        switch_name = self.dpid_data[str(datapath.id)]['name']
+        switch_name = self._get_switch_internal_config(datapath.id)['name']
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -1387,7 +1670,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                        # it's never used in the translation
 
         datapath = ev.msg.datapath
-        switch_name = self.dpid_data[str(datapath.id)]['name']
+        switch_name = self._get_switch_internal_config(datapath.id)['name']
         port = ev.msg.match['in_port']
         pkt = packet.Packet(ev.msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]

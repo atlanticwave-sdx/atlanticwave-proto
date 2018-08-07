@@ -3,38 +3,25 @@
 
 
 import logging
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveRegistry import AtlanticWaveRegistry
 
 class RuleRegistryTypeError(TypeError):
     pass
 
-class RuleRegistry(SingletonMixin):
+class RuleRegistry(AtlanticWaveRegistry):
     ''' The RuleRegistry provides a centralized lookup service for converting 
         user rules into the class that implements them. 
         Singleton. '''
 
-    def __init__(self):
-        # Setup logger
-        self._setup_logger()
+    def __init__(self, loggeridprefix='sdxcontroller'):
+        loggerid = loggeridprefix + '.ruleregistry'
+        super(RuleRegistry, self).__init__(loggerid)
 
         # Initialize rule DB
         self.ruletype_db = {}
 
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('sdxcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('sdxcontroller.rulereg')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile) 
-
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
     def add_ruletype(self, classlink):
         ''' Adds a new rule type to the registry. '''

@@ -1,0 +1,89 @@
+{
+  "endpoints": {
+    "h1": {
+      "type":"dtn",
+      "friendlyname":"h1",
+      "location":"0,0",
+      "vlan":11},
+    "h2": {
+      "type":"dtn",
+      "friendlyname":"h2",
+      "location":"0,0",
+      "vlan":12},
+    "h3": {
+      "type":"dtn",
+      "friendlyname":"h3",
+      "location":"0,0",
+      "vlan":13}
+  },
+  "localcontrollers": {
+    "localcontroller":{
+      "shortname": "localcontroller",
+      "credentials": "pwd",
+      "location": "0,0",
+      "lcip": "172.17.0.3",
+      "internalconfig": {
+        "ryucxninternalport": 55780,
+        "openflowport": 6680
+      },
+      "switchinfo": [
+        {
+          "name":"s1",
+          "friendlyname":"s1",
+          "ip": "128.61.159.153",
+          "dpid":"1",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "h1"
+	        },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "h2"
+            },
+            {
+      	      "portnumber": 3,
+	          "speed": 8000000000,
+	          "destination": "h3"
+	        }
+	        ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22],
+            "managementvlan":4085,
+            "managementvlanports":[],
+            "untaggedmanagementvlanports":[10,11]
+          }
+	    }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+  },
+  "participants": {
+    "sdonovan": {
+      "credentials": "1234",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "sdonovan@gatech.edu",
+      "type": "administrator",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    }
+  }
+}

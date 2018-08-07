@@ -2,13 +2,11 @@
 # AtlanticWave/SDX Project
 
 
-import logging
 import threading
 import sys
-import dataset
 from Queue import Queue, Empty
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
@@ -44,51 +42,46 @@ class SDXControllerConnectionError(SDXControllerError):
     ''' When there's an error with a connection. '''
     pass
 
-class SDXController(SingletonMixin):
+class SDXController(AtlanticWaveModule):
     ''' This is the main coordinating module of the SDX controller. It mostly 
         provides startup and coordination, rather than performan many actions by
         itself.
         Singleton. ''' 
 
     def __init__(self, runloop=True, options=None):
-        ''' The bulk of the work happens here. This initializes nearly everything
-            and starts up the main processing loop for the entire SDX
+        ''' The bulk of the work happens here. This initializes nearly 
+            everything and starts up the main processing loop for the entire SDX
             Controller. '''
-
-        self._setup_logger()
+        self.loggerid = 'sdxcontroller'
+        self.logfilename = 'sdxcontroller.log'
+        self.debuglogfilename = None
+        super(SDXController, self).__init__(self.loggerid, self.logfilename,
+                                            self.debuglogfilename)
 
         mani = options.manifest
         db = options.database
         run_topo = options.topo
 
-
-        # Start DB connection. Used by other modules. details on the setup:
-        # https://dataset.readthedocs.io/en/latest/api.html
-        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
-        self.logger.critical("Connection to DB: %s" % db)
-        self.db = dataset.connect('sqlite:///' + db, 
-                                  engine_kwargs={'connect_args':
-                                                 {'check_same_thread':False}})
+        self.db_filename = db
 
         # self.run_topo decides whether or not to send rules.
         self.run_topo = run_topo
 
         # Modules with configuration files
-        self.tm = TopologyManager.instance(mani)
+        self.tm = TopologyManager(self.loggerid, mani)
 
         # Initialize all the modules - Ordering is relatively important here
-        self.aci = AuthenticationInspector.instance()
-        self.azi = AuthorizationInspector.instance()
-        self.be = BreakdownEngine.instance()
-        self.rr = RuleRegistry.instance()
-        self.vi = ValidityInspector.instance()
-        self.um = UserManager.instance(self.db, mani)
-
+        self.aci = AuthenticationInspector(self.loggerid)
+        self.azi = AuthorizationInspector(self.loggerid)
+        self.be = BreakdownEngine(self.loggerid)
+        self.rr = RuleRegistry(self.loggerid)
+        self.vi = ValidityInspector(self.loggerid)
+        self.um = UserManager(self.db_filename, mani, self.loggerid)
 
         if mani != None:
-            self.lcm = LocalControllerManager.instance(mani)
+            self.lcm = LocalControllerManager(self.loggerid, mani)
         else: 
-            self.lcm = LocalControllerManager.instance()
+            self.lcm = LocalControllerManager(self.loggerid)
 
         topo = self.tm.get_topology()
 
@@ -97,7 +90,7 @@ class SDXController(SingletonMixin):
         self.ip = options.host
         self.port = options.lcport
         self.connections = {}
-        self.sdx_cm = SDXControllerConnectionManager()
+        self.sdx_cm = SDXControllerConnectionManager(self.loggerid)
         self.cm_thread = threading.Thread(target=self._cm_thread)
         self.cm_thread.daemon = True
         self.cm_thread.start()
@@ -114,38 +107,27 @@ class SDXController(SingletonMixin):
 
         # Start these modules last!
         if self.run_topo:
-            self.rm = RuleManager.instance(self.db,
-                                           self.sdx_cm.send_breakdown_rule_add,
-                                           self.sdx_cm.send_breakdown_rule_rm)
+            self.rm = RuleManager(self.db_filename, self.loggerid,
+                                  self.sdx_cm.send_breakdown_rule_add,
+                                  self.sdx_cm.send_breakdown_rule_rm)
         else:
-            self.rm = RuleManager.instance(self.db,
-                                           send_no_rules,
-                                           send_no_rules)
+            self.rm = RuleManager(self.db_filename, self.loggerid,
+                                  send_no_rules,
+                                  send_no_rules)
 
-        self.rapi = RestAPI.instance(options.host,options.port,options.shib)
+        self.rapi = RestAPI(self.loggerid,
+                            options.host, options.port, options.shib)
 
 
         # Install any rules switches will need. 
         self._prep_switches()
 
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
+
         # Go to main loop 
         if runloop:
             self._main_loop()
-
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('sdxcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('sdxcontroller')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
 
     def _cm_thread(self):
         self.sdx_cm.new_connection_callback(self._handle_new_connection)
@@ -319,11 +301,11 @@ class SDXController(SingletonMixin):
 
                 # Can return None if there was some internal message.
                 if msg == None:
-                    self.logger.debug("Received None from recv_protocol %s" %
-                                      (entry))
+                    #self.logger.debug("Received internal message from recv_protocol %s" %
+                    #                  hex(id(entry)))
                     continue
                 self.logger.debug("Received a %s message from %s" %
-                                  (type(msg), entry))
+                                  (type(msg), hex(id(entry))))
 
                 # If message is UnknownSource or L2MultipointUnknownSource,
                 # Send the appropriate handler.

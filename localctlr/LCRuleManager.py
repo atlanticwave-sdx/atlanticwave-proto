@@ -1,10 +1,8 @@
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
-import logging
-import dataset
 import cPickle as pickle
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveManager import AtlanticWaveManager
 
 # List of rule statuses
 RULE_STATUS_ACTIVE       = 1
@@ -27,61 +25,32 @@ class LCRuleManagerValidationError(LCRuleManagerError):
 class LCRuleManagerDeletionError(LCRuleManagerError):
     pass
 
-class LCRuleManager(SingletonMixin):
+class LCRuleManager(AtlanticWaveManager):
     ''' This keeps track of LCRules. It provideds a database for easier 
         filtering.
         Singleton. '''
 
-    def __init__(self, db_filename=':memory:'):
-        # Setup logger
-        self._setup_logger()
+    def __init__(self, loggeridprefix='localcontroller',
+                 db_filename=':memory:'):
+        loggerid = loggeridprefix + '.lcrulemanager'
+        super(LCRuleManager, self).__init__(loggerid)
         
         # Setup DB.
-        self._initialize_db(db_filename)
+        db_tuples = [('rule_table', 'lcrules')] 
+        self._initialize_db(db_filename, db_tuples)
+        # Rule entry looks like:
+        # {cookie_value : {'status': RULE_STATUS_ACTIVE,
+        #                  'rule': rule_value}}        
 
         self._valid_table_columns = ['cookie','switch_id','status','rule']
 
         # Setup initial rules related stuff.
         self._initial_rules_list = []
-        
-    def _initialize_db(self, db_filename):
-        # Details on the setup:
-        # https://dataset.readthedocs.io/en/latest/api.html
-        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
-        self.logger.critical("Connection to DB: %s" % db_filename)
-        self.db = dataset.connect('sqlite:///' + db_filename, 
-                                  engine_kwargs={'connect_args':
-                                                 {'check_same_thread':False}})
 
-        #Try loading the tables, if they don't exist, create them.
-        try:
-            self.logger.info("Trying to load rule_table from DB")
-            self.rule_table = self.db.load_table('lcrules')
-        except:
-            # If load_table() fails, that's fine! It means that the rule_table
-            # doesn't yet exist. So, create it.
-            self.logger.info("Failed to load rule_tale from DB, creating new table")
-            # Rule entry looks like:
-            # {cookie_value : {'status': RULE_STATUS_ACTIVE,
-            #                  'rule': rule_value}}
-            self.rule_table = self.db['rules']
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # This is from LocalController
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('localcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('localcontroller.lcrulemanager')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
-        
+
     def add_rule(self, cookie, switch_id, lcrule, 
                  status=RULE_STATUS_INSTALLING):
         # Insert LC rule into db, using the cookie and switch_id as the index
@@ -179,8 +148,8 @@ class LCRuleManager(SingletonMixin):
     def add_initial_rule(self, rule, cookie, switch_id):
         # Used during initial rule stage of inialization.
         self.logger.debug(
-            "Adding a new rule to the _initial_rules_list: %s:%s" %
-            (cookie, switch_id))
+            "Adding a new rule to the _initial_rules_list: %s:%s:%s" %
+            (cookie, switch_id, rule.get_data()['rule']))
         self._initial_rules_list.append((cookie, switch_id, rule))
 
     def initial_rules_complete(self):
@@ -199,7 +168,8 @@ class LCRuleManager(SingletonMixin):
         # Empty the _initial_rules_list for the next reconnection.
         # NOTE: _initial_rules_list is a list of SDXMessageInstallRules
         self.logger.debug("IRC RULE_TABLE %s" % self.rule_table)
-        self.logger.debug("IRC _INITIAL_RULES_LIST %s\n\n\n" % 
+        
+        self.logger.debug("IRC _INITIAL_RULES_LIST %s" % 
                           self._initial_rules_list)
         
         list_of_c_and_s = [(x['cookie'], x['switch_id'])
@@ -230,5 +200,5 @@ class LCRuleManager(SingletonMixin):
             be a weird side effect that is dirty. As such, separate function. A 
             very complicated separate function.
         '''
-        self.logger.debug("Clearning _initial_rules_list")
+        self.logger.debug("Clearing _initial_rules_list")
         self._initial_rules_list = []

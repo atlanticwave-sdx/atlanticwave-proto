@@ -17,7 +17,7 @@ SDX_IDENTIFY = "IDENTIFY"
 IPADDR = '127.0.0.1'
 PORT = 5555
 
-from lib.ConnectionManager import *
+from lib.AtlanticWaveConnectionManager import *
 from lib.Connection import Connection
 from shared.SDXControllerConnectionManagerConnection import *
 from shared.UserPolicy import UserPolicyBreakdown
@@ -32,12 +32,13 @@ DEL_CXN = "Remove Connection"
 class SDXControllerConnectionManagerNotConnectedError(ConnectionManagerValueError):
     pass
 
-class SDXControllerConnectionManager(ConnectionManager):
+class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
     ''' Used to manage the connection with the SDX Controller. '''
 
-    def __init__(self):
+    def __init__(self, loggeridprefix):
+        loggerid = loggeridprefix + '.sdxctlrcxnmgr'
         super(SDXControllerConnectionManager, self).__init__(
-            SDXControllerConnection)
+            loggerid, SDXControllerConnection)
         # associations are for easy lookup of connections based on the name of
         # the Local Controller.
         
@@ -46,7 +47,10 @@ class SDXControllerConnectionManager(ConnectionManager):
 
         # Connection action queue
         self.cxn_q = Queue()
-        
+
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
+
 
     def send_breakdown_rule_add(self, bd):
         ''' This takes in a UserPolicyBreakdown and send it to the Local

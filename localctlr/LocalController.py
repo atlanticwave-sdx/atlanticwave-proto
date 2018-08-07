@@ -10,12 +10,11 @@ import signal
 import os
 import atexit
 import traceback
-import dataset
 import cPickle as pickle
 from Queue import Queue, Empty
 from time import sleep
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
 from RyuControllerInterface import *
 from LCRuleManager import *
@@ -27,15 +26,19 @@ LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
 DEFAULT_OPENFLOW_PORT = 6633
 
-class LocalController(SingletonMixin):
+class LocalController(AtlanticWaveModule):
     ''' The Local Controller is responsible for passing messages from the SDX 
         Controller to the switch. It needs two connections to both the SDX 
         controller and switch(es).
         Singleton. ''' 
 
     def __init__(self, runloop=False, options=None):
-        # Setup logger
-        self._setup_logger()
+        self.loggerid = 'localcontroller'
+        self.logfilename = 'localcontroller-%s.log' % options.name
+        self.debuglogfilename = None
+        super(LocalController, self).__init__(self.loggerid, self.logfilename,
+                                              self.debuglogfilename)
+        
         self.name = options.name
         self.capabilities = "NOTHING YET" #FIXME: This needs to be updated
         self.logger.info("LocalController %s starting", self.name)
@@ -50,7 +53,7 @@ class LocalController(SingletonMixin):
         atexit.register(self.receive_exit)
 
         # Rules DB
-        self.rm = LCRuleManager()
+        self.rm = LCRuleManager(self.loggerid)
 
         # Initial Rules
         self._initial_rules_dict = {}
@@ -59,12 +62,13 @@ class LocalController(SingletonMixin):
         self.switch_connection = RyuControllerInterface(self.name,
                                     self.manifest, self.lcip,
                                     self.ryu_cxn_port, self.openflow_port,
-                                    self.switch_message_cb)
+                                    self.switch_message_cb,
+                                    self.loggerid)
         self.logger.info("RyuControllerInterface setup finish.")
 
         # Setup connection manager
         self.cxn_q = Queue()
-        self.sdx_cm = SDXControllerConnectionManager()
+        self.sdx_cm = SDXControllerConnectionManager(self.loggerid)
         self.sdx_connection = None
         self.start_cxn_thread = None
 
@@ -75,6 +79,9 @@ class LocalController(SingletonMixin):
         self.start_switch_connection()
         self.start_sdx_controller_connection() # Blocking call
         self.logger.info("SDX Controller Connection established.")
+
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
         # Start main loop
         if runloop:
@@ -170,8 +177,6 @@ class LocalController(SingletonMixin):
                     #self.logger.debug("Received None from recv_protocol %s" %
                     #                  (entry))
                     continue
-                self.logger.debug("Received a %s message from %s" %
-                                  (type(msg), entry))
 
                 #FIXME: Check if the SDXMessage is valid at this stage
                 
@@ -179,19 +184,28 @@ class LocalController(SingletonMixin):
                 # require tracking anything, unlike when sending out a
                 # HeartbeatRequest ourselves.
                 if type(msg) == SDXMessageHeartbeatRequest:
+                    self.logger.debug("Received a HBREQ message from %s" %
+                                      hex(id(entry)))
+
                     hbr = SDXMessageHeartbeatResponse()
                     entry.send_protocol(hbr)
                 
                 # If HeartbeatResponse, call HeartbeatResponseHandler
                 elif type(msg) == SDXMessageHeartbeatResponse:
+                    self.logger.debug("Received a HBRES message from %s" %
+                                      hex(id(entry)))
                     entry.heartbeat_response_handler(msg)
 
                 # If InstallRule
                 elif type(msg) == SDXMessageInstallRule:
+                    self.logger.debug("Received a INSTL message from %s" %
+                                      hex(id(entry)))
                     self.install_rule_sdxmsg(msg)
 
                 # If RemoveRule
                 elif type(msg) == SDXMessageRemoveRule:
+                    self.logger.debug("Received a REMOV message from %s" %
+                                      hex(id(entry)))
                     self.remove_rule_sdxmsg(msg)
                     
                 # If InstallRuleComplete - ERROR! LC shouldn't receive this.
@@ -231,44 +245,6 @@ class LocalController(SingletonMixin):
                 
                 # Restart new connection
                 self.start_sdx_controller_connection()
-
-        
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('localcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('localcontroller')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile)
-        
-    def _initialize_db(self, db_filename):
-        # Details on the setup:
-        # https://dataset.readthedocs.io/en/latest/api.html
-        # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
-        self.logger.critical("Connection to DB: %s" % db_filename)
-        self.db = dataset.connect('sqlite:///' + db_filename, 
-                                  engine_kwargs={'connect_args':
-                                                 {'check_same_thread':False}})
-        #Try loading the tables, if they don't exist, create them.
-        # <lcname>-config - Columns are 'key' and 'value'
-        config_table_name = self.name + "-config"
-        try:
-            self.logger.info("Trying to load %s from DB" % config_table_name)
-            self.config_table = self.db.load_table(config_table_name)
-        except:
-            # If load_table() fails, that's fine! It means that the table
-            # doesn't yet exist. So, create it.
-            self.logger.info("Failed to load %s from DB, creating new table" %
-                             config_table_name)
-            self.config_table = self.db[config_table_name]
-
 
     def _add_switch_config_to_db(self, switch_name, switch_config):
         # Pushes a switch info dictionary from manifest.
@@ -408,8 +384,9 @@ class LocalController(SingletonMixin):
         self.manifest = options.manifest
         dbname = options.database
 
-        # Get DB connection and tables setup.
-        self._initialize_db(dbname)
+        # Get DB connection and tables set up.
+        db_tuples = [('config_table', self.name+"-config")]
+        self._initialize_db(dbname, db_tuples)
 
         # If manifest is None, try to get the name from the DB. This is needed
         # for the LC's RyuTranslateInterface
@@ -429,6 +406,8 @@ class LocalController(SingletonMixin):
             with open(self.manifest) as data_file:
                 data = json.load(data_file)
             lcdata = data['localcontrollers'][self.name]
+            self.logger.info("Successfully opened manifest file %s" %
+                             self.manifest)
         except Exception as e:
             self.logger.warning("Exception when opening manifest file: %s" %
                                 str(e))
@@ -490,8 +469,8 @@ class LocalController(SingletonMixin):
                           (self.sdxip, self.sdxport))
         self.sdx_connection = self.sdx_cm.open_outbound_connection(self.sdxip, 
                                                                    self.sdxport)
-        self.logger.debug("SDX Controller Connection - %s" % 
-                          (self.sdx_connection))
+        self.logger.debug("SDX Controller Connection - %s: %s" % 
+                          (hex(id(self.sdx_connection)), self.sdx_connection))
 
         # Transition to Main Phase
             
@@ -541,6 +520,10 @@ class LocalController(SingletonMixin):
         rule = msg.get_data()['rule']
         cookie = rule.get_cookie()
 
+        self.logger.debug("install_rule_sdxmsg: %d:%s:%s" % (cookie, 
+                                                             switch_id, 
+                                                             rule))
+
         self.rm.add_rule(cookie, switch_id, rule, RULE_STATUS_INSTALLING)
         self.switch_connection.send_command(switch_id, rule)
 
@@ -558,6 +541,10 @@ class LocalController(SingletonMixin):
         switch_id = msg.get_data()['switch_id']
         cookie = msg.get_data()['cookie']
         rules = self.rm.get_rules(cookie, switch_id)
+
+        self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
+                                                             switch_id, 
+                                                             rules))
 
         if rules == []:
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)

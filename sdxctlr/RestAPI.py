@@ -3,7 +3,7 @@
 # AtlanticWave/SDX Project
 # Login based on example code from https://github.com/maxcountryman/flask-login
 
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveModule import AtlanticWaveModule
 
 from shared.SDXPolicy import SDXIngressPolicy, SDXEgressPolicy
 from shared.L2MultipointPolicy import L2MultipointPolicy
@@ -89,7 +89,7 @@ def request_wants_json(r):
 
 
 
-class RestAPI(SingletonMixin):
+class RestAPI(AtlanticWaveModule):
     ''' The REST API will be the main interface for participants to use to push 
         rules (eventually) down to switches. It will gather authentication 
         information from the participant and check with the 
@@ -134,33 +134,27 @@ class RestAPI(SingletonMixin):
         login_manager.init_app(app)
         app.run(host=self.host, port=self.port)
 
-    def __init__(self,host='0.0.0.0',port=5000, shib=False):
+    def __init__(self, loggeridprefix='sdxcontroller',
+                 host='0.0.0.0', port=5000, shib=False):
+        loggerid = loggeridprefix + ".rest"
+        super(RestAPI, self).__init__(loggerid)
+        
         global shibboleth
         shibboleth = shib
 
         self.host=host
         self.port=port
+
+        self.logger.critical("Opening socket %s:%s" % (self.host, self.port))
+
         
         p = Thread(target=self.api_process)
         p.daemon = True
         p.start()
         #app.config['SSO_LOGIN_URL'] = 'http://aw.cloud.rnoc.gatech.edu/secure/login2.cgi'
-        pass
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
-    def _setup_logger(self):
-        ''' Internal fucntion for setting up the logger formats. '''
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('sdxcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('sdxcontroller.rest')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile) 
 
     class User(flask_login.UserMixin):
         def __init__(self, id):
@@ -199,7 +193,7 @@ class RestAPI(SingletonMixin):
         retdict = {'links':{},'href':base_url}
         
         # Get topology
-        topo = TopologyManager.instance().get_topology()            
+        topo = TopologyManager().get_topology()            
         for node_id in topo.nodes():
             node = topo.node[node_id]
             if node['type'] == 'localcontroller':
@@ -272,7 +266,7 @@ class RestAPI(SingletonMixin):
     def v1localcontrollersspecific(lcname):
         retdict =  {}
         # Get topology
-        topo = TopologyManager.instance().get_topology()            
+        topo = TopologyManager().get_topology()            
         for node_id in topo.nodes():
             node = topo.node[node_id]
             if (node_id == lcname and
@@ -362,7 +356,7 @@ class RestAPI(SingletonMixin):
 
         retdict = {}
         # Get the topology first
-        topo = TopologyManager.instance().get_topology()            
+        topo = TopologyManager().get_topology()            
         for node_id in topo.nodes():
             node = topo.node[node_id]
             if (node_id == lcname and
@@ -420,7 +414,7 @@ class RestAPI(SingletonMixin):
                     
         retdict = {}
         # Get the topology first
-        topo = TopologyManager.instance().get_topology()            
+        topo = TopologyManager().get_topology()            
         for node_id in topo.nodes():
             node = topo.node[node_id]
             if (node_id == lcname and
@@ -518,7 +512,7 @@ class RestAPI(SingletonMixin):
                             
         retdict = {}
         # Get the topology first
-        topo = TopologyManager.instance().get_topology()            
+        topo = TopologyManager().get_topology()            
         for node_id in topo.nodes():
             node = topo.node[node_id]
             if (node_id == switchname and
@@ -613,7 +607,7 @@ class RestAPI(SingletonMixin):
                     
         retdict = {}
         # Get the topology first
-        topo = TopologyManager.instance().get_topology()            
+        topo = TopologyManager().get_topology()            
         for node_id in topo.nodes():
             node = topo.node[node_id]
             if (node_id == switchname and
@@ -695,7 +689,7 @@ class RestAPI(SingletonMixin):
                     
         retdict = {}
         # Get the topology first
-        topo = TopologyManager.instance().get_topology()            
+        topo = TopologyManager().get_topology()            
         for node_id in topo.nodes():
             node = topo.node[node_id]
             if (node_id == switchname and
@@ -779,7 +773,7 @@ class RestAPI(SingletonMixin):
         base_url = request.base_url
         retdict = {'href':base_url, 'links':{}}
         # Get all the users
-        users = UserManager.instance().get_users()
+        users = ussermanager.get_users()
         for user in users:
             un = user['username']
             retdict['links'][un] = {'href': base_url + "/" + un,
@@ -794,7 +788,7 @@ class RestAPI(SingletonMixin):
                 # Permissions - FIXME
                 user['permitted_actions']
                 # Policies
-                rules = RuleManager.instance().get_rules({'user':un})
+                rules = RuleManager().get_rules({'user':un})
                 policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
                 for rule in rules:
@@ -857,7 +851,7 @@ class RestAPI(SingletonMixin):
         base_url = request.base_url
         retdict = {'href':base_url}
         # Get specific user
-        user = UserManager.instance().get_user(username)
+        user = UserManager().get_user(username)
         retdict[username] = {'href': base_url,
                              'type': user['type'],
                              'organization': user['organization']}
@@ -870,7 +864,7 @@ class RestAPI(SingletonMixin):
             # Permissions - FIXME
             user['permitted_actions']
             # Policies
-            rules = RuleManager.instance().get_rules({'user':username})
+            rules = RuleManager().get_rules({'user':username})
             policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
             for rule in rules:
@@ -928,7 +922,7 @@ class RestAPI(SingletonMixin):
         base_url = request.base_url
         retdict = {}
         # Get specific user
-        user = UserManager.instance().get_user(username)
+        user = UserManager().get_user(username)
         retdict[username] = {'href': base_url}
 
         #FIXME - Once this is squared away, this needs to be written.
@@ -988,7 +982,7 @@ class RestAPI(SingletonMixin):
         base_url = request.base_url
         retdict = {}
         # Get specific user
-        user = UserManager.instance().get_user(username)
+        user = UserManager().get_user(username)
         retdict[username] = {'href': base_url,
                              'policies':{}}
 
@@ -998,7 +992,7 @@ class RestAPI(SingletonMixin):
         if (request.args.get('type') != None):
             query['ruletype'] = request.args.get('type')
         
-        rules = RuleManager.instance().get_rules(query)
+        rules = RuleManager().get_rules(query)
         policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
         for rule in rules:
@@ -1061,7 +1055,7 @@ class RestAPI(SingletonMixin):
         retdict = {'href': base_url, 'links':{}}
 
         # Get all the rules:
-        rules = RuleManager.instance().get_rules()
+        rules = RuleManager().get_rules()
         policy_url = base_url + "/number/"
 
         for rule in rules:
@@ -1137,7 +1131,7 @@ class RestAPI(SingletonMixin):
         retdict = {}
 
         # Get all the rules:
-        rule = RuleManager.instance().get_rule_details(policynumber)
+        rule = RuleManager().get_rule_details(policynumber)
         if rule == None:
             #FIXME - proper response
             if request_wants_json(request):
@@ -1159,7 +1153,7 @@ class RestAPI(SingletonMixin):
         # HTML output
         return flask.render_template('policiesspec.html', policydict=retdict)
         # else: fancy HTML
-        detail = RuleManager.instance().get_rule_details(rule_hash)
+        detail = RuleManager().get_rule_details(rule_hash)
         return flask.render_template('details.html', detail = detail)
         
     '''
@@ -1189,7 +1183,7 @@ class RestAPI(SingletonMixin):
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         
-        rule = RuleManager.instance().get_rule_details(policynumber)
+        rule = RuleManager().get_rule_details(policynumber)
         if rule == None:
             #FIXME - proper response
             if request_wants_json(request):
@@ -1199,7 +1193,7 @@ class RestAPI(SingletonMixin):
 
         # Delete rule
         (rule_hash, jsonrule, ruletype, state, user, breakdowns) = rule
-        RuleManager.instance().remove_rule(rule_hash, user)
+        RuleManager().remove_rule(rule_hash, user)
 
         #FIXME - proper response
         if request_wants_json(request):
@@ -1251,7 +1245,7 @@ class RestAPI(SingletonMixin):
     def v1policiestype():
         base_url = request.base_url
         retdict = {'href':base_url}
-        policies = RuleRegistry.instance().get_list_of_policies()
+        policies = RuleRegistry().get_list_of_policies()
 
         for policy in policies:
             p = {'type':policy,
@@ -1319,7 +1313,7 @@ class RestAPI(SingletonMixin):
         retdict = {'href': base_url}
 
         # Get all the rules:
-        rules = RuleManager.instance().get_rules()
+        rules = RuleManager().get_rules()
         policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
         for rule in rules:
@@ -1349,7 +1343,7 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route(EP_POLICIESTYPESPECEXAMPLE, methods=['GET'])
     def v1policiestypeexample(policytype):
-        rr = RuleRegistry.instance()
+        rr = ruleregistry
         try:
             html = rr.get_rule_class(policytype).get_html_help()
             return html
@@ -1460,10 +1454,10 @@ class RestAPI(SingletonMixin):
                              
         # Get UserPolicy
         try:
-            policyclass = RuleRegistry.instance().get_rule_class(policytype)
+            policyclass = RuleRegistry().get_rule_class(policytype)
             policyclass.check_syntax(data)
             policy = policyclass(userid, data)
-            hash = RuleManager.instance().add_rule(policy)
+            hash = RuleManager().add_rule(policy)
             policy_url = base_url + str(hash)
             retdict['policy']['href'] = policy_url
             #FIXME - proper response
@@ -1473,7 +1467,7 @@ class RestAPI(SingletonMixin):
             # else: HTML
             return flask.redirect(policy_url, code=303)
         
-        except RuleRegistryTypeError as e:
+        except RuleRegistryTypeError:
             #FIXME - proper response
             if request_wants_json(request):
                 return make_response(jsonify({}), 404)
@@ -1513,7 +1507,7 @@ class RestAPI(SingletonMixin):
             password = data['password']
             
         # Check with AuthenticationInspector
-        if AuthenticationInspector.instance().is_authenticated(username,
+        if AuthenticationInspector().is_authenticated(username,
                                                                password):
             # Log user in
             user = User(username)
@@ -1552,7 +1546,7 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @login_manager.user_loader
     def user_loader(username):
-        user = UserManager.instance().get_user(username)
+        user = UserManager().get_user(username)
         if user == None:
             return None
 
@@ -1616,7 +1610,7 @@ class RestAPI(SingletonMixin):
  
         else: 
             # Get the Topo for dynamic list gen
-            G = TopologyManager.instance().get_topology()            
+            G = TopologyManager().get_topology()            
 
             switches=[]
             dtns=[]
@@ -1640,7 +1634,7 @@ class RestAPI(SingletonMixin):
     def old_login():
         email = flask.request.form['email']
         #if flask.request.form['pw'] == users[email]['pw']:
-        if AuthenticationInspector.instance().is_authenticated(email,flask.request.form['pw']):
+        if AuthenticationInspector().is_authenticated(email,flask.request.form['pw']):
             user = User(email)
             user.id = email
             flask_login.login_user(user)
@@ -1653,7 +1647,7 @@ class RestAPI(SingletonMixin):
     @app.route('/protected')
     @flask_login.login_required
     def protected():
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'login'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'login'):
             return 'Logged in as: ' + flask_login.current_user.id
         return unauthorized_handler()
 
@@ -1674,7 +1668,7 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/user/<username>')
     def show_user_information(username):
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'get_user_info'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'get_user_info'):
             return "Test: %s"%username
         return unauthorized_handler()
 
@@ -1682,8 +1676,8 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/topology.json')
     def show_network_topology_json():
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
-            G = TopologyManager.instance().get_topology()
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
+            G = TopologyManager().get_topology()
             data = json_graph.node_link_data(G)
             return json.dumps(data)
         return unauthorized_handler()
@@ -1692,8 +1686,8 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/topology_node.json')
     def show_network_topology_node_json():
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
-            G = TopologyManager.instance().get_topology()
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
+            G = TopologyManager().get_topology()
 
             links = []
             for edge in G.edges(data=True):
@@ -1712,7 +1706,7 @@ class RestAPI(SingletonMixin):
     @staticmethod
     @app.route('/topology')
     def show_network_topology():
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
             return flask.render_template('topology.html')
         return unauthorized_handler()
 
@@ -1761,7 +1755,7 @@ class RestAPI(SingletonMixin):
         hashes = []
         for rule in data['rules']: 
             policy = L2TunnelPolicy(flask_login.current_user.id, rule)
-            hashes.append(RuleManager.instance().add_rule(policy))
+            hashes.append(RuleManager().add_rule(policy))
             
         return '<pre>%s</pre><p>%s</p>'%(json.dumps(data, indent=2),str(hashes))
             
@@ -1770,7 +1764,7 @@ class RestAPI(SingletonMixin):
     def make_new_pipe():
         theID = "curlUser"
         try:
-            if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'show_topology'):
+            if AuthorizationInspector().is_authorized(flask_login.current_user.id,'show_topology'):
                 theID = flask_login.current_user.id
             else:
                 theID = "curlUser"
@@ -1799,7 +1793,7 @@ class RestAPI(SingletonMixin):
                                             "bandwidth":request.form['bw']}}
             
             policy = L2TunnelPolicy(theID, data)
-            rule_hash = RuleManager.instance().add_rule(policy)
+            rule_hash = RuleManager().add_rule(policy)
         except:
             data =  {EndpointConnectionPolicy.get_policy_name():{
             "deadline":request.form['deadline']+':00',
@@ -1807,7 +1801,7 @@ class RestAPI(SingletonMixin):
             "dstendpoint":request.form['dest'],
             "dataquantity":int(request.form['size'])*int(request.form['unit'])}}
             policy = EndpointConnectionPolicy(theID, data)
-            rule_hash = RuleManager.instance().add_rule(policy)
+            rule_hash = RuleManager().add_rule(policy)
 
         print rule_hash
         return flask.redirect('/rule/hash/' + str(rule_hash))
@@ -1842,7 +1836,7 @@ http://localhost:5000/rule/l2m?starttime=2017-05-12T23:01:50&endtime=2017-05-13T
         data['endpoints'] = d['endpoints']
 
         policy = L2MultipointPolicy(flask_login.current_user.id,{'l2multipoint':data})
-        rule_hash = RuleManager.instance().add_rule(policy)
+        rule_hash = RuleManager().add_rule(policy)
 
         return str({'l2multipoint':data})
 
@@ -1889,7 +1883,7 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
                 SDXIngressPolicy.check_syntax(jsonrule)
                 policy = SDXIngressPolicy(flask_login.current_user.id,
                                           jsonrule)
-                rule_hash = RuleManager.instance().add_rule(policy)
+                rule_hash = RuleManager().add_rule(policy)
 
                 return str(jsonrule)
 
@@ -1898,7 +1892,7 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
                 SDXEgressPolicy.check_syntax(jsonrule)
                 policy = SDXEgressPolicy(flask_login.current_user.id,
                                          jsonrule)
-                rule_hash = RuleManager.instance().add_rule(policy)
+                rule_hash = RuleManager().add_rule(policy)
 
                 return str(jsonrule)
             else: raise Exception("not a good path. %s" % request.path)
@@ -1909,12 +1903,12 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
     @staticmethod
     @app.route('/rule/hash/<rule_hash>',methods=['GET','POST'])
     def get_rule_details_by_hash(rule_hash):
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'access_rule_by_hash'):
 
             # Shows info for rule
             if request.method == 'GET':
                 try:
-                    detail=RuleManager.instance().get_rule_details(rule_hash)
+                    detail=RuleManager().get_rule_details(rule_hash)
                     print detail
                     return  flask.render_template('details.html', detail=detail)
                 except Exception as e:
@@ -1923,7 +1917,7 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
 
             # Deletes Rules : POST because HTML does not support DELETE Requests
             if request.method == 'POST':
-                RuleManager.instance().remove_rule(rule_hash, flask_login.current_user.id)
+                RuleManager().remove_rule(rule_hash, flask_login.current_user.id)
                 return flask.redirect(flask.url_for('get_rules'))
 
             # Handles other HTTP request methods
@@ -1936,20 +1930,20 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
     @staticmethod
     @app.route('/rule/all/', methods=['GET','POST'])
     def get_rules():
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'search_rules'):
             #TODO: Throws exception currently    
             if request.method == 'POST':
-                RuleManager.instance().remove_all_rules(flask_login.current_user.id)
-            return flask.render_template('rules.html', rules=RuleManager.instance().get_rules())
+                RuleManager().remove_all_rules(flask_login.current_user.id)
+            return flask.render_template('rules.html', rules=RuleManager().get_rules())
         return unauthorized_handler()
  
     # Get a list of rules that match certain filters or a query.
     @staticmethod
     @app.route('/rule/search/<query>')
     def get_rule_search_by_query(query):
-        if AuthorizationInspector.instance().is_authorized(flask_login.current_user.id,'search_rules'):
+        if AuthorizationInspector().is_authorized(flask_login.current_user.id,'search_rules'):
 
             # TODO: Parse query into filters and ordering
-            return str(RuleManager.instance().get_rules(filter={query},ordering=query))
+            return str(RuleManager().get_rules(filter={query},ordering=query))
         return unauthorized_handler()
 

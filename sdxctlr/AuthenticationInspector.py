@@ -3,9 +3,9 @@
 
 
 import logging
-from lib.Singleton import SingletonMixin
+from lib.AtlanticWaveInspector import AtlanticWaveInspector
 
-class AuthenticationInspector(SingletonMixin):
+class AuthenticationInspector(AtlanticWaveInspector):
     ''' The AuthenticationInspector is responsible for determining if someone or
         something is authenticated (is who they say they are). It receives 
         information from both the ParticipantManager and the 
@@ -13,33 +13,17 @@ class AuthenticationInspector(SingletonMixin):
         local controllers, respectively.
         Singleton. ''' 
 
-    def __init__(self):
-        # Setup logger
-        self._setup_logger()
+    def __init__(self, loggeridprefix='sdxcontroller'):
+        loggerid = loggeridprefix + '.authentication'
+        super(AuthenticationInspector, self).__init__(loggerid)
 
         # Initialize the credential store
         self._credential_store = {}
 
-        self.logger.debug("AuthenticationInspector initialized.")
+        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
+                                                    hex(id(self))))
 
         
-
-    def _setup_logger(self):
-        ''' Internal function for setting up the logger formats. '''
-        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
-        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(levelname)-8s %(message)s')
-        console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
-        console.setFormatter(formatter)
-        logfile = logging.FileHandler('sdxcontroller.log')
-        logfile.setLevel(logging.DEBUG)
-        logfile.setFormatter(formatter)
-        self.logger = logging.getLogger('sdxcontroller.authentication')
-        self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(console)
-        self.logger.addHandler(logfile) 
-
-
     def is_authenticated(self, username, credentials):
         ''' Returns true if user is authenticated, False otherwise. Credentials 
             may change over time, for instance, for the initial deployment, 
