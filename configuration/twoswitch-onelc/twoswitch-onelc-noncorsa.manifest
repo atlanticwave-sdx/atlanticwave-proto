@@ -61,9 +61,7 @@
             "corsabwin":11,
             "corsabwout":12,
             "corsaratelimiterbridge":"br21",
-            "corsaratelimiterports":[21,22],
-            "managementvlan":4085,
-            "managementvlanports":[3,4]
+            "corsaratelimiterports":[21,22]
           }
         },
         {
@@ -97,9 +95,7 @@
             "corsabwin":11,
             "corsabwout":12,
             "corsaratelimiterbridge":"br21",
-            "corsaratelimiterports":[21,22],
-            "managementvlan":4085,
-            "managementvlanports":[3,4]
+            "corsaratelimiterports":[21,22]
           }
         }
       ],
