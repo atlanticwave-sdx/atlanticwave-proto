@@ -128,6 +128,10 @@ class RuleManager(AtlanticWaveManager):
         self.set_send_add_rule(send_user_rule_breakdown_add)
         self.set_send_rm_rule(send_user_rule_breakdown_remove)
 
+        # Setup callback lists:
+        self.install_callbacks = []
+        self.remove_callbacks = []
+
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
         
@@ -149,8 +153,8 @@ class RuleManager(AtlanticWaveManager):
         self.dlogger.info("add_rule: breakdowns %s" % breakdown)
 
         # If everything passes, set the hash, cookie, and breakdown,
-        # put into database
-        rulehash = self._get_new_rule_number()        
+        # put into database and call install_callbacks
+        rulehash = self._get_new_rule_number()
         rule.set_rule_hash(rulehash)
         for entry in breakdown:
             entry.set_cookie(rulehash)
@@ -160,7 +164,7 @@ class RuleManager(AtlanticWaveManager):
         rule.pre_add_callback(TopologyManager(), AuthorizationInspector())
         self._add_rule_to_db(rule)
         self.dlogger.info("add_rule: Rule added to db")
-
+        self._call_install_callbacks()
             
         return rulehash
         
@@ -195,6 +199,7 @@ class RuleManager(AtlanticWaveManager):
         rule.pre_remove_callback(TopologyManager(),
                                  AuthorizationInspector())
         self._rm_rule_from_db(rule)
+        self._call_remove_callbacks()
 
     def remove_all_rules(self, user):
         ''' Removes all rules. Just an alias for repeatedly calling 
@@ -303,6 +308,42 @@ class RuleManager(AtlanticWaveManager):
             return (rule_hash, jsonrule, ruletype, state, user, breakdowns)
 
         return None
+
+    def register_for_rule_updates(self, install_callback, remove_callback):
+        ''' Callback will be called when there is a rule update (install or 
+            delete. 
+            install_callback will be called when there's a new rule installed.
+            remove_callback will be called when a rule is removed.
+            Both callbacks can be the same function.
+        '''
+        if install_callback != None:
+            self.install_callbacks.append(install_callback)
+        if remove_callback != None:
+            self.remove_callbacks.append(remove_callback)
+
+    def unregister_for_topology_updates(self, install_callback=None,
+                                        remove_callback=None):
+        ''' Remove callback from list of callbacks to be called. '''
+        if install_callback != None:
+            try:
+                self.install_callbacks.remove(install_callback)
+            except:
+                raise RuleManagerError("Trying to remove %s, not in install_callbacks: %s" % (install_callback, self.install_callbacks))
+        if remove_callback != None:
+            try:
+                self.remove_callbacks.remove(remove_callback)
+            except:
+                raise RuleManagerError("Trying to remove %s, not in remove_callbacks: %s" % (remove_callback, self.remove_callbacks))
+
+    def _call_install_callbacks(self, rule):
+        ''' Call all install_callbacks. '''
+        for cb in self.install_callbacks:
+            cb(rule)
+
+    def _call_remove_callbacks(self, rule):
+        ''' Call all remove_callbacks. '''
+        for cb in self.remove_callbacks:
+            cb(rule)
 
     def _get_new_rule_number(self):
         ''' Returns a new rule number for use. For now, it's incrementing by 
