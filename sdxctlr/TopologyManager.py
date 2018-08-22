@@ -40,6 +40,9 @@ class TopologyManager(AtlanticWaveManager):
         #FIXME: Static topology right now.
         self._import_topology(topology_file)
 
+        # List of all topology update callbacks
+        self.topology_update_callbacks = []
+
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
 
@@ -57,14 +60,22 @@ class TopologyManager(AtlanticWaveManager):
         ''' callback will be called when there is a topology update. callback 
             must accept a topology as its only parameter. '''
         # Not used now, as only using static topology.
-        pass 
+        if callback != None:
+            self.topology_update_callbacks.append(callback)
         
     def unregister_for_topology_updates(self, callback):
         ''' Remove callback from list of callbacks to be called when there's a 
             topology update. '''
         # Not used now, as only using static topology.
-        pass
-    
+        if callback != None:
+            try:
+                self.topology_update_callbacks.remove(callback)
+            raise TopologyManagerError("Trying to remove %s, not in topology_update_callbacks: %s" % (callback, self.topology_update_callbacks))
+
+    def _call_topology_update_callbacks(self, change):
+        ''' FIXME: This isn't used yet. '''
+        for cb in self.topology_update_callbacks:
+            cb(change)
 
     def _import_topology(self, manifest_filename):
         with open(manifest_filename) as data_file:
