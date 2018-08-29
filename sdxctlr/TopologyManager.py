@@ -11,6 +11,48 @@ from lib.SteinerTree import make_steiner_tree
 #FIXME: This shouldn't be hard coded.
 MANIFEST_FILE = '../manifests/localcontroller.manifest'
 
+# Define different node types
+NODE_TYPE_MIN         = 1
+NODE_SWITCH           = 1
+NODE_LC               = 2
+NODE_SDX              = 3
+NODE_HOST             = 4
+NODE_DTN              = 5
+NODE_NETWORK          = 6
+NODE_TYPE_MAX         = 6
+
+
+def TOPO_TYPE_TO_STRING(typenum):
+    if typenum == NODE_SWITCH:
+        return "switch"
+    elif typenum == NODE_LC:
+        return "localcontroller"
+    elif typenum == NODE_SDX:
+        return "sdxcontroller"
+    elif typenum == NODE_HOST:
+        return "host"
+    elif typenum == NODE_DTN:
+        return "dtn"
+    elif typenum == NODE_NETWORK:
+        return "network"
+
+def TOPO_VALID_TYPE(typestr):
+    if (typestr == "switch" or
+        typestr == "localcontroller" or
+        typestr == "sdxcontroller" or
+        typestr == "host" or
+        typestr == "dtn" or
+        typestr == "network"):
+        return True
+    return False
+
+def TOPO_EDGE_TYPE(typestr):
+    ''' Used to identify edge connections. Used by API(s). '''
+    if (typestr == 'dtn' or
+        typestr == 'network'):
+        return True
+    return False
+
 class TopologyManagerError(Exception):
     ''' Parent class as a catch-all for other errors '''
     pass
@@ -70,10 +112,11 @@ class TopologyManager(AtlanticWaveManager):
         if callback != None:
             try:
                 self.topology_update_callbacks.remove(callback)
-            raise TopologyManagerError("Trying to remove %s, not in topology_update_callbacks: %s" % (callback, self.topology_update_callbacks))
+            except:
+                raise TopologyManagerError("Trying to remove %s, not in topology_update_callbacks: %s" % (callback, self.topology_update_callbacks))
 
     def _call_topology_update_callbacks(self, change):
-        ''' FIXME: This isn't used yet. '''
+        ''' FIXME: This isn't used yet. ''' 
         for cb in self.topology_update_callbacks:
             cb(change)
 
@@ -89,7 +132,10 @@ class TopologyManager(AtlanticWaveManager):
                 if not self.topo.has_node(key):
                     self.topo.add_node(key)
                 for k in endpoint:
-                    if type(endpoint[k]) == int:
+                    if k == "type" and not TOPO_VALID_TYPE(endpoint[k]):
+                        raise TopologyManagerError("Invalid type string %s" %
+                                                   endpoint[k])
+                    elif type(endpoint[k]) == int:
                         self.topo.node[key][k] = int(endpoint[k])
                     self.topo.node[key][k] = str(endpoint[k])
                     
@@ -112,7 +158,7 @@ class TopologyManager(AtlanticWaveManager):
             # Fill out topology
             with self.topolock:
                 # Add local controller
-                self.topo.add_node(key)
+                self.topo.add_node(str(key))
                 self.topo.node[key]['type'] = "localcontroller"
                 self.topo.node[key]['shortname'] = shortname
                 self.topo.node[key]['location'] = location
