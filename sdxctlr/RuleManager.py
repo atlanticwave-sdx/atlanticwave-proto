@@ -164,7 +164,7 @@ class RuleManager(AtlanticWaveManager):
         rule.pre_add_callback(TopologyManager(), AuthorizationInspector())
         self._add_rule_to_db(rule)
         self.dlogger.info("add_rule: Rule added to db")
-        self._call_install_callbacks()
+        self._call_install_callbacks(rule)
             
         return rulehash
         
@@ -199,7 +199,7 @@ class RuleManager(AtlanticWaveManager):
         rule.pre_remove_callback(TopologyManager(),
                                  AuthorizationInspector())
         self._rm_rule_from_db(rule)
-        self._call_remove_callbacks()
+        self._call_remove_callbacks(rule)
 
     def remove_all_rules(self, user):
         ''' Removes all rules. Just an alias for repeatedly calling 
