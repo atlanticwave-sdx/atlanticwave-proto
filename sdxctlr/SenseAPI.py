@@ -26,6 +26,10 @@ import json
 # Multithreading
 from threading import Thread
 
+CHANGE_TYPE_ADD_RULE    = "ctar"
+CHANGE_TYPE_RM_RULE     = "ctrr"
+CHANGE_TYPE_MOD_TOPO    = "ctmt"
+
 class SenseAPI(AtlanticWaveModule):
     ''' The SenseAPI is the main interface for SENSE integration. It generates
         the appropriate XML for the current configuration status, and sends 
@@ -94,11 +98,16 @@ class SenseAPI(AtlanticWaveModule):
         
     def rule_add_callback(self, rule):
         ''' Handles rules being added. '''
-        pass
+        print "rule_add_callback - %s" % rule
+        delta = self.generate_delta_XML(CHANGE_TYPE_ADD_RULE, rule)
+        self.send_SENSE_msg(delta)
 
     def rule_rm_callback(self, rule):
         ''' Handles rules being removed. '''
-        pass
+        print "rule_rm_callback - %s" % rule
+        delta = self.generate_delta_XML(CHANGE_TYPE_RM_RULE, rule)
+        self.send_SENSE_msg(delta)
+
 
     def topo_change_callback(self):
         ''' Handles topology changes. 
@@ -181,11 +190,16 @@ class SenseAPI(AtlanticWaveModule):
             handled separately. '''
         pass
 
-    def generate_delta_XML(self, change):
+    def generate_delta_XML(self, changetype, change):
         ''' Generates a delta based on a change passed in.
               - Topology change
               - Bandwidth change (up or down)
         '''
+        pass
+
+    def send_SENSE_msg(self, msg):
+        ''' Sends over a sense message. Handles formatting, and anything else
+            necessary. '''
         pass
 
     def install_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
@@ -233,16 +247,28 @@ class SenseAPI(AtlanticWaveModule):
     def install_point_to_multipoint_rule(self, endpointvlantuplelist,
                                          bandwidth,  starttime, endtime):
         ''' Installs a point-to-multipoint rule. '''
-        #FIXME: When should this be done?
+        #FIXME: this will need to reworked, but it's useful for prototyping
         # Make JSON version
+        endpoints = []
+        for (sw, po, vlan) in endpointvlantuplelist:
+            endpoints.append({"switch":sw, "port":po, "vlan":vlan})
+        jsonrule = {"L2Multipoint":{
+            "starttime":starttime,
+            "endtime":endtime,
+            "bandwidth":bandwidth,
+            "endpoints":endpoints}}
         
         # Perform check_syntax
+        L2MultipointPolicy.check_syntax(jsonrule)
 
         # Make policy class
+        policy = L2MultipointPolicy(self.userid, jsonrule)
 
         # Install rule
+        hash = RuleManager().add_rule(policy)
 
         #FIXME: What should be returned?
+        #FIXME: What to do about Exceptions?
         pass
 
 
