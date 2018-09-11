@@ -57,6 +57,12 @@ class TopologyManagerError(Exception):
     ''' Parent class as a catch-all for other errors '''
     pass
 
+class TopologyManagerTypeError(TypeError):
+    pass
+
+class TopologyManagerValueError(ValueError):
+    pass
+
 class TopologyManager(AtlanticWaveManager):
     ''' The TopologyManager handles the topology of the network. Initially, this
         will be very simple, as there will only be three switches, and ~100 
@@ -78,6 +84,9 @@ class TopologyManager(AtlanticWaveManager):
 
         # Initialize topology lock.
         self.topolock = Lock()
+
+        # So we don't have to parse VLANs over an over again
+        self._cached_vlans = {}
 
         #FIXME: Static topology right now.
         self._import_topology(topology_file)
@@ -220,6 +229,13 @@ class TopologyManager(AtlanticWaveManager):
                         # Other fields that may be of use
                         self.topo.edge[name][destination]['vlans_in_use'] = []
                         self.topo.edge[name][destination]['bw_in_use'] = 0
+
+                        # VLANs available
+                        if 'available_vlans' in port.keys():
+                            self.topo.edge[name][destination]['available_vlans'] = str(port['available_vlans'])
+                        else:
+                            self.topo.edge[name][destination]['available_vlans'] = "0-4095"
+
                 # Once all the switches have been looked at, add them to the
                 # LC
                 self.topo.node[key]['switches'] = switch_list
@@ -227,6 +243,62 @@ class TopologyManager(AtlanticWaveManager):
     # -----------------
     # Generic functions
     # -----------------
+
+    def check_vlan_available(self, vlan_str, vlan):
+        if vlan_str not in self._cached_vlans.keys():
+            self._parse_available_vlans(vlan_str)
+        valid_vlans = self._cached_vlans[vlan_str]
+
+        return vlan in valid_vlans        
+
+    def get_available_vlan_list(self, vlan_str):
+        if vlan_str not in self._cached_vlans.keys():
+            self._parse_available_vlans(vlan_str)
+        return self._cached_vlans[vlan_str]
+    
+    def _parse_available_vlans(self, vlan_str):
+        valid_vlans = []
+        ranges = vlan_str.split(",")
+        for r in ranges:
+            r_parts = r.split("-")
+            if len(r_parts) == 1:
+                if type(int(r_parts[0])) != int:
+                    raise TopologyManagerTypeError(
+                        "Available VLAN type error %s:%s" %
+                        (type(r_parts[0]), r_parts[0]))
+                elif r_parts[0] < 0 or r_parts[0] > 4095:
+                    raise TopologyManagerValueError(
+                        "Available VLAN out of range: %s" %
+                        r_parts[0])
+                valid_vlans.append(int(r_parts[0]))
+            elif len(r_parts) == 2:
+                low = int(r_parts[0])
+                high = int(r_parts[1])
+                if type(low) != int:
+                    raise TopologyManagerTypeError(
+                        "Available VLAN type error %s:%s" %
+                        (type(low), low))
+                elif type(high) != int:
+                    raise TopologyManagerTypeError(
+                        "Available VLAN type error %s:%s" %
+                        (type(low), low))
+                elif low < 0 or low > 4095:
+                    raise TopologyManagerValueError(
+                        "Available VLAN out of range: %s" %
+                        low)
+                elif high < 0 or high > 4095:
+                    raise TopologyManagerValueError(
+                        "Available VLAN out of range: %s" %
+                        high)
+                elif low > high:
+                    raise TopologyManagerValueError(
+                        "Available VLANs out of order: %s-%s" %
+                        (low, high))
+
+                for x in range(low, high+1):
+                    valid_vlans.append(x)
+
+        self._cached_vlans[vlan_str] = valid_vlans
 
     def reserve_bw(self, node_pairs, bw):        
         ''' Generic method for reserving bandwidth based on pairs of nodes. '''
@@ -352,13 +424,16 @@ class TopologyManager(AtlanticWaveManager):
                         if vlan in self.topo.node[point]['vlans_in_use']:
                             on_path = True
                             break
-                    
                 if on_path:
                     continue
 
                 # Check each edge on the path
                 for (node, nextnode) in zip(path[0:-1], path[1:]):
                     if vlan in self.topo.edge[node][nextnode]['vlans_in_use']:
+                        on_path = True
+                        break
+                    if vlan not in self.get_available_vlan_list(
+                            self.topo.edge[node][nextnode]['available_vlans']):
                         on_path = True
                         break
                     

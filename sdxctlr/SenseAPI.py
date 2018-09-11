@@ -95,6 +95,21 @@ class SenseAPI(AtlanticWaveModule):
                                                     100000,
                                                     "1985-04-12T12:34:56",
                                                     "2985-04-12T12:34:56")
+                        self.install_point_to_point_rule(srcnode, dstnode,
+                                                    101, 201,
+                                                    100000,
+                                                    "1985-04-12T12:34:56",
+                                                    "2985-04-12T12:34:56")
+                        self.install_point_to_point_rule(srcnode, dstnode,
+                                                    102, 202,
+                                                    100000,
+                                                    "1985-04-12T12:34:56",
+                                                    "2985-04-12T12:34:56")
+                        self.install_point_to_point_rule(srcnode, dstnode,
+                                                    103, 203,
+                                                    100000,
+                                                    "1985-04-12T12:34:56",
+                                                    "2985-04-12T12:34:56")
         
     def rule_add_callback(self, rule):
         ''' Handles rules being added. '''

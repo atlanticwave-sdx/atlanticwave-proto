@@ -46,12 +46,14 @@
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "atldtn"
+              "destination": "atldtn",
+              "available_vlans":"2345"
             },
             {
       	      "portnumber": 3,
 	          "speed": 8000000000,
-	          "destination": "br2"
+	          "destination": "br2",
+              "available_vlans": "1000-1100,4000-4080"
 	        }
 	        ],
           "internalconfig": {
@@ -80,12 +82,14 @@
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "miadtn"
+              "destination": "miadtn",
+              "available_vlans":"2345"
             },
             {
       	      "portnumber": 3,
 	          "speed": 8000000000,
-	          "destination": "br1"
+	          "destination": "br1",
+              "available_vlans": "1000-1003,4000-4080"
 	        }
 	        ],
           "internalconfig": {
