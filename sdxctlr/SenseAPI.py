@@ -1,6 +1,9 @@
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
+# Some parts are based on the Sense Resource Manager for the OSCARS interface:
+# https://bitbucket.org/berkeleylab/sensenrm-oscars/src/d09db31aecbe7654f03f15eed671c0675c5317b5/sensenrm_server.py
+
 from lib.AtlanticWaveModule import AtlanticWaveModule
 
 from shared.L2MultipointPolicy import L2MultipointPolicy
@@ -18,6 +21,11 @@ from threading import Lock
 # XML imports
 
 
+# Flask imports
+from flask import Flask, jsonify, abort, make_response, request
+from flask_restful import Api, Resource, reqparse, fields, marshal
+import ssl
+
 # Other imports
 import networkx as nx
 from networkx.readwrite import json_graph
@@ -26,9 +34,18 @@ import json
 # Multithreading
 from threading import Thread
 
-CHANGE_TYPE_ADD_RULE    = "ctar"
-CHANGE_TYPE_RM_RULE     = "ctrr"
-CHANGE_TYPE_MOD_TOPO    = "ctmt"
+
+# Globals
+
+errors = {
+    'NotFound': {
+        'message': "A resource with that ID does not exist.",
+        'status': 404,
+        'extra': "No extra information",
+    },
+}
+        
+
 
 class SenseAPI(AtlanticWaveModule):
     ''' The SenseAPI is the main interface for SENSE integration. It generates
@@ -39,6 +56,8 @@ class SenseAPI(AtlanticWaveModule):
 
     def __init__(self, loggerprefix='sdxcontroller',
                  host='0.0.0.0', port=5001):
+        global app, api, context
+
         loggerid = loggerprefix + ".sense"
         super(SenseAPI, self).__init__(loggerid)
 
@@ -57,7 +76,37 @@ class SenseAPI(AtlanticWaveModule):
         TopologyManager().register_for_topology_updates(
             self.topo_change_callback)
 
-        #
+        # Flask setup
+        #FIXME: SSL
+        #context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2) 
+        #context.load_verify_locations(capath=ssl_config["capath"])
+        #context.load_cert_chain(ssl_config["hostcertpath"],
+        #                        ssl_config["hostkeypath"])
+        # sss._https_verify_certificates(enable=ssl_config["httpsverify"])
+        app = Flask(__name__)
+        api = Api(app, errors=errors)
+        api.add_resource(ModelsAPI,
+            '/sense-rm/api/sense/v1/models',
+            endpoint='models')
+        api.add_resource(DeltasAPI,
+            '/sense-rm/api/sense/v1/deltas',
+            endpoint='deltas')
+        api.add_resource(DeltaAPI,
+            '/sense-rm/api/sense/v1/delta/<string:deltaid>',
+            endpoint='delta')
+        api.add_resource(CommitsAPI,
+            '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/commit',
+            endpoint='commits')
+        api.add_resource(ClearAPI,
+            '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/clear',
+            endpoint='clear')
+        api.add_resource(CancelAPI,
+            '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/cancel',
+            endpoint='cancel')
+        
+        
+        
+
         
         # Connection handling
         #FIXME - Is it inbound or outbound?
@@ -114,15 +163,10 @@ class SenseAPI(AtlanticWaveModule):
     def rule_add_callback(self, rule):
         ''' Handles rules being added. '''
         print "rule_add_callback - %s" % rule
-        delta = self.generate_delta_XML(CHANGE_TYPE_ADD_RULE, rule)
-        self.send_SENSE_msg(delta)
 
     def rule_rm_callback(self, rule):
         ''' Handles rules being removed. '''
         print "rule_rm_callback - %s" % rule
-        delta = self.generate_delta_XML(CHANGE_TYPE_RM_RULE, rule)
-        self.send_SENSE_msg(delta)
-
 
     def topo_change_callback(self):
         ''' Handles topology changes. 
@@ -292,3 +336,274 @@ class SenseAPI(AtlanticWaveModule):
 
     def handle_new_connection(self):
         pass
+
+class SenseAPIResource(Resource):
+    ''' Has common pieces for all Resource objects used by the SenseAPI, 
+        including logging. '''
+
+    def __init__(self,loggeridsuffix, loggeridprefix='sdxcontroller.sense'):
+        loggerid = loggeridprefix + "." + loggeridsuffix
+        super(SenseAPIResource, self).__init__()
+
+    def _setup_loggers(self, loggerid, logfilename=None, debuglogfilename=None):
+                ''' Internal function for setting up the logger formats. '''
+        # Copied from https://github.com/atlanticwave-sdx/atlanticwave-proto/blob/master/lib/AtlanticWaveModule.py#L49
+        import logging
+        self.logger = logging.getLogger(loggerid)
+        self.dlogger = logging.getLogger("debug." + loggerid)
+        if logfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.WARNING)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(logfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.logger.setLevel(logging.DEBUG)
+            self.logger.addHandler(console)
+            self.logger.addHandler(logfile)
+
+        if debuglogfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.DEBUG)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(debuglogfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.dlogger.setLevel(logging.DEBUG)
+            self.dlogger.addHandler(console)
+            self.dlogger.addHandler(logfile)
+
+    def dlogger_tb(self):
+        ''' Print out the current traceback. '''
+        from traceback import format_stack
+        tbs = format_stack()
+        all_tb = "Traceback: id: %s\n" % str(hex(id(self)))
+        for line in tbs:
+            all_tb = all_tb + line
+        self.dlogger.warning(all_tb)
+
+
+
+model_fields = {
+    'id': fields.Raw,
+    'href': fields.Raw,
+    'creationTime': fields.Raw,
+    'model': fields.Raw
+}
+
+delta_fields = {
+    'id': fields.Raw,
+    'lastModified': fields.Raw,
+    'description': fields.Raw,
+    'modelId': fields.Raw,
+    'reduction': fields.Raw,
+    'addition': fields.Raw
+}
+        
+        
+
+        
+class ModelsAPI(SenseAPIResource):
+    def __init__(self):
+        super(ModelsAPI, self).__init__(self.__class__.__name__)
+        self.dlogger.DEBUG("__init__() start")
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('current', type=str, default='true')
+        self.reqparse.add_argument('summary', type=str, default='false')
+        self.reqparse.add_argument('encode', type=str, default='false')
+        self.models = None #FIXME
+        self.dlogger.DEBUG("__init__() complete")
+    
+    def get(self):
+        self.dlogger.DEBUG("get() start")
+
+        retval = None        #FIXME
+        
+        self.logger.INFO("get() returning %s" % retval)
+        self.dlogger.DEBUG("get() complete")
+        return retval
+    
+    def post(self):
+        self.dlogger.DEBUG("post() start")
+
+        args = self.reqparse.parse_args()
+        self.logger.INFO("post() args %s" % args)
+        retval = {'models': marshal(self.models, model_fields)}, 201 #FIXME
+        
+        self.logger.INFO("post() returning %s" % retval)
+        self.dlogger.DEBUG("post() complete")
+        return retval
+    
+class DeltasAPI(SenseAPIResource):
+    def __init__(self):
+        super(DeltasAPI, self).__init__(self.__class__.__name__)
+        self.dlogger.DEBUG("__init__() start")
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('id', type=str, location='json')
+        self.reqparse.add_argument('lastModified', type=str, location='json')
+        self.reqparse.add_argument('modelId', type=str, location='json')
+        self.reqparse.add_argument('reduction', type=str, location='json')
+
+        self.dlogger.DEBUG("__init__() complete")
+    
+    def get(self):
+        self.dlogger.DEBUG("get() start")
+        self.logger.INFO("get() id %s" % deltaid)
+        retval = {'deltas': marchal(deltas, delta_fields)}       #FIXME
+        
+        self.logger.INFO("get() returning %s" % retval)
+        self.dlogger.DEBUG("get() complete")
+        return retval
+    
+    def post(self):
+        self.dlogger.DEBUG("post() start")
+
+        args = self.reqparse.parse_args()
+        self.logger.INFO("post() args %s" % args)
+        deltas, mystatus = deltas.processDelta(args)              #FIXME
+        self.logger.INFO("post() results %s" % mystatus)
+        rstatus = 201
+        if int(mystatus) != 200:
+            rstatus = mystatus
+            
+        retval = {'deltas': marshal(deltas, delta_fields)}, rstatus
+
+        self.logger.INFO("post() returning %s" % retval)
+        self.dlogger.DEBUG("post() complete")
+        return retval
+    
+class DeltaAPI(SenseAPIResource):
+    def __init__(self):
+        super(DeltaAPI, self).__init__(self.__class__.__name__)
+        self.dlogger.DEBUG("__init__() start")
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('summary', type=str, default='true')
+        self.reqparse.add_argument('deltaid', type=str, location='json')
+        self.dlogger.DEBUG("__init__() complete")
+    
+    def get(self, deltaid):
+        self.dlogger.DEBUG("get() start")
+        self.logger.INFO("get() deltaid %s" % deltaid)
+        status, phase = nrmdeltas.getDelta(deltaid)                #FIXME
+        self.dlogger.DEBUG("get() %s:%s" % (status, phase))
+        retval = {'state': str(phase), 'deltaid': str(deltaid)}, status
+        self.logger.INFO("get() returning %s" % retval)
+        self.dlogger.DEBUG("get() complete")
+        return retval
+
+class CommitsAPI(SenseAPIResource):
+    def __init__(self):
+        super(CommitsAPI, self).__init__(self.__class__.__name)
+        self.dlogger.DEBUG("__init__() start")
+        self.dlogger.DEBUG("__init__() complete")
+
+    def put(self, deltaid):
+        self.dlogger.DEBUG("put() start")
+        self.logger.INFO("put() deltaid %s" % deltaid)
+        status = nrmcommits.commit(deltaid)                      #FIXME
+        if status:
+            self.logger.INFO("put() deltaid %s COMMITTED" % deltaid)
+            retval = {'result': "COMMITTED"}, 200
+        else:
+            self.logger.INFO("put() deltaid %s COMMIT FAILED" % deltaid)
+            retval = {'result': "FAILED"}, 404
+            
+        self.logger.INFO("put() returning %s" % retval)
+        self.dlogger.DEBUG("put() complete")
+        return retval                         
+        
+    def get(self):
+        self.dlogger.DEBUG("get() start")
+        retval = {'result': True}, 200
+        self.dlogger.DEBUG("get() complete")
+        return retval
+        
+    def post(self):
+        self.dlogger.DEBUG("post() start")
+        args = self.reqparse.parse_args()                   #FIXME - reqparse not instantiated... Copied from berkley's version
+        #FIXME: this doesn't seem to do the same thing as put()... should it?
+        self.dlogger.DEBUG("post() args: %s" % args)
+        deltaid = args['id']
+        self.logger.INFO("post() deltaid %s" % deltaid)
+        retval = {'result': True}, 201
+        self.logger.INFO("post() returning %s" % retval)
+        self.dlogger.DEBUG("post() complete")
+        return retval
+
+class CancelAPI(SenseAPIResource):
+    def __init__(self):
+        super(CancelAPI, self).__init__(self.__class__.__name)
+        self.dlogger.DEBUG("__init__() start")
+        self.dlogger.DEBUG("__init__() complete")
+
+    def put(self, deltaid):
+        self.dlogger.DEBUG("put() start")
+        self.logger.INFO("put() deltaid %s" % deltaid)
+        status, resp = nrmcancel.cancel(deltaid)                      #FIXME
+        if status:
+            self.logger.INFO("put() deltaid %s CANCELLED" % deltaid)
+            retval = {'result': "CANCELLED"}, status
+        else:
+            self.logger.INFO("put() deltaid %s CANCEL FAILED, %s" %
+                             (deltaid, resp))
+            retval = {'result': "FAILED", 'mesg':str(resp)}, 404
+            
+        self.logger.INFO("put() returning %s" % retval)
+        self.dlogger.DEBUG("put() complete")
+        return retval                         
+        
+    def get(self):
+        self.dlogger.DEBUG("get() start")
+        retval = {'result': True}, 200
+        self.dlogger.DEBUG("get() complete")
+        return retval
+        
+    def post(self, deltaid):
+        self.dlogger.DEBUG("post() start")
+        #FIXME: this doesn't seem to do the same thing as put()... should it?
+        self.logger.INFO("post() deltaid %s" % deltaid)
+        retval = {'result': True}, 201
+        self.logger.INFO("post() returning %s" % retval)
+        self.dlogger.DEBUG("post() complete")
+        return retval
+        
+class ClearAPI(SenseAPIResource):
+    def __init__(self):
+        super(ClearAPI, self).__init__(self.__class__.__name)
+        self.dlogger.DEBUG("__init__() start")
+        self.dlogger.DEBUG("__init__() complete")
+
+    def put(self, deltaid):
+        self.dlogger.DEBUG("put() start")
+        self.logger.INFO("put() deltaid %s" % deltaid)
+        status, resp = nrmclear.clear(deltaid)                      #FIXME
+        if status:
+            self.logger.INFO("put() deltaid %s CLEARED" % deltaid)
+            retval = {'result': "CLEARED"}, status
+        else:
+            self.logger.INFO("put() deltaid %s CLEAR FAILED, %s" %
+                             (deltaid, resp))
+            retval = {'result': "FAILED", 'mesg':str(resp)}, 404
+            
+        self.logger.INFO("put() returning %s" % retval)
+        self.dlogger.DEBUG("put() complete")
+        return retval                         
+        
+    def get(self):
+        self.dlogger.DEBUG("get() start")
+        retval = {'result': True}, 200
+        self.dlogger.DEBUG("get() complete")
+        return retval
+        
+    def post(self, deltaid):
+        self.dlogger.DEBUG("post() start")
+        #FIXME: this doesn't seem to do the same thing as put()... should it?
+        self.logger.INFO("post() deltaid %s" % deltaid)
+        retval = {'result': True}, 201
+        self.logger.INFO("post() returning %s" % retval)
+        self.dlogger.DEBUG("post() complete")
+        return retval
+
+#FIXME: ModelAPI not used, so not copying here.
