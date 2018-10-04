@@ -17,6 +17,8 @@ from UserManager import UserManager
 from RuleRegistry import RuleRegistry
 
 from threading import Lock
+import cPickle as pickle
+import rdflib
 
 # XML imports
 
@@ -44,6 +46,21 @@ errors = {
         'extra': "No extra information",
     },
 }
+
+# HTML status codes:
+STATUS_GOOD           = 200
+STATUS_CREATED        = 201
+STATUS_ACCEPTED       = 202
+STATUS_BAD_REQUEST    = 400
+STATUS_NOT_FOUND      = 404
+STATUS_CONFLICT       = 409
+STATUS_SERVER_ERROR   = 500
+    
+
+
+
+class SenseAPIError(Exception):
+    pass
         
 
 
@@ -53,9 +70,23 @@ class SenseAPI(AtlanticWaveModule):
         updates automatically based on changes in rules and topology as provided
         by the RuleManager and TopologyManager.
     '''
+    # Delta Database entries:
+    # {"delta_id":delta_id,
+    #  "raw_request": raw_addition (pickled in DB),
+    #  "sdx_rules": sdx_rules (pickled in DB),
+    #  "status": status code (see list, below),
+    #  "last_modified": last modified time,
+    #  "timestamp": initial timestamp of the delta,
+    #  "model_id": Model ID}
 
-    def __init__(self, loggerprefix='sdxcontroller',
-                 host='0.0.0.0', port=5001):
+    # Model Database entries:
+    # {"model_id": Model ID,
+    #  "model_xml": XML that was sent over,
+    #  "model_raw_info": raw topology information (pickled in DB),
+    #  "timestamp": Timestamp of model}
+
+    def __init__(self, db_filename, loggerprefix='sdxcontroller',
+                 host='0.0.0.0', port=5002):
         global app, api, context
 
         loggerid = loggerprefix + ".sense"
@@ -69,6 +100,10 @@ class SenseAPI(AtlanticWaveModule):
         self.delta_XML = None
         self.topolock = Lock()
         self.userid = "SENSE"
+
+        # Start database
+        db_tuples[('delta_table','delta'), ('model_table', 'model')]
+        self._initialize_db(db_filename, db_tuples)
         
         # Register update functions
         RuleManager().register_for_rule_updates(self.rule_add_callback,
@@ -117,7 +152,7 @@ class SenseAPI(AtlanticWaveModule):
                                                     hex(id(self))))
 
         self._INTERNAL_TESTING_DELETE_FINAL_CHECKIN()
-
+        
     def _INTERNAL_TESTING_DELETE_FINAL_CHECKIN(self):
         nodes = self.current_topo.nodes()
         print("\n\nNODES WITH DETAILS\n" +
@@ -159,7 +194,7 @@ class SenseAPI(AtlanticWaveModule):
                                                     100000,
                                                     "1985-04-12T12:34:56",
                                                     "2985-04-12T12:34:56")
-        
+
     def rule_add_callback(self, rule):
         ''' Handles rules being added. '''
         print "rule_add_callback - %s" % rule
@@ -264,7 +299,48 @@ class SenseAPI(AtlanticWaveModule):
     def install_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
                                     bandwidth, starttime, endtime):
         ''' Installs a point-to-point rule. '''
+        # Build policy
+        policy = self._build_point_to_point_rule( endpoint1, endpoint2,
+                                                 vlan1, vlan2, bandwidth,
+                                                 starttime, endtime)
+        self._install_point_to_point_policy(policy)
+        
+    def _install_point_to_point_policy(self, policy)
+        # Install rule
+        hash = RuleManager().add_rule(policy)
 
+        #FIXME: What should be returned?
+        #FIXME: What to do about Exceptions?
+        pass
+
+    def check_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
+                                   bandwidth, starttime, endtime):
+        ''' Checks to see if a rule will be valid before installing. '''
+        # Build policy
+        policy = self._build_point_to_point_rule( endpoint1, endpoint2,
+                                                 vlan1, vlan2, bandwidth,
+                                                 starttime, endtime)
+        return self._check_point_to_point_SDX_rule(policy)
+    
+    def _check_point_to_point_SDX_rule(self, policy):
+        ''' Helper function, so this function can be used in other locations.'''
+        # Install rule
+        try:
+            RuleManager().test_add_rule(policy)
+        except Exception as e:
+            # This means that the rule cannot be added, for whatever reason.
+            # That's fine!
+            self.logger.INFO("check_point_to_point_rule() failed %e" % e)
+            self.logger.INFO("    %s, %s, %s, %s" % (endpoint1, endpoint2,
+                                                     vlan1, vlan2))
+            self.logger.INFO("    %s, %s, %s" % (bandwidth, startime, endtime))
+            return False
+        else:
+            return True
+        
+
+    def _build_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
+                                   bandwidth, starttime, endtime):
         # Find the src switch and switch port
         src = self.simplified_topo.node[endpoint1]['start_node']
         srcswitch = self.simplified_topo.node[endpoint1]['end_node']
@@ -296,12 +372,7 @@ class SenseAPI(AtlanticWaveModule):
         # Make policy class
         policy = L2TunnelPolicy(self.userid, jsonrule)
 
-        # Install rule
-        hash = RuleManager().add_rule(policy)
-
-        #FIXME: What should be returned?
-        #FIXME: What to do about Exceptions?
-        pass
+        return policy 
     
     def install_point_to_multipoint_rule(self, endpointvlantuplelist,
                                          bandwidth,  starttime, endtime):
@@ -330,12 +401,277 @@ class SenseAPI(AtlanticWaveModule):
         #FIXME: What to do about Exceptions?
         pass
 
+    def get_models(self):
+        pass
+    
+    def process_deltas(self, args):
+        # Parse the args
 
-    def connection_thread(self):
+        # If reduction:
+        #  - parse reduction
+        #  - call cancel if a valid reduction is received,
+        #    - cancel will deal with removing the delta from flows and DB
+        #  - Return status
+
+        # If addition:
+        #  - parse addition
+        #  - See if it's possible (BW, VLANs, etc.)
+        #  - If possible, save off this new delta and return good status
+        #  - If not possible, return failed status
+
+        # Put into DB
         pass
 
-    def handle_new_connection(self):
+    def _parse_delta_addition(self, raw_addition):
+        # This is based on part of nrmDelta.processDelta() from senserm_oscars's
+        # sensrm_delta.py.
+        # Parses the raw_addition, and returns back a dictionary
+        #  - "rules":SDX Rule(s) that are need
+        #  - "deltaid":Delta ID
+        #FIXME: anything else that needs to be returned back?
         pass
+
+    def _parse_delta_reduction(self, raw_reduction):
+        # This is basically the same as nrmDelta.processDeltaReduction() from
+        # senserm_oscars's senserm_delta.py.
+        # Parses the raw_reduction, and returns back the deltaid that should be
+        # cancelled.
+        pass
+    
+    
+    def get_delta(self, deltaid):
+        '''
+        '''
+        #FIXME: does this need to exist?
+        # Get from the DB based on the deltaid -
+        delta = self._get_delta_by_id(deltaid)
+        # If found, Pull out phase and state to return
+        if delta != None:
+            phase = delta['phase']
+            state = delta['state']
+            self.dlogger.DEBUG("get_delta: %s %s" % (phase, state))
+            return phase, state
+        #FIXME: If not found, return ........
+        return None, None
+    
+    def commit(self, deltaid):
+        ''' Commits the specified deltaid.
+            Returns:
+              - STATUS_GOOD if everything is committed.
+              - STATUS_NOT_FOUND if delta is not found.
+              - STATUS_CONFLICT if delta cannot be committed.
+        '''
+        # Get the delta information
+        delta = self._get_delta_by_delta_id(deltaid)
+        
+        # Check if still possible
+        if delta == None:
+            self.dlogger.DEBUG("commit: Delta %s does not exist." % deltaid)
+            return STATUS_NOT_FOUND
+        rules_all_valid = True
+        for policy in delta['sdx_rule']:
+            if not self._check_point_to_point_SDX_rule(policy):
+                rules_all_valid = False
+
+        # If not possible, reject, and send alternatives?
+        if rules_all_valid == False:
+            return STATUS_CONFLICT
+            
+        # If possible, Install rule
+        for policy in delta['sdx_rule']:
+            self._install_point_to_point_policy(policy)
+
+        return STATUS_GOOD
+    
+    def cancel(self, deltaid):
+        ''' Cancels a specified deltaid.
+            Returns:
+              - STATUS_GOOD if successfully cancelled
+              - STATUS_NOT_FOUND if delta is not found
+        '''
+        # Does it exist?
+        if self._get_delta_by_id(deltaid) != None:
+            # Delete deltaid from DB
+            self.delta_table.delete(delta_id=deltaid)
+            return STATUS_GOOD
+        return STATUS_NOT_FOUND
+    
+    def clear(self, deltaid):
+        ''' Clears a specified deltaid.
+            Returns:
+              - STATUS_GOOD if successfully cancelled
+              - STATUS_NOT_FOUND if delta is not found
+        '''
+        #FIXME: Is this right?
+        return self.cancel(deltaid)
+
+    def _get_current_time(self):
+        ''' Helper function, 
+            Returns:
+              - String of properly formatted time for timestamps. '''
+        # Based on https://bitbucket.org/berkeleylab/sensenrm-oscars/src/d09db31aecbe7654f03f15eed671c0675c5317b5/sensenrm_cancel.py's get_time() function.
+        tZERO = timedelta(0)
+        class UTC(tzinfo):
+          def utcoffset(self, dt):
+            return tZERO
+          def tzname(self, dt):
+            return "UTC"
+          def dst(self, dt):
+            return tZERO
+        utc = UTC()
+        
+        dt = datetime.now(utc)
+        fmt_datetime = dt.strftime('%Y-%m-%dT%H:%M:%S')
+        tz = dt.utcoffset()
+        if tz is None:
+            fmt_timezone = "+00:00"
+            #fmt_timezone = "Z"
+        else:
+            fmt_timezone = "+00:00"
+        time_iso8601 = fmt_datetime + fmt_timezone
+        return time_iso8601
+    
+    def _get_delta_by_id(self, delta_id):
+        ''' Helper function, just pulls a delta based on the ID.
+            Returns:
+              - None if delta id doesn't exists
+              - Dictionary containing delta. See comment at top of SenseAPI 
+                definition for keys. 
+        '''
+        raw_delta = self.delta_table.find_one(delta_id=delta_id)
+        if raw_delta == None:
+            return None
+        
+        # Unpickle the pickled values and rebuild dictionary to return
+        delta = {'delta_id':raw_delta['delta_id'],
+                 'raw_request':pickle.loads(str(raw_delta['raw_request'])),
+                 'sdx_rule':pickle.loads(str(raw_delta['sdx_rule'])),
+                 'status':raw_delta['status'],
+                 'last_modified':raw_delta['last_modified'],
+                 'timestamp':raw_delta['timestamp'],
+                 'model_id':raw_delta['model_id']}
+
+        self.dlogger.DEBUG("_get_delta_by_id() on %s successful" % delta_id)
+        return delta
+
+    def _put_delta(self, delta_id, raw_request=None, sdx_rules=None,
+                   model_id=None, status=None, update=False):
+        ''' Helper Function, just puts delta into DB. 
+            Overwrites older versions for updates (when update=True). 
+            Returns Nothing.
+            Raises errors.
+        '''
+        raw_delta = self._get_delta_by_id(delta_id)
+        last_modified = self._get_current_time()
+        delta = None
+
+        # if it's a new entry (update=False)
+        #   - There is no existing rule with delta_id==delta_id
+        #   - Make sure everything is filled in
+        #   - Build dictionary to be inserted into table, including timestamp
+        #     and last_modified
+        if update == False:
+            if raw_delta != None:
+                raise SenseAPIError(
+                    "Delta with ID %s already exists" % delta_id)
+            if (raw_request == None or
+                sdx_rules == None or
+                model_id == None or
+                status == None):
+                raise SenseAPIError(
+                    "Delta %s requires all fields (%s, %s, %s, %s)" %
+                      (delta_id, raw_request, sdx_rules, model_id, status))
+            delta = {'delta_id':delta_id,
+                     'raw_request':pickle.dumps(raw_request),
+                     'sdx_rules':pickle.dumps(sdx_rules),
+                     'status':status,
+                     'last_modified':last_modified,
+                     'timestamp':last_modified, #Both of these will be the same
+                     'model_id':model_id}
+            self.dlogger.DEBUG("Inserting delta %s" % delta_id)                
+            
+        # else, it's an update (update=True)
+        #   - Make sure there is an existing rule with delta_id==delta_id
+        #   - Build dictionary to be inserted into table, including
+        #     last_modified
+        else:
+            if raw_delta == None:
+                raise SenseAPIError(
+                    "No delta with ID %s exists, cannot update." % delta_id)
+            delta = {'delta_id':delta_id
+                     'last_modified':last_modified}
+            if raw_request != None:
+                delta['raw_request'] = pickle.dumps(raw_request)
+            if sdx_rules != None:
+                delta['sdx_rules'] = pickle.dumps(sdx_rules)
+            if status != None:
+                delta['status'] = status
+            if model_id != None:
+                delta['model_id'] = model_id
+                
+            
+            self.dlogger.DEBUG("Updating delta %s" % delta_id)
+
+        # insert dictionary into DB
+        self.delta_table.insert(delta)
+        self.dlogger.DEBUG("_put_delta() successful with ID %s. Update? %s" %
+                           (delta_id, update))
+
+    def _get_model_by_id(self, model_id):
+        ''' Helper function, just retrieves models based on model_id.
+            Returns:
+              - None if model_id does not exists.
+              - Dictionary containing model. See top of SenseAPI definition for
+                keys.
+        '''
+        raw_model = self.model_table.find_one(model_id=model_id)
+        if raw_model == None:
+            return None
+        
+        # Unpickle the pickled values and rebuild dictionary to return
+        model = {'model_id':raw_model['model_id'],
+                 'model_xml':raw_model['model_xml'],
+                 'model_raw_info':pickle.loads(str(
+                     raw_model['model_raw_info'])),
+                 'timestamp':raw_model['timestamp']}
+
+        self.dlogger.DEBUG('_get_model_by_id() on %s successful' % model_id)
+        return model
+    
+    def _put_model(self, model_id, model_xml, model_raw_info):
+        ''' Helper function, just puts model into DB. No updates allowed. 
+            Returns nothing.
+            Raises errors.
+        '''
+        # Check to see if a model with model_id already exists, if so, raise
+        # an error.
+        if model_id == None:
+            raise SenseAPIError("Model ID is necessary.")
+        if self._get_model_by_id(model_id) != None:
+            raise SenseAPIError("Model with ID %s already exists", model_id)
+        
+        # Make sure all fields are filled in
+        if model_xml == None or model_raw_info == None:
+            raise SenseAPIError("Model needs both model_xml and model_raw_info. (%s, %s)" %
+                                (model_xml, model_raw_info))
+        
+        # Build dictionary to be inserted into table, including timestamp
+        timestamp = self._get_current_time()
+        model = {'model_id':model_id,
+                 'model_xml':model_xml,
+                 'model_raw_info':pickle.dumps(model_raw_info),
+                 'timestamp':timestamp}
+
+        # Insert dictionary into DB
+        self.dlogger.DEBUG("Inserting model %s" % model_id)
+        self.model_table.insert(model)
+    
+    def _find_alternative(self, deltaid):
+        # Used to find alternative times/VLANs.
+        #FIXME: How to do this?
+
+        pass
+
 
 class SenseAPIResource(Resource):
     ''' Has common pieces for all Resource objects used by the SenseAPI, 
@@ -405,7 +741,7 @@ delta_fields = {
         
 
         
-class ModelsAPI(SenseAPIResource):
+class ModelsAPI(SenseAPIResource):#FIXME
     def __init__(self):
         super(ModelsAPI, self).__init__(self.__class__.__name__)
         self.dlogger.DEBUG("__init__() start")
@@ -413,7 +749,7 @@ class ModelsAPI(SenseAPIResource):
         self.reqparse.add_argument('current', type=str, default='true')
         self.reqparse.add_argument('summary', type=str, default='false')
         self.reqparse.add_argument('encode', type=str, default='false')
-        self.models = None #FIXME
+        self.models = SenseAPI().get_models() #FIXME
         self.dlogger.DEBUG("__init__() complete")
     
     def get(self):
@@ -436,7 +772,7 @@ class ModelsAPI(SenseAPIResource):
         self.dlogger.DEBUG("post() complete")
         return retval
     
-class DeltasAPI(SenseAPIResource):
+class DeltasAPI(SenseAPIResource):#FIXME
     def __init__(self):
         super(DeltasAPI, self).__init__(self.__class__.__name__)
         self.dlogger.DEBUG("__init__() start")
@@ -451,7 +787,8 @@ class DeltasAPI(SenseAPIResource):
     def get(self):
         self.dlogger.DEBUG("get() start")
         self.logger.INFO("get() id %s" % deltaid)
-        retval = {'deltas': marchal(deltas, delta_fields)}       #FIXME
+        retval = {'deltas': marshal(deltas, delta_fields)}       #FIXME
+        #FIXME: this doesn't make sense: where does deltaid or deltas come from?
         
         self.logger.INFO("get() returning %s" % retval)
         self.dlogger.DEBUG("get() complete")
@@ -474,7 +811,7 @@ class DeltasAPI(SenseAPIResource):
         self.dlogger.DEBUG("post() complete")
         return retval
     
-class DeltaAPI(SenseAPIResource):
+class DeltaAPI(SenseAPIResource):#FIXME
     def __init__(self):
         super(DeltaAPI, self).__init__(self.__class__.__name__)
         self.dlogger.DEBUG("__init__() start")
@@ -502,13 +839,13 @@ class CommitsAPI(SenseAPIResource):
     def put(self, deltaid):
         self.dlogger.DEBUG("put() start")
         self.logger.INFO("put() deltaid %s" % deltaid)
-        status = nrmcommits.commit(deltaid)                      #FIXME
-        if status:
+        status = SenseAPI().commit(deltaid)
+        if status == STATUS_GOOD:
             self.logger.INFO("put() deltaid %s COMMITTED" % deltaid)
-            retval = {'result': "COMMITTED"}, 200
+            retval = {'result': "COMMITTED"}, status
         else:
             self.logger.INFO("put() deltaid %s COMMIT FAILED" % deltaid)
-            retval = {'result': "FAILED"}, 404
+            retval = {'result': "FAILED"}, status
             
         self.logger.INFO("put() returning %s" % retval)
         self.dlogger.DEBUG("put() complete")
@@ -516,18 +853,14 @@ class CommitsAPI(SenseAPIResource):
         
     def get(self):
         self.dlogger.DEBUG("get() start")
-        retval = {'result': True}, 200
+        retval = {'result': True}, STATUS_GOOD
         self.dlogger.DEBUG("get() complete")
         return retval
         
-    def post(self):
+    def post(self, deltaid):
         self.dlogger.DEBUG("post() start")
-        args = self.reqparse.parse_args()                   #FIXME - reqparse not instantiated... Copied from berkley's version
-        #FIXME: this doesn't seem to do the same thing as put()... should it?
-        self.dlogger.DEBUG("post() args: %s" % args)
-        deltaid = args['id']
         self.logger.INFO("post() deltaid %s" % deltaid)
-        retval = {'result': True}, 201
+        retval = {'result': True}, STATUS_CREATED
         self.logger.INFO("post() returning %s" % retval)
         self.dlogger.DEBUG("post() complete")
         return retval
@@ -541,15 +874,14 @@ class CancelAPI(SenseAPIResource):
     def put(self, deltaid):
         self.dlogger.DEBUG("put() start")
         self.logger.INFO("put() deltaid %s" % deltaid)
-        status, resp = nrmcancel.cancel(deltaid)                      #FIXME
-        if status:
+        status, resp = SenseAPI().cancel(deltaid)
+        if status == STATUS_GOOD:
             self.logger.INFO("put() deltaid %s CANCELLED" % deltaid)
             retval = {'result': "CANCELLED"}, status
         else:
             self.logger.INFO("put() deltaid %s CANCEL FAILED, %s" %
                              (deltaid, resp))
-            retval = {'result': "FAILED", 'mesg':str(resp)}, 404
-            
+            retval = {'result': "FAILED", 'mesg':str(resp)}, status
         self.logger.INFO("put() returning %s" % retval)
         self.dlogger.DEBUG("put() complete")
         return retval                         
@@ -562,9 +894,10 @@ class CancelAPI(SenseAPIResource):
         
     def post(self, deltaid):
         self.dlogger.DEBUG("post() start")
-        #FIXME: this doesn't seem to do the same thing as put()... should it?
+        #FIXME: this doesn't seem to do the same thing as put()... should it?                      
         self.logger.INFO("post() deltaid %s" % deltaid)
-        retval = {'result': True}, 201
+                      
+        retval = {'result': True}, STATUS_CREATED
         self.logger.INFO("post() returning %s" % retval)
         self.dlogger.DEBUG("post() complete")
         return retval
@@ -578,14 +911,14 @@ class ClearAPI(SenseAPIResource):
     def put(self, deltaid):
         self.dlogger.DEBUG("put() start")
         self.logger.INFO("put() deltaid %s" % deltaid)
-        status, resp = nrmclear.clear(deltaid)                      #FIXME
-        if status:
+        status, resp = SenseAPI().clear(deltaid)
+        if status == STATUS_GOOD:
             self.logger.INFO("put() deltaid %s CLEARED" % deltaid)
             retval = {'result': "CLEARED"}, status
         else:
             self.logger.INFO("put() deltaid %s CLEAR FAILED, %s" %
                              (deltaid, resp))
-            retval = {'result': "FAILED", 'mesg':str(resp)}, 404
+            retval = {'result': "FAILED", 'mesg':str(resp)}, status
             
         self.logger.INFO("put() returning %s" % retval)
         self.dlogger.DEBUG("put() complete")
@@ -593,7 +926,7 @@ class ClearAPI(SenseAPIResource):
         
     def get(self):
         self.dlogger.DEBUG("get() start")
-        retval = {'result': True}, 200
+        retval = {'result': True}, STATUS_GOOD
         self.dlogger.DEBUG("get() complete")
         return retval
         
@@ -601,7 +934,7 @@ class ClearAPI(SenseAPIResource):
         self.dlogger.DEBUG("post() start")
         #FIXME: this doesn't seem to do the same thing as put()... should it?
         self.logger.INFO("post() deltaid %s" % deltaid)
-        retval = {'result': True}, 201
+        retval = {'result': True}, STATUS_CREATED
         self.logger.INFO("post() returning %s" % retval)
         self.dlogger.DEBUG("post() complete")
         return retval
