@@ -19,7 +19,7 @@ RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep
 ENV PYTHONPATH $PYTHONPATH:.:/atlanticwave-proto
 
 COPY run_lc.sh .
-COPY ./*.manifest .
+COPY ./*.manifest ./
 
 CMD /bin/bash run_lc.sh; /bin/bash
 #CMD /bin/bash
