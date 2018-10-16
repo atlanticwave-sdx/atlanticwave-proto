@@ -1,0 +1,286 @@
+# Copyright 2018 - Sean Donovan
+# AtlanticWave/SDX Project
+
+
+# Unit Tests for the SENSEAPI class
+
+import unittest
+import threading
+import networkx as nx
+import mock
+
+from sdxctlr.SenseAPI import *
+from sdxctlr.TopologyManager import TopologyManager
+from sdxctlr.RuleManager import RuleManager
+
+from shared.L2TunnelPolicy import L2TunnelPolicy
+
+from sdxctlr.RestAPI import RestAPI
+DB_FILE = ":memory:"
+BASIC_MANIFEST_FILE = "senseapi_manifests/twoswitch-onelc-noncorsa.manifest"
+
+def add_rule(param):
+    # For Rule Manager
+    print "Add Rule %s" % param
+
+def rm_rule(param):
+    # For Rule Manager
+    print "Rm  Rule %s" % param
+    
+
+class SingletonTest(unittest.TestCase):
+    def test_singleton(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        first = SenseAPI(DB_FILE)
+        second = SenseAPI()
+
+        self.failUnless(first is second)
+
+
+class PutGetDeltaTest(unittest.TestCase):
+    def setUp(self):
+        self.raw_request = "raw_request"
+        self.sdx_rule = "SDX RULES!"
+        self.model_id  = 3
+        self.status = STATUS_GOOD
+        self.status_created = STATUS_CREATED
+
+    def test_put(self):
+        # Make sure _put_delta doesn't blow up
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        #print api._get_all_deltas()
+        delta_id = 1
+        api._put_delta(delta_id, self.raw_request, self.sdx_rule,
+                       self.model_id, self.status)
+        
+    def test_put_get(self):
+        # Make sure _put_delta() and _get_delta_by_id() work
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        delta_id = 2
+        api._put_delta(delta_id, self.raw_request, self.sdx_rule,
+                       self.model_id, self.status)
+        raw_delta = api._get_delta_by_id(delta_id)
+
+        self.failUnlessEqual(raw_delta['delta_id'], delta_id)
+        self.failUnlessEqual(raw_delta['raw_request'], self.raw_request)
+        self.failUnlessEqual(raw_delta['sdx_rule'], self.sdx_rule)
+        self.failUnlessEqual(raw_delta['model_id'], self.model_id)
+        self.failUnlessEqual(raw_delta['status'], self.status)
+
+    def test_get(self):
+        # Test _put_delta() and get_delta()
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        delta_id = 3
+        api._put_delta(delta_id, self.raw_request, self.sdx_rule,
+                       self.model_id, self.status)
+        state, phase = api.get_delta(delta_id)
+
+        self.failUnlessEqual(state, STATUS_GOOD)
+        self.failUnlessEqual(phase, PHASE_COMMITTED)
+
+        delta_id = 4
+        api._put_delta(delta_id, self.raw_request, self.sdx_rule,
+                       self.model_id, self.status_created)
+        state, phase = api.get_delta(delta_id)
+
+        self.failUnlessEqual(state, STATUS_CREATED)
+        self.failUnlessEqual(phase, PHASE_RESERVED)
+
+    def test_put_update(self):
+        # Test updates on _put_delta() command
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        delta_id = 5
+        api._put_delta(delta_id, self.raw_request, self.sdx_rule,
+                       self.model_id, self.status)
+        raw_delta = api._get_delta_by_id(delta_id)
+
+        self.failUnlessEqual(raw_delta['delta_id'], delta_id)
+        self.failUnlessEqual(raw_delta['raw_request'], self.raw_request)
+        self.failUnlessEqual(raw_delta['sdx_rule'], self.sdx_rule)
+        self.failUnlessEqual(raw_delta['model_id'], self.model_id)
+        self.failUnlessEqual(raw_delta['status'], self.status)
+
+        api._put_delta(delta_id, status=self.status_created, update=True)
+        raw_delta = api._get_delta_by_id(delta_id)
+        #print "    %s" % raw_delta
+
+        self.failUnlessEqual(raw_delta['delta_id'], delta_id)
+        self.failUnlessEqual(raw_delta['raw_request'], self.raw_request)
+        self.failUnlessEqual(raw_delta['sdx_rule'], self.sdx_rule)
+        self.failUnlessEqual(raw_delta['model_id'], self.model_id)
+        self.failUnlessEqual(raw_delta['status'], self.status_created)
+
+    def test_put_invalid(self):
+        # Test invalid _put_delta commands
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        #   - Put invalid things
+        delta_id = 6
+        self.failUnlessRaises(SenseAPIError, api._put_delta,
+                              delta_id, self.raw_request, self.sdx_rule,
+                              self.model_id) # missing one item            
+        
+        #   - Put duplicate delta
+        delta_id = 7
+        api._put_delta(delta_id, self.raw_request, self.sdx_rule,
+                       self.model_id, self.status)
+        self.failUnlessRaises(SenseAPIError, api._put_delta,
+                              delta_id, self.raw_request, self.sdx_rule,
+                              self.model_id, self.status) 
+        
+        #   - Put update on delta that doesn't exist
+        delta_id = 8
+        self.failUnlessRaises(SenseAPIError, api._put_delta,
+                              delta_id, self.raw_request, update=True)
+
+        #   - Put empty update in
+        delta_id = 9
+        api._put_delta(delta_id, self.raw_request, self.sdx_rule,
+                       self.model_id, self.status)
+        self.failUnlessRaises(SenseAPIError, api._put_delta,
+                              delta_id, update=True)
+        
+        pass
+
+    def test_get_by_id_invalid(self):
+        # Test invalid _get_delta_by_id() commands
+        #   - invalid deltaid
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        delta_id = 10
+        self.failUnlessEqual(api._get_delta_by_id(delta_id),
+                              None)
+            
+
+    def test_get_invalid(self):
+        # Test invalid get_delta() commands
+        #   - Invalid delta_id
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        delta_id = 11
+        self.failUnlessEqual(api.get_delta(delta_id),
+                              (None,None))
+
+class CommitTest(unittest.TestCase):
+    def setUp(self):
+        self.raw_request = "raw_request"
+        self.model_id  = 3
+        self.status = STATUS_GOOD
+        self.status_created = STATUS_CREATED
+
+        
+        self.starttime = "1985-04-12T12:23:56"
+        self.endtime = "2985-04-12T12:23:56"
+        self.srcswitch = "br1"
+        self.dstswitch = "br2"
+        self.srcport = 1
+        self.dstport = 2
+        self.srcvlan = 100
+        self.dstvlan = 200
+        self.bandwidth = 100000
+        self.srcendpoint = "atldtn-br1"
+        self.dstendpoint = "miadtn-br2"
+        
+        jsonrule = {"L2Tunnel":{
+            "starttime":self.starttime,
+            "endtime":self.endtime,
+            "srcswitch":self.srcswitch,
+            "dstswitch":self.dstswitch,
+            "srcport":self.srcport,
+            "dstport":self.dstport,
+            "srcvlan":self.srcvlan,
+            "dstvlan":self.dstvlan,
+            "bandwidth":self.bandwidth}}
+        self.sdx_rule = L2TunnelPolicy("SENSE", jsonrule)
+
+    def test_build_p2p(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        api._build_point_to_point_rule(self.srcendpoint, self.dstendpoint,
+                                       self.srcvlan, self.dstvlan,
+                                       self.bandwidth, self.starttime,
+                                       self.endtime)
+                
+    def test_good_check(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        api._check_SDX_rule(self.sdx_rule)
+        api.check_point_to_point_rule(self.srcendpoint, self.dstendpoint,
+                                      self.srcvlan, self.dstvlan,
+                                      self.bandwidth, self.starttime,
+                                      self.endtime)
+
+
+    def test_basic_commit(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        delta_id = 20
+        api._put_delta(delta_id, self.raw_request, self.sdx_rule,
+                       self.model_id, self.status)
+        api.commit(delta_id)
+
+        
+
+        
+                    
+
+if __name__ == '__main__':
+    unittest.main()
