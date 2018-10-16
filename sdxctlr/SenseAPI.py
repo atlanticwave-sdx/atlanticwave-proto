@@ -4,7 +4,7 @@
 # Some parts are based on the Sense Resource Manager for the OSCARS interface:
 # https://bitbucket.org/berkeleylab/sensenrm-oscars/src/d09db31aecbe7654f03f15eed671c0675c5317b5/sensenrm_server.py
 
-from lib.AtlanticWaveModule import AtlanticWaveModule
+from lib.AtlanticWaveManager import AtlanticWaveManager
 
 from shared.L2MultipointPolicy import L2MultipointPolicy
 from shared.L2TunnelPolicy import L2TunnelPolicy
@@ -36,6 +36,9 @@ import json
 # Multithreading
 from threading import Thread
 
+# Timing
+from datetime import datetime, timedelta, tzinfo
+
 
 # Globals
 
@@ -55,7 +58,11 @@ STATUS_BAD_REQUEST    = 400
 STATUS_NOT_FOUND      = 404
 STATUS_CONFLICT       = 409
 STATUS_SERVER_ERROR   = 500
-    
+
+# PHASE definition
+PHASE_RESERVED        = "PHASE_RESERVED"
+PHASE_COMMITTED       = "PHASE_COMMITTED"
+
 
 
 
@@ -64,7 +71,7 @@ class SenseAPIError(Exception):
         
 
 
-class SenseAPI(AtlanticWaveModule):
+class SenseAPI(AtlanticWaveManager):
     ''' The SenseAPI is the main interface for SENSE integration. It generates
         the appropriate XML for the current configuration status, and sends 
         updates automatically based on changes in rules and topology as provided
@@ -73,11 +80,12 @@ class SenseAPI(AtlanticWaveModule):
     # Delta Database entries:
     # {"delta_id":delta_id,
     #  "raw_request": raw_addition (pickled in DB),
-    #  "sdx_rules": sdx_rules (pickled in DB),
+    #  "sdx_rule": sdx_rule (pickled in DB),
     #  "status": status code (see list, below),
     #  "last_modified": last modified time,
     #  "timestamp": initial timestamp of the delta,
-    #  "model_id": Model ID}
+    #  "model_id": Model ID,
+    #  "hash": Hash returned when installing a rule to the RuleManager}
 
     # Model Database entries:
     # {"model_id": Model ID,
@@ -102,7 +110,7 @@ class SenseAPI(AtlanticWaveModule):
         self.userid = "SENSE"
 
         # Start database
-        db_tuples[('delta_table','delta'), ('model_table', 'model')]
+        db_tuples = [('delta_table','delta'), ('model_table', 'model')]
         self._initialize_db(db_filename, db_tuples)
         
         # Register update functions
@@ -139,7 +147,7 @@ class SenseAPI(AtlanticWaveModule):
             '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/cancel',
             endpoint='cancel')
         
-        
+        self.generate_simplified_topology()
         
 
         
@@ -151,7 +159,7 @@ class SenseAPI(AtlanticWaveModule):
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
 
-        self._INTERNAL_TESTING_DELETE_FINAL_CHECKIN()
+        #self._INTERNAL_TESTING_DELETE_FINAL_CHECKIN()
         
     def _INTERNAL_TESTING_DELETE_FINAL_CHECKIN(self):
         nodes = self.current_topo.nodes()
@@ -178,22 +186,26 @@ class SenseAPI(AtlanticWaveModule):
                                                     100, 200,
                                                     100000,
                                                     "1985-04-12T12:34:56",
-                                                    "2985-04-12T12:34:56")
+                                                    "2985-04-12T12:34:56",
+                                                    1)
                         self.install_point_to_point_rule(srcnode, dstnode,
                                                     101, 201,
                                                     100000,
                                                     "1985-04-12T12:34:56",
-                                                    "2985-04-12T12:34:56")
+                                                    "2985-04-12T12:34:56",
+                                                    2)
                         self.install_point_to_point_rule(srcnode, dstnode,
                                                     102, 202,
                                                     100000,
                                                     "1985-04-12T12:34:56",
-                                                    "2985-04-12T12:34:56")
+                                                    "2985-04-12T12:34:56",
+                                                    3)
                         self.install_point_to_point_rule(srcnode, dstnode,
                                                     103, 203,
                                                     100000,
                                                     "1985-04-12T12:34:56",
-                                                    "2985-04-12T12:34:56")
+                                                    "2985-04-12T12:34:56",
+                                                    4)
 
     def rule_add_callback(self, rule):
         ''' Handles rules being added. '''
@@ -297,21 +309,28 @@ class SenseAPI(AtlanticWaveModule):
         pass
 
     def install_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
-                                    bandwidth, starttime, endtime):
+                                    bandwidth, starttime, endtime, delta_id):
         ''' Installs a point-to-point rule. '''
         # Build policy
         policy = self._build_point_to_point_rule( endpoint1, endpoint2,
                                                  vlan1, vlan2, bandwidth,
                                                  starttime, endtime)
-        self._install_point_to_point_policy(policy)
         
-    def _install_point_to_point_policy(self, policy)
+    def _install_policy(self, delta_id, policy):
         # Install rule
         hash = RuleManager().add_rule(policy)
 
-        #FIXME: What should be returned?
-        #FIXME: What to do about Exceptions?
-        pass
+        # Push hash into DB
+        self._put_delta(delta_id, hashval=hash, update=True)
+
+    def _remove_policy(self, delta):
+        # Remove the rule
+        # - Extract the username
+        # - Extract the hash
+                    
+        username = self.userid
+        rule_hash = delta['hash']
+        RuleManager().remove_rule(rule_hash, username)
 
     def check_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
                                    bandwidth, starttime, endtime):
@@ -320,9 +339,9 @@ class SenseAPI(AtlanticWaveModule):
         policy = self._build_point_to_point_rule( endpoint1, endpoint2,
                                                  vlan1, vlan2, bandwidth,
                                                  starttime, endtime)
-        return self._check_point_to_point_SDX_rule(policy)
+        return self._check_SDX_rule(policy)
     
-    def _check_point_to_point_SDX_rule(self, policy):
+    def _check_SDX_rule(self, policy):
         ''' Helper function, so this function can be used in other locations.'''
         # Install rule
         try:
@@ -342,6 +361,9 @@ class SenseAPI(AtlanticWaveModule):
     def _build_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
                                    bandwidth, starttime, endtime):
         # Find the src switch and switch port
+        print "\n\n\n&&&&&&"
+        print self.simplified_topo.nodes()
+        print "&&&&&&\n\n\n"
         src = self.simplified_topo.node[endpoint1]['start_node']
         srcswitch = self.simplified_topo.node[endpoint1]['end_node']
         srcport = self.current_topo[srcswitch][src][srcswitch]
@@ -401,23 +423,60 @@ class SenseAPI(AtlanticWaveModule):
         #FIXME: What to do about Exceptions?
         pass
 
-    def get_models(self):
+    def get_model(self):
+        ''' Gets the latest model. 
+            Returns XML version of model.
+        '''
         pass
     
     def process_deltas(self, args):
         # Parse the args
+        keys = args.keys()
+        if ('id' not in keys or
+            'lastModified' not in keys or
+            'modelId' not in keys):
+            raise SenseAPIError("Missing id, lastModified, or modelId: %s" %
+                                keys)
+        if not ('reduction' in keys !=
+                'addition' in keys): # poor man's xor - we only want one.
+            raise SenseAPIError("Missing reduction or addition: %s" % keys)
+        
+        deltaid = args['id']
+        last_modified = args['lastModified']
+        model_id = args['modelId']
 
+        if 'reduction' in keys:
+            reduction = args['reduction']
+            addition = None
+        else:
+            reduction = None
+            addition = args['addition']
+        
         # If reduction:
         #  - parse reduction
+        #  - check to make sure it's a valid delta
         #  - call cancel if a valid reduction is received,
         #    - cancel will deal with removing the delta from flows and DB
         #  - Return status
+        if reduction != None:
+            parsed_reduction = self._parse_delta_reduction(reduction)
+            delta = self._get_delta_by_id(parsed_reduction)
+            if delta == None:
+                # Doesn't exist anymore 
+                return None, STATUS_NOT_FOUND
+            status = self.cancel(delta)
+            return delta, status
 
         # If addition:
         #  - parse addition
         #  - See if it's possible (BW, VLANs, etc.)
         #  - If possible, save off this new delta and return good status
         #  - If not possible, return failed status
+        else:
+            parsed_addition = self._parse_delta_addition(addition)
+            SPDSPDSPD                
+            pass
+        
 
         # Put into DB
         pass
@@ -440,17 +499,22 @@ class SenseAPI(AtlanticWaveModule):
     
     
     def get_delta(self, deltaid):
-        '''
+        ''' Get the delta.
+            Returns:
+              - (state, phase) - if deltaid is valid
+              - (None, None) - if deltaid is invalid        
         '''
         #FIXME: does this need to exist?
         # Get from the DB based on the deltaid -
         delta = self._get_delta_by_id(deltaid)
         # If found, Pull out phase and state to return
         if delta != None:
-            phase = delta['phase']
-            state = delta['state']
-            self.dlogger.DEBUG("get_delta: %s %s" % (phase, state))
-            return phase, state
+            status = delta['status']
+            phase = PHASE_RESERVED
+            if status == STATUS_GOOD:
+                phase = PHASE_COMMITTED
+            self.dlogger.debug("get_delta: %s %s" % (status, phase))
+            return status, phase
         #FIXME: If not found, return ........
         return None, None
     
@@ -462,24 +526,22 @@ class SenseAPI(AtlanticWaveModule):
               - STATUS_CONFLICT if delta cannot be committed.
         '''
         # Get the delta information
-        delta = self._get_delta_by_delta_id(deltaid)
+        delta = self._get_delta_by_id(deltaid)
         
         # Check if still possible
         if delta == None:
-            self.dlogger.DEBUG("commit: Delta %s does not exist." % deltaid)
+            self.dlogger.debug("commit: Delta %s does not exist." % deltaid)
             return STATUS_NOT_FOUND
         rules_all_valid = True
-        for policy in delta['sdx_rule']:
-            if not self._check_point_to_point_SDX_rule(policy):
-                rules_all_valid = False
+        if not self._check_SDX_rule(delta['sdx_rule']):
+            rules_all_valid = False
 
         # If not possible, reject, and send alternatives?
         if rules_all_valid == False:
             return STATUS_CONFLICT
             
         # If possible, Install rule
-        for policy in delta['sdx_rule']:
-            self._install_point_to_point_policy(policy)
+        self._install_policy(deltaid, delta['sdx_rule'])
 
         return STATUS_GOOD
     
@@ -490,9 +552,13 @@ class SenseAPI(AtlanticWaveModule):
               - STATUS_NOT_FOUND if delta is not found
         '''
         # Does it exist?
-        if self._get_delta_by_id(deltaid) != None:
+        delta = self._get_delta_by_id(deltaid)
+        if delta != None:
             # Delete deltaid from DB
             self.delta_table.delete(delta_id=deltaid)
+            # If delta is installed,
+            if delta['status'] == STATUS_GOOD: # GOOD == Installed
+                self._remove_policy(delta)
             return STATUS_GOOD
         return STATUS_NOT_FOUND
     
@@ -549,13 +615,36 @@ class SenseAPI(AtlanticWaveModule):
                  'status':raw_delta['status'],
                  'last_modified':raw_delta['last_modified'],
                  'timestamp':raw_delta['timestamp'],
-                 'model_id':raw_delta['model_id']}
+                 'model_id':raw_delta['model_id'],
+                 'hash':raw_delta['hash']}
 
-        self.dlogger.DEBUG("_get_delta_by_id() on %s successful" % delta_id)
+        self.dlogger.debug("_get_delta_by_id() on %s successful" % delta_id)
         return delta
 
-    def _put_delta(self, delta_id, raw_request=None, sdx_rules=None,
-                   model_id=None, status=None, update=False):
+    def _get_all_deltas(self):
+        # THIS IS A TESTING-ONLY FUNCTION.
+        deltas = self.delta_table.find()
+        parsed_deltas = []
+
+        if deltas == None:
+            return parsed_deltas
+
+        # Unpickle all of them.
+        for delta in deltas:
+            print "#### RAW DELTA: %s" % delta
+            d = {'delta_id':delta['delta_id'],
+                 'raw_request':pickle.loads(str(delta['raw_request'])),
+                 'sdx_rule':pickle.loads(str(delta['sdx_rule'])),
+                 'status':delta['status'],
+                 'last_modified':delta['last_modified'],
+                 'timestamp':delta['timestamp'],
+                 'model_id':delta['model_id'],
+                 'hash':delta['hash']}
+            parsed_deltas.append(d)
+        return parsed_deltas
+
+    def _put_delta(self, delta_id, raw_request=None, sdx_rule=None,
+                   model_id=None, status=None, hashval=None, update=False):
         ''' Helper Function, just puts delta into DB. 
             Overwrites older versions for updates (when update=True). 
             Returns Nothing.
@@ -575,20 +664,23 @@ class SenseAPI(AtlanticWaveModule):
                 raise SenseAPIError(
                     "Delta with ID %s already exists" % delta_id)
             if (raw_request == None or
-                sdx_rules == None or
+                sdx_rule == None or
                 model_id == None or
                 status == None):
                 raise SenseAPIError(
                     "Delta %s requires all fields (%s, %s, %s, %s)" %
-                      (delta_id, raw_request, sdx_rules, model_id, status))
+                      (delta_id, raw_request, sdx_rule, model_id, status))
             delta = {'delta_id':delta_id,
                      'raw_request':pickle.dumps(raw_request),
-                     'sdx_rules':pickle.dumps(sdx_rules),
+                     'sdx_rule':pickle.dumps(sdx_rule),
                      'status':status,
                      'last_modified':last_modified,
                      'timestamp':last_modified, #Both of these will be the same
-                     'model_id':model_id}
-            self.dlogger.DEBUG("Inserting delta %s" % delta_id)                
+                     'model_id':model_id,
+                     'hash':hashval}
+            # insert dictionary into DB
+            self.dlogger.debug("Inserting delta %s" % delta_id)                
+            self.delta_table.insert(delta)
             
         # else, it's an update (update=True)
         #   - Make sure there is an existing rule with delta_id==delta_id
@@ -598,23 +690,33 @@ class SenseAPI(AtlanticWaveModule):
             if raw_delta == None:
                 raise SenseAPIError(
                     "No delta with ID %s exists, cannot update." % delta_id)
-            delta = {'delta_id':delta_id
+            delta = {'delta_id':delta_id,
                      'last_modified':last_modified}
+            rows = []
             if raw_request != None:
                 delta['raw_request'] = pickle.dumps(raw_request)
-            if sdx_rules != None:
-                delta['sdx_rules'] = pickle.dumps(sdx_rules)
+                rows.append('raw_request')
+            if sdx_rule != None:
+                delta['sdx_rule'] = pickle.dumps(sdx_rule)
+                rows.append('sdx_rule')
             if status != None:
                 delta['status'] = status
+                rows.append('status')
             if model_id != None:
                 delta['model_id'] = model_id
-                
-            
-            self.dlogger.DEBUG("Updating delta %s" % delta_id)
+                rows.append('model_id')
+            if hashval != None:
+                delta['hash'] = hashval
+                rows.append('hash')
 
-        # insert dictionary into DB
-        self.delta_table.insert(delta)
-        self.dlogger.DEBUG("_put_delta() successful with ID %s. Update? %s" %
+            if len(rows) == 0:
+                raise SenseAPIError(
+                    "Updates require one or more parts updated")
+                                    
+            self.dlogger.debug("Updating delta %s" % delta_id)
+            self.delta_table.update(delta, rows)
+
+        self.dlogger.debug("_put_delta() successful with ID %s. Update? %s" %
                            (delta_id, update))
 
     def _get_model_by_id(self, model_id):
@@ -635,7 +737,7 @@ class SenseAPI(AtlanticWaveModule):
                      raw_model['model_raw_info'])),
                  'timestamp':raw_model['timestamp']}
 
-        self.dlogger.DEBUG('_get_model_by_id() on %s successful' % model_id)
+        self.dlogger.debug('_get_model_by_id() on %s successful' % model_id)
         return model
     
     def _put_model(self, model_id, model_xml, model_raw_info):
@@ -663,7 +765,7 @@ class SenseAPI(AtlanticWaveModule):
                  'timestamp':timestamp}
 
         # Insert dictionary into DB
-        self.dlogger.DEBUG("Inserting model %s" % model_id)
+        self.dlogger.debug("Inserting model %s" % model_id)
         self.model_table.insert(model)
     
     def _find_alternative(self, deltaid):
@@ -682,7 +784,7 @@ class SenseAPIResource(Resource):
         super(SenseAPIResource, self).__init__()
 
     def _setup_loggers(self, loggerid, logfilename=None, debuglogfilename=None):
-                ''' Internal function for setting up the logger formats. '''
+        ''' Internal function for setting up the logger formats. '''
         # Copied from https://github.com/atlanticwave-sdx/atlanticwave-proto/blob/master/lib/AtlanticWaveModule.py#L49
         import logging
         self.logger = logging.getLogger(loggerid)
@@ -744,199 +846,200 @@ delta_fields = {
 class ModelsAPI(SenseAPIResource):#FIXME
     def __init__(self):
         super(ModelsAPI, self).__init__(self.__class__.__name__)
-        self.dlogger.DEBUG("__init__() start")
+        self.dlogger.debug("__init__() start")
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('current', type=str, default='true')
         self.reqparse.add_argument('summary', type=str, default='false')
         self.reqparse.add_argument('encode', type=str, default='false')
-        self.models = SenseAPI().get_models() #FIXME
-        self.dlogger.DEBUG("__init__() complete")
+        self.models = SenseAPI().get_model() #FIXME
+        self.dlogger.debug("__init__() complete")
     
     def get(self):
-        self.dlogger.DEBUG("get() start")
+        self.dlogger.debug("get() start")
 
         retval = None        #FIXME
         
-        self.logger.INFO("get() returning %s" % retval)
-        self.dlogger.DEBUG("get() complete")
+        self.logger.info("get() returning %s" % retval)
+        self.dlogger.debug("get() complete")
         return retval
     
     def post(self):
-        self.dlogger.DEBUG("post() start")
+        self.dlogger.debug("post() start")
 
         args = self.reqparse.parse_args()
-        self.logger.INFO("post() args %s" % args)
+        self.logger.info("post() args %s" % args)
         retval = {'models': marshal(self.models, model_fields)}, 201 #FIXME
         
-        self.logger.INFO("post() returning %s" % retval)
-        self.dlogger.DEBUG("post() complete")
+        self.logger.info("post() returning %s" % retval)
+        self.dlogger.debug("post() complete")
         return retval
     
-class DeltasAPI(SenseAPIResource):#FIXME
+class DeltasAPI(SenseAPIResource):
     def __init__(self):
         super(DeltasAPI, self).__init__(self.__class__.__name__)
-        self.dlogger.DEBUG("__init__() start")
+        self.dlogger.debug("__init__() start")
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('id', type=str, location='json')
         self.reqparse.add_argument('lastModified', type=str, location='json')
         self.reqparse.add_argument('modelId', type=str, location='json')
         self.reqparse.add_argument('reduction', type=str, location='json')
+        self.reqparse.add_argument('addition', type=str, location='json')
 
-        self.dlogger.DEBUG("__init__() complete")
+        self.dlogger.debug("__init__() complete")
     
     def get(self):
-        self.dlogger.DEBUG("get() start")
-        self.logger.INFO("get() id %s" % deltaid)
+        self.dlogger.debug("get() start")
+        self.logger.info("get() id %s" % deltaid)
         retval = {'deltas': marshal(deltas, delta_fields)}       #FIXME
         #FIXME: this doesn't make sense: where does deltaid or deltas come from?
         
-        self.logger.INFO("get() returning %s" % retval)
-        self.dlogger.DEBUG("get() complete")
+        self.logger.info("get() returning %s" % retval)
+        self.dlogger.debug("get() complete")
         return retval
     
     def post(self):
-        self.dlogger.DEBUG("post() start")
+        self.dlogger.debug("post() start")
 
         args = self.reqparse.parse_args()
-        self.logger.INFO("post() args %s" % args)
-        deltas, mystatus = deltas.processDelta(args)              #FIXME
-        self.logger.INFO("post() results %s" % mystatus)
-        rstatus = 201
-        if int(mystatus) != 200:
+        self.logger.info("post() args %s" % args)
+        deltas, mystatus = SenseAPI().process_deltas(args)
+        self.logger.info("post() results %s" % mystatus)
+        rstatus = STATUS_CREATED
+        if int(mystatus) != STATUS_GOOD:
             rstatus = mystatus
             
         retval = {'deltas': marshal(deltas, delta_fields)}, rstatus
 
-        self.logger.INFO("post() returning %s" % retval)
-        self.dlogger.DEBUG("post() complete")
+        self.logger.info("post() returning %s" % retval)
+        self.dlogger.debug("post() complete")
         return retval
     
-class DeltaAPI(SenseAPIResource):#FIXME
+class DeltaAPI(SenseAPIResource):
     def __init__(self):
         super(DeltaAPI, self).__init__(self.__class__.__name__)
-        self.dlogger.DEBUG("__init__() start")
+        self.dlogger.debug("__init__() start")
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('summary', type=str, default='true')
         self.reqparse.add_argument('deltaid', type=str, location='json')
-        self.dlogger.DEBUG("__init__() complete")
+        self.dlogger.debug("__init__() complete")
     
     def get(self, deltaid):
-        self.dlogger.DEBUG("get() start")
-        self.logger.INFO("get() deltaid %s" % deltaid)
-        status, phase = nrmdeltas.getDelta(deltaid)                #FIXME
-        self.dlogger.DEBUG("get() %s:%s" % (status, phase))
+        self.dlogger.debug("get() start")
+        self.logger.info("get() deltaid %s" % deltaid)
+        status, phase = SenseAPI().get_delta(deltaid)
+        self.dlogger.debug("get() %s:%s" % (status, phase))
         retval = {'state': str(phase), 'deltaid': str(deltaid)}, status
-        self.logger.INFO("get() returning %s" % retval)
-        self.dlogger.DEBUG("get() complete")
+        self.logger.info("get() returning %s" % retval)
+        self.dlogger.debug("get() complete")
         return retval
 
 class CommitsAPI(SenseAPIResource):
     def __init__(self):
         super(CommitsAPI, self).__init__(self.__class__.__name)
-        self.dlogger.DEBUG("__init__() start")
-        self.dlogger.DEBUG("__init__() complete")
+        self.dlogger.debug("__init__() start")
+        self.dlogger.debug("__init__() complete")
 
     def put(self, deltaid):
-        self.dlogger.DEBUG("put() start")
-        self.logger.INFO("put() deltaid %s" % deltaid)
+        self.dlogger.debug("put() start")
+        self.logger.info("put() deltaid %s" % deltaid)
         status = SenseAPI().commit(deltaid)
         if status == STATUS_GOOD:
-            self.logger.INFO("put() deltaid %s COMMITTED" % deltaid)
+            self.logger.info("put() deltaid %s COMMITTED" % deltaid)
             retval = {'result': "COMMITTED"}, status
         else:
-            self.logger.INFO("put() deltaid %s COMMIT FAILED" % deltaid)
+            self.logger.info("put() deltaid %s COMMIT FAILED" % deltaid)
             retval = {'result': "FAILED"}, status
             
-        self.logger.INFO("put() returning %s" % retval)
-        self.dlogger.DEBUG("put() complete")
+        self.logger.info("put() returning %s" % retval)
+        self.dlogger.debug("put() complete")
         return retval                         
         
     def get(self):
-        self.dlogger.DEBUG("get() start")
+        self.dlogger.debug("get() start")
         retval = {'result': True}, STATUS_GOOD
-        self.dlogger.DEBUG("get() complete")
+        self.dlogger.debug("get() complete")
         return retval
         
     def post(self, deltaid):
-        self.dlogger.DEBUG("post() start")
-        self.logger.INFO("post() deltaid %s" % deltaid)
+        self.dlogger.debug("post() start")
+        self.logger.info("post() deltaid %s" % deltaid)
         retval = {'result': True}, STATUS_CREATED
-        self.logger.INFO("post() returning %s" % retval)
-        self.dlogger.DEBUG("post() complete")
+        self.logger.info("post() returning %s" % retval)
+        self.dlogger.debug("post() complete")
         return retval
 
 class CancelAPI(SenseAPIResource):
     def __init__(self):
         super(CancelAPI, self).__init__(self.__class__.__name)
-        self.dlogger.DEBUG("__init__() start")
-        self.dlogger.DEBUG("__init__() complete")
+        self.dlogger.debug("__init__() start")
+        self.dlogger.debug("__init__() complete")
 
     def put(self, deltaid):
-        self.dlogger.DEBUG("put() start")
-        self.logger.INFO("put() deltaid %s" % deltaid)
+        self.dlogger.debug("put() start")
+        self.logger.info("put() deltaid %s" % deltaid)
         status, resp = SenseAPI().cancel(deltaid)
         if status == STATUS_GOOD:
-            self.logger.INFO("put() deltaid %s CANCELLED" % deltaid)
+            self.logger.info("put() deltaid %s CANCELLED" % deltaid)
             retval = {'result': "CANCELLED"}, status
         else:
-            self.logger.INFO("put() deltaid %s CANCEL FAILED, %s" %
+            self.logger.info("put() deltaid %s CANCEL FAILED, %s" %
                              (deltaid, resp))
             retval = {'result': "FAILED", 'mesg':str(resp)}, status
-        self.logger.INFO("put() returning %s" % retval)
-        self.dlogger.DEBUG("put() complete")
+        self.logger.info("put() returning %s" % retval)
+        self.dlogger.debug("put() complete")
         return retval                         
         
     def get(self):
-        self.dlogger.DEBUG("get() start")
+        self.dlogger.debug("get() start")
         retval = {'result': True}, 200
-        self.dlogger.DEBUG("get() complete")
+        self.dlogger.debug("get() complete")
         return retval
         
     def post(self, deltaid):
-        self.dlogger.DEBUG("post() start")
+        self.dlogger.debug("post() start")
         #FIXME: this doesn't seem to do the same thing as put()... should it?                      
         self.logger.INFO("post() deltaid %s" % deltaid)
                       
         retval = {'result': True}, STATUS_CREATED
-        self.logger.INFO("post() returning %s" % retval)
-        self.dlogger.DEBUG("post() complete")
+        self.logger.info("post() returning %s" % retval)
+        self.dlogger.debug("post() complete")
         return retval
         
 class ClearAPI(SenseAPIResource):
     def __init__(self):
         super(ClearAPI, self).__init__(self.__class__.__name)
-        self.dlogger.DEBUG("__init__() start")
-        self.dlogger.DEBUG("__init__() complete")
+        self.dlogger.debug("__init__() start")
+        self.dlogger.debug("__init__() complete")
 
     def put(self, deltaid):
-        self.dlogger.DEBUG("put() start")
-        self.logger.INFO("put() deltaid %s" % deltaid)
+        self.dlogger.debug("put() start")
+        self.logger.info("put() deltaid %s" % deltaid)
         status, resp = SenseAPI().clear(deltaid)
         if status == STATUS_GOOD:
-            self.logger.INFO("put() deltaid %s CLEARED" % deltaid)
+            self.logger.info("put() deltaid %s CLEARED" % deltaid)
             retval = {'result': "CLEARED"}, status
         else:
-            self.logger.INFO("put() deltaid %s CLEAR FAILED, %s" %
+            self.logger.info("put() deltaid %s CLEAR FAILED, %s" %
                              (deltaid, resp))
             retval = {'result': "FAILED", 'mesg':str(resp)}, status
             
-        self.logger.INFO("put() returning %s" % retval)
-        self.dlogger.DEBUG("put() complete")
+        self.logger.info("put() returning %s" % retval)
+        self.dlogger.debug("put() complete")
         return retval                         
         
     def get(self):
-        self.dlogger.DEBUG("get() start")
+        self.dlogger.debug("get() start")
         retval = {'result': True}, STATUS_GOOD
-        self.dlogger.DEBUG("get() complete")
+        self.dlogger.debug("get() complete")
         return retval
         
     def post(self, deltaid):
-        self.dlogger.DEBUG("post() start")
+        self.dlogger.debug("post() start")
         #FIXME: this doesn't seem to do the same thing as put()... should it?
-        self.logger.INFO("post() deltaid %s" % deltaid)
+        self.logger.info("post() deltaid %s" % deltaid)
         retval = {'result': True}, STATUS_CREATED
-        self.logger.INFO("post() returning %s" % retval)
-        self.dlogger.DEBUG("post() complete")
+        self.logger.info("post() returning %s" % retval)
+        self.dlogger.debug("post() complete")
         return retval
 
 #FIXME: ModelAPI not used, so not copying here.
