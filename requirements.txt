@@ -22,3 +22,7 @@ dataset==0.8.0
 ryu==4.11
 docker==3.4.1
 docker-pycreds==0.3.0
+isodate=0.6.0
+rdflib=4.2.2
+aniso8601=3.0.2
+flask-restful=0.3.6
