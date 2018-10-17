@@ -312,16 +312,17 @@ class SenseAPI(AtlanticWaveManager):
                                     bandwidth, starttime, endtime, delta_id):
         ''' Installs a point-to-point rule. '''
         # Build policy
-        policy = self._build_point_to_point_rule( endpoint1, endpoint2,
+        policy = self._build_point_to_point_rule(endpoint1, endpoint2,
                                                  vlan1, vlan2, bandwidth,
                                                  starttime, endtime)
         
     def _install_policy(self, delta_id, policy):
         # Install rule
-        hash = RuleManager().add_rule(policy)
+        hashval = RuleManager().add_rule(policy)
 
         # Push hash into DB
-        self._put_delta(delta_id, hashval=hash, update=True)
+        self._put_delta(delta_id, hashval=hashval, status=STATUS_GOOD,
+                        update=True)
 
     def _remove_policy(self, delta):
         # Remove the rule
@@ -644,9 +645,12 @@ class SenseAPI(AtlanticWaveManager):
         return parsed_deltas
 
     def _put_delta(self, delta_id, raw_request=None, sdx_rule=None,
-                   model_id=None, status=None, hashval=None, update=False):
+                   model_id=None, status=None, hashval=None,
+                   update=False):
         ''' Helper Function, just puts delta into DB. 
             Overwrites older versions for updates (when update=True). 
+            status isn't required for creating: default of STATUS_CREATED will 
+            be used.
             Returns Nothing.
             Raises errors.
         '''
@@ -663,6 +667,8 @@ class SenseAPI(AtlanticWaveManager):
             if raw_delta != None:
                 raise SenseAPIError(
                     "Delta with ID %s already exists" % delta_id)
+            if status == None:
+                status = STATUS_CREATED
             if (raw_request == None or
                 sdx_rule == None or
                 model_id == None or
@@ -692,6 +698,7 @@ class SenseAPI(AtlanticWaveManager):
                     "No delta with ID %s exists, cannot update." % delta_id)
             delta = {'delta_id':delta_id,
                      'last_modified':last_modified}
+            
             rows = []
             if raw_request != None:
                 delta['raw_request'] = pickle.dumps(raw_request)
@@ -713,8 +720,9 @@ class SenseAPI(AtlanticWaveManager):
                 raise SenseAPIError(
                     "Updates require one or more parts updated")
                                     
-            self.dlogger.debug("Updating delta %s" % delta_id)
-            self.delta_table.update(delta, rows)
+            self.dlogger.debug("Updating delta %s with rows %s" % (delta_id,
+                                                                   rows))
+            self.delta_table.update(delta, ['delta_id'])
 
         self.dlogger.debug("_put_delta() successful with ID %s. Update? %s" %
                            (delta_id, update))
