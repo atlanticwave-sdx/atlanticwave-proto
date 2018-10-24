@@ -46,8 +46,8 @@ class PutGetDeltaTest(unittest.TestCase):
         self.raw_request = "raw_request"
         self.sdx_rule = "SDX RULES!"
         self.model_id  = 3
-        self.status = STATUS_GOOD
-        self.status_created = STATUS_CREATED
+        self.status = STATUS_COMMITTED
+        self.status_created = STATUS_ACTIVATED
 
     def test_put(self):
         # Make sure _put_delta doesn't blow up
@@ -81,7 +81,7 @@ class PutGetDeltaTest(unittest.TestCase):
         self.failUnlessEqual(raw_delta['raw_request'], self.raw_request)
         self.failUnlessEqual(raw_delta['sdx_rule'], self.sdx_rule)
         self.failUnlessEqual(raw_delta['model_id'], self.model_id)
-        self.failUnlessEqual(raw_delta['status'], STATUS_CREATED)
+        self.failUnlessEqual(raw_delta['status'], STATUS_ACCEPTED)
 
     def test_get(self):
         # Test _put_delta() and get_delta()
@@ -97,7 +97,7 @@ class PutGetDeltaTest(unittest.TestCase):
                        self.model_id, self.status)
         state, phase = api.get_delta(delta_id)
 
-        self.failUnlessEqual(state, STATUS_GOOD)
+        self.failUnlessEqual(state, STATUS_COMMITTED)
         self.failUnlessEqual(phase, PHASE_COMMITTED)
 
         delta_id = 4
@@ -105,7 +105,7 @@ class PutGetDeltaTest(unittest.TestCase):
                        self.model_id, self.status_created)
         state, phase = api.get_delta(delta_id)
 
-        self.failUnlessEqual(state, STATUS_CREATED)
+        self.failUnlessEqual(state, STATUS_ACTIVATED)
         self.failUnlessEqual(phase, PHASE_RESERVED)
 
     def test_put_update(self):
@@ -207,8 +207,8 @@ class CommitTest(unittest.TestCase):
     def setUp(self):
         self.raw_request = "raw_request"
         self.model_id  = 3
-        self.status = STATUS_GOOD
-        self.status_created = STATUS_CREATED
+        self.status = STATUS_COMMITTED
+        self.status_created = STATUS_ACTIVATED
 
         
         self.starttime = "1985-04-12T12:23:56"
@@ -282,8 +282,8 @@ class CancelTest(unittest.TestCase):
     def setUp(self):
         self.raw_request = "raw_request"
         self.model_id  = 3
-        self.status_good = STATUS_GOOD
-        self.status_created = STATUS_CREATED
+        self.status_good = STATUS_COMMITTED
+        self.status_created = STATUS_ACTIVATED
 
         
         self.starttime = "1985-04-12T12:23:56"
@@ -324,7 +324,7 @@ class CancelTest(unittest.TestCase):
                        self.model_id)
         api.commit(delta_id)
 
-        self.failUnlessEqual(STATUS_GOOD, api.cancel(delta_id))
+        self.failUnlessEqual(HTTP_GOOD, api.cancel(delta_id))
         self.failUnlessEqual(None, api._get_delta_by_id(delta_id))
 
     def test_basic_committed_clear(self):
@@ -341,7 +341,7 @@ class CancelTest(unittest.TestCase):
                        self.model_id)
         api.commit(delta_id)
 
-        self.failUnlessEqual(STATUS_GOOD, api.clear(delta_id))
+        self.failUnlessEqual(HTTP_GOOD, api.clear(delta_id))
         self.failUnlessEqual(None, api._get_delta_by_id(delta_id))
 
     def test_basic_uncommitted_cancel(self):
@@ -357,7 +357,7 @@ class CancelTest(unittest.TestCase):
         api._put_delta(delta_id, self.raw_request, self.sdx_rule,
                        self.model_id)
 
-        self.failUnlessEqual(STATUS_GOOD, api.clear(delta_id))
+        self.failUnlessEqual(HTTP_GOOD, api.clear(delta_id))
         self.failUnlessEqual(None, api._get_delta_by_id(delta_id))
     
     def test_cancel_bad_delta(self):
@@ -371,7 +371,7 @@ class CancelTest(unittest.TestCase):
 
         delta_id = 33
 
-        self.failUnlessEqual(STATUS_NOT_FOUND, api.cancel(delta_id))
+        self.failUnlessEqual(HTTP_NOT_FOUND, api.cancel(delta_id))
 
     def test_double_clear(self):
         # Calling cancel() first time, expect STATUS_GOOD back
@@ -387,9 +387,9 @@ class CancelTest(unittest.TestCase):
         api._put_delta(delta_id, self.raw_request, self.sdx_rule,
                        self.model_id)
 
-        self.failUnlessEqual(STATUS_GOOD, api.cancel(delta_id))
+        self.failUnlessEqual(HTTP_GOOD, api.cancel(delta_id))
         self.failUnlessEqual(None, api._get_delta_by_id(delta_id))
-        self.failUnlessEqual(STATUS_NOT_FOUND, api.cancel(delta_id))
+        self.failUnlessEqual(HTTP_NOT_FOUND, api.cancel(delta_id))
         self.failUnlessEqual(None, api._get_delta_by_id(delta_id))
 if __name__ == '__main__':
     unittest.main()

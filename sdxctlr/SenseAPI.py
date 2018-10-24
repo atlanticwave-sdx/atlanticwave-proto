@@ -50,14 +50,23 @@ errors = {
     },
 }
 
-# HTML status codes:
-STATUS_GOOD           = 200
-STATUS_CREATED        = 201
-STATUS_ACCEPTED       = 202
-STATUS_BAD_REQUEST    = 400
-STATUS_NOT_FOUND      = 404
-STATUS_CONFLICT       = 409
-STATUS_SERVER_ERROR   = 500
+# HTTP status codes:
+HTTP_GOOD           = 200
+HTTP_CREATED        = 201
+HTTP_ACCEPTED       = 202
+HTTP_BAD_REQUEST    = 400
+HTTP_NOT_FOUND      = 404
+HTTP_CONFLICT       = 409
+HTTP_SERVER_ERROR   = 500
+
+# SENSE status codes
+STATUS_ACCEPTING    = "Accepting"
+STATUS_ACCEPTED     = "Accepted"
+STATUS_COMMITTING   = "Committing"
+STATUS_COMMITTED    = "Committed"
+STATUS_ACTIVATING   = "Activating"
+STATUS_ACTIVATED    = "Activated"
+STATUS_FAILED       = "Failed"
 
 # PHASE definition
 PHASE_RESERVED        = "PHASE_RESERVED"
@@ -148,7 +157,7 @@ class SenseAPI(AtlanticWaveManager):
             endpoint='cancel')
         
         self.generate_simplified_topology()
-        
+        self.generate_model()
 
         
         # Connection handling
@@ -252,8 +261,51 @@ class SenseAPI(AtlanticWaveManager):
         return vlans_in_use
 
     def get_vlans_available_on_egress_port(self, node):
-        ''' Get VLANs available for SENSE API use. '''
-        pass
+        ''' Get VLANs available for SENSE API use. 
+            Take in a node name
+            Returns a string with the available VLANs.
+        '''
+
+        # Get available VLANs
+        raw_available_vlans = self.simplified_topo.node[node]['available_vlans']
+        available_vlans = TopologyManager().get_available_vlan_list(
+            raw_available_vlans)
+
+        # Get VLANs in use
+        in_use = self.get_vlans_in_use_on_egress_port(node)
+        
+        # Get difference
+        # https://www.geeksforgeeks.org/python-intersection-two-lists/
+        diff = set(available_vlans).difference(in_use)
+
+        # Simplify to text
+        sortedlist = sorted(diff)
+        index = 0
+        begin = None
+        current = None
+        text_vlan = ""
+
+        while index < len(sortedlist):
+            begin = sortedlist[index]
+            current = begin
+
+            index += 1
+
+            while (index < len(sortedlist) and
+                   current + 1 == sortedlist[index]):
+                current += 1
+                index += 1
+
+            if begin == current:
+                text_vlan += "%d" % current
+            else:
+                text_vlan += "%d-%d" % (begin, current)
+
+            if index < len(sortedlist):
+                text_vlan += ","
+
+        # Return text
+        return text_vlan
 
     def generate_simplified_topology(self):
         ''' Calculates the 'black box' version of the topology, exposing only 
@@ -262,6 +314,7 @@ class SenseAPI(AtlanticWaveManager):
         
         # Create graph with central node only.
         with self.topolock:
+            self.current_topo = TopologyManager().get_topology()     # Update!
             self.simplified_topo = nx.Graph()
             self.simplified_topo.add_node('central')
             self.simplified_topo.node['central']['type'] = 'central'
@@ -272,10 +325,14 @@ class SenseAPI(AtlanticWaveManager):
             for node in self.current_topo.nodes(): # name of node
                 print self.current_topo[node]
                 t = self.current_topo.node[node]['type']
+                alias = None
+                if 'alias' in self.current_topo.node[node].keys():
+                    alias = self.current_topo.node[node]['alias']
                 if TOPO_EDGE_TYPE(t):
                     for edge in self.current_topo[node]: # edge dictionary
                         new_node = node + "-" + edge
                         self.simplified_topo.add_node(new_node)
+                        self.simplified_topo.add_edge(new_node, 'central')
 
                         # Copy over how to access the connection (which two
                         # nodes on the original topology), and the max bandwidth
@@ -285,23 +342,90 @@ class SenseAPI(AtlanticWaveManager):
                         print self.current_topo[node][edge]
                         bw = self.current_topo[node][edge]['weight']
                         self.simplified_topo.node[new_node]['max_bw'] = bw
+                        vlans = self.current_topo[node][edge]['available_vlans']
+                        self.simplified_topo.node[new_node]['available_vlans'] = vlans
                         self.simplified_topo.node[new_node]['type'] = t
+                        if alias != None:
+                            self.simplified_topo.node[new_node]['alias'] = alias
+                            
         print("\n\nSIMPLIFIED TOPOLOGY\n%s\n\n" %
+
+              
               json.dumps(self.simplified_topo.nodes(data=True),
                          indent=4, sort_keys=True))
                                                     
 
-    def generate_full_XML(self):
-        ''' Generates the full XML of the simplified topology. Deltas are 
-            handled separately. '''
-        pass
+    def generate_model(self):
+        ''' Generates a model of the simplified topology. '''
+        baseurn = "urn:ogf:network:domain="
+        fullurn = baseurn + "atlanticwave-sdx.net"
+        
+        # Boilerplate prefixes
+        output  = "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
+        output += "@prefix owl: <http://www.w3.org/2002/07/owl#> .\n"
+        output += "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n"
+        output += "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
+        output += "@prefix nml: <http://schemas.ogf.org/nml/2013/03/base#> .\n"
+        output += "@prefix mrs: <http://schemas.ogf.org/mrs/2013/12/topology#> .\n\n\n"
 
-    def generate_delta_XML(self, changetype, change):
-        ''' Generates a delta based on a change passed in.
-              - Topology change
-              - Bandwidth change (up or down)
-        '''
-        pass
+        
+        # Get all endpoints
+        endpoints = ""
+        list_of_endpoints = []
+        self.generate_simplified_topology()
+
+
+        for ep in self.simplified_topo.neighbors('central'):
+            # For each endpoint:
+            #  - Get endpoint name
+            node = self.simplified_topo.node[ep]
+            epname = "%s:%s" % (fullurn, ep)
+            list_of_endpoints.append(epname)
+            
+            #  - Definition of VLANs available on said endpoint
+            vlan_name = "%s:vlan_range" % epname
+            vlan_def  = "%s\n" %vlan_name
+            vlan_def += "                a nml:LabelGroup, owl:NamedIndividual ;\n"
+            vlan_def += "                nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
+            vlan_def += "                nml:values \"%s\" .\n\n" % self.get_vlans_available_on_egress_port(ep)
+            
+            #  - Definition of Link structure
+            link_def  = "%s\n" % epname
+            link_def += "                a nml:BidirectionalPort, owl:NamedIndividual ;\n"
+            link_def += "                nml:belingsTo <%s:l2switching>, <%s> ;\n" % (fullurn, fullurn)
+            link_def += "                nml:hasLabelGroup <%s> ;\n" % vlan_name
+            if 'alias' in node.keys():
+                link_def += "                nml:isAlias <%s> ;\n" % node['alias']
+            link_def += "                nml:name \"%s\" .\n\n" % ep
+
+            endpoints += vlan_def
+            endpoints += link_def
+
+        # Add topology (acts as switch)
+        endpoints_str = ""
+        for entry in list_of_endpoints[:-1]:
+            endpoints_str += "<%s>, " % entry
+        endpoints_str += "<%s> ;" % list_of_endpoints[-1]
+
+        topology = "<%s>\n" % fullurn
+        topology += "                a nml:Topology, owl:NamedIndividual ;\n"
+        #        topology += "                nml:belongsTo" #Fixme: who?
+        topology += "                nml:hasBidirectionalPort %s\n" % endpoints_str
+        topology += "                nml:hasService <%s:l2switching> ;\n" % fullurn
+        topology += "                nml:name \"AtlanticWave/SDX\" .\n\n"
+
+        service  = "<%s:l2switching>\n" % fullurn
+        service += "                 a nml:SwitchingService, owl:NamedIndividual ;\n"
+        service += "                 nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
+        service += "                 nml:hasBidirectionalPort %s\n" % endpoints_str
+        service += "                 nml:labelSwaping \"false\" .\n\n"
+
+        output += topology
+        output += service
+        output += endpoints
+
+        return output
+
 
     def send_SENSE_msg(self, msg):
         ''' Sends over a sense message. Handles formatting, and anything else
@@ -321,7 +445,7 @@ class SenseAPI(AtlanticWaveManager):
         hashval = RuleManager().add_rule(policy)
 
         # Push hash into DB
-        self._put_delta(delta_id, hashval=hashval, status=STATUS_GOOD,
+        self._put_delta(delta_id, hashval=hashval, status=STATUS_ACTIVATED,
                         update=True)
 
     def _remove_policy(self, delta):
@@ -464,7 +588,7 @@ class SenseAPI(AtlanticWaveManager):
             delta = self._get_delta_by_id(parsed_reduction)
             if delta == None:
                 # Doesn't exist anymore 
-                return None, STATUS_NOT_FOUND
+                return None, HTTP_NOT_FOUND
             status = self.cancel(delta)
             return delta, status
 
@@ -512,8 +636,8 @@ class SenseAPI(AtlanticWaveManager):
         if delta != None:
             status = delta['status']
             phase = PHASE_RESERVED
-            if status == STATUS_GOOD:
-                phase = PHASE_COMMITTED
+            if status == STATUS_COMMITTED:
+                phase = PHASE_COMMITTED #FIXME?
             self.dlogger.debug("get_delta: %s %s" % (status, phase))
             return status, phase
         #FIXME: If not found, return ........
@@ -522,9 +646,9 @@ class SenseAPI(AtlanticWaveManager):
     def commit(self, deltaid):
         ''' Commits the specified deltaid.
             Returns:
-              - STATUS_GOOD if everything is committed.
-              - STATUS_NOT_FOUND if delta is not found.
-              - STATUS_CONFLICT if delta cannot be committed.
+              - HTTP_GOOD if everything is committed.
+              - HTTP_NOT_FOUND if delta is not found.
+              - HTTP_CONFLICT if delta cannot be committed.
         '''
         # Get the delta information
         delta = self._get_delta_by_id(deltaid)
@@ -532,25 +656,25 @@ class SenseAPI(AtlanticWaveManager):
         # Check if still possible
         if delta == None:
             self.dlogger.debug("commit: Delta %s does not exist." % deltaid)
-            return STATUS_NOT_FOUND
+            return HTTP_NOT_FOUND
         rules_all_valid = True
         if not self._check_SDX_rule(delta['sdx_rule']):
             rules_all_valid = False
 
         # If not possible, reject, and send alternatives?
         if rules_all_valid == False:
-            return STATUS_CONFLICT
+            return HTTP_CONFLICT
             
         # If possible, Install rule
         self._install_policy(deltaid, delta['sdx_rule'])
 
-        return STATUS_GOOD
+        return HTTP_GOOD
     
     def cancel(self, deltaid):
         ''' Cancels a specified deltaid.
             Returns:
-              - STATUS_GOOD if successfully cancelled
-              - STATUS_NOT_FOUND if delta is not found
+              - HTTP_GOOD if successfully cancelled
+              - HTTP_NOT_FOUND if delta is not found
         '''
         # Does it exist?
         delta = self._get_delta_by_id(deltaid)
@@ -558,16 +682,16 @@ class SenseAPI(AtlanticWaveManager):
             # Delete deltaid from DB
             self.delta_table.delete(delta_id=deltaid)
             # If delta is installed,
-            if delta['status'] == STATUS_GOOD: # GOOD == Installed
+            if delta['status'] == STATUS_ACTIVATED:
                 self._remove_policy(delta)
-            return STATUS_GOOD
-        return STATUS_NOT_FOUND
+            return HTTP_GOOD
+        return HTTP_NOT_FOUND
     
     def clear(self, deltaid):
         ''' Clears a specified deltaid.
             Returns:
-              - STATUS_GOOD if successfully cancelled
-              - STATUS_NOT_FOUND if delta is not found
+              - HTTP_GOOD if successfully cancelled
+              - HTTP_NOT_FOUND if delta is not found
         '''
         #FIXME: Is this right?
         return self.cancel(deltaid)
@@ -649,7 +773,7 @@ class SenseAPI(AtlanticWaveManager):
                    update=False):
         ''' Helper Function, just puts delta into DB. 
             Overwrites older versions for updates (when update=True). 
-            status isn't required for creating: default of STATUS_CREATED will 
+            status isn't required for creating: default of HTTP_CREATED will 
             be used.
             Returns Nothing.
             Raises errors.
@@ -668,7 +792,7 @@ class SenseAPI(AtlanticWaveManager):
                 raise SenseAPIError(
                     "Delta with ID %s already exists" % delta_id)
             if status == None:
-                status = STATUS_CREATED
+                status = STATUS_ACCEPTED
             if (raw_request == None or
                 sdx_rule == None or
                 model_id == None or
@@ -912,8 +1036,8 @@ class DeltasAPI(SenseAPIResource):
         self.logger.info("post() args %s" % args)
         deltas, mystatus = SenseAPI().process_deltas(args)
         self.logger.info("post() results %s" % mystatus)
-        rstatus = STATUS_CREATED
-        if int(mystatus) != STATUS_GOOD:
+        rstatus = HTTP_CREATED
+        if int(mystatus) != HTTP_GOOD:
             rstatus = mystatus
             
         retval = {'deltas': marshal(deltas, delta_fields)}, rstatus
@@ -951,7 +1075,7 @@ class CommitsAPI(SenseAPIResource):
         self.dlogger.debug("put() start")
         self.logger.info("put() deltaid %s" % deltaid)
         status = SenseAPI().commit(deltaid)
-        if status == STATUS_GOOD:
+        if status == HTTP_GOOD:
             self.logger.info("put() deltaid %s COMMITTED" % deltaid)
             retval = {'result': "COMMITTED"}, status
         else:
@@ -964,14 +1088,14 @@ class CommitsAPI(SenseAPIResource):
         
     def get(self):
         self.dlogger.debug("get() start")
-        retval = {'result': True}, STATUS_GOOD
+        retval = {'result': True}, HTTP_GOOD
         self.dlogger.debug("get() complete")
         return retval
         
     def post(self, deltaid):
         self.dlogger.debug("post() start")
         self.logger.info("post() deltaid %s" % deltaid)
-        retval = {'result': True}, STATUS_CREATED
+        retval = {'result': True}, HTTP_CREATED
         self.logger.info("post() returning %s" % retval)
         self.dlogger.debug("post() complete")
         return retval
@@ -986,7 +1110,7 @@ class CancelAPI(SenseAPIResource):
         self.dlogger.debug("put() start")
         self.logger.info("put() deltaid %s" % deltaid)
         status, resp = SenseAPI().cancel(deltaid)
-        if status == STATUS_GOOD:
+        if status == HTTP_GOOD:
             self.logger.info("put() deltaid %s CANCELLED" % deltaid)
             retval = {'result': "CANCELLED"}, status
         else:
@@ -1008,7 +1132,7 @@ class CancelAPI(SenseAPIResource):
         #FIXME: this doesn't seem to do the same thing as put()... should it?                      
         self.logger.INFO("post() deltaid %s" % deltaid)
                       
-        retval = {'result': True}, STATUS_CREATED
+        retval = {'result': True}, HTTP_CREATED
         self.logger.info("post() returning %s" % retval)
         self.dlogger.debug("post() complete")
         return retval
@@ -1023,7 +1147,7 @@ class ClearAPI(SenseAPIResource):
         self.dlogger.debug("put() start")
         self.logger.info("put() deltaid %s" % deltaid)
         status, resp = SenseAPI().clear(deltaid)
-        if status == STATUS_GOOD:
+        if status == HTTP_GOOD:
             self.logger.info("put() deltaid %s CLEARED" % deltaid)
             retval = {'result': "CLEARED"}, status
         else:
@@ -1037,7 +1161,7 @@ class ClearAPI(SenseAPIResource):
         
     def get(self):
         self.dlogger.debug("get() start")
-        retval = {'result': True}, STATUS_GOOD
+        retval = {'result': True}, HTTP_GOOD
         self.dlogger.debug("get() complete")
         return retval
         
@@ -1045,7 +1169,7 @@ class ClearAPI(SenseAPIResource):
         self.dlogger.debug("post() start")
         #FIXME: this doesn't seem to do the same thing as put()... should it?
         self.logger.info("post() deltaid %s" % deltaid)
-        retval = {'result': True}, STATUS_CREATED
+        retval = {'result': True}, HTTP_CREATED
         self.logger.info("post() returning %s" % retval)
         self.dlogger.debug("post() complete")
         return retval
