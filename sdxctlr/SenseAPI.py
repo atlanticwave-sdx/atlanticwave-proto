@@ -347,13 +347,6 @@ class SenseAPI(AtlanticWaveManager):
                         self.simplified_topo.node[new_node]['type'] = t
                         if alias != None:
                             self.simplified_topo.node[new_node]['alias'] = alias
-                            
-        print("\n\nSIMPLIFIED TOPOLOGY\n%s\n\n" %
-
-              
-              json.dumps(self.simplified_topo.nodes(data=True),
-                         indent=4, sort_keys=True))
-                                                    
 
     def generate_model(self):
         ''' Generates a model of the simplified topology. '''
@@ -384,13 +377,13 @@ class SenseAPI(AtlanticWaveManager):
             
             #  - Definition of VLANs available on said endpoint
             vlan_name = "%s:vlan_range" % epname
-            vlan_def  = "%s\n" %vlan_name
+            vlan_def  = "<%s>\n" %vlan_name
             vlan_def += "                a nml:LabelGroup, owl:NamedIndividual ;\n"
             vlan_def += "                nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
             vlan_def += "                nml:values \"%s\" .\n\n" % self.get_vlans_available_on_egress_port(ep)
             
             #  - Definition of Link structure
-            link_def  = "%s\n" % epname
+            link_def  = "<%s>\n" % epname
             link_def += "                a nml:BidirectionalPort, owl:NamedIndividual ;\n"
             link_def += "                nml:belingsTo <%s:l2switching>, <%s> ;\n" % (fullurn, fullurn)
             link_def += "                nml:hasLabelGroup <%s> ;\n" % vlan_name

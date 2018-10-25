@@ -391,5 +391,29 @@ class CancelTest(unittest.TestCase):
         self.failUnlessEqual(None, api._get_delta_by_id(delta_id))
         self.failUnlessEqual(HTTP_NOT_FOUND, api.cancel(delta_id))
         self.failUnlessEqual(None, api._get_delta_by_id(delta_id))
+
+
+
+class ModelTest(unittest.TestCase):
+    def setup(self):
+        pass
+
+    def test_generate_model_basic(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        model = api.generate_model()
+        #print "MODEL\n%s\n\n\n" % str(model)
+        #import json
+        #print "FULL TOPOLOGY\n%s\n\n\n" % json.dumps(tm.get_topology().nodes(
+        #    data=True), sort_keys=True, indent=4)
+        #print "SIMPLIFIED TOPOLOGY\n%s\n\n\n" % json.dumps(api.simplified_topo.nodes(
+        #    data=True), sort_keys=True, indent=4)
+#FIXME: What else?
+        
 if __name__ == '__main__':
     unittest.main()
