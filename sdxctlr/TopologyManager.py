@@ -233,6 +233,8 @@ class TopologyManager(AtlanticWaveManager):
                         # VLANs available
                         if 'available_vlans' in port.keys():
                             self.topo.edge[name][destination]['available_vlans'] = str(port['available_vlans'])
+                        elif 'available_vlans' in self.topo.node[port['destination']].keys():
+                            self.topo.edge[name][destination]['available_vlans'] = str(self.topo.node[port['destination']]['available_vlans'])
                         else:
                             self.topo.edge[name][destination]['available_vlans'] = "0-4095"
 
@@ -266,7 +268,7 @@ class TopologyManager(AtlanticWaveManager):
                     raise TopologyManagerTypeError(
                         "Available VLAN type error %s:%s" %
                         (type(r_parts[0]), r_parts[0]))
-                elif r_parts[0] < 0 or r_parts[0] > 4095:
+                elif int(r_parts[0]) < 0 or int(r_parts[0]) > 4095:
                     raise TopologyManagerValueError(
                         "Available VLAN out of range: %s" %
                         r_parts[0])
