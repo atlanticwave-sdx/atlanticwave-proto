@@ -1,35 +1,35 @@
 {
   "endpoints": {
     "bf40g-renci": {
-      "type":"host",
-      "friendlyname":"RENCI BF40G Node",
-      "location":"35.939796, -79.018203",
-      "vlan":1412},
+      "type": "host",
+      "friendlyname": "RENCI BF40G Node",
+      "location": "35.939796, -79.018203",
+      "vlan": 1411},
     "bf40g-duke": {
-      "type":"host",
-      "friendlyname":"DUKE BF40G Node",
-      "location":"36.003614, -78.938755",
-      "vlan":1412},
+      "type": "host",
+      "friendlyname": "DUKE BF40G Node",
+      "location": "36.003614, -78.938755",
+      "vlan": 1411},
     "bf40g-unc": {
-      "type":"host",
-      "friendlyname":"UNC BF40G Node",
-      "location":"35.903395, -79.048370",
-      "vlan":1412},
+      "type": "host",
+      "friendlyname": "UNC BF40G Node",
+      "location": "35.903395, -79.048370",
+      "vlan": 1411},
     "bf40g-ncsu": {
-      "type":"host",
-      "friendlyname":"NCSU BF40G Node",
-      "location":35.773395, -78.677730"",
-      "vlan":1412}
+      "type": "host",
+      "friendlyname": "NCSU BF40G Node",
+      "location": "35.773395, -78.677730",
+      "vlan": 1411}
   },
   "localcontrollers": {
     "lc-renci":{
       "shortname": "lc-renci",
       "credentials": "rencipwd",
-      "location":"35.939796, -79.018203",
+      "location": "35.939796, -79.018203",
       "lcip": "192.168.201.196",
       "internalconfig": {
         "ryucxninternalport": 55780,
-        "openflowport": 6680
+        "openflowport": 6681
       },
       "switchinfo": [
         {
@@ -54,18 +54,18 @@
       	      "portnumber": 10,
 	       "speed": 80000000000,
 	       "destination": "bf40g-renci"
-	    },
+	    }
 	  ],
           "internalconfig": {
             "corsaurl": "https://corsa-2.renci.ben",
             "corsatoken": "ddc60638fa7a7aa3fb5ca10de8f4e5e8bf82cd289187f933cfc7d7a01e7f7f3839ecac1145bc9908abfd03aa493e4acda448522b304a6ce779f82ce9f1528356",
             "corsabridge": "br20",
-            "corsabwin":11,
-            "corsabwout":12,
-            "corsaratelimiterbridge":"br21",
-            "corsaratelimiterports":[21,22]
+            "corsabwin": 11,
+            "corsabwout": 12,
+            "corsaratelimiterbridge": "br21",
+            "corsaratelimiterports": [21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2],
+            "managementvlanports":[1,2]
           }
         }
       ],
@@ -74,7 +74,7 @@
         "administrator": "Mert Cevik",
         "contact": "mcevik@renci.org"
       }
-    }
+    },
     "lc-duke":{
       "shortname": "lc-duke",
       "credentials": "dukepwd",
@@ -89,8 +89,8 @@
           "name":"corsa1-duke",
           "friendlyname":"DUKE Corsa DP2100",
           "ip": "192.168.202.30",
-          "dpid":"1",
-          "brand":"Open vSwitch",
+          "dpid": "1",
+          "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
             { 
@@ -107,7 +107,7 @@
               "portnumber": 11,
                "speed": 80000000000,
                "destination": "bf40g-duke"
-            },
+            }
           ],
           "internalconfig": {
             "corsaurl": "https://corsa-1.duke.ben",
@@ -116,9 +116,9 @@
             "corsabwin":11,
             "corsabwout":12,
             "corsaratelimiterbridge":"br21",
-            "corsaratelimiterports":[21,22]
+            "corsaratelimiterports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2],
+            "managementvlanports":[1,2]
           }
         }
       ],
@@ -127,7 +127,7 @@
         "administrator": "Mert Cevik",
         "contact": "mcevik@renci.org"
       }
-    }
+    },
     "lc-unc":{
       "shortname": "lc-unc",
       "credentials": "uncpwd",
@@ -160,7 +160,7 @@
               "portnumber": 10,
                "speed": 80000000000,
                "destination": "bf40g-unc"
-            },
+            }
           ],
           "internalconfig": {
             "corsaurl": "https://corsa-1.unc.ben",
@@ -169,9 +169,9 @@
             "corsabwin":11,
             "corsabwout":12,
             "corsaratelimiterbridge":"br21",
-            "corsaratelimiterports":[21,22]
+            "corsaratelimiterports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2],
+            "managementvlanports":[1,2]
           }
         }
       ],
@@ -180,11 +180,11 @@
         "administrator": "Mert Cevik",
         "contact": "mcevik@renci.org"
       }
-    }
+    },
     "lc-ncsu":{
       "shortname": "lc-ncsu",
       "credentials": "ncsupwd",
-      "location":35.773395, -78.677730"",
+      "location": "35.773395, -78.677730",
       "lcip": "192.168.204.21",
       "internalconfig": {
         "ryucxninternalport": 55780,
@@ -213,7 +213,7 @@
               "portnumber": 10,
                "speed": 80000000000,
                "destination": "bf40g-ncsu"
-            },
+            }
           ],
           "internalconfig": {
             "corsaurl": "https://corsa-1.ncsu.ben",
@@ -222,9 +222,9 @@
             "corsabwin":11,
             "corsabwout":12,
             "corsaratelimiterbridge":"br21",
-            "corsaratelimiterports":[21,22]
+            "corsaratelimiterports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2],
+            "managementvlanports":[1,2]
           }
         }
       ],
@@ -295,6 +295,6 @@
       "restrictions": [
         "tbd"
       ]
-    },
+    }
   }
 }
