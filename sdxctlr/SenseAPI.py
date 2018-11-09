@@ -20,8 +20,6 @@ from threading import Lock
 import cPickle as pickle
 import rdflib
 
-# XML imports
-
 
 # Flask imports
 from flask import Flask, jsonify, abort, make_response, request
@@ -38,6 +36,7 @@ from threading import Thread
 
 # Timing
 from datetime import datetime, timedelta, tzinfo
+from shared.constants import rfc3339format, MAXENDTIME
 
 
 # Globals
@@ -72,7 +71,10 @@ STATUS_FAILED       = "Failed"
 PHASE_RESERVED        = "PHASE_RESERVED"
 PHASE_COMMITTED       = "PHASE_COMMITTED"
 
-
+# URN info
+baseurn = "urn:ogf:network:domain="
+fullurn = baseurn + "atlanticwave-sdx.net"
+awaveurn = "urn:ogf:network:atlanticwave-sdx.net"
 
 
 class SenseAPIError(Exception):
@@ -169,7 +171,18 @@ class SenseAPI(AtlanticWaveManager):
                                                     hex(id(self))))
 
         #self._INTERNAL_TESTING_DELETE_FINAL_CHECKIN()
+
+    def __print_topology_details(self, topo):
+        #DEBUGING ONLY, SHOULD DELETE
+        # Pass either topo - current_topo, simplified_topo - and print out
+        # the details of the nodes and the edges
+        print("\n\nNODES WITH DETAILS\n%s" %
+              json.dumps(topo.nodes(data=True), indent=4, sort_keys=True))
+        print("\n\nEDGES WITH DETAILS\n%s\n\n\n" %
+              json.dumps(topo.edges(data=True), indent=4, sort_keys=True))
+
         
+
     def _INTERNAL_TESTING_DELETE_FINAL_CHECKIN(self):
         nodes = self.current_topo.nodes()
         print("\n\nNODES WITH DETAILS\n" +
@@ -235,14 +248,16 @@ class SenseAPI(AtlanticWaveManager):
             requests. '''
 
         # Access the bandwidth from the original topology.
-        print self.simplified_topo.node[node]
         start_node = self.simplified_topo.node[node]['start_node']
         end_node = self.simplified_topo.node[node]['end_node']
         bw_available = self.simplified_topo.node[node]['max_bw']
         bw_in_use = self.current_topo[start_node][end_node]['bw_in_use']
 
-        print "%s: bw_available %s, bw_in_use %s" % (node, bw_available,
-                                                     bw_in_use)
+        self.dlogger.debug("get_bw_available_on_egress_port: %s" %
+                           self.simplified_topo.node[node])
+        self.dlogger.debug("  %s: bw_available %s, bw_in_use %s" %
+                           (node, bw_available, bw_in_use))
+        
         # Return BW on egress port
         return (bw_available - bw_in_use)
 
@@ -250,12 +265,13 @@ class SenseAPI(AtlanticWaveManager):
         ''' Get the VLANs that are in use on a given egress port. '''
 
         # Access the bandwidth from the original topology.
-        print self.simplified_topo.node[node]
         start_node = self.simplified_topo.node[node]['start_node']
         end_node = self.simplified_topo.node[node]['end_node']
         vlans_in_use = self.current_topo[start_node][end_node]['vlans_in_use']
 
-        print "%s: vlans_in_use %s" % (node, vlans_in_use)
+        self.dlogger.debug("get_vlans_in_use_on_egress_port: %s" %
+                           self.simplified_topo.node[node])
+        self.dlogger.debug("  %s: vlans_in_use %s" % (node, vlans_in_use))
 
         # Return VLANs in use on egress port
         return vlans_in_use
@@ -323,7 +339,7 @@ class SenseAPI(AtlanticWaveManager):
             # each connection on the edge node add a connection to the central
             # node.
             for node in self.current_topo.nodes(): # name of node
-                print self.current_topo[node]
+                #print self.current_topo[node]
                 t = self.current_topo.node[node]['type']
                 alias = None
                 if 'alias' in self.current_topo.node[node].keys():
@@ -339,7 +355,7 @@ class SenseAPI(AtlanticWaveManager):
                         # of the connection.                    
                         self.simplified_topo.node[new_node]['start_node'] = node
                         self.simplified_topo.node[new_node]['end_node'] = edge
-                        print self.current_topo[node][edge]
+                        #print self.current_topo[node][edge]
                         bw = self.current_topo[node][edge]['weight']
                         self.simplified_topo.node[new_node]['max_bw'] = bw
                         vlans = self.current_topo[node][edge]['available_vlans']
@@ -350,8 +366,6 @@ class SenseAPI(AtlanticWaveManager):
 
     def generate_model(self):
         ''' Generates a model of the simplified topology. '''
-        baseurn = "urn:ogf:network:domain="
-        fullurn = baseurn + "atlanticwave-sdx.net"
         
         # Boilerplate prefixes
         output  = "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
@@ -479,19 +493,14 @@ class SenseAPI(AtlanticWaveManager):
     def _build_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
                                    bandwidth, starttime, endtime):
         # Find the src switch and switch port
-        print "\n\n\n&&&&&&"
-        print self.simplified_topo.nodes()
-        print "&&&&&&\n\n\n"
         src = self.simplified_topo.node[endpoint1]['start_node']
         srcswitch = self.simplified_topo.node[endpoint1]['end_node']
         srcport = self.current_topo[srcswitch][src][srcswitch]
-        print "SRC %s switch %s port %s" % (src, srcswitch, srcport)
 
-        # FInd the dst switch and switch port
+        # Find the dst switch and switch port
         dst = self.simplified_topo.node[endpoint2]['start_node']
         dstswitch = self.simplified_topo.node[endpoint2]['end_node']
         dstport = self.current_topo[dstswitch][dst][dstswitch]
-        print "DST %s switch %s port %s" % (dst, dstswitch, dstport)
         
         # Make JSON version
         jsonrule = {"L2Tunnel":{
@@ -504,7 +513,6 @@ class SenseAPI(AtlanticWaveManager):
             "srcvlan":vlan1,
             "dstvlan":vlan2,
             "bandwidth":bandwidth}}
-        print "\nJSON\n%s" % (json.dumps(jsonrule, indent=4, sort_keys=True))
         
         # Perform check_syntax
         L2TunnelPolicy.check_syntax(jsonrule)
@@ -559,13 +567,13 @@ class SenseAPI(AtlanticWaveManager):
                 'addition' in keys): # poor man's xor - we only want one.
             raise SenseAPIError("Missing reduction or addition: %s" % keys)
         
-        deltaid = args['id']
+        delta_id = args['id']
         last_modified = args['lastModified']
         model_id = args['modelId']
 
         if 'reduction' in keys:
             reduction = args['reduction']
-            addition = None
+            addition = None #FIXME: is this true? I don't think so.
         else:
             reduction = None
             addition = args['addition']
@@ -576,6 +584,8 @@ class SenseAPI(AtlanticWaveManager):
         #  - call cancel if a valid reduction is received,
         #    - cancel will deal with removing the delta from flows and DB
         #  - Return status
+        delta = None
+        status = None
         if reduction != None:
             parsed_reduction = self._parse_delta_reduction(reduction)
             delta = self._get_delta_by_id(parsed_reduction)
@@ -583,38 +593,144 @@ class SenseAPI(AtlanticWaveManager):
                 # Doesn't exist anymore 
                 return None, HTTP_NOT_FOUND
             status = self.cancel(delta)
-            return delta, status
 
         # If addition:
         #  - parse addition
         #  - See if it's possible (BW, VLANs, etc.)
         #  - If possible, save off this new delta and return good status
-        #  - If not possible, return failed status
+        #  - If not possible, return failed status - raises errors
         else:
-            parsed_addition = self._parse_delta_addition(addition)
-            SPDSPDSPD                
-            pass
-        
-
-        # Put into DB
-        pass
+            parsed_addition_policy = self._parse_delta_addition(addition)
+            bd = RuleManager().test_add_rule(parsed_addition_policy)
+            status = STATUS_ACCEPTED
+            self._put_delta(delta_id, args, parsed_addition_policy,
+                            model_id, status)
+            delta = self._get_delta_by_id(delta_id)
+            
+        return delta, status
 
     def _parse_delta_addition(self, raw_addition):
         # This is based on part of nrmDelta.processDelta() from senserm_oscars's
         # sensrm_delta.py.
-        # Parses the raw_addition, and returns back a dictionary
-        #  - "rules":SDX Rule(s) that are need
-        #  - "deltaid":Delta ID
+        # Parses the raw_addition, and returns back the rule that will make the
+        # addition.
+        #
+        # ASSUMPTION: only one rule is being added with each addition. Changes
+        # would be needed if multiple rules are in each addition.
         #FIXME: anything else that needs to be returned back?
-        pass
+
+        endpoints = []
+        starttime = None
+        endtime = None
+        bandwidth = 100*8000000 # 100mbps
+        policy = None
+
+        gr = rdflib.Graph()
+        result = gr.parse(data=raw_addition, format='ttl')
+        #FIXME: check the result
+        
+        # Build up list of important information:
+        #  - endpoints (switch, port, VLAN)
+        #  - start and end times
+        #  - bandwidth
+        for s,p,o in gr:
+            if awaveurn in str(s):
+                # bandwidth - First as "vlanport" or "vlantag" is also in string
+                if "service+bw" in str(s):
+                    if "reservableCapacity" in str(p):
+                        bandwidth = o
+                
+                # endpoints
+                elif "vlanport" in str(s) or "vlantag" in str(s):
+                    # VLAN
+                    if "value" in str(p):
+                        vlan = int(o)
+                        
+                        # Endpoint name
+                        epname = s.split("::")[1].split(":+:")[0]
+                        #Wow that's messy
+                    
+                        # Look up switch from port name
+                        ep, switchname = str(epname).split('-')
+                        port = self.current_topo[switchname][ep][switchname]
+                        endpoint = {}
+                        endpoint['switch'] = switchname
+                        endpoint['port'] = port
+                        endpoint['vlan'] = vlan
+                        endpoints.append(endpoint)
+
+                # starttime and endtime
+                elif "lifetime" in str(s):
+                    if "start" in str(p):
+                        starttime = o
+                    if "end" in str(p):
+                        endtime = o
+
+
+        # Normalized the picked out information:
+        #  - start and end times may not be selected, so select for them
+        if starttime != None:
+            starttime = datetime.strptime(starttime,
+                                          rfc3339format)
+        else:
+            starttime = datetime.now().strftime(rfc3339format)
+
+        if endtime != None:
+            endtime = datetime.strptime(starttime,
+                                        rfc3339format)
+        else:
+            endtime = MAXENDTIME
+        #FIXME: Need to validate 
+
+        # Create AWave/SDX rules for the delta information
+        #  - if 2 endpoints, L2TunnelPolicy
+        #  - if >2 endpoints, L2MultipointPolicy
+        if len(endpoints) < 2:
+            raise SenseAPIError("There are fewer than 2 endpoints: %s" %
+                                endpoints)
+        elif len(endpoints) == 2:
+            rule = {L2TunnelPolicy.get_policy_name():
+                    {"starttime":starttime,
+                     "endtime":endtime,
+                     "srcswitch":endpoints[0]['switch'],
+                     "dstswitch":endpoints[1]['switch'],
+                     "srcport":endpoints[0]['port'],
+                     "dstport":endpoints[1]['port'],
+                     "srcvlan":endpoints[0]['vlan'],
+                     "dstvlan":endpoints[1]['vlan'],
+                     "bandwidth":bandwidth}}                     
+            policy = L2TunnelPolicy(self.userid, rule)
+
+        elif len(endpoints) > 2:
+            rule = {L2MultipointPolicy.get_policy_name():
+                    {"starttime":starttime,
+                     "endtime":endtime,
+                     "bandwidth":bandwidth,
+                     "endpoints":endpoints}}
+            policy = L2MultipointPolicy(self.userid, rule)        
+
+        # Return the new Policy
+        return policy
 
     def _parse_delta_reduction(self, raw_reduction):
         # This is basically the same as nrmDelta.processDeltaReduction() from
         # senserm_oscars's senserm_delta.py.
         # Parses the raw_reduction, and returns back the deltaid that should be
         # cancelled.
-        pass
-    
+
+        cancelID = ""
+        gr = rdflib.Graph()
+        result = gr.parse(data=raw_reduction, format='ttl')
+        #FIXME: check the result
+
+        for s,p,o in gr:
+            if awaveurn in str(s):
+                if "existsDuring" in str(s):
+                    subj2 = s.split("conn+")
+                    subj3 = subj2[1].split(":")
+                    cancelID = subj3[0]
+                    return cancelID
+        return cancelID
     
     def get_delta(self, deltaid):
         ''' Get the delta.
@@ -749,7 +865,6 @@ class SenseAPI(AtlanticWaveManager):
 
         # Unpickle all of them.
         for delta in deltas:
-            print "#### RAW DELTA: %s" % delta
             d = {'delta_id':delta['delta_id'],
                  'raw_request':pickle.loads(str(delta['raw_request'])),
                  'sdx_rule':pickle.loads(str(delta['sdx_rule'])),

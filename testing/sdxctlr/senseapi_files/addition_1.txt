@@ -1,0 +1,130 @@
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links-connection_1:vlan+3603>
+        a       <http://schemas.ogf.org/mrs/2013/12/topology#SwitchingSubnet> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#tag>
+                "l2path+urn:ogf:network:service+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links:connection_1" ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE> ;
+        <http://schemas.ogf.org/nml/2013/03/base#encoding>
+                <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3603> , <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3603> ;
+        <http://schemas.ogf.org/nml/2013/03/base#labelSwapping>
+                "true" .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3603:service+bw>
+        a       rdfs:Resource , owl:Thing , <http://schemas.ogf.org/mrs/2013/12/topology#BandwidthService> ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#availableCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#granularity>
+                "1000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#maximumCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#priority>
+                "0" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#reservableCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#type>
+                "guaranteedCapped" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#unit>
+                "bps" .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3603:label+3603>
+        a       <http://schemas.ogf.org/nml/2013/03/base#Label> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/nml/2013/03/base#labeltype>
+                <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+        <http://schemas.ogf.org/nml/2013/03/base#value>
+                "3603" .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#tag>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/mrs/2013/12/topology#tag> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/mrs/2013/12/topology#tag> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+>
+        <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3603> .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#priority>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/mrs/2013/12/topology#priority> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/mrs/2013/12/topology#priority> .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#maximumCapacity>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/mrs/2013/12/topology#maximumCapacity> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/mrs/2013/12/topology#maximumCapacity> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3603>
+        a       <http://schemas.ogf.org/nml/2013/03/base#BidirectionalPort> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#tag>
+                "l2path+urn:ogf:network:service+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links:connection_1" ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links-connection_1:vlan+3603> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasLabel>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3603:label+3603> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasService>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3603:service+bw> ;
+        <http://schemas.ogf.org/nml/2013/03/base#isAlias>
+                <urn:ogf:network:fnal.gov:2013:s0:1_1:chic-cr5:vlanport+3603> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+>
+        <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3603> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3603:label+3603>
+        a       <http://schemas.ogf.org/nml/2013/03/base#Label> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/nml/2013/03/base#labeltype>
+                <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+        <http://schemas.ogf.org/nml/2013/03/base#value>
+                "3603" .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE>
+        <http://schemas.ogf.org/mrs/2013/12/topology#providesSubnet>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links-connection_1:vlan+3603> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3603>
+        a       <http://schemas.ogf.org/nml/2013/03/base#BidirectionalPort> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#tag>
+                "l2path+urn:ogf:network:service+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links:connection_1" ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links-connection_1:vlan+3603> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasLabel>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3603:label+3603> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasService>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3603:service+bw> ;
+        <http://schemas.ogf.org/nml/2013/03/base#isAlias>
+                <urn:ogf:network:anl.gov:2013:s0:1_1:star-cr5:vlanport+3603> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3603:service+bw>
+        a       owl:Thing , <http://schemas.ogf.org/mrs/2013/12/topology#BandwidthService> , rdfs:Resource ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#availableCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#granularity>
+                "1000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#maximumCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#priority>
+                "0" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#reservableCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#type>
+                "guaranteedCapped" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#unit>
+                "bps" .
+
+owl:Nothing  rdfs:subClassOf  <http://schemas.ogf.org/nml/2013/03/base#Lifetime> , <http://schemas.ogf.org/nsi/2013/12/services/definition#ServiceDefinition> .
+
+<http://schemas.ogf.org/nml/2013/03/base#isAlias>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/nml/2013/03/base#isAlias> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/nml/2013/03/base#isAlias> .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#granularity>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/mrs/2013/12/topology#granularity> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/mrs/2013/12/topology#granularity> .
