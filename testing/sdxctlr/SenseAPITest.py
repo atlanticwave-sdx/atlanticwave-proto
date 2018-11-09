@@ -17,7 +17,7 @@ from shared.L2TunnelPolicy import L2TunnelPolicy
 
 from sdxctlr.RestAPI import RestAPI
 DB_FILE = ":memory:"
-BASIC_MANIFEST_FILE = "senseapi_manifests/twoswitch-onelc-noncorsa.manifest"
+BASIC_MANIFEST_FILE = "senseapi_files/twoswitch-onelc-noncorsa.manifest"
 
 def add_rule(param):
     # For Rule Manager
@@ -408,12 +408,54 @@ class ModelTest(unittest.TestCase):
 
         model = api.generate_model()
         #print "MODEL\n%s\n\n\n" % str(model)
+
+        f = open('model.txt', 'w')
+        f.write(model)
         #import json
         #print "FULL TOPOLOGY\n%s\n\n\n" % json.dumps(tm.get_topology().nodes(
         #    data=True), sort_keys=True, indent=4)
         #print "SIMPLIFIED TOPOLOGY\n%s\n\n\n" % json.dumps(api.simplified_topo.nodes(
         #    data=True), sort_keys=True, indent=4)
 #FIXME: What else?
-        
+
+class DeltaParseTest(unittest.TestCase):
+    def setup(self):
+        pass
+
+    def test_parse_delta_reduction(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        reduction_filename = "senseapi_files/reduction_1.txt"
+        with open(reduction_filename, 'r') as reduction_file:
+            reduction = reduction_file.read()
+
+        # from the file, direclty
+        reduction_id = "ad6d9b50-8beb-48aa-8523-9303c075e942" 
+        result = api._parse_delta_reduction(reduction)
+        self.failUnlessEqual(result, reduction_id)
+
+
+    def test_parse_delta_addition(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        addition_filename = "senseapi_files/addition_1.txt"
+        with open(addition_filename, 'r') as addition_file:
+            addition = addition_file.read()
+
+
+        result = api._parse_delta_addition(addition)
+
+
+
 if __name__ == '__main__':
     unittest.main()
