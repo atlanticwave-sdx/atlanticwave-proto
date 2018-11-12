@@ -18,6 +18,11 @@
       "type":"dtn",
       "friendlyname":"miadtn",
       "location":"0,0",
+      "available_vlans":"1-1000,2000-2100"},
+    "miadtn2": {
+      "type":"dtn",
+      "friendlyname":"miadtn",
+      "location":"0,0",
       "available_vlans":"1-1000,2000-2100"}
   },
   "localcontrollers": {
@@ -89,7 +94,12 @@
       	      "portnumber": 3,
 	          "speed": 8000000000,
 	          "destination": "br1"
-	        }
+	        },
+            {
+              "portnumber": 4,
+              "speed": 8000000000,
+              "destination": "miadtn2"
+            }
 	        ],
           "internalconfig": {
             "corsaurl": "",

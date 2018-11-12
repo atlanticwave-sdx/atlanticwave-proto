@@ -14,8 +14,12 @@ from sdxctlr.TopologyManager import TopologyManager
 from sdxctlr.RuleManager import RuleManager
 
 from shared.L2TunnelPolicy import L2TunnelPolicy
+from shared.L2MultipointPolicy import L2MultipointPolicy
 
-from sdxctlr.RestAPI import RestAPI
+from datetime import datetime
+from shared.constants import rfc3339format, MAXENDTIME
+
+
 DB_FILE = ":memory:"
 BASIC_MANIFEST_FILE = "senseapi_files/twoswitch-onelc-noncorsa.manifest"
 
@@ -418,7 +422,7 @@ class ModelTest(unittest.TestCase):
         #    data=True), sort_keys=True, indent=4)
 #FIXME: What else?
 
-class DeltaParseTest(unittest.TestCase):
+class DeltaTest(unittest.TestCase):
     def setup(self):
         pass
 
@@ -440,7 +444,7 @@ class DeltaParseTest(unittest.TestCase):
         self.failUnlessEqual(result, reduction_id)
 
 
-    def test_parse_delta_addition(self):
+    def test_parse_delta_addition_l2tunnel(self):
         tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
         rm = RuleManager(DB_FILE,
                          send_user_rule_breakdown_add=add_rule,
@@ -453,8 +457,87 @@ class DeltaParseTest(unittest.TestCase):
             addition = addition_file.read()
 
 
+        starttime = datetime.now().strftime(rfc3339format)
+        endtime = MAXENDTIME
+        fwd_expected_addition_json = {L2TunnelPolicy.get_policy_name():
+                                      {"starttime": starttime,
+                                       "endtime": endtime,
+                                       "srcswitch": "br1",
+                                       "dstswitch": "br2",
+                                       "srcport": 2,
+                                       "dstport": 2,
+                                       "srcvlan": 3603,
+                                       "dstvlan": 3603,
+                                       "bandwidth":1000000000}}
+        rev_expected_addition_json = {L2TunnelPolicy.get_policy_name():
+                                      {"starttime": starttime,
+                                       "endtime": endtime,
+                                       "srcswitch": "br2",
+                                       "dstswitch": "br1",
+                                       "srcport": 2,
+                                       "dstport": 2,
+                                       "srcvlan": 3603,
+                                       "dstvlan": 3603,
+                                       "bandwidth":1000000000}}
+        fwd_expected_addition_policy = L2TunnelPolicy(api.userid,
+                                                    fwd_expected_addition_json)
+        rev_expected_addition_policy = L2TunnelPolicy(api.userid,
+                                                    rev_expected_addition_json)
+
         result = api._parse_delta_addition(addition)
 
+        fwd_eq = (result.json_rule == fwd_expected_addition_policy.json_rule)
+        rev_eq = (result.json_rule == rev_expected_addition_policy.json_rule)
+
+        #print "\nEXPECTED: %s" % fwd_expected_addition_policy.json_rule
+        #print "EXPECTED: %s" % rev_expected_addition_policy.json_rule
+        #print "RECEIVED: %s" % result.json_rule
+        #print "fwd_eq: %s" % fwd_eq
+        #print "rev_eq: %s" % rev_eq
+        self.assertTrue(fwd_eq or rev_eq)
+        #FIXME: how to test this?
+
+    def test_parse_delta_addition_l2multipoint(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        addition_filename = "senseapi_files/addition_2.txt"
+        with open(addition_filename, 'r') as addition_file:
+            addition = addition_file.read()
+
+
+        starttime = datetime.now().strftime(rfc3339format)
+        endtime = MAXENDTIME
+        endpoints = [{'switch':'br2', 'port':4, 'vlan':3603},
+                     {'switch':'br2', 'port':2, 'vlan':3603},
+                     {'switch':'br1', 'port':2, 'vlan':3603}]
+                     
+        expected_addition_json = {L2MultipointPolicy.get_policy_name():
+                                      {"starttime": starttime,
+                                       "endtime": endtime,
+                                       "bandwidth":1000000000,
+                                       "endpoints":endpoints}}
+        expected_addition_policy = L2MultipointPolicy(api.userid,
+                                                      expected_addition_json)
+
+        result = api._parse_delta_addition(addition)
+
+        print "\nEXPECTED: %s" % expected_addition_policy.json_rule
+        print "RECEIVED: %s\n" % result.json_rule
+
+        #e = json.loads(dict(expected_addition_policy.json_rule))
+        #r = dict(result.json_rule)
+        #self.assertEqual(e, r)
+        self.assertEqual(expected_addition_policy.start_time,
+                         result.start_time)
+        self.assertEqual(expected_addition_policy.stop_time,
+                         result.stop_time)
+        self.assertEqual(expected_addition_policy.endpoints.sort(),
+                         result.endpoints.sort())
 
 
 if __name__ == '__main__':
