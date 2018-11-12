@@ -14,7 +14,7 @@ COPY run_sdx.sh .
 COPY ./*.manifest ./
 
 # This really should point to a particular version
-RUN git clone https://github.com/RENCI-NRIG/atlanticwave-sdx/atlanticwave-proto.git
+RUN git clone https://github.com/RENCI-NRIG/atlanticwave-proto.git
 RUN pip install -r atlanticwave-proto/requirements.txt
 
 CMD /bin/bash run_sdx.sh; /bin/bash
