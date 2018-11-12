@@ -638,7 +638,7 @@ class SenseAPI(AtlanticWaveManager):
                 # bandwidth - First as "vlanport" or "vlantag" is also in string
                 if "service+bw" in str(s):
                     if "reservableCapacity" in str(p):
-                        bandwidth = o
+                        bandwidth = int(o)
                 
                 # endpoints
                 elif "vlanport" in str(s) or "vlantag" in str(s):
