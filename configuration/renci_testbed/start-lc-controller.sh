@@ -1,11 +1,10 @@
 #/bin/bash
 
-LC_SITE=$1
-LC_CONTAINER="lc-${LC_SITE}"
+LC_SITE="lc-$1"
 
 # Local Controller
-cd ../localctlr/
-docker rm ${CONTAINER}
+cd atlanticwave-proto/localctlr/
+docker rm ${LC_SITE}
 export SDXIPVAL="10.14.11.254"
 docker run -e MANIFEST="/renci_ben.manifest" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p 6680:6680 -dit --name=${LC_SITE} lc_container
 

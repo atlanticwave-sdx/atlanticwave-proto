@@ -8,18 +8,19 @@ sudo yum -y install git docker.io
 sudo usermod -aG docker $USER
 
 # git work
-git clone https://github.com/RENCI-NRIG/atlanticwave-sdx/atlanticwave-proto.git
-git checkout renci_testbed_setup
+git clone https://github.com/RENCI-NRIG/atlanticwave-proto.git
 
 # Docker work: build Local Controller containers
 cd ~/atlanticwave-proto/
+git checkout renci_testbed_setup
 cp configuration/renci_testbed/renci_ben.manifest docker/lc_container/
 
-sudo systemctl restart docker
+#sudo systemctl restart docker
+sudo service docker restart 
 
-cd ../lc_container
+cd docker/lc_container
 sudo docker build -t lc_container .
-rm renci_ben.manifest 
+rm -f renci_ben.manifest 
 
 # Copy over run scripts
 cd ~/atlanticwave-proto/configuration/renci_testbed
