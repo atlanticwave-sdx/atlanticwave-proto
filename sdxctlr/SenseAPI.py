@@ -30,6 +30,8 @@ import ssl
 import networkx as nx
 from networkx.readwrite import json_graph
 import json
+import zlib
+import base64
 
 # Multithreading
 from threading import Thread
@@ -571,12 +573,12 @@ class SenseAPI(AtlanticWaveManager):
         last_modified = args['lastModified']
         model_id = args['modelId']
 
-        if 'reduction' in keys:
-            reduction = args['reduction']
+        if 'reduction' in keys and len(args['reduction']) > 0:
+            reduction = self._decode_b64_gunzip(args['reduction'])
             addition = None #FIXME: is this true? I don't think so.
         else:
             reduction = None
-            addition = args['addition']
+            addition = self._decode_b64_gunzip(args['addition'])
         
         # If reduction:
         #  - parse reduction
@@ -588,11 +590,15 @@ class SenseAPI(AtlanticWaveManager):
         status = None
         if reduction != None:
             parsed_reduction = self._parse_delta_reduction(reduction)
+            self.logger.info("Reduction %s to be removed" % parsed_reduction)
             delta = self._get_delta_by_id(parsed_reduction)
+            #print "delta_by_id      = %s" % delta
             if delta == None:
                 # Doesn't exist anymore 
                 return None, HTTP_NOT_FOUND
-            status = self.cancel(delta)
+            status = self.cancel(parsed_reduction)
+            self.logger.info("Reduction %s canceled %s" % (parsed_reduction,
+                                                           status))
 
         # If addition:
         #  - parse addition
@@ -838,7 +844,7 @@ class SenseAPI(AtlanticWaveManager):
               - Dictionary containing delta. See comment at top of SenseAPI 
                 definition for keys. 
         '''
-        raw_delta = self.delta_table.find_one(delta_id=delta_id)
+        raw_delta = self.delta_table.find_one(delta_id=unicode(delta_id))
         if raw_delta == None:
             return None
         
@@ -1013,6 +1019,24 @@ class SenseAPI(AtlanticWaveManager):
         #FIXME: How to do this?
 
         pass
+
+    def _encode_gzip_b64(self, data):
+        ''' Helper function that handles gziping then encoding into base64 
+            string.
+            Based on https://bitbucket.org/berkeleylab/sensenrm-oscars/src/d09db31aecbe7654f03f15eed671c0675c5317b5/sensenrm_server.py?at=master&fileviewer=file-view-default
+        '''
+        gzip_compress = zlib.compressobj(9, zlib.DEFLATED, zlib.MAX_WBITS | 16)
+        gzipped_data = gzip_compress.compress(data) + gzip_compress.flush()
+        b64_gzip_data = base64.b64encode(gzipped_data).decode()
+        return b64_gzip_data
+
+    def _decode_b64_gunzip(self, data):
+        ''' Helper function that handles decoding then unzipping data.
+            Based on https://bitbucket.org/berkeleylab/sensenrm-oscars/src/d09db31aecbe7654f03f15eed671c0675c5317b5/sensenrm_server.py?at=master&fileviewer=file-view-default
+        '''
+        unzipped_data = zlib.decompress(base64.b64decode(data),
+                                        16+zlib.MAX_WBITS)
+        return unzipped_data
 
 
 class SenseAPIResource(Resource):
