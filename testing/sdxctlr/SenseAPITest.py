@@ -526,8 +526,8 @@ class DeltaTest(unittest.TestCase):
 
         result = api._parse_delta_addition(addition)
 
-        print "\nEXPECTED: %s" % expected_addition_policy.json_rule
-        print "RECEIVED: %s\n" % result.json_rule
+        #print "\nEXPECTED: %s" % expected_addition_policy.json_rule
+        #print "RECEIVED: %s\n" % result.json_rule
 
         #e = json.loads(dict(expected_addition_policy.json_rule))
         #r = dict(result.json_rule)
@@ -540,5 +540,88 @@ class DeltaTest(unittest.TestCase):
                          result.endpoints.sort())
 
 
+    def test_process_delta_reduction_nonexistant(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        full_delta_filename = "senseapi_files/delta_red_1.txt"
+        with open(full_delta_filename, 'r') as delta_file:
+            deltadata = eval(delta_file.read())
+
+        # This one should return 404 - Non-existant
+        delta, status = api.process_deltas(deltadata)
+
+        self.assertEqual(None, delta)
+        self.assertEqual(HTTP_NOT_FOUND, status)
+
+    def test_process_delta_reduction(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        full_delta_filename = "senseapi_files/delta_red_1.txt"
+        with open(full_delta_filename, 'r') as delta_file:
+            deltadata = eval(delta_file.read())
+
+        # Install that rule
+        delta_id = "ad6d9b50-8beb-48aa-8523-9303c075e942"
+        raw_request = "Shoudln't be that important for this test"
+        sdx_rule = "Also not important"
+        model_id = "12345"
+        api._put_delta(delta_id, raw_request, sdx_rule, model_id)
+
+        #deltas = api.delta_table.find()
+        #print "\n\nDELTAS:"
+        #for d in deltas:
+        #    print "%s" % d
+
+        #print "\n%s" % delta_id
+        raw_delta = api._get_delta_by_id(delta_id)
+        self.assertNotEqual(None, raw_delta)
+
+        # Try removing it again
+        delta, status = api.process_deltas(deltadata)
+        #print "\nDelta:  %s" % delta
+        #print "Status: %s\n" % status
+        
+        raw_delta = api._get_delta_by_id(delta_id)
+        #print "\nRAW_DELTA: %s" % raw_delta
+        self.assertEqual(None, raw_delta)
+    
+
+    def test_process_delta_addition(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        full_delta_filename = "senseapi_files/delta_add_1.txt"
+        with open(full_delta_filename, 'r') as delta_file:
+            deltadata = eval(delta_file.read())
+        # Install rule
+        delta_id = "ad6d9b50-8beb-48aa-8523-9303c075e942"
+        delta, status = api.process_deltas(deltadata)
+        raw_delta = api._get_delta_by_id(delta_id)
+        self.assertNotEqual(None, raw_delta)
+        
+        # Remove it
+        full_delta_filename = "senseapi_files/delta_red_1.txt"
+        with open(full_delta_filename, 'r') as delta_file:
+            deltadata = eval(delta_file.read())
+
+        delta, status = api.process_deltas(deltadata)
+        raw_delta = api._get_delta_by_id(delta_id)
+        self.assertEqual(None, raw_delta)
+
+    
 if __name__ == '__main__':
     unittest.main()
