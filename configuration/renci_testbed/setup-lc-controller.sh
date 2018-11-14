@@ -15,7 +15,8 @@ cd ~/atlanticwave-proto/
 git checkout renci_testbed_setup
 cp configuration/renci_testbed/renci_ben.manifest docker/lc_container/
 
-sudo systemctl restart docker
+#sudo systemctl restart docker
+sudo service docker restart
 
 cd docker/lc_container
 sudo docker build -t lc_container .
