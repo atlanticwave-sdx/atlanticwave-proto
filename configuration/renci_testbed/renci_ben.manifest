@@ -26,7 +26,7 @@
       "shortname": "lc-renci",
       "credentials": "rencipwd",
       "location": "35.939796, -79.018203",
-      "lcip": "10.14.11.101",
+      "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55781,
         "openflowport": 6681
@@ -36,7 +36,7 @@
           "name":"corsa1-renci",
           "friendlyname":"RENCI Corsa DP2100",
           "ip": "10.14.11.201",
-          "dpid":"1",
+          "dpid":"7573453565774",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -79,7 +79,7 @@
       "shortname": "lc-duke",
       "credentials": "dukepwd",
       "location":"36.003614, -78.938755",
-      "lcip": "10.14.11.102",
+      "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55782,
         "openflowport": 6682
@@ -89,7 +89,7 @@
           "name":"corsa1-duke",
           "friendlyname":"DUKE Corsa DP2100",
           "ip": "10.14.11.202",
-          "dpid": "1",
+          "dpid": "279552153404237",
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -132,7 +132,7 @@
       "shortname": "lc-unc",
       "credentials": "uncpwd",
       "location":"35.903395, -79.048370",
-      "lcip": "10.14.11.103",
+      "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55783,
         "openflowport": 6683
@@ -142,7 +142,7 @@
           "name":"corsa1-unc",
           "friendlyname":"UNC Corsa DP2100",
           "ip": "10.14.11.203",
-          "dpid":"1",
+          "dpid":"236202656471118",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -185,7 +185,7 @@
       "shortname": "lc-ncsu",
       "credentials": "ncsupwd",
       "location": "35.773395, -78.677730",
-      "lcip": "10.14.11.104",
+      "lcip": "127.0.0.1",
       "internalconfig": {
         "ryucxninternalport": 55784,
         "openflowport": 6684
@@ -195,7 +195,7 @@
           "name":"corsa1-ncsu",
           "friendlyname":"NCSU Corsa DP2100",
           "ip": "10.14.11.204",
-          "dpid":"1",
+          "dpid":"209215245675848",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
