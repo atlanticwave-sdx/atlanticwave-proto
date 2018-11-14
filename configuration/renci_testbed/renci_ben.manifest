@@ -28,7 +28,7 @@
       "location": "35.939796, -79.018203",
       "lcip": "10.14.11.101",
       "internalconfig": {
-        "ryucxninternalport": 55780,
+        "ryucxninternalport": 55781,
         "openflowport": 6681
       },
       "switchinfo": [
@@ -81,7 +81,7 @@
       "location":"36.003614, -78.938755",
       "lcip": "10.14.11.102",
       "internalconfig": {
-        "ryucxninternalport": 55780,
+        "ryucxninternalport": 55782,
         "openflowport": 6682
       },
       "switchinfo": [
@@ -134,7 +134,7 @@
       "location":"35.903395, -79.048370",
       "lcip": "10.14.11.103",
       "internalconfig": {
-        "ryucxninternalport": 55780,
+        "ryucxninternalport": 55783,
         "openflowport": 6683
       },
       "switchinfo": [
@@ -187,7 +187,7 @@
       "location": "35.773395, -78.677730",
       "lcip": "10.14.11.104",
       "internalconfig": {
-        "ryucxninternalport": 55780,
+        "ryucxninternalport": 55784,
         "openflowport": 6684
       },
       "switchinfo": [
