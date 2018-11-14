@@ -443,6 +443,18 @@ class DeltaTest(unittest.TestCase):
         result = api._parse_delta_reduction(reduction)
         self.failUnlessEqual(result, reduction_id)
 
+    def test_bad_parse_delta_reduction(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        reduction = "jibberish!"
+
+        self.assertRaises(SenseAPIClientError,
+                          api._parse_delta_reduction, reduction)
 
     def test_parse_delta_addition_l2tunnel(self):
         tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
@@ -539,6 +551,21 @@ class DeltaTest(unittest.TestCase):
         self.assertEqual(expected_addition_policy.endpoints.sort(),
                          result.endpoints.sort())
 
+    def test_bad_parse_delta_addition(self):
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        addition = "jibberish!"
+
+        self.assertRaises(SenseAPIClientError,
+                          api._parse_delta_addition, addition)
+
+
+
 
     def test_process_delta_reduction_nonexistant(self):
         tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
@@ -621,6 +648,78 @@ class DeltaTest(unittest.TestCase):
         delta, status = api.process_deltas(deltadata)
         raw_delta = api._get_delta_by_id(delta_id)
         self.assertEqual(None, raw_delta)
+
+    def test_bad_process_reduction_decode(self):
+        # Testing invalid reduction data
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        full_delta_filename = "senseapi_files/delta_red_bad_1.txt"
+        with open(full_delta_filename, 'r') as delta_file:
+            deltadata = eval(delta_file.read())
+
+        delta,status = api.process_deltas(deltadata)
+
+        self.assertEquals(delta, None)
+        self.assertEquals(status, HTTP_BAD_REQUEST)
+
+    def test_bad_process_addition_decode(self):
+        # Testing invalid reduction data
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        full_delta_filename = "senseapi_files/delta_add_bad_1.txt"
+        with open(full_delta_filename, 'r') as delta_file:
+            deltadata = eval(delta_file.read())
+
+        delta,status = api.process_deltas(deltadata)
+
+        self.assertEquals(delta, None)
+        self.assertEquals(status, HTTP_BAD_REQUEST)
+        
+    def test_bad_process_reduction_invalid_reduction(self):
+        # Testing invalid reduction data
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        full_delta_filename = "senseapi_files/delta_red_bad_2.txt"
+        with open(full_delta_filename, 'r') as delta_file:
+            deltadata = eval(delta_file.read())
+
+        delta,status = api.process_deltas(deltadata)
+
+        self.assertEquals(delta, None)
+        self.assertEquals(status, HTTP_BAD_REQUEST)
+
+    def test_bad_process_addition_invalid_addition(self):
+        # Testing invalid reduction data
+        tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
+        rm = RuleManager(DB_FILE,
+                         send_user_rule_breakdown_add=add_rule,
+                         send_user_rule_breakdown_remove=rm_rule)
+
+        api = SenseAPI(DB_FILE)
+
+        full_delta_filename = "senseapi_files/delta_add_bad_2.txt"
+        with open(full_delta_filename, 'r') as delta_file:
+            deltadata = eval(delta_file.read())
+
+        delta,status = api.process_deltas(deltadata)
+
+        self.assertEquals(delta, None)
+        self.assertEquals(status, HTTP_BAD_REQUEST)
 
     
 if __name__ == '__main__':
