@@ -81,6 +81,19 @@ awaveurn = "urn:ogf:network:atlanticwave-sdx.net"
 
 class SenseAPIError(Exception):
     pass
+
+class SenseAPIB64Error(SenseAPIError):
+    ''' For Base64-related errors. Usually debug errors. '''
+    pass
+
+class SenseAPIClientError(SenseAPIError):
+    ''' Catch all for Client-side errors. Likley has subclasses. '''
+    pass
+
+class SenseAPIArgumentError(SenseAPIClientError):
+    ''' For errors with arguments being passed in. '''
+    pass
+
         
 
 
@@ -563,22 +576,34 @@ class SenseAPI(AtlanticWaveManager):
         if ('id' not in keys or
             'lastModified' not in keys or
             'modelId' not in keys):
-            raise SenseAPIError("Missing id, lastModified, or modelId: %s" %
-                                keys)
+            raise SenseAPIArgumentError("Missing id, lastModified, or modelId: %s" %
+                                        keys)
         if not ('reduction' in keys !=
                 'addition' in keys): # poor man's xor - we only want one.
-            raise SenseAPIError("Missing reduction or addition: %s" % keys)
+            raise SenseAPIArgumentError("Missing reduction or addition: %s" %
+                                        keys)
         
         delta_id = args['id']
         last_modified = args['lastModified']
         model_id = args['modelId']
 
         if 'reduction' in keys and len(args['reduction']) > 0:
-            reduction = self._decode_b64_gunzip(args['reduction'])
+            try:
+                reduction = self._decode_b64_gunzip(args['reduction'])
+            except Exception as e:
+                self.dlogger.error("Decoding error on Reduction: %s:%s" %
+                                   (e, args['reduction']))
+                return None, HTTP_BAD_REQUEST
+                                   
             addition = None #FIXME: is this true? I don't think so.
         else:
             reduction = None
-            addition = self._decode_b64_gunzip(args['addition'])
+            try:
+                addition = self._decode_b64_gunzip(args['addition'])
+            except Exception as e:
+                self.dlogger.error("Decoding error on Reduction: %s:%s" %
+                                   (e, args['reduction']))
+                return None, HTTP_BAD_REQUEST
         
         # If reduction:
         #  - parse reduction
@@ -589,7 +614,11 @@ class SenseAPI(AtlanticWaveManager):
         delta = None
         status = None
         if reduction != None:
-            parsed_reduction = self._parse_delta_reduction(reduction)
+            try:
+                parsed_reduction = self._parse_delta_reduction(reduction)
+            except SenseAPIClientError as e:
+                self.dlogger.error("process_deltas: Received %s" % e)
+                return None, HTTP_BAD_REQUEST
             self.logger.info("Reduction %s to be removed" % parsed_reduction)
             delta = self._get_delta_by_id(parsed_reduction)
             #print "delta_by_id      = %s" % delta
@@ -606,7 +635,11 @@ class SenseAPI(AtlanticWaveManager):
         #  - If possible, save off this new delta and return good status
         #  - If not possible, return failed status - raises errors
         else:
-            parsed_addition_policy = self._parse_delta_addition(addition)
+            try:
+                parsed_addition_policy = self._parse_delta_addition(addition)
+            except SenseAPIClientError as e:
+                self.dlogger.error("process_deltas: Received %s" % e)
+                return None, HTTP_BAD_REQUEST
             bd = RuleManager().test_add_rule(parsed_addition_policy)
             status = STATUS_ACCEPTED
             self._put_delta(delta_id, args, parsed_addition_policy,
@@ -632,9 +665,16 @@ class SenseAPI(AtlanticWaveManager):
         policy = None
 
         gr = rdflib.Graph()
-        result = gr.parse(data=raw_addition, format='ttl')
-        #FIXME: check the result
-        
+        try:
+            result = gr.parse(data=raw_addition, format='ttl')
+            #FIXME: check the result
+        except Exception as e:
+            self.dlogger.error(
+                "_parse_delta_addition: Error on parsing graph: %s" % e)
+            self.dlogger.error("  Addition: %s" % raw_addition)
+            raise SenseAPIClientError("Addition unparsable %s:%s" %
+                                      (e, raw_addition))
+            
         # Build up list of important information:
         #  - endpoints (switch, port, VLAN)
         #  - start and end times
@@ -692,28 +732,46 @@ class SenseAPI(AtlanticWaveManager):
         #  - if 2 endpoints, L2TunnelPolicy
         #  - if >2 endpoints, L2MultipointPolicy
         if len(endpoints) < 2:
-            raise SenseAPIError("There are fewer than 2 endpoints: %s" %
-                                endpoints)
+            raise SenseAPIClientError("There are fewer than 2 endpoints: %s" %
+                                      endpoints)
         elif len(endpoints) == 2:
-            rule = {L2TunnelPolicy.get_policy_name():
-                    {"starttime":starttime,
-                     "endtime":endtime,
-                     "srcswitch":endpoints[0]['switch'],
-                     "dstswitch":endpoints[1]['switch'],
-                     "srcport":endpoints[0]['port'],
-                     "dstport":endpoints[1]['port'],
-                     "srcvlan":endpoints[0]['vlan'],
-                     "dstvlan":endpoints[1]['vlan'],
-                     "bandwidth":bandwidth}}                     
-            policy = L2TunnelPolicy(self.userid, rule)
+            try:
+                rule = {L2TunnelPolicy.get_policy_name():
+                        {"starttime":starttime,
+                         "endtime":endtime,
+                         "srcswitch":endpoints[0]['switch'],
+                         "dstswitch":endpoints[1]['switch'],
+                         "srcport":endpoints[0]['port'],
+                         "dstport":endpoints[1]['port'],
+                         "srcvlan":endpoints[0]['vlan'],
+                         "dstvlan":endpoints[1]['vlan'],
+                         "bandwidth":bandwidth}}
+                policy = L2TunnelPolicy(self.userid, rule)
+            except Exception as e:
+                self.dlogger.error(
+                    "_parse_delta_addition: Error on L2TunnelPolicy creation - %s:%s:%s:%s" %
+                    (starttime, endtime, bandwidth, endpoints))
+                raise SenseAPIClientError(
+                    "Invalid parameters for L2TunnelPolicy - %s:%s:%s:%s" %
+                    (starttime, endtime, bandwidth, endpoints))
 
         elif len(endpoints) > 2:
-            rule = {L2MultipointPolicy.get_policy_name():
-                    {"starttime":starttime,
-                     "endtime":endtime,
-                     "bandwidth":bandwidth,
-                     "endpoints":endpoints}}
-            policy = L2MultipointPolicy(self.userid, rule)        
+            try:
+                rule = {L2MultipointPolicy.get_policy_name():
+                        {"starttime":starttime,
+                         "endtime":endtime,
+                         "bandwidth":bandwidth,
+                         "endpoints":endpoints}}
+                policy = L2MultipointPolicy(self.userid, rule)
+            except Exception as e:
+                self.dlogger.error(
+                    "_parse_delta_addition: Error on L2MultipointPolicy creation - %s:%s:%s:%s" %
+                    (starttime, endtime, bandwidth, endpoints))
+                raise SenseAPIClientError(
+                    "Invalid parameters for L2MultipointPolicy - %s:%s:%s:%s" %
+                    (starttime, endtime, bandwidth, endpoints))
+                
+                
 
         # Return the new Policy
         return policy
@@ -723,11 +781,18 @@ class SenseAPI(AtlanticWaveManager):
         # senserm_oscars's senserm_delta.py.
         # Parses the raw_reduction, and returns back the deltaid that should be
         # cancelled.
-
         cancelID = ""
         gr = rdflib.Graph()
-        result = gr.parse(data=raw_reduction, format='ttl')
-        #FIXME: check the result
+        
+        try:
+            result = gr.parse(data=raw_reduction, format='ttl')
+            #FIXME: check the result
+        except Exception as e:
+            self.dlogger.error(
+                "_parse_delta_reduction: Error on parsing graph: %s" % e)
+            self.dlogger.error("  Reduction: %s" % raw_reduction)
+            raise SenseAPIClientError("Reduction unparsable %s:%s" %
+                                      (e, raw_reduction))
 
         for s,p,o in gr:
             if awaveurn in str(s):
@@ -737,7 +802,7 @@ class SenseAPI(AtlanticWaveManager):
                     cancelID = subj3[0]
                     return cancelID
         return cancelID
-    
+            
     def get_delta(self, deltaid):
         ''' Get the delta.
             Returns:
@@ -1034,9 +1099,16 @@ class SenseAPI(AtlanticWaveManager):
         ''' Helper function that handles decoding then unzipping data.
             Based on https://bitbucket.org/berkeleylab/sensenrm-oscars/src/d09db31aecbe7654f03f15eed671c0675c5317b5/sensenrm_server.py?at=master&fileviewer=file-view-default
         '''
-        unzipped_data = zlib.decompress(base64.b64decode(data),
+        try:
+            unzipped_data = zlib.decompress(base64.b64decode(data),
                                         16+zlib.MAX_WBITS)
-        return unzipped_data
+            return unzipped_data
+        except Exception as e:
+            self.dlogger.error("_decode_b64_gunzip() error: %s" % e)
+            self.dlogger.error("   Data: %s" % data)
+            raise SenseAPIB64Error("Error decoding or decompressing: %s\n%s" %
+                                   (str(e), data))
+    
 
 
 class SenseAPIResource(Resource):
