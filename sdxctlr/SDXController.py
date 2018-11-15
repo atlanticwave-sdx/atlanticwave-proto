@@ -119,7 +119,7 @@ class SDXController(AtlanticWaveModule):
         self.rapi = RestAPI(self.loggerid,
                             options.host, options.port, options.shib)
         self.sapi = SenseAPI(self.loggerid,
-                             options.host, options.sport)
+                             host=options.host, port=options.sport)
 
 
         # Install any rules switches will need. 
