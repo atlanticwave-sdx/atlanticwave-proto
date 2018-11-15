@@ -32,6 +32,7 @@ from networkx.readwrite import json_graph
 import json
 import zlib
 import base64
+import uuid
 
 # Multithreading
 from threading import Thread
@@ -114,8 +115,8 @@ class SenseAPI(AtlanticWaveManager):
     #  "hash": Hash returned when installing a rule to the RuleManager}
 
     # Model Database entries:
-    # {"model_id": Model ID,
-    #  "model_xml": XML that was sent over,
+    # {"model_id": Model ID (UUID),
+    #  "model_data": XML that was sent over,
     #  "model_raw_info": raw topology information (pickled in DB),
     #  "timestamp": Timestamp of model}
 
@@ -126,6 +127,11 @@ class SenseAPI(AtlanticWaveManager):
         loggerid = loggerprefix + ".sense"
         super(SenseAPI, self).__init__(loggerid)
 
+        # For FLASK
+        self.host = host
+        self.port = port
+        self.urlbase = "http://%s:%s" % (host, port)
+        
         # Set up local repositories for rules and topology to perform diffs on.
         self.current_rules = RuleManager().get_rules()
         self.current_topo = TopologyManager().get_topology()
@@ -156,36 +162,47 @@ class SenseAPI(AtlanticWaveManager):
         api = Api(app, errors=errors)
         api.add_resource(ModelsAPI,
             '/sense-rm/api/sense/v1/models',
-            endpoint='models')
+            endpoint='models',
+            resource_class_kwargs={'urlbase':self.urlbase})
         api.add_resource(DeltasAPI,
             '/sense-rm/api/sense/v1/deltas',
-            endpoint='deltas')
+            endpoint='deltas',
+            resource_class_kwargs={'urlbase':self.urlbase})
         api.add_resource(DeltaAPI,
             '/sense-rm/api/sense/v1/delta/<string:deltaid>',
-            endpoint='delta')
+            endpoint='delta',
+            resource_class_kwargs={'urlbase':self.urlbase})
         api.add_resource(CommitsAPI,
             '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/commit',
-            endpoint='commits')
+            endpoint='commits',
+            resource_class_kwargs={'urlbase':self.urlbase})
         api.add_resource(ClearAPI,
             '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/clear',
-            endpoint='clear')
+            endpoint='clear',
+            resource_class_kwargs={'urlbase':self.urlbase})
         api.add_resource(CancelAPI,
             '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/cancel',
-            endpoint='cancel')
+            endpoint='cancel',
+            resource_class_kwargs={'urlbase':self.urlbase})
         
         self.generate_simplified_topology()
-        self.generate_model()
-
-        
+                
         # Connection handling
         #FIXME - Is it inbound or outbound?
 
-        
+        api_thread = Thread(target=self.api_process)
+        api_thread.daemon = True
+        api_thread.start()
+        self.logger.critical("Opening socket %s:%s" % (self.host, self.port))
 
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
 
         #self._INTERNAL_TESTING_DELETE_FINAL_CHECKIN()
+
+    def api_process(self):
+        app.run(host=self.host, port=self.port)
+        #FIXME: need SSL, threaded, debug
 
     def __print_topology_details(self, topo):
         #DEBUGING ONLY, SHOULD DELETE
@@ -564,11 +581,50 @@ class SenseAPI(AtlanticWaveManager):
         #FIXME: What to do about Exceptions?
         pass
 
-    def get_model(self):
+    def get_latest_model(self):
         ''' Gets the latest model. 
-            Returns XML version of model.
+            Returns dictionary: 
+             {'id': UUID of model,
+              'href': address of model,
+              'creationTime': timestamp of model,
+              'model': the model itself}
         '''
-        pass
+
+        model_id = None
+        href = None
+        creation_time = None
+        model = None
+        
+        # Check DB: if there is a latest one, already inserted, use it.
+        result = self.model_table.find_one(order_by=['timestamp'])
+
+        if result != None:
+            model_id = result['model_id']
+            href = "%s/sense-rm/api/sense/v1/models/%s" % (self.urlbase,
+                                                           model_id)
+            creation_time = result['timestamp']
+            model = result['model_data']
+        else:
+            # If not, generate the model
+            model = self.generate_model()
+            raw_model = self.simplified_topo
+            
+            # Get creation time
+            creation_time = datetime.now().strftime(rfc3339format)
+            
+            # Get ID
+            model_id = str(uuid.uuid5(uuid.NAMESPACE_URL,
+                                      creation_time))
+
+            # Insert it into the DB
+            self._put_model(model_id, model, raw_model, creation_time)
+
+        # Return the correct format
+        retval = {'id':model_id,
+                  'href':href,
+                  'creationTime':creation_time,
+                  'model':model}
+        return retval
     
     def process_deltas(self, args):
         # Parse the args
@@ -1037,13 +1093,13 @@ class SenseAPI(AtlanticWaveManager):
               - Dictionary containing model. See top of SenseAPI definition for
                 keys.
         '''
-        raw_model = self.model_table.find_one(model_id=model_id)
+        raw_model = self.model_table.find_one(model_id=str(model_id))
         if raw_model == None:
             return None
         
         # Unpickle the pickled values and rebuild dictionary to return
         model = {'model_id':raw_model['model_id'],
-                 'model_xml':raw_model['model_xml'],
+                 'model_data':raw_model['model_data'],
                  'model_raw_info':pickle.loads(str(
                      raw_model['model_raw_info'])),
                  'timestamp':raw_model['timestamp']}
@@ -1051,7 +1107,7 @@ class SenseAPI(AtlanticWaveManager):
         self.dlogger.debug('_get_model_by_id() on %s successful' % model_id)
         return model
     
-    def _put_model(self, model_id, model_xml, model_raw_info):
+    def _put_model(self, model_id, model_xml, model_raw_info, timestamp=None):
         ''' Helper function, just puts model into DB. No updates allowed. 
             Returns nothing.
             Raises errors.
@@ -1069,9 +1125,11 @@ class SenseAPI(AtlanticWaveManager):
                                 (model_xml, model_raw_info))
         
         # Build dictionary to be inserted into table, including timestamp
-        timestamp = self._get_current_time()
+        if timestamp == None:
+            timestamp = self._get_current_time()
+            
         model = {'model_id':model_id,
-                 'model_xml':model_xml,
+                 'model_data':model_xml,
                  'model_raw_info':pickle.dumps(model_raw_info),
                  'timestamp':timestamp}
 
@@ -1115,8 +1173,11 @@ class SenseAPIResource(Resource):
     ''' Has common pieces for all Resource objects used by the SenseAPI, 
         including logging. '''
 
-    def __init__(self,loggeridsuffix, loggeridprefix='sdxcontroller.sense'):
+    def __init__(self, urlbase,
+                 loggeridsuffix, loggeridprefix='sdxcontroller.sense'):
         loggerid = loggeridprefix + "." + loggeridsuffix
+        self._setup_loggers(loggerid)
+        self.urlbase = urlbase
         super(SenseAPIResource, self).__init__()
 
     def _setup_loggers(self, loggerid, logfilename=None, debuglogfilename=None):
@@ -1180,21 +1241,20 @@ delta_fields = {
 
         
 class ModelsAPI(SenseAPIResource):#FIXME
-    def __init__(self):
-        super(ModelsAPI, self).__init__(self.__class__.__name__)
+    def __init__(self, urlbase):
+        super(ModelsAPI, self).__init__(urlbase, self.__class__.__name__)
         self.dlogger.debug("__init__() start")
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('current', type=str, default='true')
         self.reqparse.add_argument('summary', type=str, default='false')
         self.reqparse.add_argument('encode', type=str, default='false')
-        self.models = SenseAPI().get_model() #FIXME
+        self.model = SenseAPI().get_latest_model()
         self.dlogger.debug("__init__() complete")
     
     def get(self):
         self.dlogger.debug("get() start")
 
-        retval = None        #FIXME
-        
+        retval = marshal(self.model, model_fields)
         self.logger.info("get() returning %s" % retval)
         self.dlogger.debug("get() complete")
         return retval
@@ -1211,8 +1271,8 @@ class ModelsAPI(SenseAPIResource):#FIXME
         return retval
     
 class DeltasAPI(SenseAPIResource):
-    def __init__(self):
-        super(DeltasAPI, self).__init__(self.__class__.__name__)
+    def __init__(self, urlbase):
+        super(DeltasAPI, self).__init__(urlbase, self.__class__.__name__)
         self.dlogger.debug("__init__() start")
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('id', type=str, location='json')
@@ -1251,8 +1311,8 @@ class DeltasAPI(SenseAPIResource):
         return retval
     
 class DeltaAPI(SenseAPIResource):
-    def __init__(self):
-        super(DeltaAPI, self).__init__(self.__class__.__name__)
+    def __init__(self, urlbase):
+        super(DeltaAPI, self).__init__(urlbase, self.__class__.__name__)
         self.dlogger.debug("__init__() start")
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('summary', type=str, default='true')
@@ -1270,8 +1330,8 @@ class DeltaAPI(SenseAPIResource):
         return retval
 
 class CommitsAPI(SenseAPIResource):
-    def __init__(self):
-        super(CommitsAPI, self).__init__(self.__class__.__name)
+    def __init__(self, urlbase):
+        super(CommitsAPI, self).__init__(urlbase, self.__class__.__name)
         self.dlogger.debug("__init__() start")
         self.dlogger.debug("__init__() complete")
 
@@ -1305,8 +1365,8 @@ class CommitsAPI(SenseAPIResource):
         return retval
 
 class CancelAPI(SenseAPIResource):
-    def __init__(self):
-        super(CancelAPI, self).__init__(self.__class__.__name)
+    def __init__(self, urlbase):
+        super(CancelAPI, self).__init__(urlbase, self.__class__.__name)
         self.dlogger.debug("__init__() start")
         self.dlogger.debug("__init__() complete")
 
@@ -1333,7 +1393,7 @@ class CancelAPI(SenseAPIResource):
         
     def post(self, deltaid):
         self.dlogger.debug("post() start")
-        #FIXME: this doesn't seem to do the same thing as put()... should it?                      
+        #FIXME: this doesn't seem to do the same thing as put()... should it?
         self.logger.INFO("post() deltaid %s" % deltaid)
                       
         retval = {'result': True}, HTTP_CREATED
@@ -1342,8 +1402,8 @@ class CancelAPI(SenseAPIResource):
         return retval
         
 class ClearAPI(SenseAPIResource):
-    def __init__(self):
-        super(ClearAPI, self).__init__(self.__class__.__name)
+    def __init__(self, urlbase):
+        super(ClearAPI, self).__init__(urlbase, self.__class__.__name)
         self.dlogger.debug("__init__() start")
         self.dlogger.debug("__init__() complete")
 
