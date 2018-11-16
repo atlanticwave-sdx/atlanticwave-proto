@@ -4,22 +4,22 @@
       "type": "host",
       "friendlyname": "RENCI BF40G Node",
       "location": "35.939796, -79.018203",
-      "vlan": 1411},
+      "vlan": 1412},
     "bf40g-duke": {
       "type": "host",
       "friendlyname": "DUKE BF40G Node",
       "location": "36.003614, -78.938755",
-      "vlan": 1411},
+      "vlan": 1412},
     "bf40g-unc": {
       "type": "host",
       "friendlyname": "UNC BF40G Node",
       "location": "35.903395, -79.048370",
-      "vlan": 1411},
+      "vlan": 1412},
     "bf40g-ncsu": {
       "type": "host",
       "friendlyname": "NCSU BF40G Node",
       "location": "35.773395, -78.677730",
-      "vlan": 1411}
+      "vlan": 1412}
   },
   "localcontrollers": {
     "lc-renci":{
@@ -64,7 +64,7 @@
             "corsabwout": 20,
             "corsaratelimiterbridge": "br20",
             "corsaratelimiterports": [21,22],
-            "managementvlan":1411,
+            "managementvlan":1412,
             "managementvlanports":[1,2]
           }
         }
@@ -117,7 +117,7 @@
             "corsabwout":20,
             "corsaratelimiterbridge":"br20",
             "corsaratelimiterports":[21,22],
-            "managementvlan":1411,
+            "managementvlan":1412,
             "managementvlanports":[1,2]
           }
         }
@@ -170,7 +170,7 @@
             "corsabwout":20,
             "corsaratelimiterbridge":"br20",
             "corsaratelimiterports":[21,22],
-            "managementvlan":1411,
+            "managementvlan":1412,
             "managementvlanports":[1,2]
           }
         }
@@ -223,7 +223,7 @@
             "corsabwout":20,
             "corsaratelimiterbridge":"br20",
             "corsaratelimiterports":[21,22],
-            "managementvlan":1411,
+            "managementvlan":1412,
             "managementvlanports":[1,2]
           }
         }
