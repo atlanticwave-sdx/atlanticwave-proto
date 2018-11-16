@@ -65,6 +65,17 @@
 	       "destination": "bf40g-renci"
 	    }
 	  ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
         }
       ],
       "operatorinfo": {
@@ -116,6 +127,17 @@
                "destination": "bf40g-duke"
             }
           ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
         }
       ],
       "operatorinfo": {
@@ -167,6 +189,17 @@
                "destination": "bf40g-unc"
             }
           ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
         }
       ],
       "operatorinfo": {
@@ -218,6 +251,17 @@
                "destination": "bf40g-ncsu"
             }
           ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
         }
       ],
       "operatorinfo": {
