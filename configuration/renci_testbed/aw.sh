@@ -10,14 +10,33 @@ DELAY=3
 DATE=$(date +%Y%m%d-%H%M%S)
 PWD=`pwd`
 
-# Out-of-band management IP addresses of the nodes
-# 192.168.201.156 atlanticwave-sdx-controller.renci.ben 
-# 192.168.201.171 atlanticwave-lc-renci.renci.ben
-# 192.168.201.172 atlanticwave-lc-duke.renci.ben
-# 192.168.201.173 atlanticwave-lc-unc.renci.ben
-# 192.168.201.174 atlanticwave-lc-ncsu.renci.ben
-SITE=$(hostname | cut -d- -f3 | cut -d. -f1) # renci | duke | unc | ncsu
-TYPE=$(hostname | cut -d- -f2 ) # sdx | lc 
+HOSTNAME=$(hostname)
+
+case ${HOSTNAME} in
+    bf40g1.renci.ben)
+            SITE="renci"
+            TYPE="lc"
+            ;;
+    bf40g1.duke.ben)
+            SITE="duke"
+            TYPE="lc"
+            ;;
+    bf40g1.unc.ben)
+            SITE="unc"
+            TYPE="lc"
+            ;;
+    bf40g1.ncsu.ben)
+            SITE="ncsu"
+            TYPE="lc"
+            ;;
+    atlanticwave-sdx-controller.renci.ben)
+            SITE="renci"
+            TYPE="sdx"
+            ;;
+esac
+
+#SITE=$(hostnamectl --transient | cut -d- -f3 | cut -d. -f1) # renci | duke | unc | ncsu
+#TYPE=$(hostnamectl --transient | cut -d- -f2 ) # sdx | lc 
 
 AW_REPO="https://github.com/RENCI-NRIG/atlanticwave-proto.git"
 AW_BRANCH="renci_testbed_setup"
@@ -117,26 +136,26 @@ stop_docker_container(){
 while getopts "cbrsH" opt; do
     case $opt in
         c)
-            title "--- Cleanup Files"
+            title "Cleanup Files"
             cleanup_files ${TMP_DIR} ${WORK_DIR} ${TYPE}
             
-            title "--- Cleanup Docker Containers and Images"
+            title "Cleanup Docker Containers and Images"
             cleanup_docker ${TYPE}
             ;;
         b)
-            title "--- Cleanup Files"
+            title "Cleanup Files"
             cleanup_files ${TMP_DIR} ${WORK_DIR} ${TYPE}
-            title "--- Cleanup Docker Containers and Images"
+            title "Cleanup Docker Containers and Images"
             cleanup_docker ${TYPE}
-            title "--- Build Docker Image"
+            title "Build Docker Image"
             build_docker_image $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE}
             ;;
         r)
-            title "--- Run Docker Container for ${TYPE}"
+            title "Run Docker Container for ${TYPE}"
             run_docker_container $SITE $WORK_DIR $TYPE
             ;;
         s)
-            title "--- Stop Docker Containers"
+            title "Stop Docker Containers"
             stop_docker_container 
             ;;
         H)
