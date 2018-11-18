@@ -1,5 +1,10 @@
 {
   "endpoints": {
+    "sdx-controller": {
+      "type": "sdxcontroller",
+      "friendlyname": "SDX Controller",
+      "location": "35.939796, -79.018203",
+      "vlan": 1410},
     "bf40g-renci": {
       "type": "dtn",
       "friendlyname": "RENCI BF40G Node",
@@ -19,12 +24,7 @@
       "type": "dtn",
       "friendlyname": "NCSU BF40G Node",
       "location": "35.773395, -78.677730",
-      "vlan": 1424},
-    "sdx-controller-host": {
-      "type": "host",
-      "friendlyname": "RENCI SDX Controller",
-      "location": "35.939796, -79.018203",
-      "vlan": 1421},
+      "vlan": 1424}
   },
   "localcontrollers": {
     "lc-renci":{
@@ -63,7 +63,7 @@
             {
       	      "portnumber": 31,
 	       "speed": 80000000000,
-	       "destination": "sdx-controller-host"
+	       "destination": "sdx-controller"
 	    }
 	  ],
           "internalconfig": {
