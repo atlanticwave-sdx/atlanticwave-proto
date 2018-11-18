@@ -36,7 +36,7 @@
           "name":"corsa1-renci",
           "friendlyname":"RENCI Corsa DP2100",
           "ip": "10.0.201.1",
-          "dpid":"7573453565774",
+          "dpid":"201",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -89,7 +89,7 @@
           "name":"corsa1-duke",
           "friendlyname":"DUKE Corsa DP2100",
           "ip": "10.0.202.1",
-          "dpid": "279552153404237",
+          "dpid": "202",
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -142,7 +142,7 @@
           "name":"corsa1-unc",
           "friendlyname":"UNC Corsa DP2100",
           "ip": "10.0.203.1",
-          "dpid":"236202656471118",
+          "dpid":"203",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -195,7 +195,7 @@
           "name":"corsa1-ncsu",
           "friendlyname":"NCSU Corsa DP2100",
           "ip": "10.0.204.1",
-          "dpid":"209215245675848",
+          "dpid":"204",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
