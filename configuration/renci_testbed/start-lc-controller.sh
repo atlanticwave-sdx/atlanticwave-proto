@@ -6,7 +6,7 @@ OPTS="it"
 LC_SITE="lc-$1"
 export LC_SITE
 
-SDXIPVAL="10.14.10.254"
+SDXIPVAL="10.14.11.254"
 export SDXIPVAL
 
 case ${LC_SITE} in
