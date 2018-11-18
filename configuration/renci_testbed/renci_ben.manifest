@@ -19,7 +19,12 @@
       "type": "dtn",
       "friendlyname": "NCSU BF40G Node",
       "location": "35.773395, -78.677730",
-      "vlan": 1424}
+      "vlan": 1424},
+    "sdx-controller-host": {
+      "type": "host",
+      "friendlyname": "RENCI SDX Controller",
+      "location": "35.939796, -79.018203",
+      "vlan": 1421},
   },
   "localcontrollers": {
     "lc-renci":{
@@ -54,6 +59,11 @@
       	      "portnumber": 10,
 	       "speed": 80000000000,
 	       "destination": "bf40g-renci"
+	    },
+            {
+      	      "portnumber": 31,
+	       "speed": 80000000000,
+	       "destination": "sdx-controller-host"
 	    }
 	  ],
           "internalconfig": {
@@ -65,7 +75,7 @@
             "corsaratelimiterbridge": "br20",
             "corsaratelimiterports": [21,22],
             "managementvlan":1410,
-            "managementvlanports":[1,2]
+            "managementvlanports":[1,2,31]
           }
         }
       ],
