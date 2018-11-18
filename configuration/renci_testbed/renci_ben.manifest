@@ -75,7 +75,7 @@
             "corsaratelimiterbridge": "br20",
             "corsaratelimiterports": [21,22],
             "managementvlan":1410,
-            "managementvlanports":[1,2,31]
+            "managementvlanports":[1,2,10,31]
           }
         }
       ],
@@ -128,7 +128,7 @@
             "corsaratelimiterbridge":"br20",
             "corsaratelimiterports":[21,22],
             "managementvlan":1410,
-            "managementvlanports":[1,2]
+            "managementvlanports":[1,2,11]
           }
         }
       ],
@@ -181,7 +181,7 @@
             "corsaratelimiterbridge":"br20",
             "corsaratelimiterports":[21,22],
             "managementvlan":1410,
-            "managementvlanports":[1,2]
+            "managementvlanports":[1,2,11]
           }
         }
       ],
@@ -234,7 +234,7 @@
             "corsaratelimiterbridge":"br20",
             "corsaratelimiterports":[21,22],
             "managementvlan":1410,
-            "managementvlanports":[1,2]
+            "managementvlanports":[1,2,10]
           }
         }
       ],
