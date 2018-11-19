@@ -39,7 +39,7 @@
       "type": "localcontroller",
       "friendlyname": "NCSU Controller",
       "location": "35.773395, -78.677730",
-      "vlan": 1411}
+      "vlan": 1411},
     "ncsudtn": {
       "type": "dtn",
       "friendlyname": "NCSU BF40G Node",
