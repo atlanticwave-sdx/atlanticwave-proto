@@ -1,34 +1,54 @@
 {
   "endpoints": {
-    "sdx-controller": {
+    "sdx": {
       "type": "sdxcontroller",
       "friendlyname": "SDX Controller",
       "location": "35.939796, -79.018203",
       "vlan": 1411},
-    "bf40g-renci": {
+    "rencictlr": {
       "type": "localcontroller",
-      "friendlyname": "RENCI BF40G Node",
+      "friendlyname": "RENCI Controller",
       "location": "35.939796, -79.018203",
       "vlan": 1411},
-    "bf40g-duke": {
+    "rencidtn": {
+      "type": "dtn",
+      "friendlyname": "RENCI BF40G Node",
+      "location": "35.939796, -79.018203",
+      "vlan": 1420},
+    "dukectlr": {
       "type": "localcontroller",
-      "friendlyname": "DUKE BF40G Node",
+      "friendlyname": "DUKE Controller",
       "location": "36.003614, -78.938755",
       "vlan": 1411},
-    "bf40g-unc": {
+    "dukedtn": {
+      "type": "dtn",
+      "friendlyname": "DUKE BF40G Node",
+      "location": "36.003614, -78.938755",
+      "vlan": 1420},
+    "uncctlr": {
       "type": "localcontroller",
-      "friendlyname": "UNC BF40G Node",
+      "friendlyname": "UNC Controller",
       "location": "35.903395, -79.048370",
       "vlan": 1411},
-    "bf40g-ncsu": {
+    "uncdtn": {
+      "type": "dtn",
+      "friendlyname": "UNC BF40G Node",
+      "location": "35.903395, -79.048370",
+      "vlan": 1420},
+    "ncsuctlr": {
       "type": "localcontroller",
-      "friendlyname": "NCSU BF40G Node",
+      "friendlyname": "NCSU Controller",
       "location": "35.773395, -78.677730",
       "vlan": 1411}
+    "ncsudtn": {
+      "type": "dtn",
+      "friendlyname": "NCSU BF40G Node",
+      "location": "35.773395, -78.677730",
+      "vlan": 1420}
   },
   "localcontrollers": {
-    "lc-renci":{
-      "shortname": "lc-renci",
+    "rencictlr":{
+      "shortname": "rencictlr",
       "credentials": "rencipwd",
       "location": "35.939796, -79.018203",
       "lcip": "10.14.11.1",
@@ -38,7 +58,7 @@
       },
       "switchinfo": [
         {
-          "name":"corsa1-renci",
+          "name":"rencis1",
           "friendlyname":"RENCI Corsa DP2100",
           "ip": "10.0.201.1",
           "dpid":"201",
@@ -48,22 +68,27 @@
             {
       	      "portnumber": 1,
               "speed": 80000000000,
-              "destination": "corsa1-unc"
+              "destination": "uncs1"
 	    },
             {
               "portnumber": 2,
               "speed": 80000000000,
-              "destination": "corsa1-duke"
+              "destination": "dukes1"
             },
             {
       	      "portnumber": 10,
 	       "speed": 80000000000,
-	       "destination": "bf40g-renci"
+	       "destination": "rencictlr"
+	    },
+            {
+      	      "portnumber": 11,
+	       "speed": 80000000000,
+	       "destination": "rencidtn"
 	    },
             {
       	      "portnumber": 30,
 	       "speed": 80000000000,
-	       "destination": "sdx-controller"
+	       "destination": "sdx"
 	    }
 	  ],
           "internalconfig": {
@@ -85,8 +110,8 @@
         "contact": "mcevik@renci.org"
       }
     },
-    "lc-duke":{
-      "shortname": "lc-duke",
+    "dukectlr":{
+      "shortname": "dukectlr",
       "credentials": "dukepwd",
       "location":"36.003614, -78.938755",
       "lcip": "10.14.11.2",
@@ -96,7 +121,7 @@
       },
       "switchinfo": [
         { 
-          "name":"corsa1-duke",
+          "name":"dukes1",
           "friendlyname":"DUKE Corsa DP2100",
           "ip": "10.0.202.1",
           "dpid": "202",
@@ -106,17 +131,22 @@
             { 
               "portnumber": 1,
               "speed": 80000000000,
-              "destination": "corsa1-renci"
+              "destination": "rencis1"
             },
             { 
               "portnumber": 2,
               "speed": 80000000000,
-              "destination": "corsa1-ncsu"
+              "destination": "ncsus1"
+            },
+            { 
+              "portnumber": 10,
+               "speed": 80000000000,
+               "destination": "dukedtn"
             },
             { 
               "portnumber": 11,
                "speed": 80000000000,
-               "destination": "bf40g-duke"
+               "destination": "dukectlr"
             }
           ],
           "internalconfig": {
@@ -138,8 +168,8 @@
         "contact": "mcevik@renci.org"
       }
     },
-    "lc-unc":{
-      "shortname": "lc-unc",
+    "uncctlr":{
+      "shortname": "uncctlr",
       "credentials": "uncpwd",
       "location":"35.903395, -79.048370",
       "lcip": "10.14.11.3",
@@ -149,7 +179,7 @@
       },
       "switchinfo": [
         { 
-          "name":"corsa1-unc",
+          "name":"uncs1",
           "friendlyname":"UNC Corsa DP2100",
           "ip": "10.0.203.1",
           "dpid":"203",
@@ -159,17 +189,22 @@
             { 
               "portnumber": 1,
               "speed": 80000000000,
-              "destination": "corsa1-renci"
+              "destination": "rencis1"
             },
             { 
               "portnumber": 2,
               "speed": 80000000000,
-              "destination": "corsa1-ncsu"
+              "destination": "ncsus1"
+            },
+            { 
+              "portnumber": 10,
+               "speed": 80000000000,
+               "destination": "uncdtn"
             },
             { 
               "portnumber": 11,
                "speed": 80000000000,
-               "destination": "bf40g-unc"
+               "destination": "uncctlr"
             }
           ],
           "internalconfig": {
@@ -191,8 +226,8 @@
         "contact": "mcevik@renci.org"
       }
     },
-    "lc-ncsu":{
-      "shortname": "lc-ncsu",
+    "ncsuctlr":{
+      "shortname": "ncsuctlr",
       "credentials": "ncsupwd",
       "location": "35.773395, -78.677730",
       "lcip": "10.14.11.4",
@@ -202,7 +237,7 @@
       },
       "switchinfo": [
         { 
-          "name":"corsa1-ncsu",
+          "name":"ncsus1",
           "friendlyname":"NCSU Corsa DP2100",
           "ip": "10.0.204.1",
           "dpid":"204",
@@ -212,17 +247,22 @@
             { 
               "portnumber": 1,
               "speed": 80000000000,
-              "destination": "corsa1-unc"
+              "destination": "uncs1"
             },
             { 
               "portnumber": 2,
               "speed": 80000000000,
-              "destination": "corsa1-duke"
+              "destination": "dukes1"
             },
             { 
               "portnumber": 10,
                "speed": 80000000000,
-               "destination": "bf40g-ncsu"
+               "destination": "ncsuctlr"
+            },
+            { 
+              "portnumber": 11,
+               "speed": 80000000000,
+               "destination": "ncsudtn"
             }
           ],
           "internalconfig": {
