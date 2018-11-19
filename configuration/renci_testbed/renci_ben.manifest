@@ -61,7 +61,7 @@
 	       "destination": "bf40g-renci"
 	    },
             {
-      	      "portnumber": 31,
+      	      "portnumber": 30,
 	       "speed": 80000000000,
 	       "destination": "sdx-controller"
 	    }
@@ -75,7 +75,7 @@
             "corsaratelimiterbridge": "br20",
             "corsaratelimiterports": [21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2,10,31]
+            "managementvlanports":[1,2,10,30]
           }
         }
       ],
