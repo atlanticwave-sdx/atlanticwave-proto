@@ -14,19 +14,19 @@ HOSTNAME=$(hostname)
 
 case ${HOSTNAME} in
     bf40g1.renci.ben)
-            SITE="renci"
+            SITE="rencictlr"
             TYPE="lc"
             ;;
     bf40g1.duke.ben)
-            SITE="duke"
+            SITE="dukectlr"
             TYPE="lc"
             ;;
     bf40g1.unc.ben)
-            SITE="unc"
+            SITE="uncctlr"
             TYPE="lc"
             ;;
     bf40g1.ncsu.ben)
-            SITE="ncsu"
+            SITE="ncsuctlr"
             TYPE="lc"
             ;;
     atlanticwave-sdx-controller.renci.ben)

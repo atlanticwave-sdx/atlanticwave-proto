@@ -3,23 +3,23 @@
 #OPTS="dit"
 OPTS="it"
 
-LC_SITE="lc-$1"
+LC_SITE="$1"
 export LC_SITE
 
 SDXIPVAL="10.14.11.254"
 export SDXIPVAL
 
 case ${LC_SITE} in
-    lc-renci) 
+    rencictlr) 
               RYU_PORT=6681
               ;;
-    lc-duke) 
+    dukectlr) 
               RYU_PORT=6682
               ;;
-    lc-unc) 
+    uncctlr) 
               RYU_PORT=6683
               ;;
-    lc-ncsu) 
+    ncsuctlr) 
               RYU_PORT=6684
               ;;
     \?)
