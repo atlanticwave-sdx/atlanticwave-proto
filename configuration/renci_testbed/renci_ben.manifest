@@ -192,11 +192,6 @@
               "destination": "rencis1"
             },
             { 
-              "portnumber": 2,
-              "speed": 80000000000,
-              "destination": "ncsus1"
-            },
-            { 
               "portnumber": 10,
                "speed": 80000000000,
                "destination": "uncdtn"
@@ -216,7 +211,7 @@
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2,11]
+            "managementvlanports":[1,11]
           }
         }
       ],
@@ -245,11 +240,6 @@
           "model": "2.3.0",
           "portinfo": [
             { 
-              "portnumber": 1,
-              "speed": 80000000000,
-              "destination": "uncs1"
-            },
-            { 
               "portnumber": 2,
               "speed": 80000000000,
               "destination": "dukes1"
@@ -274,7 +264,7 @@
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2,10]
+            "managementvlanports":[2,10]
           }
         }
       ],
