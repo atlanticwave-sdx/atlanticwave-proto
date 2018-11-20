@@ -1,7 +1,7 @@
 #/bin/bash
 
-#OPTS="dit"
-OPTS="it"
+OPTS="dit"
+#OPTS="it"
 
 LC_SITE="$1"
 export LC_SITE
@@ -31,8 +31,13 @@ esac
 
 # Local Controller
 cd atlanticwave-proto/localctlr/
-docker stop ${LC_SITE}
-docker rm ${LC_SITE}
+
+LC_CONTAINER=$(docker ps -a -f name=${LC_SITE} -q)
+
+if [[ -n "${LC_CONTAINER}" ]]; then
+    docker stop ${LC_CONTAINER}
+fi
+
 
 docker run --rm --network host -e MANIFEST="/renci_ben.manifest" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} lc_container
 
