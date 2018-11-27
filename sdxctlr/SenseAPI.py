@@ -143,7 +143,9 @@ class SenseAPI(AtlanticWaveManager):
 
         # Start database
         db_tuples = [('delta_table','delta'), ('model_table', 'model')]
-        self._initialize_db(db_filename, db_tuples)
+        self._initialize_db(db_filename, db_tuples, True)
+        self.delta_table.delete() #FIXME: these shouldn't be needed.
+        self.model_table.delete() #FIXME: these shouldn't be needed.
         
         # Register update functions
         RuleManager().register_for_rule_updates(self.rule_add_callback,
@@ -198,6 +200,7 @@ class SenseAPI(AtlanticWaveManager):
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
 
+        self.__print_all_deltas()
         #self._INTERNAL_TESTING_DELETE_FINAL_CHECKIN()
 
     def api_process(self):
@@ -213,6 +216,13 @@ class SenseAPI(AtlanticWaveManager):
         print("\n\nEDGES WITH DETAILS\n%s\n\n\n" %
               json.dumps(topo.edges(data=True), indent=4, sort_keys=True))
 
+    def __print_all_deltas(self):
+        deltas = self.get_all_deltas()
+
+        print "\n\n&&&&& DELTAS &&&&&"
+        for d in deltas:
+            print d
+        print "&&&&&        &&&&&\n\n"
         
 
     def _INTERNAL_TESTING_DELETE_FINAL_CHECKIN(self):
@@ -481,6 +491,7 @@ class SenseAPI(AtlanticWaveManager):
         
     def _install_policy(self, delta_id, policy):
         # Install rule
+        self.dlogger.debug("_install_policy: %s:%s" % (delta_id, policy))
         hashval = RuleManager().add_rule(policy)
 
         # Push hash into DB
@@ -628,6 +639,9 @@ class SenseAPI(AtlanticWaveManager):
     
     def process_deltas(self, args):
         # Parse the args
+        self.dlogger.debug("process_delta() begin with args: %s" % args)
+        self.__print_all_deltas()
+        
         keys = args.keys()
         if ('id' not in keys or
             'lastModified' not in keys or
@@ -673,7 +687,7 @@ class SenseAPI(AtlanticWaveManager):
             try:
                 parsed_reduction = self._parse_delta_reduction(reduction)
             except SenseAPIClientError as e:
-                self.dlogger.error("process_deltas: Received %s" % e)
+                self.dlogger.error("process_deltas: Received \"%s\"" % e)
                 return None, HTTP_BAD_REQUEST
             self.logger.info("Reduction %s to be removed" % parsed_reduction)
             delta = self._get_delta_by_id(parsed_reduction)
@@ -682,6 +696,7 @@ class SenseAPI(AtlanticWaveManager):
                 # Doesn't exist anymore 
                 return None, HTTP_NOT_FOUND
             status = self.cancel(parsed_reduction)
+            retdelta = self._convert_delta(delta)
             self.logger.info("Reduction %s canceled %s" % (parsed_reduction,
                                                            status))
 
@@ -697,12 +712,19 @@ class SenseAPI(AtlanticWaveManager):
                 self.dlogger.error("process_deltas: Received %s" % e)
                 return None, HTTP_BAD_REQUEST
             bd = RuleManager().test_add_rule(parsed_addition_policy)
-            status = STATUS_ACCEPTED
-            self._put_delta(delta_id, args, parsed_addition_policy,
-                            model_id, status)
+            status = HTTP_ACCEPTED
+            try:
+                self._put_delta(delta_id, args, parsed_addition_policy,
+                                model_id, status)
+            except SenseAPIError as e:
+                self.dlogger.error("process_deltas: Received %s" % e)
+                return None, HTTP_CONFLICT                
             delta = self._get_delta_by_id(delta_id)
-            
-        return delta, status
+            retdelta = self._convert_delta(delta)
+
+        self.dlogger.debug("process_deltas: returning %s,%s" % (retdelta,
+                                                                status)) 
+        return retdelta, status
 
     def _parse_delta_addition(self, raw_addition):
         # This is based on part of nrmDelta.processDelta() from senserm_oscars's
@@ -778,7 +800,7 @@ class SenseAPI(AtlanticWaveManager):
             starttime = datetime.now().strftime(rfc3339format)
 
         if endtime != None:
-            endtime = datetime.strptime(starttime,
+            endtime = datetime.strptime(endtime,
                                         rfc3339format)
         else:
             endtime = MAXENDTIME
@@ -872,7 +894,7 @@ class SenseAPI(AtlanticWaveManager):
         if delta != None:
             status = delta['status']
             phase = PHASE_RESERVED
-            if status == STATUS_COMMITTED:
+            if status == STATUS_ACTIVATED:
                 phase = PHASE_COMMITTED #FIXME?
             self.dlogger.debug("get_delta: %s %s" % (status, phase))
             return status, phase
@@ -982,27 +1004,46 @@ class SenseAPI(AtlanticWaveManager):
         self.dlogger.debug("_get_delta_by_id() on %s successful" % delta_id)
         return delta
 
-    def _get_all_deltas(self):
-        # THIS IS A TESTING-ONLY FUNCTION.
+    def get_all_deltas(self):
+        ''' Gets a list of all deltas and returns in the following format:
+            {'id': Delta ID,
+             'lastModified': Last modified time,
+             'description': Not actually sure what that is,
+             'modelID': model ID,
+             'reduction': Reduction section of the raw_request,
+             'addition': Addition section of the raw_request}
+        '''
+
         deltas = self.delta_table.find()
         parsed_deltas = []
 
         if deltas == None:
             return parsed_deltas
 
-        # Unpickle all of them.
+        # Convert to Endpoint-friendly
         for delta in deltas:
-            d = {'delta_id':delta['delta_id'],
-                 'raw_request':pickle.loads(str(delta['raw_request'])),
-                 'sdx_rule':pickle.loads(str(delta['sdx_rule'])),
-                 'status':delta['status'],
-                 'last_modified':delta['last_modified'],
-                 'timestamp':delta['timestamp'],
-                 'model_id':delta['model_id'],
-                 'hash':delta['hash']}
+            d = self._convert_delta(delta, True)
             parsed_deltas.append(d)
         return parsed_deltas
 
+    def _convert_delta(self, delta, unpickle=False):
+        ''' Helper to convert DB's form to what the endpoints are expecting. '''
+        print "\n\nCONVERT_DELTA\n%s\n\n\n" % delta
+        raw_request = delta['raw_request']
+        if unpickle:
+            raw_request = pickle.loads(str(raw_request))
+        print "\n\nRAW REQUEST!\n%s\n\n" % raw_request
+        reduction = raw_request['reduction']
+        addition = raw_request['addition']
+            
+        d = {'id':delta['delta_id'],
+             'lastModified':delta['last_modified'],
+             'description':None,
+             'modelId':delta['model_id'],
+             'reduction':reduction,
+             'addition':addition}
+        return d
+                        
     def _put_delta(self, delta_id, raw_request=None, sdx_rule=None,
                    model_id=None, status=None, hashval=None,
                    update=False):
@@ -1017,6 +1058,9 @@ class SenseAPI(AtlanticWaveManager):
         last_modified = self._get_current_time()
         delta = None
 
+        self.dlogger.info("_put_delta() for delta_id %s, update = %s" %
+                          (delta_id, update))
+        
         # if it's a new entry (update=False)
         #   - There is no existing rule with delta_id==delta_id
         #   - Make sure everything is filled in
@@ -1280,14 +1324,13 @@ class DeltasAPI(SenseAPIResource):
         self.reqparse.add_argument('modelId', type=str, location='json')
         self.reqparse.add_argument('reduction', type=str, location='json')
         self.reqparse.add_argument('addition', type=str, location='json')
+        self.deltas = SenseAPI().get_all_deltas()
 
         self.dlogger.debug("__init__() complete")
     
     def get(self):
         self.dlogger.debug("get() start")
-        self.logger.info("get() id %s" % deltaid)
-        retval = {'deltas': marshal(deltas, delta_fields)}       #FIXME
-        #FIXME: this doesn't make sense: where does deltaid or deltas come from?
+        retval = {'deltas': marshal(self.deltas, delta_fields)}
         
         self.logger.info("get() returning %s" % retval)
         self.dlogger.debug("get() complete")
@@ -1300,14 +1343,15 @@ class DeltasAPI(SenseAPIResource):
         self.logger.info("post() args %s" % args)
         deltas, mystatus = SenseAPI().process_deltas(args)
         self.logger.info("post() results %s" % mystatus)
+        self.dlogger.info("post() deltas %s" % deltas)
         rstatus = HTTP_CREATED
         if int(mystatus) != HTTP_GOOD:
             rstatus = mystatus
             
         retval = {'deltas': marshal(deltas, delta_fields)}, rstatus
 
-        self.logger.info("post() returning %s" % retval)
-        self.dlogger.debug("post() complete")
+        self.logger.info("post() returning %s" % str(retval))
+        self.logger.debug("post() complete")
         return retval
     
 class DeltaAPI(SenseAPIResource):
@@ -1316,7 +1360,8 @@ class DeltaAPI(SenseAPIResource):
         self.dlogger.debug("__init__() start")
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('summary', type=str, default='true')
-        self.reqparse.add_argument('deltaid', type=str, location='json')
+        # Removed, as deltaid is in the URL
+        #self.reqparse.add_argument('deltaid', type=str, location='json')
         self.dlogger.debug("__init__() complete")
     
     def get(self, deltaid):
@@ -1325,13 +1370,13 @@ class DeltaAPI(SenseAPIResource):
         status, phase = SenseAPI().get_delta(deltaid)
         self.dlogger.debug("get() %s:%s" % (status, phase))
         retval = {'state': str(phase), 'deltaid': str(deltaid)}, status
-        self.logger.info("get() returning %s" % retval)
+        self.logger.info("get() returning %s" % str(retval))
         self.dlogger.debug("get() complete")
         return retval
 
 class CommitsAPI(SenseAPIResource):
     def __init__(self, urlbase):
-        super(CommitsAPI, self).__init__(urlbase, self.__class__.__name)
+        super(CommitsAPI, self).__init__(urlbase, self.__class__.__name__)
         self.dlogger.debug("__init__() start")
         self.dlogger.debug("__init__() complete")
 
@@ -1346,7 +1391,7 @@ class CommitsAPI(SenseAPIResource):
             self.logger.info("put() deltaid %s COMMIT FAILED" % deltaid)
             retval = {'result': "FAILED"}, status
             
-        self.logger.info("put() returning %s" % retval)
+        self.logger.info("put() returning %s" % str(retval))
         self.dlogger.debug("put() complete")
         return retval                         
         
