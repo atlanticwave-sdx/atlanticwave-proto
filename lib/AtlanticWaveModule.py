@@ -84,7 +84,8 @@ class AtlanticWaveModule(object):
             all_tb = all_tb + line
         self.dlogger.warning(all_tb)
 
-    def _initialize_db(self, db_filename, db_tables_tuples):
+    def _initialize_db(self, db_filename, db_tables_tuples,
+                       print_table_on_load=False):
         # A lot of modules will need DB access for storing data, but some use a
         # DB for storing configuration information as well. This is *optional*
         # to use, which is why it's not part of __init__()
@@ -101,7 +102,15 @@ class AtlanticWaveModule(object):
             try:
                 self.logger.info("Trying to load %s from DB" % name)
                 t = self.db.load_table(table)
+                if print_table_on_load:
+                    entries = t.find()
+                    print "\n\n&&&&& ENTRIES in %s &&&&&" % name
+                    for e in entries:
+                        print "\n%s" % str(e)
+                    print "&&&&& END ENTRIES &&&&&\n\n"
+                    
                 setattr(self, name, t)
+                
             except:
                 # If load_table() fails, that's fine! It means that the
                 # table doesn't yet exist. So, create it.
