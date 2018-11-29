@@ -76,12 +76,12 @@
               "destination": "dukes1"
             },
             {
-      	      "portnumber": 10,
+      	      "portnumber": 11,
 	       "speed": 80000000000,
 	       "destination": "rencictlr"
 	    },
             {
-      	      "portnumber": 11,
+      	      "portnumber": 12,
 	       "speed": 80000000000,
 	       "destination": "rencidtn"
 	    },
@@ -100,7 +100,7 @@
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2,10,30]
+            "managementvlanports":[1,2,11,30]
           }
         }
       ],
@@ -139,14 +139,14 @@
               "destination": "ncsus1"
             },
             { 
-              "portnumber": 10,
-               "speed": 80000000000,
-               "destination": "dukedtn"
-            },
-            { 
               "portnumber": 11,
                "speed": 80000000000,
                "destination": "dukectlr"
+            },
+            { 
+              "portnumber": 12,
+               "speed": 80000000000,
+               "destination": "dukedtn"
             }
           ],
           "internalconfig": {
@@ -192,14 +192,14 @@
               "destination": "rencis1"
             },
             { 
-              "portnumber": 10,
-               "speed": 80000000000,
-               "destination": "uncdtn"
-            },
-            { 
               "portnumber": 11,
                "speed": 80000000000,
                "destination": "uncctlr"
+            },
+            { 
+              "portnumber": 12,
+               "speed": 80000000000,
+               "destination": "uncdtn"
             }
           ],
           "internalconfig": {

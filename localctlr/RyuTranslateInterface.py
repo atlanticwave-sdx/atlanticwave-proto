@@ -25,7 +25,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.utils import hex_array
-from ryu.lib.packet import packet, ethernet, ether_types, vlan
+from ryu.lib.packet import packet, ethernet, ether_types
 
 # LC Rule Types
 from shared.MatchActionLCRule import *
