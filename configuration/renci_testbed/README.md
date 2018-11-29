@@ -63,23 +63,27 @@ Set port tunnel-modes
 # RENCI
 configure port 1 tunnel-mode passthrough
 configure port 2 tunnel-mode passthrough
-configure port 10 tunnel-mode passthrough
+configure port 11 tunnel-mode passthrough
+configure port 12 tunnel-mode passthrough
 configure port 30 tunnel-mode passthrough
 
 # DUKE
 configure port 1 tunnel-mode passthrough
 configure port 2 tunnel-mode passthrough
 configure port 11 tunnel-mode passthrough
+configure port 12 tunnel-mode passthrough
 
 # UNC
 configure port 1 tunnel-mode passthrough
 configure port 2 tunnel-mode passthrough
 configure port 11 tunnel-mode passthrough
+configure port 12 tunnel-mode passthrough
 
 # NCSU
 configure port 1 tunnel-mode passthrough
 configure port 2 tunnel-mode passthrough
 configure port 10 tunnel-mode passthrough
+configure port 11 tunnel-mode passthrough
 
 ```
 
@@ -87,19 +91,23 @@ configure port 10 tunnel-mode passthrough
 Create VFCs on all Corsa switches
 
 ```
-# Create bandwidth limiter VFC (br20) on all switches
+# Rate Limiting VFC
+# Create rate limiting VFC (br20) on RENCI | DUKE | UNC | NCSU
 configure bridge add br20 vpws resources 2
 configure bridge br20 controller add Eline 172.17.2.1 6653
+application eline configure connection add atlanticwave 21 22 "Rate Limiting VFC"
 
+# 
 # RENCI
 configure bridge add br21 openflow resources 10
 configure bridge br21 dpid 0xC9
 configure bridge br21 tunnel attach ofport 1 port 1
 configure bridge br21 tunnel attach ofport 2 port 2
-configure bridge br21 tunnel attach ofport 10 port 10
-configure bridge br21 tunnel attach ofport 30 port 30
+configure bridge br21 tunnel attach ofport 11 port 11
+configure bridge br21 tunnel attach ofport 12 port 12
 configure bridge br21 tunnel attach ofport 19 port 19 
 configure bridge br21 tunnel attach ofport 20 port 20 
+configure bridge br21 tunnel attach ofport 30 port 30
 configure bridge br21 controller add CONTbr21 192.168.201.196 6681
 
 # DUKE
@@ -109,6 +117,7 @@ configure bridge br22 dpid 0xCA
 configure bridge br22 tunnel attach ofport 1 port 1 
 configure bridge br22 tunnel attach ofport 2 port 2 
 configure bridge br22 tunnel attach ofport 11 port 11
+configure bridge br22 tunnel attach ofport 12 port 12
 configure bridge br22 tunnel attach ofport 19 port 19 
 configure bridge br22 tunnel attach ofport 20 port 20 
 configure bridge br22 controller add CONTbr22 192.168.202.39 6682
@@ -120,6 +129,7 @@ configure bridge br23 dpid 0xCB
 configure bridge br23 tunnel attach ofport 1 port 1 
 configure bridge br23 tunnel attach ofport 2 port 2 
 configure bridge br23 tunnel attach ofport 11 port 11
+configure bridge br23 tunnel attach ofport 12 port 12
 configure bridge br23 tunnel attach ofport 19 port 19 
 configure bridge br23 tunnel attach ofport 20 port 20 
 configure bridge br23 controller add CONTbr23 192.168.203.10 6683
@@ -131,6 +141,7 @@ configure bridge br24 dpid 0xCC
 configure bridge br24 tunnel attach ofport 1 port 1 
 configure bridge br24 tunnel attach ofport 2 port 2 
 configure bridge br24 tunnel attach ofport 10 port 10 
+configure bridge br24 tunnel attach ofport 11 port 11 
 configure bridge br24 tunnel attach ofport 19 port 19 
 configure bridge br24 tunnel attach ofport 20 port 20 
 configure bridge br24 controller add CONTbr24  192.168.204.21 6684
@@ -150,6 +161,4 @@ Type of the controller and site names are extracted from hostnames.
 /root/aw.sh -r 
 
 ```
-
-
 
