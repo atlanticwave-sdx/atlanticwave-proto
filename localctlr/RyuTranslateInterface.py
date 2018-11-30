@@ -1437,6 +1437,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             translate_table = SDXEGRESSRULETABLE
             flood_table = FORWARDINGTABLE
             learning_table = LEARNINGTABLE
+            switch_table = endpoint_table    # Used in some logs down below.
             self.logger.error("L2MultipointEndpo: %d,%d:%d:%s" % (
                 endpoint_table, flood_table,
                 of_cookie,
@@ -1477,8 +1478,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         if switch_rules == None or switch_table == None:
             self.logger.error(
-                "switch_rules or switch_table is None for msg: %s" %
-                sdx_rules)
+                "switch_rules or switch_table (%s) is None for msg: %s" %
+                (switch_table, sdx_rule))
             #FIXME: This shouldn't happen...
             pass
         
