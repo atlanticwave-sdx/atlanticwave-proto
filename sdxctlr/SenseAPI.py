@@ -56,10 +56,14 @@ errors = {
 HTTP_GOOD           = 200
 HTTP_CREATED        = 201
 HTTP_ACCEPTED       = 202
+HTTP_NO_CONTENT     = 204
+HTTP_NOT_MODIFIED   = 304
 HTTP_BAD_REQUEST    = 400
+HTTP_FORBIDDEN      = 403     # RETURNED BY FLASK-RESTFUL ONLY
 HTTP_NOT_FOUND      = 404
+HTTP_NOT_ACCEPTABLE = 406
 HTTP_CONFLICT       = 409
-HTTP_SERVER_ERROR   = 500
+HTTP_SERVER_ERROR   = 500     # RETURNED BY FLASK-RESTFUL ONLY
 
 # SENSE status codes
 STATUS_ACCEPTING    = "Accepting"
@@ -171,21 +175,14 @@ class SenseAPI(AtlanticWaveManager):
             endpoint='deltas',
             resource_class_kwargs={'urlbase':self.urlbase})
         api.add_resource(DeltaAPI,
-            '/sense-rm/api/sense/v1/delta/<string:deltaid>',
+            '/sense-rm/api/sense/v1/deltas/<string:deltaid>',
             endpoint='delta',
             resource_class_kwargs={'urlbase':self.urlbase})
         api.add_resource(CommitsAPI,
-            '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/commit',
+            '/sense-rm/api/sense/v1/deltas/<string:deltaid>/actions/commit',
             endpoint='commits',
             resource_class_kwargs={'urlbase':self.urlbase})
-        api.add_resource(ClearAPI,
-            '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/clear',
-            endpoint='clear',
-            resource_class_kwargs={'urlbase':self.urlbase})
-        api.add_resource(CancelAPI,
-            '/sense-rm/api/sense/v1/delta/<string:deltaid>/actions/cancel',
-            endpoint='cancel',
-            resource_class_kwargs={'urlbase':self.urlbase})
+
         
         self.generate_simplified_topology()
                 
@@ -695,9 +692,9 @@ class SenseAPI(AtlanticWaveManager):
             if delta == None:
                 # Doesn't exist anymore 
                 return None, HTTP_NOT_FOUND
-            status = self.cancel(parsed_reduction)
+            status = self.delete(parsed_reduction)
             retdelta = self._convert_delta(delta)
-            self.logger.info("Reduction %s canceled %s" % (parsed_reduction,
+            self.logger.info("Reduction %s deleted %s" % (parsed_reduction,
                                                            status))
 
         # If addition:
@@ -928,10 +925,10 @@ class SenseAPI(AtlanticWaveManager):
 
         return HTTP_GOOD
     
-    def cancel(self, deltaid):
-        ''' Cancels a specified deltaid.
+    def delete(self, deltaid):
+        ''' deletes a specified deltaid.
             Returns:
-              - HTTP_GOOD if successfully cancelled
+              - HTTP_NO_CONTENT if successfully deleted
               - HTTP_NOT_FOUND if delta is not found
         '''
         # Does it exist?
@@ -942,17 +939,9 @@ class SenseAPI(AtlanticWaveManager):
             # If delta is installed,
             if delta['status'] == STATUS_ACTIVATED:
                 self._remove_policy(delta)
-            return HTTP_GOOD
+            return HTTP_NO_CONTENT
         return HTTP_NOT_FOUND
     
-    def clear(self, deltaid):
-        ''' Clears a specified deltaid.
-            Returns:
-              - HTTP_GOOD if successfully cancelled
-              - HTTP_NOT_FOUND if delta is not found
-        '''
-        #FIXME: Is this right?
-        return self.cancel(deltaid)
 
     def _get_current_time(self):
         ''' Helper function, 
@@ -1374,33 +1363,32 @@ class DeltaAPI(SenseAPIResource):
         self.dlogger.debug("get() complete")
         return retval
 
+    def delete(self, deltaid):
+        self.dlogger.debug("delete() start")
+        self.logger.info("delete() deltaid %s" % deltaid)
+        status = SenseAPI().delete(deltaid)
+        retval = None
+        if int(status) == HTTP_NO_CONTENT:
+            retval = status
+        elif int(status) == HTTP_NOT_FOUND:
+            retval = {"error": "conflict",
+                      "error_description": "Delta ID %s not found" % deltaid,
+                      "error_uri": None} #FIXME: this should be a real URI
+        else:
+            retval = {"error": "%s" % status,
+                      "error_description": "Failure %s" % status,
+                      "error_uri": None} #FIXME: this should be a real URI
+
+        self.logger.info("delete() returning %s" % retval)
+        self.dlogger.debug("delete() complete")
+        return retval
+
 class CommitsAPI(SenseAPIResource):
     def __init__(self, urlbase):
         super(CommitsAPI, self).__init__(urlbase, self.__class__.__name__)
         self.dlogger.debug("__init__() start")
         self.dlogger.debug("__init__() complete")
 
-    def put(self, deltaid):
-        self.dlogger.debug("put() start")
-        self.logger.info("put() deltaid %s" % deltaid)
-        status = SenseAPI().commit(deltaid)
-        if status == HTTP_GOOD:
-            self.logger.info("put() deltaid %s COMMITTED" % deltaid)
-            retval = {'result': "COMMITTED"}, status
-        else:
-            self.logger.info("put() deltaid %s COMMIT FAILED" % deltaid)
-            retval = {'result': "FAILED"}, status
-            
-        self.logger.info("put() returning %s" % str(retval))
-        self.dlogger.debug("put() complete")
-        return retval                         
-        
-    def get(self):
-        self.dlogger.debug("get() start")
-        retval = {'result': True}, HTTP_GOOD
-        self.dlogger.debug("get() complete")
-        return retval
-        
     def post(self, deltaid):
         self.dlogger.debug("post() start")
         self.logger.info("post() deltaid %s" % deltaid)
@@ -1409,78 +1397,3 @@ class CommitsAPI(SenseAPIResource):
         self.dlogger.debug("post() complete")
         return retval
 
-class CancelAPI(SenseAPIResource):
-    def __init__(self, urlbase):
-        super(CancelAPI, self).__init__(urlbase, self.__class__.__name)
-        self.dlogger.debug("__init__() start")
-        self.dlogger.debug("__init__() complete")
-
-    def put(self, deltaid):
-        self.dlogger.debug("put() start")
-        self.logger.info("put() deltaid %s" % deltaid)
-        status, resp = SenseAPI().cancel(deltaid)
-        if status == HTTP_GOOD:
-            self.logger.info("put() deltaid %s CANCELLED" % deltaid)
-            retval = {'result': "CANCELLED"}, status
-        else:
-            self.logger.info("put() deltaid %s CANCEL FAILED, %s" %
-                             (deltaid, resp))
-            retval = {'result': "FAILED", 'mesg':str(resp)}, status
-        self.logger.info("put() returning %s" % retval)
-        self.dlogger.debug("put() complete")
-        return retval                         
-        
-    def get(self):
-        self.dlogger.debug("get() start")
-        retval = {'result': True}, 200
-        self.dlogger.debug("get() complete")
-        return retval
-        
-    def post(self, deltaid):
-        self.dlogger.debug("post() start")
-        #FIXME: this doesn't seem to do the same thing as put()... should it?
-        self.logger.INFO("post() deltaid %s" % deltaid)
-                      
-        retval = {'result': True}, HTTP_CREATED
-        self.logger.info("post() returning %s" % retval)
-        self.dlogger.debug("post() complete")
-        return retval
-        
-class ClearAPI(SenseAPIResource):
-    def __init__(self, urlbase):
-        super(ClearAPI, self).__init__(urlbase, self.__class__.__name)
-        self.dlogger.debug("__init__() start")
-        self.dlogger.debug("__init__() complete")
-
-    def put(self, deltaid):
-        self.dlogger.debug("put() start")
-        self.logger.info("put() deltaid %s" % deltaid)
-        status, resp = SenseAPI().clear(deltaid)
-        if status == HTTP_GOOD:
-            self.logger.info("put() deltaid %s CLEARED" % deltaid)
-            retval = {'result': "CLEARED"}, status
-        else:
-            self.logger.info("put() deltaid %s CLEAR FAILED, %s" %
-                             (deltaid, resp))
-            retval = {'result': "FAILED", 'mesg':str(resp)}, status
-            
-        self.logger.info("put() returning %s" % retval)
-        self.dlogger.debug("put() complete")
-        return retval                         
-        
-    def get(self):
-        self.dlogger.debug("get() start")
-        retval = {'result': True}, HTTP_GOOD
-        self.dlogger.debug("get() complete")
-        return retval
-        
-    def post(self, deltaid):
-        self.dlogger.debug("post() start")
-        #FIXME: this doesn't seem to do the same thing as put()... should it?
-        self.logger.info("post() deltaid %s" % deltaid)
-        retval = {'result': True}, HTTP_CREATED
-        self.logger.info("post() returning %s" % retval)
-        self.dlogger.debug("post() complete")
-        return retval
-
-#FIXME: ModelAPI not used, so not copying here.
