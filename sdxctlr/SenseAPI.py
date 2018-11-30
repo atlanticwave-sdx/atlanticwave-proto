@@ -905,6 +905,9 @@ class SenseAPI(AtlanticWaveManager):
               - HTTP_NOT_FOUND if delta is not found.
               - HTTP_CONFLICT if delta cannot be committed.
         '''
+    
+        self.dlogger.debug("commit(): Attempting to commit deltaid %s" %
+                           deltaid)
         # Get the delta information
         delta = self._get_delta_by_id(deltaid)
         
@@ -921,6 +924,7 @@ class SenseAPI(AtlanticWaveManager):
             return HTTP_CONFLICT
             
         # If possible, Install rule
+        self.dlogger.debug("commit(): Calling _install_policy")
         self._install_policy(deltaid, delta['sdx_rule'])
 
         return HTTP_GOOD
@@ -1392,8 +1396,9 @@ class CommitsAPI(SenseAPIResource):
     def post(self, deltaid):
         self.dlogger.debug("post() start")
         self.logger.info("post() deltaid %s" % deltaid)
-        retval = {'result': True}, HTTP_CREATED
-        self.logger.info("post() returning %s" % retval)
+        resp = SenseAPI().commit(deltaid)
+        retval = {'result': True}, resp
+        self.logger.info("post() returning %s" % str(retval))
         self.dlogger.debug("post() complete")
         return retval
 
