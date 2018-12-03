@@ -245,12 +245,12 @@
               "destination": "dukes1"
             },
             { 
-              "portnumber": 10,
+              "portnumber": 11,
                "speed": 80000000000,
                "destination": "ncsuctlr"
             },
             { 
-              "portnumber": 11,
+              "portnumber": 12,
                "speed": 80000000000,
                "destination": "ncsudtn"
             }
@@ -264,7 +264,7 @@
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[2,10]
+            "managementvlanports":[2,11]
           }
         }
       ],

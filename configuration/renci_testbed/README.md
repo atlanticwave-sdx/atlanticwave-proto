@@ -82,8 +82,8 @@ configure port 12 tunnel-mode passthrough
 # NCSU
 configure port 1 tunnel-mode passthrough
 configure port 2 tunnel-mode passthrough
-configure port 10 tunnel-mode passthrough
 configure port 11 tunnel-mode passthrough
+configure port 12 tunnel-mode passthrough
 
 ```
 
@@ -140,8 +140,8 @@ configure bridge add br24 openflow resources 10
 configure bridge br24 dpid 0xCC
 configure bridge br24 tunnel attach ofport 1 port 1 
 configure bridge br24 tunnel attach ofport 2 port 2 
-configure bridge br24 tunnel attach ofport 10 port 10 
 configure bridge br24 tunnel attach ofport 11 port 11 
+configure bridge br24 tunnel attach ofport 12 port 12 
 configure bridge br24 tunnel attach ofport 19 port 19 
 configure bridge br24 tunnel attach ofport 20 port 20 
 configure bridge br24 controller add CONTbr24  192.168.204.21 6684
