@@ -14,7 +14,7 @@
       "type": "dtn",
       "friendlyname": "RENCI BF40G Node",
       "location": "35.939796, -79.018203",
-      "vlan": 1420},
+      "vlan": 1421},
     "dukectlr": {
       "type": "localcontroller",
       "friendlyname": "DUKE Controller",
@@ -24,7 +24,7 @@
       "type": "dtn",
       "friendlyname": "DUKE BF40G Node",
       "location": "36.003614, -78.938755",
-      "vlan": 1420},
+      "vlan": 1422},
     "uncctlr": {
       "type": "localcontroller",
       "friendlyname": "UNC Controller",
@@ -34,7 +34,7 @@
       "type": "dtn",
       "friendlyname": "UNC BF40G Node",
       "location": "35.903395, -79.048370",
-      "vlan": 1420},
+      "vlan": 1423},
     "ncsuctlr": {
       "type": "localcontroller",
       "friendlyname": "NCSU Controller",
@@ -44,7 +44,7 @@
       "type": "dtn",
       "friendlyname": "NCSU BF40G Node",
       "location": "35.773395, -78.677730",
-      "vlan": 1420}
+      "vlan": 1424}
   },
   "localcontrollers": {
     "rencictlr":{
