@@ -127,6 +127,11 @@
               "destination": "rencis1"
             },
             {
+              "portnumber": 24,
+              "speed": 80000000000,
+              "destination": "uncs1"
+            },
+            {
               "portnumber": 4,
                "speed": 80000000000,
                "destination": "rencibm4"
@@ -146,7 +151,7 @@
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [27,28],
             "managementvlan":1411,
-            "managementvlanports":[23]
+            "managementvlanports":[23,24]
           }
         }
       ],
