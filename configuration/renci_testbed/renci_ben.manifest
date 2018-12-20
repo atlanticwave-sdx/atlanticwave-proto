@@ -121,7 +121,7 @@
         {
           "name":"rencis2",
           "friendlyname":"RENCI INNO Corsa DP2100",
-          "ip": "10.0.201.5",
+          "ip": "10.0.201.1",
           "dpid":"205",
           "brand":"Open vSwitch",
           "model": "2.3.0",
