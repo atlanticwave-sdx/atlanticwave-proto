@@ -85,6 +85,11 @@
               "speed": 80000000000,
               "destination": "dukes1"
             },
+            { 
+              "portnumber": 23,
+              "speed": 80000000000,
+              "destination": "rencis2"
+            },
             {
       	      "portnumber": 11,
 	       "speed": 80000000000,
@@ -110,7 +115,7 @@
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2,11,30]
+            "managementvlanports":[1,2,11,23,30]
           }
         },
         {
@@ -125,11 +130,6 @@
               "portnumber": 23,
               "speed": 80000000000,
               "destination": "rencis1"
-            },
-            {
-              "portnumber": 24,
-              "speed": 80000000000,
-              "destination": "uncs1"
             },
             {
               "portnumber": 4,
@@ -151,7 +151,7 @@
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [27,28],
             "managementvlan":1411,
-            "managementvlanports":[23,24]
+            "managementvlanports":[23]
           }
         }
       ],
