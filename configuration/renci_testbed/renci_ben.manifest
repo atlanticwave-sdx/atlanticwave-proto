@@ -139,7 +139,7 @@
           ],
           "internalconfig": {
             "corsaurl": "https://corsa-1.renci.ben/",
-            "corsatoken": ""245c25eac968cb22624438f0e1bcd2d766be666843676e413b6739d86f6c3523bf7aab1e5c3231aa2d7acd6757371dea3d8cbc470a1e60825f93a85dabd01ddb,
+            "corsatoken": "245c25eac968cb22624438f0e1bcd2d766be666843676e413b6739d86f6c3523bf7aab1e5c3231aa2d7acd6757371dea3d8cbc470a1e60825f93a85dabd01ddb",
             "corsabridge": "br25",
             "corsabwin": 25,
             "corsabwout": 26,
