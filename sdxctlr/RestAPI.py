@@ -1477,6 +1477,7 @@ class RestAPI(AtlanticWaveModule):
         except Exception as e:
              #FIXME - proper response
             if request_wants_json(request):
+                print "ERROR at 1480: %s" % str(e)
                 return make_response(jsonify({str(e)}), 400)
             #FIXME:  NEED HTML response written
             return make_response(jsonify({str(e)}), 400)
