@@ -33,5 +33,5 @@ else
 fi
 
 cd sdxctlr/
-python SDXController.py -m $MANIFEST -H $IPADDR -p $PORT -l $LCPORT -N
+python SDXController.py -m $MANIFEST -H $IPADDR -p $PORT -l $LCPORT 
 
