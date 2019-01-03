@@ -75,6 +75,10 @@ class EndpointConnectionPolicy(UserPolicy):
         # Second
         pass
 
+    def __str__(self):
+        return "%s(%s,%s,%s,%s)" % (self.get_policy_name(), self.deadline,
+                                    self.src, self.dst, self.data)
+
     @classmethod
     def check_syntax(cls, json_rule):
         try:
@@ -90,6 +94,12 @@ class EndpointConnectionPolicy(UserPolicy):
                                           (str(data), type(data)))
             #FIXME: checking on src and dst to see if they're strings?
         except Exception as e:
+            import os
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            lineno = exc_tb.tb_lineno
+            print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
+                                                 filename,lineno)
             raise
 
     def breakdown_rule(self, tm, ai):

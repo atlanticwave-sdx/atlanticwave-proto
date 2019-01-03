@@ -58,6 +58,14 @@ class L2TunnelPolicy(UserPolicy):
 
         # Anything specific here?
         pass
+    
+    def __str__(self):
+        return "%s(%s,%s,%s,SRC(%s,%s,%s),DST(%s,%s,%s),%s" % (
+            self.get_policy_name(), self.start_time, self.stop_time,
+            self.src_switch, self.src_port, self.src_vlan,
+            self.dst_switch, self.dst_port, self.dst_vlan,
+            self.bandwidth)
+                                    
 
     @classmethod
     def check_syntax(cls, json_rule):
@@ -97,10 +105,15 @@ class L2TunnelPolicy(UserPolicy):
                 (dst_vlan > 4090)):
                 raise UserPolicyValueError("dst_vlan is out of range %d" %
                                            dst_vlan)
-
-        except e:
+        except Exception as e:
+            import os
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            lineno = exc_tb.tb_lineno
+            print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
+                                                 filename,lineno)
             raise
-            
+        
     def breakdown_rule(self, tm, ai):
         self.breakdown = []
         topology = tm.get_topology()

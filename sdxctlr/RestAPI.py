@@ -1368,13 +1368,15 @@ class RestAPI(AtlanticWaveModule):
     @login_required
     @app.route(EP_POLICIESTYPESPEC, methods=['POST'])
     def v1policiestypespecpost(policytype):
+        RestAPI().logger.info("POST new policy type %s" % policytype)
+
         if not flask_login.current_user.is_authenticated:
             print "Not Authenticated!"
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         '''
         Helper function that's used to preprocess incoming data from form
-        '''
+        '''        
         def _parse_post_data(data_json):
             print data_json
             if "L2Multipoint" in data_json.keys():
@@ -1440,13 +1442,18 @@ class RestAPI(AtlanticWaveModule):
         base_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
         userid = flask_login.current_user.id
+        RestAPI().logger.info("  - user %s" % userid)
 
         # Extract out data. Try JSON first.
         data = request.get_json()
+        if data != None:
+            RestAPI().logger.info("  - JSON data %s" % data)
+        
         if data == None:
             # Not JSON, so from the HTML form:
             preprocessed_data = {policytype:(flask.request.form.to_dict())}
             data = _parse_post_data(preprocessed_data)
+            RestAPI().logger.info("  - Form data %s" % data)
             
         retdict = {'policy':{'user':userid,
                              'type':policytype,
@@ -1455,10 +1462,14 @@ class RestAPI(AtlanticWaveModule):
         # Get UserPolicy
         try:
             policyclass = RuleRegistry().get_rule_class(policytype)
+            RestAPI().dlogger.debug("POST %s: %s" % (policytype, policyclass))
             policyclass.check_syntax(data)
+            RestAPI().dlogger.debug("  - check_syntax successful")
             policy = policyclass(userid, data)
-            hash = RuleManager().add_rule(policy)
-            policy_url = base_url + str(hash)
+            RestAPI().dlogger.debug("  - policy: %s" % policy)
+            hashval = RuleManager().add_rule(policy)
+            RestAPI().dlogger.debug("  - hash: %s" % hashval)
+            policy_url = base_url + str(hashval)
             retdict['policy']['href'] = policy_url
             #FIXME - proper response
             if request_wants_json(request):
@@ -1477,7 +1488,8 @@ class RestAPI(AtlanticWaveModule):
         except Exception as e:
              #FIXME - proper response
             if request_wants_json(request):
-                return make_response(jsonify({str(e)}), 400)
+                RestAPI().logger.error("POST %s ERROR: %s" % (policyname, e,))
+                return make_response(jsonify({"Error":str(e)}), 400)
             #FIXME:  NEED HTML response written
             return make_response(jsonify({str(e)}), 400)
 

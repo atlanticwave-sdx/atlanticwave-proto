@@ -174,7 +174,8 @@ class TopologyManager(AtlanticWaveManager):
     def reserve_bw(self, node_pairs, bw):        
         ''' Generic method for reserving bandwidth based on pairs of nodes. '''
         #FIXME: Should there be some more accounting on this? Reference to the
-        #structure reserving the bw?        
+        #structure reserving the bw?
+        self.dlogger.debug("reserve_bw: %s, %s" % (bw, node_pairs))
         with self.topolock:
             # Check to see if we're going to go over the bandwidth of the edge
             for (node, nextnode) in node_pairs:
@@ -191,6 +192,7 @@ class TopologyManager(AtlanticWaveManager):
     def unreserve_bw(self, node_pairs, bw):
         ''' Generic method for removing bw reservation based on pairs of nodes. 
         '''
+        self.dlogger.debug("unreserve_bw: %s, %s" % (bw, node_pairs))
         with self.topolock:
             # Check to see if we've removed too much
             for (node, nextnode) in node_pairs:
@@ -209,7 +211,7 @@ class TopologyManager(AtlanticWaveManager):
         #FIXME: Should there be some more accounting on this? Reference to the
         #structure reserving the vlan?
         # FIXME: This probably has some issues with concurrency.
-
+        self.dlogger.debug("reserve_vlan: %s, %s" % (vlan, node_pairs))
         with self.topolock:
             # Make sure the path is clear -> very similar to find_vlan_on_path
             for node in nodes:
@@ -231,6 +233,7 @@ class TopologyManager(AtlanticWaveManager):
     def unreserve_vlan(self, nodes, node_pairs, vlan):
         ''' Generic method for unreserving VLANs on given nodes and paths based 
             on nodes and pairs of nodes. '''
+        self.dlogger.debug("unreserve_vlan: %s, %s" % (vlan, node_pairs))
         with self.topolock:
             # Make sure it's already reserved on the given path:
             for node in nodes:
@@ -281,6 +284,7 @@ class TopologyManager(AtlanticWaveManager):
             Returns an available VLAN if possible, None if none are available on
             the submitted path.
         '''
+        self.dlogger.debug("find_vlan_on_path: %s" % path)
         selected_vlan = None
         with self.topolock:
             for vlan in range(1,4089):
@@ -307,7 +311,8 @@ class TopologyManager(AtlanticWaveManager):
                 # If all good, set selected_vlan
                 selected_vlan = vlan
                 break
-
+            
+        self.dlogger.debug("find_vlan_on_path returning %s" % selected_vlan)
         return selected_vlan
 
     def find_valid_path(self, src, dst, bw=None):
@@ -320,6 +325,7 @@ class TopologyManager(AtlanticWaveManager):
         # https://networkx.readthedocs.io/en/stable/reference/generated/networkx.algorithms.shortest_paths.generic.all_shortest_paths.html
         # https://networkx.readthedocs.io/en/stable/reference/generated/networkx.algorithms.simple_paths.all_simple_paths.html
         # May need to use *both* algorithms. Starting with shortest paths now.
+        self.dlogger.debug("find_valid_path: %s, %s, %s" % (bw, src, dst))
         list_of_paths = nx.all_shortest_paths(self.topo,
                                               source=src,
                                               target=dst)
@@ -329,7 +335,9 @@ class TopologyManager(AtlanticWaveManager):
             vlan = self.find_vlan_on_path(path)
             if vlan == None:
                 continue
-
+            
+            self.dlogger.debug("find_valid_path found path %s has valid VLANs" %
+                                   path)
             enough_bw = True
             for (node, nextnode) in zip(path[0:-1], path[1:]):
                 # For each edge on the path, check that bw is available.
@@ -342,9 +350,12 @@ class TopologyManager(AtlanticWaveManager):
                 
             # If all's good, return the path to the caller
             if enough_bw:
+                self.dlogger.debug("find_valid_path found path has bw %s" %
+                                   path)
                 return path
         
         # No path return
+        self.dlogger.debug("find_valid_path found no path")
         return None
 
     
@@ -353,29 +364,31 @@ class TopologyManager(AtlanticWaveManager):
     # --------------
 
     def reserve_vlan_on_tree(self, tree, vlan):
-        ''' Marks a VLAN in use on a provided tree (nx graph). Raises an error if
-            the VLAN is in use at the time at any location. '''
+        ''' Marks a VLAN in use on a provided tree (nx graph). Raises an error 
+            if the VLAN is in use at the time at any location. '''
         self.reserve_vlan(tree.nodes(), tree.edges(), vlan)
         
     def unreserve_vlan_on_tree(self, tree, vlan):
-        ''' Removes reservations on a given tree (nx graph) for a given VLAN. '''
+        ''' Removes reservations on a given tree (nx graph) for a given VLAN. 
+        '''
         self.unreserve_vlan(tree.nodes(), tree.edges(), vlan)
 
     def reserve_bw_on_tree(self, tree, bw):
-        ''' Reserves a specified amount of bandwidth on a given tree (nx graph). 
-            Raises an error if the bandwidth is not available at any part of the 
+        ''' Reserves a specified amount of bandwidth on a given tree (nx graph).
+            Raises an error if the bandwidth is not available at any part of the
             tree. '''
         self.reserve_bw(tree.edges(), bw)
         
     def unreserve_bw_on_tree(self, tree, bw):
-        ''' Removes reservations on a given tree (nx graph) for a given amount of
-            bandwidth. '''
+        ''' Removes reservations on a given tree (nx graph) for a given amount 
+            of bandwidth. '''
         self.unreserve_bw(tree.edges(), bw)
 
     def find_vlan_on_tree(self, tree):
         ''' Tree version of find_vlan_on_path(). Finds a VLAN that's not being
             used at the moment on a provivded path. Returns an available VLAN if
             possible, None if none are available on the submitted tree. '''
+        self.dlogger.debug("find_vlan_on_tree: %s" % tree.nodes()) 
         selected_vlan = None
         with self.topolock:
             for vlan in range(1,4089):
@@ -403,6 +416,7 @@ class TopologyManager(AtlanticWaveManager):
                 selected_vlan = vlan
                 break
 
+        self.dlogger.debug("find_vlan_on_tree returning %s" % selected_vlan)
         return selected_vlan
 
     def find_valid_steiner_tree(self, nodes, bw=None):
@@ -415,6 +429,7 @@ class TopologyManager(AtlanticWaveManager):
         #bandwidth. Take existing topology, copy it, and delete the edge with
         #a problem, then rerun Kou's algorithm.
 
+        self.dlogger.debug("find_valid_steiner_tree: %s, %s" % (bw, nodes))
         # Prime the topology to use
         topo = self.topo
         # Loop through, trying to make a valid Steiner tree that has available
@@ -427,6 +442,9 @@ class TopologyManager(AtlanticWaveManager):
             
             try:
                 tree = make_steiner_tree(self.topo, nodes)
+                self.dlogger.debug("find_valid_steiner_tree: found %s" %
+                                   (tree.edges()))
+
             except ValueError:
                 raise
             except nx.exception.NetworkXNoPath:
@@ -453,9 +471,12 @@ class TopologyManager(AtlanticWaveManager):
             selected_vlan = self.find_vlan_on_tree(tree)
             if selected_vlan == None:
                 #FIXME: how to handle this?
+                self.logger.error("find_valid_steiner_tree: Could not find VLAN, unhandled!")
                 pass
  
 
             # Has BW and VLAN available, return it.
+            self.dlogger.debug("find_valid_steiner_tree: Successful %s" %
+                               tree.edges())
             return tree
             
