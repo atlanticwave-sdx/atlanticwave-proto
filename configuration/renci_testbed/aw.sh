@@ -109,7 +109,7 @@ build_docker_image(){
    
    cd $TMP_DIR
    title "Clone Branch ${AW_BRANCH}"
-###   git clone -b $BR $REPO
+   git clone -b $BR $REPO
    cp ${TMP_DIR}/atlanticwave-proto/configuration/renci_testbed/setup-${TYPE}-controller.sh ${WORK_DIR}
    chmod +x ${WORK_DIR}/setup-${TYPE}-controller.sh 
    cd ${WORK_DIR}
