@@ -198,7 +198,11 @@ Type of the controller and site names are extracted from hostnames.
 
 ```
 # Build docker images
-/root/aw.sh -b
+/root/aw.sh -R <REPO> -B <BRANCH> -b
+Default Repo: https://github.com/RENCI-NRIG/atlanticwave-proto.git
+Default Branch: master-rci
+
+/root/aw.sh -B renci-corsa-ben -b
 
 # Run docker containers
 /root/aw.sh -r 
