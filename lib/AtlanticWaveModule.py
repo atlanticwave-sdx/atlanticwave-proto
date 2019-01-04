@@ -55,7 +55,7 @@ class AtlanticWaveModule(object):
         if logfilename != None:
             formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
             console = logging.StreamHandler()
-            console.setLevel(logging.WARNING)
+            console.setLevel(logging.DEBUG)
             console.setFormatter(formatter)
             logfile = logging.FileHandler(logfilename)
             logfile.setLevel(logging.DEBUG)

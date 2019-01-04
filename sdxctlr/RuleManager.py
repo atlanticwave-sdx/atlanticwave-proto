@@ -142,21 +142,25 @@ class RuleManager(AtlanticWaveManager):
             failure message based on why the rule installation failed. Also 
             returns a reference to the rule (e.g., a tracking number) so that 
             more details can be retrieved in the future. '''
-
+        self.logger.info("add_rule: %s" % rule)
         try:
             breakdown = self._determine_breakdown(rule)
         except Exception as e: raise
+        self.dlogger.info("add_rule: breakdowns %s" % breakdown)
 
         # If everything passes, set the hash, cookie, and breakdown,
         # put into database
-        rulehash = self._get_new_rule_number()
+        rulehash = self._get_new_rule_number()        
         rule.set_rule_hash(rulehash)
         for entry in breakdown:
             entry.set_cookie(rulehash)
         rule.set_breakdown(breakdown)
+        self.dlogger.info("add_rule: hash and cookies set to %s" % rulehash)
 
         rule.pre_add_callback(TopologyManager(), AuthorizationInspector())
         self._add_rule_to_db(rule)
+        self.dlogger.info("add_rule: Rule added to db")
+
             
         return rulehash
         
@@ -353,7 +357,8 @@ class RuleManager(AtlanticWaveManager):
     def _add_rule_to_db(self, rule):
         ''' Adds rule to the database, which also include handling timed 
             insertion of rules. '''
-
+        self.dlogger.info("_add_rule_to_db: %s:%s" % (rule,
+                                                      rule.get_rule_hash()))
         state = INACTIVE_RULE
 
         # Should this be installed now? e.g., Is the begin time before *now*?
@@ -376,9 +381,11 @@ class RuleManager(AtlanticWaveManager):
 #        print "Remove  : %s" % remove_time
 
         if remove_time != None and now >= remove_time:
+            self.dlogger.info("  EXPIRED_RULE")
             state = EXPIRED_RULE
         elif now >= install_time: # implicitly, before remove_time
             state = ACTIVE_RULE
+            self.dlogger.info("  ACTIVE_RULE")
             self._install_rule(rule)
 
         # Push into DB.
@@ -394,6 +401,7 @@ class RuleManager(AtlanticWaveManager):
 
         # Restart install timer if it's a rule starting the future
         if state == INACTIVE_RULE:
+            self.dlogger.info("  INACTIVE_RULE")
             self._restart_install_timer()
 
 
@@ -436,7 +444,8 @@ class RuleManager(AtlanticWaveManager):
     def _install_rule(self, rule):
         ''' Helper function that installs a rule into the switch. '''
         try:
-            self.logger.debug("_install_rule")
+            self.dlogger.debug("_install_rule: %s:%d" % (rule,
+                                                         rule.get_rule_hash()))
             self._install_breakdown(rule.get_breakdown())
         except Exception as e: raise
         self._restart_remove_timer()
