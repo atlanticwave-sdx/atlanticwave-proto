@@ -14,7 +14,17 @@
       "type": "dtn",
       "friendlyname": "RENCI BF40G Node",
       "location": "35.939796, -79.018203",
-      "vlan": 1420},
+      "vlan": 1421},
+    "rencibm4": {
+      "type": "dtn",
+      "friendlyname": "RENCI BM4 Node",
+      "location": "35.939796, -79.018203",
+      "vlan": 1425},
+    "rencibm9": {
+      "type": "dtn",
+      "friendlyname": "RENCI BM9 Node",
+      "location": "35.939796, -79.018203",
+      "vlan": 1425},
     "dukectlr": {
       "type": "localcontroller",
       "friendlyname": "DUKE Controller",
@@ -24,7 +34,7 @@
       "type": "dtn",
       "friendlyname": "DUKE BF40G Node",
       "location": "36.003614, -78.938755",
-      "vlan": 1420},
+      "vlan": 1422},
     "uncctlr": {
       "type": "localcontroller",
       "friendlyname": "UNC Controller",
@@ -34,7 +44,7 @@
       "type": "dtn",
       "friendlyname": "UNC BF40G Node",
       "location": "35.903395, -79.048370",
-      "vlan": 1420},
+      "vlan": 1423},
     "ncsuctlr": {
       "type": "localcontroller",
       "friendlyname": "NCSU Controller",
@@ -44,7 +54,7 @@
       "type": "dtn",
       "friendlyname": "NCSU BF40G Node",
       "location": "35.773395, -78.677730",
-      "vlan": 1420}
+      "vlan": 1424}
   },
   "localcontrollers": {
     "rencictlr":{
@@ -75,6 +85,11 @@
               "speed": 80000000000,
               "destination": "dukes1"
             },
+            { 
+              "portnumber": 23,
+              "speed": 80000000000,
+              "destination": "rencis2"
+            },
             {
       	      "portnumber": 11,
 	       "speed": 80000000000,
@@ -100,7 +115,43 @@
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2,11,30]
+            "managementvlanports":[1,2,11,23,30]
+          }
+        },
+        {
+          "name":"rencis2",
+          "friendlyname":"RENCI INNO Corsa DP2100",
+          "ip": "10.0.201.1",
+          "dpid":"205",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 23,
+              "speed": 80000000000,
+              "destination": "rencis1"
+            },
+            {
+              "portnumber": 4,
+               "speed": 80000000000,
+               "destination": "rencibm4"
+            },
+            {
+              "portnumber": 9,
+               "speed": 80000000000,
+               "destination": "rencibm9"
+            }
+          ],
+          "internalconfig": {
+            "corsaurl": "https://corsa-1.renci.ben/",
+            "corsatoken": "245c25eac968cb22624438f0e1bcd2d766be666843676e413b6739d86f6c3523bf7aab1e5c3231aa2d7acd6757371dea3d8cbc470a1e60825f93a85dabd01ddb",
+            "corsabridge": "br25",
+            "corsabwin": 25,
+            "corsabwout": 26,
+            "corsaratelimitbridge": "br20",
+            "corsaratelimitports": [27,28],
+            "managementvlan":1411,
+            "managementvlanports":[23]
           }
         }
       ],
@@ -245,12 +296,12 @@
               "destination": "dukes1"
             },
             { 
-              "portnumber": 10,
+              "portnumber": 11,
                "speed": 80000000000,
                "destination": "ncsuctlr"
             },
             { 
-              "portnumber": 11,
+              "portnumber": 12,
                "speed": 80000000000,
                "destination": "ncsudtn"
             }
@@ -264,7 +315,7 @@
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[2,10]
+            "managementvlanports":[2,11]
           }
         }
       ],

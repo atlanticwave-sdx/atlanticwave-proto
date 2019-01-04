@@ -773,7 +773,7 @@ class RestAPI(AtlanticWaveModule):
         base_url = request.base_url
         retdict = {'href':base_url, 'links':{}}
         # Get all the users
-        users = ussermanager.get_users()
+        users = UserManager().get_users()
         for user in users:
             un = user['username']
             retdict['links'][un] = {'href': base_url + "/" + un,
@@ -1477,6 +1477,7 @@ class RestAPI(AtlanticWaveModule):
         except Exception as e:
              #FIXME - proper response
             if request_wants_json(request):
+                print "ERROR at 1480: %s" % str(e)
                 return make_response(jsonify({str(e)}), 400)
             #FIXME:  NEED HTML response written
             return make_response(jsonify({str(e)}), 400)
