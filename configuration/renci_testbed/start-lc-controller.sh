@@ -1,26 +1,30 @@
 #/bin/bash
 
-OPTS="dit"
-#OPTS="it"
+#OPTS="dit"
+OPTS="it"
 
-LC_SITE="$1"
-export LC_SITE
+SITE="$1"
+export SITE
 
 SDXIPVAL="10.14.11.254"
 export SDXIPVAL
 
-case ${LC_SITE} in
-    rencictlr) 
+case ${SITE} in
+    renci)
               RYU_PORT=6681
+              LC_SITE="rencictlr"
               ;;
-    dukectlr) 
+    duke)
               RYU_PORT=6682
+              LC_SITE="dukectlr"
               ;;
-    uncctlr) 
+    unc)
               RYU_PORT=6683
+              LC_SITE="uncctlr"
               ;;
-    ncsuctlr) 
+    ncsu)
               RYU_PORT=6684
+              LC_SITE="ncsuctlr"
               ;;
     \?)
               echo "Invalid option" >&2
