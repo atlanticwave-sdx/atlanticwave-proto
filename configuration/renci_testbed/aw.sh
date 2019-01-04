@@ -14,19 +14,19 @@ HOSTNAME=$(hostname)
 
 case ${HOSTNAME} in
     bf40g1.renci.ben)
-            SITE="rencictlr"
+            SITE="renci"
             TYPE="lc"
             ;;
     bf40g1.duke.ben)
-            SITE="dukectlr"
+            SITE="duke"
             TYPE="lc"
             ;;
     bf40g1.unc.ben)
-            SITE="uncctlr"
+            SITE="unc"
             TYPE="lc"
             ;;
     bf40g1.ncsu.ben)
-            SITE="ncsuctlr"
+            SITE="ncsu"
             TYPE="lc"
             ;;
     atlanticwave-sdx-controller.renci.ben)
@@ -39,7 +39,7 @@ esac
 #TYPE=$(hostnamectl --transient | cut -d- -f2 ) # sdx | lc 
 
 AW_REPO="https://github.com/RENCI-NRIG/atlanticwave-proto.git"
-AW_BRANCH="renci_testbed_setup"
+AW_BRANCH="renci-corsa-ben"
 
 
 clean_up (){
@@ -108,11 +108,12 @@ build_docker_image(){
    TYPE=$5
    
    cd $TMP_DIR
-   git clone -b $BR $REPO
+   title "Clone Branch ${AW_BRANCH}"
+###   git clone -b $BR $REPO
    cp ${TMP_DIR}/atlanticwave-proto/configuration/renci_testbed/setup-${TYPE}-controller.sh ${WORK_DIR}
    chmod +x ${WORK_DIR}/setup-${TYPE}-controller.sh 
    cd ${WORK_DIR}
-   ./setup-${TYPE}-controller.sh
+   ./setup-${TYPE}-controller.sh -R ${AW_REPO} -B ${AW_BRANCH}
 
 }
 
@@ -133,8 +134,14 @@ stop_docker_container(){
 }
 
 
-while getopts "cbrsH" opt; do
+while getopts "R:B:cbrsH" opt; do
     case $opt in
+        R)
+            AW_REPO=${OPTARG}
+            ;;
+        B)
+            AW_BRANCH=${OPTARG}
+            ;;
         c)
             title "Cleanup Files"
             cleanup_files ${TMP_DIR} ${WORK_DIR} ${TYPE}
