@@ -39,7 +39,7 @@ esac
 #TYPE=$(hostnamectl --transient | cut -d- -f2 ) # sdx | lc 
 
 AW_REPO="https://github.com/RENCI-NRIG/atlanticwave-proto.git"
-AW_BRANCH="renci-corsa-ben"
+AW_BRANCH="master-rci"
 
 
 clean_up (){
