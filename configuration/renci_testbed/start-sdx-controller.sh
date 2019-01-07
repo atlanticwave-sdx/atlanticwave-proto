@@ -1,7 +1,7 @@
 #/bin/bash
 
-OPTS="dit"
-#OPTS="it"
+#OPTS="dit"
+OPTS="it"
 NAME="sdxrencitestbed"
 
 # SDX Controller
