@@ -3,12 +3,12 @@
 # Package installation
 sudo yum install -y docker git
 
-
 # Docker user modifications?
 sudo groupadd docker
 sudo usermod -aG docker $USER
 rm -rf ~/.docker
 sudo systemctl enable docker
+
 
 # Pull down the latest and greatest
 git clone https://github.com/atlanticwave-sdx/atlanticwave-proto.git
@@ -26,6 +26,4 @@ sudo docker build -t sdx_container .
 cd ../lc_container
 sudo docker build -t lc_container .
 #rm helloworld.manifest
-
-
 
