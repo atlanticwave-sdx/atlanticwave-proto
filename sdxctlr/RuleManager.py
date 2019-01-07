@@ -370,7 +370,10 @@ class RuleManager(AtlanticWaveManager):
         # Check if valid rule
         try:
             valid = ValidityInspector().is_valid_rule(rule)
-        except Exception as e: raise
+        except Exception as e:
+            self.dlogger.error("Caught Error for rule %s" % rule)
+            self.exception_tb(e)
+            raise
         
         if valid != True:
             raise RuleManagerValidationError(
@@ -379,7 +382,10 @@ class RuleManager(AtlanticWaveManager):
         # Get the breakdown of the rule
         try:
             breakdown = BreakdownEngine().get_breakdown(rule)
-        except Exception as e: raise
+        except Exception as e:
+            self.dlogger.error("Caught Error for rule %s" % rule)
+            self.exception_tb(e)
+            raise
 
         if breakdown == None:
             raise RuleManagerBreakdownError(
@@ -388,7 +394,10 @@ class RuleManager(AtlanticWaveManager):
         # Check if the user is authorized to perform those actions.
         try:
             authorized = AuthorizationInspector().is_authorized(rule.username, rule)
-        except Exception as e: raise
+        except Exception as e:
+            self.dlogger.error("Caught Error for rule %s" % rule)
+            self.exception_tb(e)
+            raise
             
         if authorized != True:
             raise RuleManagerAuthorizationError(

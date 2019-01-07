@@ -449,9 +449,14 @@ class TopologyManager(AtlanticWaveManager):
         self.dlogger.debug("find_vlan_on_path returning %s" % selected_vlan)
         return selected_vlan
 
-    def find_valid_path(self, src, dst, bw=None):
+    def find_valid_path(self, src, dst, bw=None, ignore_endpoints=False):
         ''' Find a path that is currently valid based on a contstraint. 
-            Right now, the only constraint is bandwidth. '''
+            Right now, the only constraint is bandwidth. 
+            ignore_endpoints is for ignoring the path all the way to the 
+            endpoints themselves when checking constraints, and just verifying
+            at all other points. Returns stripped path (all middle points). This
+            is for cases when there *could* be multiple paths from a given 
+            endpoint, we don't want to artifically restrict possible paths. '''
 
         # Get possible paths
         #FIXME: NetworkX has multiple methods for getting paths. Shortest and
@@ -466,6 +471,8 @@ class TopologyManager(AtlanticWaveManager):
 
         for path in list_of_paths:
             # For each path, check that a VLAN is available
+            if ignore_endpoints:
+                path = path[1:-1]
             vlan = self.find_vlan_on_path(path)
             if vlan == None:
                 continue
