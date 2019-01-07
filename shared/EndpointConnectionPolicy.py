@@ -121,13 +121,14 @@ class EndpointConnectionPolicy(UserPolicy):
                                       (data_in_bits/total_time)*EndpointConnectionPolicy.buffer_bw_percent)))
 
         # Second, get the path, and reserve bw and a VLAN on it
-        self.fullpath = tm.find_valid_path(self.src, self.dst, self.bandwidth)
-        if self.fullpath == None:
+        self.switchpath = tm.find_valid_path(self.src, self.dst,
+                                             self.bandwidth, True)
+        if self.switchpath == None:
             raise UserPolicyError("There is no available path between %s and %s for bandwidth %s" % (self.src, self.dst, self.bandwidth))
         # Switchpath is the path between endpoint switches. self.src and
         # self.dst are hosts, not switches, so they're not useful for certain
         # things.
-        self.switchpath = self.fullpath[1:-1]
+        self.fullpath = [self.src] + self.switchpath + [self.dst]
 
         self.intermediate_vlan = tm.find_vlan_on_path(self.switchpath)
         if self.intermediate_vlan == None:

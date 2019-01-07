@@ -9,6 +9,8 @@
 from Singleton import Singleton
 import logging
 import dataset
+import os
+import sys
 from traceback import format_stack
 
 class AtlanticWaveModuleValueError(ValueError):
@@ -83,6 +85,14 @@ class AtlanticWaveModule(object):
         for line in tbs:
             all_tb = all_tb + line
         self.dlogger.warning(all_tb)
+
+    def exception_tb(self, e):
+        ''' Print out current error. '''
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        lineno = exc_tb.tb_lineno
+        self.dlogger.warning("Exception %s at %s:%d" % (str(e), filename,
+                                                        lineno))
 
     def _initialize_db(self, db_filename, db_tables_tuples,
                        print_table_on_load=False):
