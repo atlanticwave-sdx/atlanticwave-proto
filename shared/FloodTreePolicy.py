@@ -26,13 +26,23 @@ class FloodTreePolicy(UserPolicy):
         # Anythign specific here?
         pass
 
+    def __str__(self):
+        return "%s()" % (self.get_policy_name())
+    
     @classmethod
     def check_syntax(cls, json_rule):
         try:
             value = json_rule[cls.get_policy_name()]
             if value != None or value != [] or value != {}:
                 raise UserPolicyValueError("value json_rule should be None, [], or {}, not %s." % value)
-        except e: raise
+        except Exception as e:
+            import os
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            lineno = exc_tb.tb_lineno
+            print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
+                                                 filename,lineno)
+            raise
 
     def breakdown_rule(self, tm, ai):
         ''' This is where everything interesting happens. It creates a spanning 

@@ -121,12 +121,12 @@ Vagrant.configure(2) do |config|
      cd docker/sdx_container
      sudo docker build -t sdx_container .
      ls -alF
-     rm helloworld.manifest
+     #rm helloworld.manifest
 
      cd ../lc_container
      ls -alF
      sudo docker build -t lc_container .
-     rm helloworld.manifest
+     #rm helloworld.manifest
 
      # Copy over run scripts
      #cd ~/atlanticwave-proto/configuration/containernet-vagrant
