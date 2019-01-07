@@ -1498,10 +1498,6 @@ class RestAPI(AtlanticWaveModule):
             #FIXME:  NEED HTML response written
             return make_response(jsonify({"Error":str(e)}), 400)
 
-
-
-
-
     # Login endpoint
     @staticmethod
     @app.route(EP_LOGIN, methods=['GET'])
