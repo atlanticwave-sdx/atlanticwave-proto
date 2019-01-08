@@ -60,7 +60,7 @@ class L2TunnelPolicy(UserPolicy):
         pass
     
     def __str__(self):
-        return "%s(%s,%s,%s,SRC(%s,%s,%s),DST(%s,%s,%s),%s" % (
+        return "%s(%s,%s,SRC(%s,%s,%s),DST(%s,%s,%s),%s" % (
             self.get_policy_name(), self.start_time, self.stop_time,
             self.src_switch, self.src_port, self.src_vlan,
             self.dst_switch, self.dst_port, self.dst_vlan,

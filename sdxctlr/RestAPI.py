@@ -1491,6 +1491,7 @@ class RestAPI(AtlanticWaveModule):
                 RestAPI().logger.error("POST %s ERROR: %s" % (policyname, e,))
                 return make_response(jsonify({"Error":str(e)}), 400)
             #FIXME:  NEED HTML response written
+            RestAPI().logger.error("POST %s ERROR: %s" % (policyname, e,))
             return make_response(jsonify({"Error":str(e)}), 400)
 
 
