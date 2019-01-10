@@ -253,7 +253,7 @@ class L2MultipointPolicy(UserPolicy):
         # Release VLAN and BW in use
         tm.unreserve_vlan_on_tree(self.tree, self.intermediate_vlan)
         tm.unreserve_bw_on_tree(self.tree, self.bandwidth)
-	
+
     def switch_change_callback(self, tm, ai, data):
         ''' This is for a learned destination on a L2MultipointPolicy. 
             The LocalController sent up a message that there was a new 
