@@ -683,7 +683,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 matches = [IN_PORT(vlanrule.get_outport()),
                            VLAN_VID(vlanrule.get_vlan_out())]
                 actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
-                           Forward(internal_config['corsa_bw_out'])]
+                           Forward(internal_config['corsabwout'])]
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
                                                              table,
