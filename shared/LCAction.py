@@ -57,7 +57,7 @@ class WriteMetadata(LCAction):
     def __init__(self, value, mask=2**64-1):
         self.value = value
         self.mask = mask
-        super(SetMetadata, self).__init__("SetMetadata")
+        super(WriteMetadata, self).__init__("WriteMetadata")
 
     def __str__(self):
         retstr = "%s:%s mask %s" % (self._name, self.value, self.mask)
