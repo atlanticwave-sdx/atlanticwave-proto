@@ -928,7 +928,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 matches = [METADATA(MD_L2M_TRANSLATE),
                            VLAN_VID(port)]
                 actions = [WriteMetadata(port),
-                           SetFields(VLAN_VID(Intermediate_vlan))]
+                           SetField(VLAN_VID(Intermediate_vlan))]
                 priority = PRIORITY_L2MULTIPOINT_TRANSLATE
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
