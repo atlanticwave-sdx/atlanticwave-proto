@@ -133,7 +133,7 @@ class GotoTable(LCAction):
         to all the other LCActions. '''
     def __init__(self, table):
         self.table = table
-        super(GotoTable, self)._-init__("GotoTable")
+        super(GotoTable, self).__init__("GotoTable")
 
     def __str__(self):
         retstr = "%s:%s" % (self._name, self.table)
@@ -928,7 +928,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 matches = [METADATA(MD_L2M_TRANSLATE),
                            VLAN_VID(port)]
                 actions = [WriteMetadata(port),
-                           SetFields(VLAN_VID(Intermediate_vlan))]
+                           SetField(VLAN_VID(intermediate_vlan))]
                 priority = PRIORITY_L2MULTIPOINT_TRANSLATE
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
@@ -1245,7 +1245,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # separetely
             elif isinstance(action, WriteMetadata):
                 (value, mask) = action.get()
-                aa_results.append(parser.OFPInstructionWriteMetadata(value,
+                instructions.append(parser.OFPInstructionWriteMetadata(value,
                                                                      mask))
 
         # Are there any values in aa_results? If so, put them in APPLY_ACTIONS
