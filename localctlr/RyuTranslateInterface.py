@@ -1450,6 +1450,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                                 sdx_rule)
             self._register_packet_in_cb(of_cookie,
                                         self.l2multipoint_unknown_source_cb)
+            # This is to keep some logs down below happy. L2MultipointEndpoints
+            # are weird, and the loggingisn't well suited.
+            switch_table = endpoint_table
+            
         elif isinstance(sdx_rule, L2MultipointLearnedDestinationLCRule):
             # Learning switch forwarding rules happen as a fallback at the end
             switch_table = FORWARDINGTABLE
@@ -1477,8 +1481,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         if switch_rules == None or switch_table == None:
             self.logger.error(
-                "switch_rules or switch_table is None for msg: %s" %
-                sdx_rule)
+                "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
+                 (sdx_rule, switch_rules, switch_table)
             #FIXME: This shouldn't happen...
             pass
         
