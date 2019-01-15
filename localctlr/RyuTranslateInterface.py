@@ -1482,7 +1482,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if switch_rules == None or switch_table == None:
             self.logger.error(
                 "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
-                 (sdx_rule, switch_rules, switch_table)
+                 sdx_rule, switch_rules, switch_table)
             #FIXME: This shouldn't happen...
             pass
         
