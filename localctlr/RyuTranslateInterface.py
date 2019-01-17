@@ -994,8 +994,20 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 'path':'/meter/cir',
                                 'value':bandwidth},
                                {'op':'replace',
+                                'path':'/meter/cbs',
+                                'value':bandwidth},
+                               {'op':'replace',
                                 'path':'/meter/eir',
-                                'value':bandwidth}]
+                                'value':0},
+                               {'op':'replace',
+                                'path':'/meter/ebs',
+                                'value':0}]
+                              #[{'op':'replace',
+                              #  'path':'/meter/cir',
+                              #  'value':bandwidth},
+                              # {'op':'replace',
+                              #  'path':'/meter/eir',
+                              #  'value':bandwidth}]
                     valid_responses = [204]
 
                     print "Patching %s:%s" % (request_url, json)
