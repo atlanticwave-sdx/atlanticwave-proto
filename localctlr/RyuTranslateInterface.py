@@ -452,7 +452,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             event_type, event_data = self.inter_cm_cxn.recv_cmd()
             (switch_id, event) = event_data
             if switch_id not in self.datapaths.keys():
-                self.logging.warning("switch_id %s does not match known switches: %s" %
+                self.logger.warning("switch_id %s does not match known switches: %s" %
                                      (switch_id, self.datapaths.keys()))
                                      
                 # FIXME - Need to update this for sending errors back
