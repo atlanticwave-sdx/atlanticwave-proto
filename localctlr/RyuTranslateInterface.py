@@ -925,9 +925,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #    See "Rule Needed Once", below, as to why this happens
                 #   - set metadata(endpoint)
                 #   - set VLAN tag to intermediate
-                matches = [METADATA(MD_L2M_TRANSLATE),
+                matches = [METADATA(MD_L2M_TRANSLATE, MD_L2M_MASK),
                            VLAN_VID(port)]
-                actions = [WriteMetadata(port),
+                actions = [WriteMetadata(port, MD_L2M_MASK),
                            SetField(VLAN_VID(intermediate_vlan))]
                 priority = PRIORITY_L2MULTIPOINT_TRANSLATE
                 marule = MatchActionLCRule(switch_id, matches, actions)
@@ -942,7 +942,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #   - match metadata(endpoint), vlan(intermediate)
                 #    - continue
                 #    - Forward to controller
-                matches = [METADATA(port),
+                matches = [METADATA(port, MD_L2M_MASK),
                            VLAN_VID(intermediate_vlan)]
                 actions = [Continue(), Forward(OFPP_CONTROLLER)]
                 priority = PRIORITY_L2MULTIPOINT_LEARNING
@@ -963,12 +963,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
             matches = [IN_PORT(internal_config['corsabwout']),
                        VLAN_VID(intermediate_vlan)]
             actions = [PopVLAN(),
-                       WriteMetadata(MD_L2M_TRANSLATE),
+                       WriteMetadata(MD_L2M_TRANSLATE, MD_L2M_MASK),
                        GotoTable(translate_table)]
             priority = PRIORITY_L2MULTIPOINT
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
-                                                         translate_table,
+                                                         endpoint_table,
                                                          of_cookie,
                                                          marule,
                                                          priority)
@@ -1035,7 +1035,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
             for port in ports:
                 matches = []
                 if port in endpoint_ports:
-                    matches = [METADATA(port), VLAN_VID(intermediate_vlan)]
+                    matches = [METADATA(port, MD_L2M_MASK),
+                               VLAN_VID(intermediate_vlan)]
                 elif port in flooding_ports:
                     matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
                 actions = []
@@ -1055,7 +1056,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
                 if port in endpoint_ports:
-                    matches = [METADATA(port), 
+                    matches = [METADATA(port, MD_L2M_MASK), 
                                VLAN_VID(intermediate_vlan), 
                                ETH_DST('ff:ff:ff:ff:ff:ff')]
                 elif port in flooding_ports:
