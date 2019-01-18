@@ -59,5 +59,6 @@ PRIORITY_L2M_BROADCAST_FORWARDING      = 4
 PRIORITY_L2M_DESTINATION_FORWARDING    = 4
 
 
-# METADATA
+# METADATA - All metadata use should use the same mask
+MD_L2M_MASK                             = 2**16-1
 MD_L2M_TRANSLATE                        = 1
