@@ -114,6 +114,28 @@ class UserPolicy(object):
             May not need to be implemented. '''
         pass
 
+    def get_endpoints(self):
+        ''' This is not a mandatory function: it should be implemented by 
+            UserPolicy children that have external facing endpoints that can use
+            resources (bandwidth and VLANs, in particular). Returns a list of 
+            tuples:
+              (endpointshortname, endpointedge, vlan)
+            The endpointshortname and endpointedge is the name of the node being
+            connected (if it's an edge node and not a switch) or the name of the
+            switch (for instance, br2). Order doesn't matter, we only care about
+            the nodes involved. The vlan is the VLAN ID being used to connect 
+            the two nodes.
+        '''
+        return []
+
+    def get_bandwidth(self):
+        ''' Another non-mandatory function: it should be implemented by 
+            UserPolicy children that have external facing endpoints that can use
+            resources (bandwidth and VLANs, in particular). Returns the 
+            bandwidth reserved for this service in bps.
+        '''
+        return None
+
     def set_breakdown(self, breakdown):
         self.breakdown = breakdown
 

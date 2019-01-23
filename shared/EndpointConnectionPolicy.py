@@ -62,6 +62,9 @@ class EndpointConnectionPolicy(UserPolicy):
         self.intermediate_vlan = None
         self.fullpath = None
 
+        # for get_endpoints()
+        self.endpoints = []
+
         super(EndpointConnectionPolicy, self).__init__(username,
                                                        json_rule)
 
@@ -156,6 +159,9 @@ class EndpointConnectionPolicy(UserPolicy):
             outvlan = int(topology.node[self.dst]['vlan'])
             bandwidth = self.bandwidth
 
+            # Add to self.endpoints
+            self.endpoints.append((self.src, inedge, invlan))
+            self.endpoints.append((self.dst, outedge, outvlan))
             bd = UserPolicyBreakdown(shortname, [])
 
             rule = VlanTunnelLCRule(switch_id, inport, outport, invlan, outvlan,
@@ -177,6 +183,11 @@ class EndpointConnectionPolicy(UserPolicy):
         dst_vlan = int(topology.node[self.dst]['vlan'])
         srcpath = self.switchpath[1]
         dstpath = self.switchpath[-2]
+
+        # Add to self.endpoints
+        self.endpoints.append((self.src, src_edge, src_vlan))
+        self.endpoints.append((self.dst, dst_edge, dst_vlan))
+
         for location, inport, invlan, path in [(src_switch, src_port,
                                                 src_vlan, srcpath),
                                                (dst_switch, dst_port,
@@ -264,4 +275,9 @@ class EndpointConnectionPolicy(UserPolicy):
         # Release VLAN and BW in use
         tm.unreserve_vlan_on_path(self.switchpath, self.intermediate_vlan)
         tm.unreserve_bw_on_path(self.fullpath, self.bandwidth)
-        
+
+    def get_endpoints(self):
+        return self.endpoints
+    
+    def get_bandwidth(self):
+        return self.bandwidth

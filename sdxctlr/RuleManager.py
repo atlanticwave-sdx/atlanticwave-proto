@@ -124,6 +124,13 @@ class RuleManager(AtlanticWaveManager):
 
         print "Rule number = %d" % self.rule_number
 
+        last_modified = self.config_table.find_one(key='last_modified')
+        if last_modified == None:
+            now = datetime.now()
+            last_modified = now.strftime(rfc3339format)
+            self.config_table.insert({'key':'last_modified',
+                                      'value':last_modified})
+
         # Use these to send the rule to the Local Controller
         self.set_send_add_rule(send_user_rule_breakdown_add)
         self.set_send_rm_rule(send_user_rule_breakdown_remove)
@@ -146,11 +153,13 @@ class RuleManager(AtlanticWaveManager):
             failure message based on why the rule installation failed. Also 
             returns a reference to the rule (e.g., a tracking number) so that 
             more details can be retrieved in the future. '''
-        self.logger.info("add_rule: %s" % rule)
+
+        self.logger.info("add_rule: Beging with rule: %s" % rule)
+        self._update_last_modified_timestamp()
         try:
             breakdown = self._determine_breakdown(rule)
         except Exception as e: raise
-        self.dlogger.info("add_rule: breakdowns %s" % breakdown)
+        self.dlogger.info("add_rule: breakdowns %s" % breakdown)        
 
         # If everything passes, set the hash, cookie, and breakdown,
         # put into database and call install_callbacks
@@ -163,9 +172,9 @@ class RuleManager(AtlanticWaveManager):
 
         rule.pre_add_callback(TopologyManager(), AuthorizationInspector())
         self._add_rule_to_db(rule)
-        self.dlogger.info("add_rule: Rule added to db")
         self._call_install_callbacks(rule)
-            
+        self.dlogger.info("add_rule: Rule added to db: %s" % rule)
+
         return rulehash
         
 
@@ -187,6 +196,7 @@ class RuleManager(AtlanticWaveManager):
         if self.rule_table.find_one(hash=rule_hash) == None:
             raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
 
+        self._update_last_modified_timestamp()
         rule = pickle.loads(str(self.rule_table.find_one(hash=rule_hash)['rule']))
         authorized = None
         try:
@@ -309,6 +319,14 @@ class RuleManager(AtlanticWaveManager):
 
         return None
 
+    def get_raw_rule(self, rule_hash):
+        ''' This will return the actual rule, for advanced manipulation. '''
+        table_entry = self.rule_table.find_one(hash=rule_hash)
+        if table_entry != None:
+            rule = pickle.loads(str(table_entry['rule']))
+            return rule
+        return None
+
     def register_for_rule_updates(self, install_callback, remove_callback):
         ''' Callback will be called when there is a rule update (install or 
             delete. 
@@ -403,6 +421,20 @@ class RuleManager(AtlanticWaveManager):
                 "Rule is not authorized: %s" % rule)
 
         return breakdown
+
+    def _update_last_modified_timestamp(self):
+        ''' Used for setting the last_modified timestamp. '''
+        now = datetime.now()
+        last_modified = now.strftime(rfc3339format)
+        self.config_table.update({'key':'last_modified',
+                                  'value':last_modified},
+                                 ['key'])
+
+    def get_last_modified_timestamp(self):
+        ''' Get the last_modified timestamp. '''
+        last_modified_dict = self.config_table.find_one(key='last_modified')
+        last_modified = last_modified_dict['value']
+        return last_modified
 
     def _add_rule_to_db(self, rule):
         ''' Adds rule to the database, which also include handling timed 

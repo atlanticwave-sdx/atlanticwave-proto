@@ -53,6 +53,9 @@ class L2TunnelPolicy(UserPolicy):
         # Derived values
         self.intermediate_vlan = None
         self.fullpath = None
+
+        # For get_endpoints()
+        self.endpoints = []
         
         super(L2TunnelPolicy, self).__init__(username, json_rule)
 
@@ -60,7 +63,7 @@ class L2TunnelPolicy(UserPolicy):
         pass
     
     def __str__(self):
-        return "%s(%s,%s,%s,SRC(%s,%s,%s),DST(%s,%s,%s),%s" % (
+        return "%s(%s,%s,SRC(%s,%s,%s),DST(%s,%s,%s),%s" % (
             self.get_policy_name(), self.start_time, self.stop_time,
             self.src_switch, self.src_port, self.src_vlan,
             self.dst_switch, self.dst_port, self.dst_vlan,
@@ -142,6 +145,16 @@ class L2TunnelPolicy(UserPolicy):
         tm.reserve_vlan_on_path(self.fullpath, self.intermediate_vlan)
         tm.reserve_bw_on_path(self.fullpath, self.bandwidth)
 
+        # Fill out self.endpoints
+        self.endpoints.append((self.src_switch,
+                               self._get_neighbor(topology, self.src_switch,
+                                                  self.src_port),
+                               self.src_vlan))
+        self.endpoints.append((self.src_switch,
+                               self._get_neighbor(topology, self.src_switch,
+                                                  self.dst_port),
+                               self.dst_vlan))
+        
         # Special case: Single node:
         if len(self.fullpath) == 1:
             if (self.src_switch != self.dst_switch):
@@ -161,7 +174,7 @@ class L2TunnelPolicy(UserPolicy):
             rule = VlanTunnelLCRule(switch_id, inport, outport, invlan, outvlan,
                                     True, bandwidth)
             bd.add_to_list_of_rules(rule)
-            self.breakdown.append(bd)
+            self.breakdown.append(bd)            
             return self.breakdown
 
         
@@ -237,6 +250,15 @@ class L2TunnelPolicy(UserPolicy):
         # Return the breakdown, now that we've finished.
         return self.breakdown
 
+    def _get_neighbor(self, topo, node, port):
+        ''' helper function that gets the name of the neighbor '''
+        for n in topo[node].keys():
+            if topo[node][n][node] == port:
+                return n
+
+        # This shouldn't happen...
+        return None
+
     
     def check_validity(self, tm, ai):
         #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
@@ -281,6 +303,10 @@ class L2TunnelPolicy(UserPolicy):
         tm.unreserve_bw_on_path(self.fullpath, self.bandwidth)
         
 
+    def get_endpoints(self):
+        return self.endpoints
 
+    def get_bandwidth(self):
+        return self.bandwidth
 
 
