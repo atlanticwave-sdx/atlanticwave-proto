@@ -40,10 +40,9 @@ from threading import Thread
 # Timing
 from datetime import datetime, timedelta, tzinfo
 from shared.constants import rfc3339format, MAXENDTIME
-
+sensetimeformat = "%Y-%m-$dT%H:%M:%S.000000-0000"
 
 # Globals
-
 errors = {
     'NotFound': {
         'message': "A resource with that ID does not exist.",
@@ -79,9 +78,13 @@ PHASE_RESERVED        = "PHASE_RESERVED"
 PHASE_COMMITTED       = "PHASE_COMMITTED"
 
 # URN info
-baseurn = "urn:ogf:network:domain="
+baseurn = "urn:ogf:network:"
 fullurn = baseurn + "atlanticwave-sdx.net"
 awaveurn = "urn:ogf:network:atlanticwave-sdx.net"
+
+SERVICE_DOMAIN_L2_TUNNEL = "l2switching"
+SERVICE_DOMAIN_AWAVE = "AtlanticWaveSDX"
+
 
 
 class SenseAPIError(Exception):
@@ -135,11 +138,16 @@ class SenseAPI(AtlanticWaveManager):
         self.host = host
         self.port = port
         self.urlbase = "http://%s:%s" % (host, port)
+
+        # SENSE Service constants
+        self.SVC_SENSE    = "ServiceDomain:l2switching"
+        self.SVC_NONSENSE = "ServiceDomain:AWaveServices"
         
         # Set up local repositories for rules and topology to perform diffs on.
         self.current_rules = RuleManager().get_rules()
         self.current_topo = TopologyManager().get_topology()
         self.simplified_topo = None
+        self.list_of_services = None
         self.topo_XML = None
         self.delta_XML = None
         self.topolock = Lock()
@@ -197,7 +205,34 @@ class SenseAPI(AtlanticWaveManager):
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
 
+
+
+
+        
         self.__print_all_deltas()
+        #self.__print_topology_details(self.simplified_topo)
+        self.__print_topology_details(self.current_topo)
+        print "Neighbors of Miadtn: %s" % self.current_topo['miadtn']
+        print "Neighbors of br1   : %s" % self.current_topo['br1']
+        print "Neighbors of br2   : %s" % self.current_topo['br2']
+        print "br1 neighbor list  : %s" % self.current_topo['br1'].keys()
+        print "br2 neighbor list  : %s" % self.current_topo['br2'].keys()
+        for n in self.current_topo['br1'].keys():
+            print "br1-%s:  %s" % (n, self.current_topo['br1'][n]['br1'])
+        for n in self.current_topo['br2'].keys():
+            print "br2-%s:  %s" % (n, self.current_topo['br2'][n]['br2'])
+        print "\n\n"
+
+        model, newbool = self.get_latest_model()
+        print "get_latest_model %s, %s" % (newbool, model['model'])
+        print "\n\n"
+        model, newbool = self.get_latest_model()
+        print "get_latest_model %s, %s" % (newbool, model['model'])
+        
+        print "\n\n"
+        print "simplified_topo:\n"
+        self.__print_topology_details(self.simplified_topo)
+        print "\n\n\n\n"
         #self._INTERNAL_TESTING_DELETE_FINAL_CHECKIN()
 
     def api_process(self):
@@ -361,7 +396,102 @@ class SenseAPI(AtlanticWaveManager):
 
         # Return text
         return text_vlan
+    
+    def generate_list_of_services(self):
+        ''' Generates a list of external facing services based on endpoints. 
+            Any service that has at least one endpoint at the end of the 
+            controlled network is included in the list.
 
+            Each element in the list is quite simple:
+              {"service":"servicename",
+               "bandwidth":bandwidth in bits per second,
+               "starttime":start time string,
+               "endtime":end time string
+               "endpoints": [ list of endpoint tuples]}
+
+            An endpoint tuple looks as follows:
+              ("endpointname",VLAN number)
+
+            The servicename includes the Service Domain.
+            The endpointname include the switch/port combo.
+            Neither include the URN.
+            starttime and endtime are in the SENSE format.
+        
+            Requires the simplified topology to be generated. '''
+        self.current_rules = RuleManager().get_rules()
+        self.list_of_services = []
+        
+        # Get exterior ports - from the simplified_topology
+        exterior_nodes = self.simplified_topo.nodes()
+        exterior_nodes.remove('central')
+
+        print "\nEXTERIOR NODES: %s" % exterior_nodes
+        print "\nRULES: %s\n\n" % self.current_rules
+        
+        # Loop through rules
+
+        for r in self.current_rules:
+            rule = RuleManager().get_raw_rule(r[0])
+            potential_endpoints = rule.get_endpoints()
+            # - Loop through endpoints
+            endpoints = []
+            print "\n RULE: %s" % rule
+            for (e, f, v) in potential_endpoints:
+                print "   endpoint: %s, %s, %d" % (e, f, v)
+                # -- check if rule ends on an exterior port
+                if (("%s-%s" % (e,f)) in exterior_nodes):
+                    # -- if it does, save off name
+                    endpoints.append(("%s-%s" % (e,f), v))
+                elif (("%s-%s" % (f,e)) in exterior_nodes):
+                    endpoints.append(("%s-%s" % (f,e), v))
+            # - if list is not empty, then continue. If empty, next rule
+            if len(endpoints) == 0:
+                continue
+            
+            # - get start and end times
+            start_time = rule.get_start_time()
+            stop_time = rule.get_stop_time()
+            # - if now < start_time or now > stop_time, don't care about
+            #   the rule
+            start_datetime = datetime.strptime(start_time, rfc3339format)
+            stop_datetime =  datetime.strptime(stop_time,  rfc3339format)
+            now = datetime.now()
+            if (now < start_datetime or
+                now > stop_datetime):
+                continue
+            
+            # - get it's bandwidth
+            bandwidth = rule.get_bandwidth()
+
+            # - get the user
+            user = rule.get_user()
+            
+            # - create service name:
+            #   Get the rule_hash from the rule
+            rule_hash = rule.get_rule_hash()
+            #   if user is self.userid, then give back uuid
+            if user == self.userid:
+                # -- find the delta in the local database to get the UUID
+                delta = self._get_delta_by_rule_hash(rule_hash)
+                # -- Put together service name.
+                service_name = "%s:conn+%s" % (self.SVC_SENSE,
+                                               delta)
+                
+            #   if user is other, then make up name
+            else:
+                service_name = "%s:conn+%s" % (self.SVC_NONSENSE,
+                                               rule_hash)
+            
+            # - create new service dictionary
+            svc_dict = {"service":service_name,
+                        "bandwidth":bandwidth,
+                        "starttime":start_time,
+                        "endtime":stop_time,
+                        "endpoints":endpoints}
+            # - add new dictionary to self.list_of_services
+            self.list_of_services.append(svc_dict)
+        return
+    
     def generate_simplified_topology(self):
         ''' Calculates the 'black box' version of the topology, exposing only 
             the outside networks and DTNs as endpoints. The internals are *not*
@@ -407,7 +537,8 @@ class SenseAPI(AtlanticWaveManager):
         ''' Generates a model of the simplified topology. '''
         
         # Boilerplate prefixes
-        output  = "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
+        output  = "model: @prefix sd: <http://schemas.ogf.org/nsi/2013/12/services/definitions#> ."
+        output += "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
         output += "@prefix owl: <http://www.w3.org/2002/07/owl#> .\n"
         output += "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n"
         output += "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
@@ -415,10 +546,11 @@ class SenseAPI(AtlanticWaveManager):
         output += "@prefix mrs: <http://schemas.ogf.org/mrs/2013/12/topology#> .\n\n\n"
 
         
-        # Get all endpoints
+        # Get all endpoints and active services
         endpoints = ""
         list_of_endpoints = []
         self.generate_simplified_topology()
+        self.generate_list_of_services()
 
 
         for ep in self.simplified_topo.neighbors('central'):
@@ -429,24 +561,119 @@ class SenseAPI(AtlanticWaveManager):
             list_of_endpoints.append(epname)
             
             #  - Definition of VLANs available on said endpoint
+            # FIXME: does this need to remove in-use VLANs?
             vlan_name = "%s:vlan_range" % epname
             vlan_def  = "<%s>\n" %vlan_name
             vlan_def += "                a nml:LabelGroup, owl:NamedIndividual ;\n"
             vlan_def += "                nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
             vlan_def += "                nml:values \"%s\" .\n\n" % self.get_vlans_available_on_egress_port(ep)
+
+            #  - Bandwidth on a given port
+            bw_name = "%s:BandwidthService" % epname
+            available_bw = self.get_bw_available_on_egress_port(ep)
+            bw_def  = "<%s>\n" % bw_name
+            bw_def += "                a mrs:BandwidthService ;\n"
+            bw_def += "                mrs:availableCapacity \"%d\"^^xsd:long ;\n" % available_bw
+            bw_def += "                mrs:reservableCapacity \"%d\"^^xsd:long ;\n" % available_bw
+            bw_def += "                mrs:maximumCapacity \"%d\"^^xsd:long ;\n" % node["max_bw"]
+            bw_def += "                mrs:unit \"bps\" ;\n"
+            bw_def += "                nml:belongsTo <%s> .\n\n" % epname
             
             #  - Definition of Link structure
             link_def  = "<%s>\n" % epname
             link_def += "                a nml:BidirectionalPort, owl:NamedIndividual ;\n"
-            link_def += "                nml:belingsTo <%s:l2switching>, <%s> ;\n" % (fullurn, fullurn)
+            link_def += "                nml:belongsTo <%s:l2switching>, <%s> ;\n" % (fullurn, fullurn)
             link_def += "                nml:hasLabelGroup <%s> ;\n" % vlan_name
+            link_def += "                nml:hasService <%s> ;\n" % bw_name
             if 'alias' in node.keys():
                 link_def += "                nml:isAlias <%s> ;\n" % node['alias']
             link_def += "                nml:name \"%s\" .\n\n" % ep
 
             endpoints += vlan_def
+            endpoints += bw_def
             endpoints += link_def
 
+        # Add services and all the various related bits.
+        services = ""
+        for s in self.list_of_services:
+            # - Pull out bandwidth and service name
+            bandwidth = s['bandwidth']
+            servicename = s['service']
+            starttime = s['starttime']
+            endtime = s['endtime']
+            per_service_endpoints = []
+
+            # - Loop through all service endpoints
+            for e in s['endpoints']:
+                (endpointname, vlannum) = e
+                service_str = "%s::%s:resource+links-connection_1:vlan+%d" % (
+                    fullurn, servicename, vlannum)
+
+                # -- Add VLAN label for virtual port
+                services += "<%s::%s:vlanport+%d:label+%d>\n" % (
+                    fullurn, endpointname, vlannum, vlannum)
+                services += "        a nml:Label ;\n"
+                services += "        nml:belongsTo <%s::%s:vlanport+%d> ;\n" % (
+                    fullurn, endpointname, vlannum)
+                services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
+                    service_str)
+                services += "        nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
+                services += "        nml:value %d .\n\n" % vlannum
+                
+                # -- Add bandwidth on virtual port
+                services += "<%s::%s:vlanport+%d:service+bw>\n" % (
+                    fullurn, endpointname, vlannum)
+                services += "        a mrs:BandwidthService ;\n"
+                services += "        mrs:reservableCapacity \"%d\"^^xsd:long ;\n" % (bandwidth)
+                services += "        mrs:type \"guaranteedCapped\" ;\n"
+                services += "        mrs:unit \"bps\" ;\n"
+                services += "        nml:belongsTo <%s::%s:vlanport+%d> ;\n" % (
+                    fullurn, endpointname, vlannum)
+                services += "        nml:existsDuring <%s:existsDuring> .\n\n" % (
+                    service_str)
+                
+                # -- Add service lifetime
+                services += "<%s:existsDuring>\n" % service_str
+                services += "        a nml:Lifetime ;\n"
+                services += "        nml:end \"%s\" ;\n" % endtime
+                services += "        nml:start \"%s\" .\n\n" % starttime
+                
+                # -- Add virtual port
+                services += "<%s::%s:vlanport+%d>\n" % (
+                    fullurn, endpointname, vlannum)
+                services += "        a nml:BidirectionalPort ;\n"
+                services += "        nml:belongsTo <%s>,<%s:%s> ;\n" % (
+                    service_str, fullurn, endpointname)
+                services += "        nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;\n"
+                services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
+                    service_str)
+                services += "        nml:hasLabel <%s::%s:vlanport+%d:label+%d> ;\n" % (
+                    fullurn, endpointname, vlannum, vlannum)
+                services += "        nml:hasService <%s::%s:vlanport+%d:service+bw> ;\n" % (
+                    fullurn, endpointname, vlannum)
+                services += "        nml:name \"UNKNOWN\" .\n\n"
+                # -- Add virtual port to list_of_endpoints
+                list_of_endpoints.append("%s:%s:vlanport+%d" % (
+                    fullurn, endpointname, vlannum))
+                per_service_endpoints.append("%s:%s:vlanport+%d" % (
+                    fullurn, endpointname, vlannum))
+                
+            # - Add service
+            endpoints_str = ""
+            for entry in per_service_endpoints[:-1]:
+                endpoints_str += "<%s>, " % entry
+            endpoints_str += "<%s> ;" % per_service_endpoints[-1]
+            
+            services += "<%s>\n" % service_str
+            services += "        a mrs:switchingSubnet ;\n"
+            services += "        nml:belongsTo <%s> ;\n" % fullurn
+            services += "        nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;\n"
+            services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
+                service_str)
+            services += "        nml:hasBidirectionalPort %s\n" % endpoints_str
+            services += "        nml:labelSwapping true ;\n"
+            services += "        nml:labelType <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> .\n\n"
+        
         # Add topology (acts as switch)
         endpoints_str = ""
         for entry in list_of_endpoints[:-1]:
@@ -460,14 +687,19 @@ class SenseAPI(AtlanticWaveManager):
         topology += "                nml:hasService <%s:l2switching> ;\n" % fullurn
         topology += "                nml:name \"AtlanticWave/SDX\" .\n\n"
 
-        service  = "<%s:l2switching>\n" % fullurn
-        service += "                 a nml:SwitchingService, owl:NamedIndividual ;\n"
-        service += "                 nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
-        service += "                 nml:hasBidirectionalPort %s\n" % endpoints_str
-        service += "                 nml:labelSwaping \"false\" .\n\n"
+        # Add L2 service domain
+        service_domain  = "<%s:%s>\n" % (fullurn, self.SVC_SENSE)
+        service_domain += "                 a nml:SwitchingService, owl:NamedIndividual ;\n"
+        service_domain += "                 nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
+        service_domain += "                 nml:hasBidirectionalPort %s\n" % endpoints_str
+        service_domain += "                 nml:labelSwaping \"false\" .\n\n"
 
+        # Add AWave service domain
+        #FIXME
+
+        output += service_domain
         output += topology
-        output += service
+        output += services
         output += endpoints
 
         return output
@@ -591,17 +823,24 @@ class SenseAPI(AtlanticWaveManager):
 
     def get_latest_model(self):
         ''' Gets the latest model. 
-            Returns dictionary: 
+            Returns tuple of the dictionary (described below), and bool whether
+            the dictionary is new or not: (dictionary, new?)
              {'id': UUID of model,
               'href': address of model,
               'creationTime': timestamp of model,
               'model': the model itself}
         '''
 
+        # Dictionary components
         model_id = None
         href = None
         creation_time = None
         model = None
+
+        # Control components
+        need_new_model = False
+        retnew = False
+
         
         # Check DB: if there is a latest one, already inserted, use it.
         result = self.model_table.find_one(order_by=['timestamp'])
@@ -612,8 +851,28 @@ class SenseAPI(AtlanticWaveManager):
                                                            model_id)
             creation_time = result['timestamp']
             model = result['model_data']
+
+        # Now, do we need a new model? Two reasons for this:
+        #  - There wasn't a model in the DB
+        #  - The latest model in the DB is stale, based on changes to either
+        #    the topology or to the rules that are installed
+        if creation_time == None:
+            need_new_model = True
         else:
-            # If not, generate the model
+            # Get the most recent time that there was a change
+            topo_update_time = TopologyManager().get_last_modified_timestamp()
+            rule_update_time = RuleManager().get_last_modified_timestamp()
+            parsed_creation = datetime.strptime(creation_time, rfc3339format)
+            parsed_topo = datetime.strptime(topo_update_time, rfc3339format)
+            parsed_rule = datetime.strptime(rule_update_time, rfc3339format)
+
+            # Check if model is stale
+            if (parsed_creation < parsed_topo or
+                parsed_creation < parsed_rule):
+                need_new_model = True
+            
+        if need_new_model:
+            # Generate the model
             model = self.generate_model()
             raw_model = self.simplified_topo
             
@@ -626,13 +885,14 @@ class SenseAPI(AtlanticWaveManager):
 
             # Insert it into the DB
             self._put_model(model_id, model, raw_model, creation_time)
+            retnew = True
 
         # Return the correct format
-        retval = {'id':model_id,
+        retdict = {'id':model_id,
                   'href':href,
                   'creationTime':creation_time,
                   'model':model}
-        return retval
+        return (retdict, retnew)
     
     def process_deltas(self, args):
         # Parse the args
@@ -976,7 +1236,7 @@ class SenseAPI(AtlanticWaveManager):
     def _get_delta_by_id(self, delta_id):
         ''' Helper function, just pulls a delta based on the ID.
             Returns:
-              - None if delta id doesn't exists
+              - None if delta id doesn't exist
               - Dictionary containing delta. See comment at top of SenseAPI 
                 definition for keys. 
         '''
@@ -995,6 +1255,32 @@ class SenseAPI(AtlanticWaveManager):
                  'hash':raw_delta['hash']}
 
         self.dlogger.debug("_get_delta_by_id() on %s successful" % delta_id)
+        return delta
+
+    def _get_delta_by_rule_hash(self, rule_hash):
+        ''' Helper function, just pulls a delta based on the rule hash (from the
+            RuleManager).
+            Returns:
+              - None if rule_hash doesn't exist
+              - Dictionary containing delta. See comment at top of SenseAPI
+                definition for keys.
+        '''
+        raw_delta = self.delta_table.find_one(hash=unicode(rule_hash))
+        if raw_delta == None:
+            return None
+        
+        # Unpickle the pickled values and rebuild dictionary to return
+        delta = {'delta_id':raw_delta['delta_id'],
+                 'raw_request':pickle.loads(str(raw_delta['raw_request'])),
+                 'sdx_rule':pickle.loads(str(raw_delta['sdx_rule'])),
+                 'status':raw_delta['status'],
+                 'last_modified':raw_delta['last_modified'],
+                 'timestamp':raw_delta['timestamp'],
+                 'model_id':raw_delta['model_id'],
+                 'hash':raw_delta['hash']}
+
+        self.dlogger.debug("_get_delta_by_rule_hash() on %s successful" %
+                           rule_hash)
         return delta
 
     def get_all_deltas(self):
@@ -1285,7 +1571,7 @@ class ModelsAPI(SenseAPIResource):#FIXME
         self.reqparse.add_argument('current', type=str, default='true')
         self.reqparse.add_argument('summary', type=str, default='false')
         self.reqparse.add_argument('encode', type=str, default='false')
-        self.model = SenseAPI().get_latest_model()
+        self.model, newbool = SenseAPI().get_latest_model()
         self.dlogger.debug("__init__() complete")
     
     def get(self):

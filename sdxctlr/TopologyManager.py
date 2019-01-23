@@ -4,10 +4,12 @@
 
 from lib.AtlanticWaveManager import AtlanticWaveManager
 from threading import Lock
+from datetime import datetime
 import networkx as nx
 import json
 from lib.SteinerTree import make_steiner_tree
 
+from shared.constants import rfc3339format
 #FIXME: This shouldn't be hard coded.
 MANIFEST_FILE = '../manifests/localcontroller.manifest'
 
@@ -88,6 +90,10 @@ class TopologyManager(AtlanticWaveManager):
         # So we don't have to parse VLANs over an over again
         self._cached_vlans = {}
 
+        # Last modified timestamp
+        now = datetime.now()
+        self.last_modified = now.strftime(rfc3339format)
+            
         #FIXME: Static topology right now.
         self._import_topology(topology_file)
 
@@ -106,6 +112,15 @@ class TopologyManager(AtlanticWaveManager):
     def get_lcs(self):
         ''' Returns the list of valid LocalControllers. '''
         return self.lcs
+
+    def _update_last_modified_timestamp(self):
+        ''' Used for setting the last_modified timestamp. '''
+        now = datetime.now()
+        self.last_modified = now.strftime(rfc3339format)
+
+    def get_last_modified_timestamp(self):
+        ''' Get the last_modified timestamp. '''
+        return self.last_modified
 
     def register_for_topology_updates(self, callback):
         ''' callback will be called when there is a topology update. callback 
@@ -137,6 +152,7 @@ class TopologyManager(AtlanticWaveManager):
             # All the other nodes
             key = str(unikey)
             endpoint = data['endpoints'][key]
+            #FIXME: Validation?
             with self.topolock:
                 if not self.topo.has_node(key):
                     self.topo.add_node(key)

@@ -43,6 +43,9 @@ class L2MultipointPolicy(UserPolicy):
         # Derived values
         self.intermediate_vlan = None
         self.tree = None
+
+        # For get_endpoints()
+        self.external_endpoints = []
         
         super(L2MultipointPolicy, self).__init__(username,
                                                  json_rule)
@@ -163,6 +166,7 @@ class L2MultipointPolicy(UserPolicy):
                 # [neighbor] would give us the port on 'neighbor'.
                 # Using topology as it is sure to include all the data.
                 connected_ports.append(topology.edge[node][neighbor][node])
+                self.external_endpoints.append ((node, neighbor, vlan))
             for p in connected_ports:
                 if p in endpoint_ports:
                     continue
@@ -326,5 +330,8 @@ class L2MultipointPolicy(UserPolicy):
         return breakdowns
             
                 
-        
-
+    def get_endpoints(self):
+        return self.external_endpoints
+    
+    def get_bandwidth(self):
+        return self.bandwidth
