@@ -135,7 +135,7 @@ class SDXPolicy(UserPolicy):
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
             print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
-                                                 filename,lineno)
+                                                 str(e), filename,lineno)
             raise
 
     def check_validity(self, tm, ai):
