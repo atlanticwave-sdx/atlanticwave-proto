@@ -26,6 +26,9 @@ class UserPolicy(object):
         self.breakdown = None
         self.rule_hash = None
 
+        # The resource list should be a list of PathResource children.
+        self.resources = []
+
         # All rules should have start and stop times. They may be rediculously
         # far in the past and/or the future, but the should have them.
         # They should be strings in rfc3339format (see shared.constants).
@@ -163,6 +166,8 @@ class UserPolicy(object):
     def get_rule_hash(self):
         return self.rule_hash
 
+    def get_resources(self):
+        return self.resources
 
 
     def _parse_json(self, json_rule):

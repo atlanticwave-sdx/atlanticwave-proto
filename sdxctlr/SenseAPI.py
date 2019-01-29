@@ -208,9 +208,11 @@ class SenseAPI(AtlanticWaveManager):
 
 
 
-        
+
+    def __DEBUG_print_lots_of_details(self):
+        print "\n\n\n\n"
         self.__print_all_deltas()
-        #self.__print_topology_details(self.simplified_topo)
+        print "current_topo:"
         self.__print_topology_details(self.current_topo)
         print "Neighbors of Miadtn: %s" % self.current_topo['miadtn']
         print "Neighbors of br1   : %s" % self.current_topo['br1']
@@ -223,11 +225,11 @@ class SenseAPI(AtlanticWaveManager):
             print "br2-%s:  %s" % (n, self.current_topo['br2'][n]['br2'])
         print "\n\n"
 
-        model, newbool = self.get_latest_model()
-        print "get_latest_model %s, %s" % (newbool, model['model'])
-        print "\n\n"
-        model, newbool = self.get_latest_model()
-        print "get_latest_model %s, %s" % (newbool, model['model'])
+        #model, newbool = self.get_latest_model()
+        #print "get_latest_model %s, %s" % (newbool, model['model'])
+        #print "\n\n"
+        #model, newbool = self.get_latest_model()
+        #print "get_latest_model %s, %s" % (newbool, model['model'])
         
         print "\n\n"
         print "simplified_topo:\n"
@@ -325,7 +327,9 @@ class SenseAPI(AtlanticWaveManager):
         start_node = self.simplified_topo.node[node]['start_node']
         end_node = self.simplified_topo.node[node]['end_node']
         bw_available = self.simplified_topo.node[node]['max_bw']
-        bw_in_use = self.current_topo[start_node][end_node]['bw_in_use']
+        # Swapped around, because the end_node is always the switch, and the
+        # switch's data structure is the keeper of the bw_in_use
+        bw_in_use = self.current_topo[end_node][start_node]['bw_in_use']
 
         self.dlogger.debug("get_bw_available_on_egress_port: %s" %
                            self.simplified_topo.node[node])
@@ -341,7 +345,11 @@ class SenseAPI(AtlanticWaveManager):
         # Access the bandwidth from the original topology.
         start_node = self.simplified_topo.node[node]['start_node']
         end_node = self.simplified_topo.node[node]['end_node']
-        vlans_in_use = self.current_topo[start_node][end_node]['vlans_in_use']
+        # Swapped around, because the end_node is always the switch, and the
+        # switch's data structure is the keeper of the vlans_in_use on the port
+        print "self.current_topo[%s][%s]:%s" % (end_node, start_node,
+                                    self.current_topo[end_node][start_node])
+        vlans_in_use = self.current_topo[end_node][start_node]['vlans_in_use']
 
         self.dlogger.debug("get_vlans_in_use_on_egress_port: %s" %
                            self.simplified_topo.node[node])
@@ -435,7 +443,7 @@ class SenseAPI(AtlanticWaveManager):
             potential_endpoints = rule.get_endpoints()
             # - Loop through endpoints
             endpoints = []
-            print "\n RULE: %s" % rule
+            print "\n RULE: %s\n    ENDPOINTS: %s" % (rule, potential_endpoints)
             for (e, f, v) in potential_endpoints:
                 print "   endpoint: %s, %s, %d" % (e, f, v)
                 # -- check if rule ends on an exterior port
@@ -552,7 +560,8 @@ class SenseAPI(AtlanticWaveManager):
         self.generate_simplified_topology()
         self.generate_list_of_services()
 
-
+        #self.__DEBUG_print_lots_of_details()
+        
         for ep in self.simplified_topo.neighbors('central'):
             # For each endpoint:
             #  - Get endpoint name

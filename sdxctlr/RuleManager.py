@@ -158,7 +158,7 @@ class RuleManager(AtlanticWaveManager):
         self._update_last_modified_timestamp()
         try:
             breakdown = self._determine_breakdown(rule)
-        except Exception as e: raise
+        except Exception: raise
         self.dlogger.info("add_rule: breakdowns %s" % breakdown)        
 
         # If everything passes, set the hash, cookie, and breakdown,
@@ -397,6 +397,7 @@ class RuleManager(AtlanticWaveManager):
                 "Rule cannot be validated: %s" % rule)
         
         # Get the breakdown of the rule
+        breakdown = BreakdownEngine().get_breakdown(rule)
         try:
             breakdown = BreakdownEngine().get_breakdown(rule)
         except Exception as e:
@@ -528,9 +529,22 @@ class RuleManager(AtlanticWaveManager):
         try:
             self.dlogger.debug("_install_rule: %s:%d" % (rule,
                                                          rule.get_rule_hash()))
+            self._reserve_resources(rule.get_resources())
             self._install_breakdown(rule.get_breakdown())
         except Exception as e: raise
         self._restart_remove_timer()
+
+    def _reserve_resources(self, resource_list):
+        ''' Helper function that reserves resources that a rule needs. '''
+        for resource in resource_list:
+            self.logger.debug("_reserve_resources: %s" % resource)
+            TopologyManager().reserve_resource(resource)
+        
+    def _unreserve_resources(self, resource_list):
+        ''' Helper function that unreserves resources that a rule needs. '''
+        for resource in resource_list:
+            self.logger.debug("_unreserve_resources: %s" % resource)
+            TopologyManager().unreserve_resource(resource)
 
     def _install_breakdown(self, breakdown):
         try:
@@ -551,6 +565,7 @@ class RuleManager(AtlanticWaveManager):
             if extendedbd != None:
                 for bd in extendedbd:
                     self.send_user_rm_rule(bd)
+            self._unreserve_resources(rule.get_resources())
         except Exception as e: raise
         
     def _rule_install_timer_cb(self):

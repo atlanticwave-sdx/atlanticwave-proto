@@ -6,6 +6,7 @@ from UserPolicy import *
 from datetime import datetime
 from shared.constants import *
 from shared.VlanTunnelLCRule import VlanTunnelLCRule
+from shared.PathResource import VLANPathResource, BandwidthPathResource,  VLANPortResource, BandwidthPortResource
 
 class L2TunnelPolicy(UserPolicy):
     ''' This policy is for network administrators to create L2 tunnels, similar 
@@ -119,6 +120,7 @@ class L2TunnelPolicy(UserPolicy):
         
     def breakdown_rule(self, tm, ai):
         self.breakdown = []
+        self.resources = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
         # Get a path from the src_switch to the dst_switch form the topology
@@ -142,17 +144,33 @@ class L2TunnelPolicy(UserPolicy):
         self.intermediate_vlan = tm.find_vlan_on_path(self.fullpath)
         if self.intermediate_vlan == None:
             raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
-        tm.reserve_vlan_on_path(self.fullpath, self.intermediate_vlan)
-        tm.reserve_bw_on_path(self.fullpath, self.bandwidth)
+
+        # Add necessary resource
+        self.resources.append(VLANPathResource(self.fullpath,
+                                               self.intermediate_vlan))
+        self.resources.append(VLANPortResource(self.src_switch,
+                                               self.src_port,
+                                               self.src_vlan))
+        self.resources.append(VLANPortResource(self.dst_switch,
+                                               self.dst_port,
+                                               self.dst_vlan))
+        self.resources.append(BandwidthPathResource(self.fullpath,
+                                                    self.bandwidth))
+        self.resources.append(BandwidthPortResource(self.src_switch,
+                                                    self.src_port,
+                                                    self.bandwidth))
+        self.resources.append(BandwidthPortResource(self.dst_switch,
+                                                    self.dst_port,
+                                                    self.bandwidth))
 
         # Fill out self.endpoints
         self.endpoints.append((self.src_switch,
-                               self._get_neighbor(topology, self.src_switch,
-                                                  self.src_port),
+                               tm.get_switch_port_neighbor(self.src_switch,
+                                                           src_port),
                                self.src_vlan))
-        self.endpoints.append((self.src_switch,
-                               self._get_neighbor(topology, self.src_switch,
-                                                  self.dst_port),
+        self.endpoints.append((self.dst_switch,
+                               tm.get_switch_port_neighbor(self.dst_switch,
+                                                           dst_port),
                                self.dst_vlan))
         
         # Special case: Single node:
@@ -298,10 +316,7 @@ class L2TunnelPolicy(UserPolicy):
         ''' This is called before a rule is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
-        # Release VLAN and BW in use
-        tm.unreserve_vlan_on_path(self.fullpath, self.intermediate_vlan)
-        tm.unreserve_bw_on_path(self.fullpath, self.bandwidth)
-        
+        pass        
 
     def get_endpoints(self):
         return self.endpoints

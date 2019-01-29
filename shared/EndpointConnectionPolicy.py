@@ -6,6 +6,7 @@ from UserPolicy import *
 from L2TunnelPolicy import *
 from datetime import datetime
 import networkx as nx
+from shared.PathResource import VLANPathResource, BandwidthPathResource
 from shared.constants import *
 from math import ceil
 
@@ -109,6 +110,7 @@ class EndpointConnectionPolicy(UserPolicy):
         # There is a lot of logic borrowed from L2TunnelPolicy's version of
         # breakdown_rule, but there are some significant differences.
         self.breakdown = []
+        self.resources = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
         
@@ -128,6 +130,7 @@ class EndpointConnectionPolicy(UserPolicy):
                                              self.bandwidth, True)
         if self.switchpath == None:
             raise UserPolicyError("There is no available path between %s and %s for bandwidth %s" % (self.src, self.dst, self.bandwidth))
+        
         # Switchpath is the path between endpoint switches. self.src and
         # self.dst are hosts, not switches, so they're not useful for certain
         # things.
@@ -136,12 +139,6 @@ class EndpointConnectionPolicy(UserPolicy):
         self.intermediate_vlan = tm.find_vlan_on_path(self.switchpath)
         if self.intermediate_vlan == None:
             raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
-            
-        # We reserve the VLAN on all points *except* the end points, as the
-        # endpoints have their own VLAN. Reserver the BW on the full path,
-        # however
-        tm.reserve_vlan_on_path(self.switchpath, self.intermediate_vlan)
-        tm.reserve_bw_on_path(self.fullpath, self.bandwidth)
         
         # Third, build the breakdown rules for the path.
         # This section is heavily based on the L2TunnelPolicy.breakdown_rule()
@@ -168,6 +165,16 @@ class EndpointConnectionPolicy(UserPolicy):
                                     True, bandwidth)
             bd.add_to_list_of_rules(rule)
             self.breakdown.append(bd)
+
+            # Enumerate resources
+            self.resources.append(VLANPathResource(self.switchpath,
+                                                   self.intermediate_vlan))
+            self.resources.append(VLANPathResource((location,self.src),
+                                                   src_vlan))
+            self.resources.append(VLANPathResource((location,self.dst),
+                                                   dst_vlan))
+            self.resources.append(BandwidthPathResource(self.fullpath,
+                                                        self.bandwidth))
             return self.breakdown
 
 
@@ -187,6 +194,17 @@ class EndpointConnectionPolicy(UserPolicy):
         # Add to self.endpoints
         self.endpoints.append((self.src, src_edge, src_vlan))
         self.endpoints.append((self.dst, dst_edge, dst_vlan))
+
+        # Enumerate resources
+        self.resources.append(VLANPathResource(self.switchpath,
+                                               self.intermediate_vlan))
+        self.resources.append(VLANPathResource((src_switch,self.src),
+                                               src_vlan))
+        self.resources.append(VLANPathResource((dst_switch,self.dst),
+                                               dst_vlan))
+        self.resources.append(BandwidthPathResource(self.fullpath,
+                                                    self.bandwidth))
+        
 
         for location, inport, invlan, path in [(src_switch, src_port,
                                                 src_vlan, srcpath),
@@ -272,9 +290,7 @@ class EndpointConnectionPolicy(UserPolicy):
         ''' This is called before a rule is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
-        # Release VLAN and BW in use
-        tm.unreserve_vlan_on_path(self.switchpath, self.intermediate_vlan)
-        tm.unreserve_bw_on_path(self.fullpath, self.bandwidth)
+        pass
 
     def get_endpoints(self):
         return self.endpoints
