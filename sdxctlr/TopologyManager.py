@@ -8,6 +8,7 @@ from datetime import datetime
 import networkx as nx
 import json
 from lib.SteinerTree import make_steiner_tree
+from shared.PathResource import *
 
 from shared.constants import rfc3339format
 #FIXME: This shouldn't be hard coded.
@@ -163,6 +164,8 @@ class TopologyManager(AtlanticWaveManager):
                     elif type(endpoint[k]) == int:
                         self.topo.node[key][k] = int(endpoint[k])
                     self.topo.node[key][k] = str(endpoint[k])
+                # Add other required fields to the endpoitn dict
+                self.topo.node[key]['vlans_in_use'] = []
                     
 
         for key in data['localcontrollers'].keys():
@@ -362,6 +365,7 @@ class TopologyManager(AtlanticWaveManager):
         with self.topolock:
             # Make sure the path is clear -> very similar to find_vlan_on_path
             for node in nodes:
+                print "\nself.topo.node[%s]: %s\n" % (node, self.topo.node[node])
                 if vlan in self.topo.node[node]['vlans_in_use']:
                     raise TopologyManagerError("VLAN %d is already reserved on node %s" % (vlan, node))
 
@@ -399,6 +403,60 @@ class TopologyManager(AtlanticWaveManager):
             for (node, nextnode) in node_pairs:
                 self.topo.edge[node][nextnode]['vlans_in_use'].remove(vlan)
 
+    def reserve_resource(self, resource):
+        ''' Reserve the requested resource. '''
+        if isinstance(resource, VLANPortResource):
+            self.reserve_vlan_on_port(resource.get_switch(),
+                                      resource.get_port(),
+                                      resource.get_vlan())
+        elif isinstance(resource, VLANPathResource):
+            self.reserve_vlan_on_path(resource.get_path(),
+                                      resource.get_vlan())
+        elif isinstance(resource, VLANTreeResource):
+            self.reserve_vlan_on_tree(resource.get_tree(),
+                                      resource.get_vlan())
+        elif isinstance(resource, BandwidthPortResource):
+            self.reserve_bw_on_port(resource.get_switch(),
+                                           resource.get_port(),
+                                           resource.get_bandwidth())
+        elif isinstance(resource, BandwidthPathResource):
+            self.reserve_bw_on_path(resource.get_path(),
+                                           resource.get_bandwidth())
+        elif isinstance(resource, BandwidthTreeResource):
+            self.reserve_bw_on_tree(resource.get_tree(),
+                                           resource.get_bandwidth())
+        else:
+            raise TopologyManagerTypeError(
+                "%s is not a valid resource to reserve. %s" % (
+                type(resource), resource))
+        
+    def unreserve_resource(self, resource):
+        ''' Release the requested resource. '''
+        if isinstance(resource, VLANPortResource):
+            self.unreserve_vlan_on_port(resource.get_switch(),
+                                        resource.get_port(),
+                                        resource.get_vlan())
+        elif isinstance(resource, VLANPathResource):
+            self.unreserve_vlan_on_path(resource.get_path(),
+                                        resource.get_vlan())
+        elif isinstance(resource, VLANTreeResource):
+            self.unreserve_vlan_on_tree(resource.get_tree(),
+                                        resource.get_vlan())
+        elif isinstance(resource, BandwidthPortResource):
+            self.unreserve_bw_on_port(resource.get_switch(),
+                                             resource.get_port(),
+                                             resource.get_bandwidth())
+        elif isinstance(resource, BandwidthPathResource):
+            self.unreserve_bw_on_path(resource.get_path(),
+                                             resource.get_bandwidth())
+        elif isinstance(resource, BandwidthTreeResource):
+            self.unreserve_bw_on_tree(resource.get_tree(),
+                                             resource.get_bandwidth())
+        else:
+            raise TopologyManagerTypeError(
+                "%s is not a valid resource to unreserve. %s" % (
+                type(resource), resource))
+                
     # --------------
     # Path functions
     # --------------
@@ -637,3 +695,62 @@ class TopologyManager(AtlanticWaveManager):
                                tree.edges())
             return tree
             
+    # -------------------
+    # Port-only functions
+    # -------------------
+
+    def get_switch_port_neighbor(self, switchname, portnum):
+        ''' Finds a neighbor for a switch/port combination.
+            returns name of neighbor if exists, None if it doesn't.
+        '''
+        # Check if port is in use: loop through neighbors
+        for neighbor in self.topo[switchname].keys():
+            # - if neighbor is using that port, good, we have a match
+            if self.topo[switchname][neighbor][switchname] == portnum:
+                # --return neighbor name
+                return neighbor
+        return None
+
+    def reserve_vlan_on_port(self, switchname, portnum, vlan):
+        ''' Reserves VLANs on a specific port. '''
+        neighbor = self.get_switch_port_neighbor(switchname, portnum)
+        if neighbor != None:
+            # - reserve the VLAN on both sides of the connection
+            self.dlogger.debug("reserve_vlan_on_port: %s,%s,%s" % (
+                switchname, neighbor, vlan))
+            # We're not reserving on the switch, as that should already
+            # be covered.
+            self.reserve_vlan([], [(switchname, neighbor)], vlan)
+        # No worries if there were no matches!
+
+    def unreserve_vlan_on_port(self, switchname, portnum, vlan):
+        ''' Releases VLANs on a specific port. '''
+        neighbor = self.get_switch_port_neighbor(switchname, portnum)
+        if neighbor != None:
+            # - unreserve the VLAN on both sides of the connection, but not
+            # on the switch itself: we only care about the port right now.
+            self.dlogger.debug("unreserve_vlan_on_port: %s,%s,%s" % (
+                switchname, neighbor, vlan))
+            self.unreserve_vlan([],[(switchname, neighbor)], vlan)
+        # No worries if there were no matches!
+
+    def reserve_bw_on_port(self, switchname, portnum, bw):
+        ''' Reserves bandwidth on a specific port. '''
+        neighbor = self.get_switch_port_neighbor(switchname, portnum)
+        if neighbor != None:
+            # - reserve the bandwidth on both sides of the connection
+            self.dlogger.debug("reserve_bw_on_port: %s,%s,%s" % (
+                switchname, neighbor, bw))
+            self.reserve_bw([(switchname, neighbor)], bw)
+        # No worries if there were no matches!
+
+    def unreserve_bw_on_port(self, switchname, portnum, bw):
+        ''' Releases bandwidth on a specific port. '''
+        neighbor = self.get_switch_port_neighbor(switchname, portnum)
+        if neighbor != None:
+            # - unreserve the bandwidth on both sides of the connection
+            self.dlogger.debug("unreserve_bw_on_port: %s,%s,%s" % (
+                switchname, neighbor, bw))
+            self.unreserve_bw([(switchname, neighbor)], bw)
+        # No worries if there were no matches!
+

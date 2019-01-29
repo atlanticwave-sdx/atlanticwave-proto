@@ -7,6 +7,8 @@ from shared.constants import *
 from shared.L2MultipointEndpointLCRule import L2MultipointEndpointLCRule
 from shared.L2MultipointFloodLCRule import L2MultipointFloodLCRule
 from shared.L2MultipointLearnedDestinationLCRule import L2MultipointLearnedDestinationLCRule
+from shared.PathResource import VLANTreeResource, BandwidthTreeResource, \
+    VLANPortResource, BandwidthPortResource
 import networkx as nx
 
 class L2MultipointPolicy(UserPolicy):
@@ -98,6 +100,7 @@ class L2MultipointPolicy(UserPolicy):
             
     def breakdown_rule(self, tm, ai):
         self.breakdown = []
+        self.resources = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
 
@@ -112,9 +115,11 @@ class L2MultipointPolicy(UserPolicy):
         self.intermediate_vlan = tm.find_vlan_on_tree(self.tree)
         if self.intermediate_vlan == None:
             raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.tree, self))
-        tm.reserve_vlan_on_tree(self.tree, self.intermediate_vlan)
-        tm.reserve_bw_on_tree(self.tree, self.bandwidth)
 
+        self.resources.append(VLANTreeResource(self.tree,
+                                               self.intermediate_vlan))
+        self.resources.append(BandwidthTreeResource(self.tree,
+                                                    self.bandwidth))
         
         #nodes = self.tree.nodes(data=True)
         #edges = self.tree.edges(data=True)
@@ -151,6 +156,14 @@ class L2MultipointPolicy(UserPolicy):
             flooding_ports = []
             endpoint_ports_and_vlans = []
 
+            self.resources.append(VLANPortResource(node, port, vlan))
+            self.resources.append(BandwidthPortResource(node, port, bandwidth))
+
+            # Figure out neighbor of endpoints (if they exist)
+            neighbor = tm.get_switch_port_neighbor(node, port)
+            if neighbor != None:
+                self.external_endpoints.append((node, neighbor, vlan))
+
             # for endpoint ports, add to endpoint_ports_and_vlans and
             # covered_endpoints
             endpoint_ports_and_vlans = [(d['port'],d['vlan']) for
@@ -166,7 +179,6 @@ class L2MultipointPolicy(UserPolicy):
                 # [neighbor] would give us the port on 'neighbor'.
                 # Using topology as it is sure to include all the data.
                 connected_ports.append(topology.edge[node][neighbor][node])
-                self.external_endpoints.append ((node, neighbor, vlan))
             for p in connected_ports:
                 if p in endpoint_ports:
                     continue
@@ -254,10 +266,8 @@ class L2MultipointPolicy(UserPolicy):
         ''' This is called before a rule is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
-        # Release VLAN and BW in use
-        tm.unreserve_vlan_on_tree(self.tree, self.intermediate_vlan)
-        tm.unreserve_bw_on_tree(self.tree, self.bandwidth)
-
+        pass
+    
     def switch_change_callback(self, tm, ai, data):
         ''' This is for a learned destination on a L2MultipointPolicy. 
             The LocalController sent up a message that there was a new 
