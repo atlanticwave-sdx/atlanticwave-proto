@@ -483,7 +483,7 @@ class SenseAPI(AtlanticWaveManager):
                 delta = self._get_delta_by_rule_hash(rule_hash)
                 # -- Put together service name.
                 service_name = "%s:conn+%s" % (self.SVC_SENSE,
-                                               delta)
+                                               delta['delta_id'])
                 
             #   if user is other, then make up name
             else:
