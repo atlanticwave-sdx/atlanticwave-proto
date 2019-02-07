@@ -69,7 +69,27 @@ class L2TunnelPolicy(UserPolicy):
             self.src_switch, self.src_port, self.src_vlan,
             self.dst_switch, self.dst_port, self.dst_vlan,
             self.bandwidth)
-                                    
+
+    def __eq__(self, other):
+        if (type(self) != type(other) or
+            self.start_time != other.start_time or
+            self.stop_time != other.stop_time or
+            self.bandwidth != other.bandwidth):
+            return False
+
+        # Src and Dst could be flipped. Same thing, just backwards.
+        return ((self.src_switch == other.src_switch and
+                 self.src_port == other.src_port and
+                 self.src_vlan == other.src_vlan and
+                 self.dst_switch == other.dst_switch and
+                 self.dst_port == other.dst_port and
+                 self.dst_vlan == other.dst_vlan) or
+                (self.src_switch == other.dst_switch and
+                 self.src_port == other.dst_port and
+                 self.src_vlan == other.dst_vlan and
+                 self.dst_switch == other.src_switch and
+                 self.dst_port == other.src_port and
+                 self.dst_vlan == other.src_vlan))
 
     @classmethod
     def check_syntax(cls, json_rule):
@@ -164,13 +184,14 @@ class L2TunnelPolicy(UserPolicy):
                                                     self.bandwidth))
 
         # Fill out self.endpoints
+        self.endpoints = []
         self.endpoints.append((self.src_switch,
                                tm.get_switch_port_neighbor(self.src_switch,
-                                                           src_port),
+                                                           self.src_port),
                                self.src_vlan))
         self.endpoints.append((self.dst_switch,
                                tm.get_switch_port_neighbor(self.dst_switch,
-                                                           dst_port),
+                                                           self.dst_port),
                                self.dst_vlan))
         
         # Special case: Single node:

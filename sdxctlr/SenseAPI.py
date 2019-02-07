@@ -19,6 +19,7 @@ from RuleRegistry import RuleRegistry
 from threading import Lock
 import cPickle as pickle
 import rdflib
+from rdflib.util import list2set
 
 
 # Flask imports
@@ -40,7 +41,8 @@ from threading import Thread
 # Timing
 from datetime import datetime, timedelta, tzinfo
 from shared.constants import rfc3339format, MAXENDTIME
-sensetimeformat = "%Y-%m-$dT%H:%M:%S.000000-0000"
+#FIXME - sensetimeformat should be updated for Python3 to include %z
+sensetimeformat = "%Y-%m-%dT%H:%M:%S.%f" 
 
 # Globals
 errors = {
@@ -114,18 +116,23 @@ class SenseAPI(AtlanticWaveManager):
     # Delta Database entries:
     # {"delta_id":delta_id,
     #  "raw_request": raw_addition (pickled in DB),
-    #  "sdx_rule": sdx_rule (pickled in DB),
+    #  "addition": addition in db (pickled in DB),
+    #  "reduction": reduction in db (pickled in DB),
     #  "status": status code (see list, below),
     #  "last_modified": last modified time,
     #  "timestamp": initial timestamp of the delta,
-    #  "model_id": Model ID,
-    #  "hash": Hash returned when installing a rule to the RuleManager}
+    #  "model_id": Model ID}
 
     # Model Database entries:
     # {"model_id": Model ID (UUID),
     #  "model_data": XML that was sent over,
     #  "model_raw_info": raw topology information (pickled in DB),
     #  "timestamp": Timestamp of model}
+
+    # Hash Database entries:
+    # {"hash": Hash from the RuleManager returned on installing a policy,
+    #  "policy": Policy that's installed,
+    #  "delta_id": Delta ID associated with the policy}
 
     def __init__(self, db_filename, loggerprefix='sdxcontroller',
                  host='0.0.0.0', port=5002):
@@ -154,10 +161,13 @@ class SenseAPI(AtlanticWaveManager):
         self.userid = "SENSE"
 
         # Start database
-        db_tuples = [('delta_table','delta'), ('model_table', 'model')]
+        db_tuples = [('delta_table','delta'),
+                     ('model_table', 'model'),
+                     ('hash_table','hash')]
         self._initialize_db(db_filename, db_tuples, True)
         self.delta_table.delete() #FIXME: these shouldn't be needed.
         self.model_table.delete() #FIXME: these shouldn't be needed.
+        self.hash_table.delete()
         
         # Register update functions
         RuleManager().register_for_rule_updates(self.rule_add_callback,
@@ -480,6 +490,8 @@ class SenseAPI(AtlanticWaveManager):
             #   if user is self.userid, then give back uuid
             if user == self.userid:
                 # -- find the delta in the local database to get the UUID
+                print "------Trying to get by rule hash %s" % rule_hash
+                
                 delta = self._get_delta_by_rule_hash(rule_hash)
                 # -- Put together service name.
                 service_name = "%s:conn+%s" % (self.SVC_SENSE,
@@ -727,24 +739,6 @@ class SenseAPI(AtlanticWaveManager):
                                                  vlan1, vlan2, bandwidth,
                                                  starttime, endtime)
         
-    def _install_policy(self, delta_id, policy):
-        # Install rule
-        self.dlogger.debug("_install_policy: %s:%s" % (delta_id, policy))
-        hashval = RuleManager().add_rule(policy)
-
-        # Push hash into DB
-        self._put_delta(delta_id, hashval=hashval, status=STATUS_ACTIVATED,
-                        update=True)
-
-    def _remove_policy(self, delta):
-        # Remove the rule
-        # - Extract the username
-        # - Extract the hash
-                    
-        username = self.userid
-        rule_hash = delta['hash']
-        RuleManager().remove_rule(rule_hash, username)
-
     def check_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
                                    bandwidth, starttime, endtime):
         ''' Checks to see if a rule will be valid before installing. '''
@@ -906,22 +900,32 @@ class SenseAPI(AtlanticWaveManager):
     def process_deltas(self, args):
         # Parse the args
         self.dlogger.debug("process_delta() begin with args: %s" % args)
+        print("\n\n---- BEGIN OF PROCESS_DELTAS ----")
         self.__print_all_deltas()
+        print("\n\n")
         
         keys = args.keys()
         if ('id' not in keys or
             'lastModified' not in keys or
             'modelId' not in keys):
-            raise SenseAPIArgumentError("Missing id, lastModified, or modelId: %s" %
-                                        keys)
-        if not ('reduction' in keys !=
-                'addition' in keys): # poor man's xor - we only want one.
+            raise SenseAPIArgumentError(
+                "Missing id, lastModified, or modelId: %s" % keys)
+
+
+        if ('reduction' not in keys and
+            'addition' not in keys):
             raise SenseAPIArgumentError("Missing reduction or addition: %s" %
                                         keys)
         
         delta_id = args['id']
         last_modified = args['lastModified']
         model_id = args['modelId']
+
+        reduction = None
+        addition = None
+        parsed_reductions = None
+        parsed_additions = None
+        status = HTTP_GOOD
 
         if 'reduction' in keys and len(args['reduction']) > 0:
             try:
@@ -931,222 +935,249 @@ class SenseAPI(AtlanticWaveManager):
                                    (e, args['reduction']))
                 return None, HTTP_BAD_REQUEST
                                    
-            addition = None #FIXME: is this true? I don't think so.
-        else:
-            reduction = None
+        elif 'addition' in keys and len(args['addition']) > 0:
             try:
                 addition = self._decode_b64_gunzip(args['addition'])
             except Exception as e:
                 self.dlogger.error("Decoding error on Reduction: %s:%s" %
                                    (e, args['reduction']))
                 return None, HTTP_BAD_REQUEST
-        
+
+
         # If reduction:
         #  - parse reduction
-        #  - check to make sure it's a valid delta
-        #  - call cancel if a valid reduction is received,
-        #    - cancel will deal with removing the delta from flows and DB
-        #  - Return status
-        delta = None
-        status = None
+        #  - find matching hashes per policy
+        #  - if they don't exist, reject the reduction
         if reduction != None:
-            try:
-                parsed_reduction = self._parse_delta_reduction(reduction)
-            except SenseAPIClientError as e:
-                self.dlogger.error("process_deltas: Received \"%s\"" % e)
-                return None, HTTP_BAD_REQUEST
-            self.logger.info("Reduction %s to be removed" % parsed_reduction)
-            delta = self._get_delta_by_id(parsed_reduction)
-            #print "delta_by_id      = %s" % delta
-            if delta == None:
-                # Doesn't exist anymore 
-                return None, HTTP_NOT_FOUND
-            status = self.delete(parsed_reduction)
-            retdelta = self._convert_delta(delta)
-            self.logger.info("Reduction %s deleted %s" % (parsed_reduction,
-                                                           status))
+            parsed_reductions = self._parse_delta(reduction)
+            #try:
+            #    parsed_reductions = self._parse_delta(reduction)
+            #except SenseAPIClientError as e:
+            #    self.dlogger.error(
+            #        "process_deltas: reduction parsing received %s" %
+            #                       e)
+            #    return None, HTTP_BAD_REQUEST
 
+            for policy in parsed_reductions:
+                rule_hash = self._get_rule_hash_by_policy(policy)
+                if rule_hash == None:
+                    self.dlogger.error(
+                        "process_deltas: reduction no known hash for policy %s"
+                        % str(policy))
+                    return None, HTTP_BAD_REQUEST
+            
         # If addition:
         #  - parse addition
-        #  - See if it's possible (BW, VLANs, etc.)
-        #  - If possible, save off this new delta and return good status
-        #  - If not possible, return failed status - raises errors
-        else:
+        #  - See if each policy is possible (BW, VLANs, etc.)
+        #  - If possible, great, continue on
+        #  - If not possible, return failed status - automagic due to raised
+        #    errors
+        if addition != None:
             try:
-                parsed_addition_policy = self._parse_delta_addition(addition)
+                parsed_additions = self._parse_delta(addition)
             except SenseAPIClientError as e:
-                self.dlogger.error("process_deltas: Received %s" % e)
+                self.dlogger.error("process_deltas: add parsing received %s" %
+                                   e)
                 return None, HTTP_BAD_REQUEST
-            bd = RuleManager().test_add_rule(parsed_addition_policy)
-            status = HTTP_ACCEPTED
-            try:
-                self._put_delta(delta_id, args, parsed_addition_policy,
-                                model_id, status)
-            except SenseAPIError as e:
-                self.dlogger.error("process_deltas: Received %s" % e)
-                return None, HTTP_CONFLICT                
-            delta = self._get_delta_by_id(delta_id)
-            retdelta = self._convert_delta(delta)
+            
+            for policy in parsed_additions:
+                bd = RuleManager().test_add_rule(policy)            
+        
+        # Have good addition and/or reduction,
+        # - Put the delta into the db
+        # - Get delta from db
+        # - convert delta into what the orchestrator is expecting
+        # - return delta and status
 
-        self.dlogger.debug("process_deltas: returning %s,%s" % (retdelta,
-                                                                status)) 
+        #self._put_delta(delta_id, args, parsed_additions,
+        #                    parsed_reductions, model_id, status)
+        try:
+            self._put_delta(delta_id, args, parsed_additions,
+                            parsed_reductions, model_id, status)
+        except SenseAPIError as e:
+            self.dlogger.error("process_deltas: _put_delta received %s" % e)
+            return None, HTTP_CONFLICT
+        delta = self._get_delta_by_id(delta_id)
+        retdelta = self._convert_delta(delta)
+
+        self.dlogger.debug("process_deltas: returning %s, %s" %
+                           (retdelta, status))
+
+        print("\n\n---- END OF PROCESS_DELTAS ----")
+        self.__print_all_deltas()
+        print("\n\n")
+                   
+        
         return retdelta, status
-
-    def _parse_delta_addition(self, raw_addition):
+    
+    def _parse_delta(self, raw_delta):
         # This is based on part of nrmDelta.processDelta() from senserm_oscars's
         # sensrm_delta.py.
-        # Parses the raw_addition, and returns back the rule that will make the
-        # addition.
+        # Parses the raw_delta, and returns back the policies that it thinks
+        # matches the delta
         #
         # ASSUMPTION: only one rule is being added with each addition. Changes
         # would be needed if multiple rules are in each addition.
         #FIXME: anything else that needs to be returned back?
 
-        endpoints = []
-        starttime = None
-        endtime = None
-        bandwidth = 100*8000000 # 100mbps
-        policy = None
+        def __get_uuid_and_service_name(s):
+            # I'm sorry for this ugly string manipulation...
+            print "__get_uuid_and_service_name: %s" %s
+            uuid = s.split("conn+")[1].split(":")[0]
+            svcname = ":".join(s.split("conn+")[1].split(":")[1:])
+            return uuid, svcname
 
         gr = rdflib.Graph()
         try:
-            result = gr.parse(data=raw_addition, format='ttl')
+            result = gr.parse(data=raw_delta, format='ttl')
             #FIXME: check the result
         except Exception as e:
             self.dlogger.error(
-                "_parse_delta_addition: Error on parsing graph: %s" % e)
-            self.dlogger.error("  Addition: %s" % raw_addition)
-            raise SenseAPIClientError("Addition unparsable %s:%s" %
-                                      (e, raw_addition))
-            
-        # Build up list of important information:
-        #  - endpoints (switch, port, VLAN)
-        #  - start and end times
-        #  - bandwidth
-        for s,p,o in gr:
-            if awaveurn in str(s):
-                # bandwidth - First as "vlanport" or "vlantag" is also in string
-                if "service+bw" in str(s):
-                    if "reservableCapacity" in str(p):
-                        bandwidth = int(o)
+                "_parse_delta: Error on parsing graph: %s" % e)
+            self.dlogger.error("  Delta: %s" % raw_delta)
+            raise SenseAPIClientError("Delta unparsable %s:%s" %
+                                      (e, raw_delta))
+
+        # Get a list of services
+        # - loop thorugh the graph and extract the UUIDs and service name
+        # -- Initialize the services dictionary.
+        # -- When finding a service, get the start-end times
+        # -- When finding a service, get the ports associated with the service
+        # -- Loop through the ports
+        # --- Extract vlan
+        # --- Extract bandwidth (shared, but each port has its own copy)
+        services = {}
+        print "\n\n\n"
+        for s in list2set(gr.subjects()):
+            #print s
+            if awaveurn not in str(s):
+                continue
+            if ('ServiceDomain' in str(s) and
+                'conn' in str(s) and
+                'lifetime' not in str(s)):
+                print "   MATCH %s" % s
+                uuid, svcname = __get_uuid_and_service_name(s)
+                if uuid not in services.keys():
+                    services[uuid] = {}
+                services[uuid][svcname] = {'endpoints':[]}
                 
-                # endpoints
-                elif "vlanport" in str(s) or "vlantag" in str(s):
-                    # VLAN
-                    if "value" in str(p):
-                        vlan = int(o)
-                        
-                        # Endpoint name
-                        epname = s.split("::")[1].split(":+:")[0]
-                        #Wow that's messy
-                    
-                        # Look up switch from port name
+
+                for p,o in gr.predicate_objects(s):
+                    # Start and end times
+                    print "  s: %s\n   p: %s\n   o: %s" % (s,p,o)
+                    if "existsDuring" in str(p):
+                        for p2,o2 in gr.predicate_objects(o):
+                            if "start" in str(p2):
+                                print "----- STARTTIME %s" % o2
+                                starttime = datetime.strftime(
+                                    datetime.strptime(str(o2)[:-5],
+                                                      sensetimeformat),
+                                    rfc3339format)
+                                services[uuid][svcname]['starttime'] = starttime
+                            elif "end" in str(p2):
+                                print "----- END  TIME %s" % o2
+                                endtime = datetime.strftime(
+                                    datetime.strptime(str(o2)[:-5],
+                                                      sensetimeformat),
+                                    rfc3339format)
+                                services[uuid][svcname]['endtime'] = endtime
+                                
+                    # Ports
+                    elif "hasBidirectionalPort" in str(p):
+                        vlan = None
+                        bw = None
+                        for p2,o2 in gr.predicate_objects(o):
+                            # - VLAN
+                            if "hasLabel" in str(p2):
+                                for p3,o3 in gr.predicate_objects(o2):
+                                    if "value" in str(p3):
+                                        vlan = int(str(o3))
+                            # - Bandwidth
+                            elif ("hasService" in str(p2) and
+                                  "service+bw" in str(o2)):
+                                for p3,o3 in gr.predicate_objects(o2):
+                                    if "reservableCapacity" in str(p3):
+                                          bw = int(o3)
+                        # Get endpoint from port
+                        epname = str(o).split("::")[1].split(":+:")[0]
                         ep, switchname = str(epname).split('-')
                         port = self.current_topo[switchname][ep][switchname]
-                        endpoint = {}
-                        endpoint['switch'] = switchname
-                        endpoint['port'] = port
-                        endpoint['vlan'] = vlan
-                        endpoints.append(endpoint)
+                        endpoint = {'switch':switchname,
+                                    'port':port,
+                                    'vlan':vlan}                        
+                        
+                        services[uuid][svcname]['endpoints'].append(endpoint)
+                        if bw != None:
+                            services[uuid][svcname]['bandwidth'] = bw
 
-                # starttime and endtime
-                elif "lifetime" in str(s):
-                    if "start" in str(p):
-                        starttime = o
-                    if "end" in str(p):
-                        endtime = o
+        # Have details, now loop through services and create rules that are
+        # being described.
+        generated_rules = []
+        for uuid in services.keys():
+            for svc in services[uuid].keys():
+                endpointcount = len(services[uuid][svc]['endpoints'])
+                if endpointcount < 2:
+                    raise SenseAPIClientError(
+                        "There are fewer than 2 endpoints: %s, %s, %s" %
+                        (endpoints, uuid, svc))
+                elif endpointcount == 2:
+                    # L2Tunnel
+                    try:
+                        ep0 = services[uuid][svc]['endpoints'][0]
+                        ep1 = services[uuid][svc]['endpoints'][1]
+                        starttime = services[uuid][svc]['starttime']
+                        endtime = services[uuid][svc]['endtime']
+                        bandwidth = services[uuid][svc]['bandwidth']
+                        rule = {L2TunnelPolicy.get_policy_name():
+                                {'starttime':starttime,
+                                 'endtime':endtime,
+                                 'srcswitch':ep0['switch'],
+                                 'dstswitch':ep1['switch'],
+                                 'srcport':ep0['port'],
+                                 'dstport':ep1['port'],
+                                 'srcvlan':ep0['vlan'],
+                                 'dstvlan':ep1['vlan'],
+                                 'bandwidth':bandwidth}}
+                        policy = L2TunnelPolicy(self.userid, rule)
+                        generated_rules.append(policy)
+                    except Exception as e:
+                        self.dlogger.error(
+                           "_parse_delta: Error on L2TunnelPolicy creation - %s:%s:%s:%s:%s" %
+                            (starttime, endtime, bandwidth, ep0, ep1))
+                        self.dlogger.error("    %s" % str(e))
+                        raise SenseAPIClientError(
+                            "Invalid parameters for L2TunnelPolicy - %s:%s:%s:%s:%s" %
+                            (starttime, endtime, bandwidth, ep0, ep1))
+                    
+                elif endpointcount > 2:
+                    # L2Multipoint
+                    print "services %s" % services
+                    print "services[%s][%s]" % (uuid, svc,
+                                                services[uuid][svc])
+                    try:
+                        starttime = services[uuid][svc]['starttime']
+                        endtime = services[uuid][svc]['endtime']
+                        bandwidth = services[uuid][svc]['bandwidth']
+                        endpoints = services[uuid][svc]['endpoints']
+                        rule = {L2MultipointPolicy.get_policy_name():
+                                {"starttime":starttime,
+                                 "endtime":endtime,
+                                 "bandwidth":bandwidth,
+                                 "endpoints":endpoints}}
+                        policy = L2MultipointPolicy(self.userid, rule)
+                        generated_rules.append(policy)
+                    except Exception as e:
+                        self.dlogger.error(
+                            "_parse_delta: Error on L2MultipointPolicy creation - %s:%s:%s:%s" %
+                            (starttime, endtime, bandwidth, endpoints))
+                        raise SenseAPIClientError(
+                            "Invalid parameters for L2MultipointPolicy - %s:%s:%s:%s" %
+                            (starttime, endtime, bandwidth, endpoints))
 
+        self.logger.info("_parse_delta: Generated %d policies for UUIDs %s" %
+                         (len(generated_rules), str(services.keys())))
+        return generated_rules
 
-        # Normalized the picked out information:
-        #  - start and end times may not be selected, so select for them
-        if starttime != None:
-            starttime = datetime.strptime(starttime,
-                                          rfc3339format)
-        else:
-            starttime = datetime.now().strftime(rfc3339format)
-
-        if endtime != None:
-            endtime = datetime.strptime(endtime,
-                                        rfc3339format)
-        else:
-            endtime = MAXENDTIME
-        #FIXME: Need to validate 
-
-        # Create AWave/SDX rules for the delta information
-        #  - if 2 endpoints, L2TunnelPolicy
-        #  - if >2 endpoints, L2MultipointPolicy
-        if len(endpoints) < 2:
-            raise SenseAPIClientError("There are fewer than 2 endpoints: %s" %
-                                      endpoints)
-        elif len(endpoints) == 2:
-            try:
-                rule = {L2TunnelPolicy.get_policy_name():
-                        {"starttime":starttime,
-                         "endtime":endtime,
-                         "srcswitch":endpoints[0]['switch'],
-                         "dstswitch":endpoints[1]['switch'],
-                         "srcport":endpoints[0]['port'],
-                         "dstport":endpoints[1]['port'],
-                         "srcvlan":endpoints[0]['vlan'],
-                         "dstvlan":endpoints[1]['vlan'],
-                         "bandwidth":bandwidth}}
-                policy = L2TunnelPolicy(self.userid, rule)
-            except Exception as e:
-                self.dlogger.error(
-                    "_parse_delta_addition: Error on L2TunnelPolicy creation - %s:%s:%s:%s" %
-                    (starttime, endtime, bandwidth, endpoints))
-                raise SenseAPIClientError(
-                    "Invalid parameters for L2TunnelPolicy - %s:%s:%s:%s" %
-                    (starttime, endtime, bandwidth, endpoints))
-
-        elif len(endpoints) > 2:
-            try:
-                rule = {L2MultipointPolicy.get_policy_name():
-                        {"starttime":starttime,
-                         "endtime":endtime,
-                         "bandwidth":bandwidth,
-                         "endpoints":endpoints}}
-                policy = L2MultipointPolicy(self.userid, rule)
-            except Exception as e:
-                self.dlogger.error(
-                    "_parse_delta_addition: Error on L2MultipointPolicy creation - %s:%s:%s:%s" %
-                    (starttime, endtime, bandwidth, endpoints))
-                raise SenseAPIClientError(
-                    "Invalid parameters for L2MultipointPolicy - %s:%s:%s:%s" %
-                    (starttime, endtime, bandwidth, endpoints))
-                
-                
-
-        # Return the new Policy
-        return policy
-
-    def _parse_delta_reduction(self, raw_reduction):
-        # This is basically the same as nrmDelta.processDeltaReduction() from
-        # senserm_oscars's senserm_delta.py.
-        # Parses the raw_reduction, and returns back the deltaid that should be
-        # cancelled.
-        cancelID = ""
-        gr = rdflib.Graph()
-        
-        try:
-            result = gr.parse(data=raw_reduction, format='ttl')
-            #FIXME: check the result
-        except Exception as e:
-            self.dlogger.error(
-                "_parse_delta_reduction: Error on parsing graph: %s" % e)
-            self.dlogger.error("  Reduction: %s" % raw_reduction)
-            raise SenseAPIClientError("Reduction unparsable %s:%s" %
-                                      (e, raw_reduction))
-
-        for s,p,o in gr:
-            if awaveurn in str(s):
-                if "existsDuring" in str(s):
-                    subj2 = s.split("conn+")
-                    subj3 = subj2[1].split(":")
-                    cancelID = subj3[0]
-                    return cancelID
-        return cancelID
-            
     def get_delta(self, deltaid):
         ''' Get the delta.
             Returns:
@@ -1179,23 +1210,53 @@ class SenseAPI(AtlanticWaveManager):
                            deltaid)
         # Get the delta information
         delta = self._get_delta_by_id(deltaid)
-        
-        # Check if still possible
-        if delta == None:
-            self.dlogger.debug("commit: Delta %s does not exist." % deltaid)
-            return HTTP_NOT_FOUND
-        rules_all_valid = True
-        if not self._check_SDX_rule(delta['sdx_rule']):
-            rules_all_valid = False
 
-        # If not possible, reject, and send alternatives?
-        if rules_all_valid == False:
-            return HTTP_CONFLICT
-            
-        # If possible, Install rule
-        self.dlogger.debug("commit(): Calling _install_policy")
-        self._install_policy(deltaid, delta['sdx_rule'])
+        # Make sure additions can still work
+        print "\n\n%s\n\n" % delta
+        print "    &&&&&&&&\n    %s\n\n  %s\n\n%s" % (delta,
+                                                      delta['addition'],
+                                                      delta['reduction'])
+        if delta['addition'] != None:
+            for policy in delta['addition']:
+                try:
+                    RuleManager().test_add_rule(policy)
+                except Exception as e:
+                    # This means that rule cannot be added, for whatever reason,
+                    # log it, and return bad status
+                    self.logger.error("commit: addition failed, aborting. " +
+                                      "%s, %s" % str(policy), e)
+                    return HTTP_CONFLICT
 
+        # Reductions first
+        # - Loop through the reductions
+        # -- get the corresponding rule_hash
+        # -- Call RuleManager().remove_rule() to get rid of the rule
+        # -- if it doesn't exist in the RuleManager, that's fine, but log it!
+        if delta['reduction'] != None:
+            for policy in delta['reduction']:
+                rule_hash = self._get_rule_hash_by_policy(policy)
+                try:
+                    RuleManager().remove_rule(rule_hash, self.userid)
+                except RuleManagerError as e:
+                    self.dlogger.info("commit: reduction failed, continuing: %s"
+                                      % rule_hash)
+
+        # Addition commit second
+        # - Loop through second time
+        # -- Install policy this time
+        # -- push the rule_hash into the hashDB with _put_rule_hash_by_policy()
+        if delta['addition'] != None:
+            for policy in delta['addition']:
+                try:
+                    rule_hash = RuleManager().add_rule(policy)
+                    self._put_rule_hash_by_policy(policy, rule_hash,
+                                                  deltaid)
+                except:
+                    raise
+
+        # Update status
+        self._put_delta(deltaid, status=STATUS_ACTIVATED, update=True)
+        # Return good status
         return HTTP_GOOD
     
     def delete(self, deltaid):
@@ -1249,19 +1310,19 @@ class SenseAPI(AtlanticWaveManager):
               - Dictionary containing delta. See comment at top of SenseAPI 
                 definition for keys. 
         '''
-        raw_delta = self.delta_table.find_one(delta_id=unicode(delta_id))
+        raw_delta = self.delta_table.find_one(delta_id=delta_id)
         if raw_delta == None:
             return None
         
         # Unpickle the pickled values and rebuild dictionary to return
         delta = {'delta_id':raw_delta['delta_id'],
                  'raw_request':pickle.loads(str(raw_delta['raw_request'])),
-                 'sdx_rule':pickle.loads(str(raw_delta['sdx_rule'])),
+                 'addition':pickle.loads(str(raw_delta['addition'])),
+                 'reduction':pickle.loads(str(raw_delta['reduction'])),
                  'status':raw_delta['status'],
                  'last_modified':raw_delta['last_modified'],
                  'timestamp':raw_delta['timestamp'],
-                 'model_id':raw_delta['model_id'],
-                 'hash':raw_delta['hash']}
+                 'model_id':raw_delta['model_id']}
 
         self.dlogger.debug("_get_delta_by_id() on %s successful" % delta_id)
         return delta
@@ -1274,24 +1335,60 @@ class SenseAPI(AtlanticWaveManager):
               - Dictionary containing delta. See comment at top of SenseAPI
                 definition for keys.
         '''
-        raw_delta = self.delta_table.find_one(hash=unicode(rule_hash))
-        if raw_delta == None:
-            return None
-        
-        # Unpickle the pickled values and rebuild dictionary to return
-        delta = {'delta_id':raw_delta['delta_id'],
-                 'raw_request':pickle.loads(str(raw_delta['raw_request'])),
-                 'sdx_rule':pickle.loads(str(raw_delta['sdx_rule'])),
-                 'status':raw_delta['status'],
-                 'last_modified':raw_delta['last_modified'],
-                 'timestamp':raw_delta['timestamp'],
-                 'model_id':raw_delta['model_id'],
-                 'hash':raw_delta['hash']}
 
-        self.dlogger.debug("_get_delta_by_rule_hash() on %s successful" %
-                           rule_hash)
+        raw_hash = self.hash_table.find_one(hash=rule_hash)
+        print "\n\nRAW_HASH = %s\n\n" % raw_hash
+        if raw_hash == None:
+            return None
+
+        delta_id = raw_hash['delta_id']
+        
+        delta = self._get_delta_by_id(delta_id)
+
+        self.dlogger.debug("_get_delta_by_rule_hash() on %s successful %s" %
+                           (rule_hash, delta_id))
         return delta
 
+    def _get_rule_hash_by_policy(self, policy):
+        ''' Helper function, finds the rule hash based on a policy that was in
+            an addition in the past. '''
+
+        print "\n\nPOLICY: %s" % policy
+
+        for raw_hash in self.hash_table.find():
+            if pickle.loads(str(raw_hash['policy'])) == policy:
+                rule_hash = raw_hash['hash']
+                self.dlogger.debug("_get_rule_hash_by_policy() successful %s" %
+                                   rule_hash)
+                return rule_hash
+                
+        self.dlogger.debug("_get_rule_hash_by_policy() unsuccessful")
+        return None
+
+    def _put_rule_hash_by_policy(self, policy, rule_hash, delta_id):
+        ''' helper function, puts the rule hash and policy into the hash_table
+            to make finding them easier. Note: a delta can have multiple
+            policies as part of the addition, which is where this comes in.
+            We can find this information other ways, but this is *so* much 
+            easier. '''
+
+        #FIXME: possible enhancement to check if something matching the
+        # rule_hash is already in the hash_table.
+
+        self.dlogger.info("_put_rule_hash_by_policy: %s, %s" % (rule_hash,
+                                                                delta_id))
+        
+        hash_policy = {'hash':rule_hash,
+                       'policy':pickle.dumps(policy),
+                       'delta_id':delta_id}
+        #self.dlogger.debug("Inserting hash_policy %s" % hash_policy)
+        self.hash_table.insert(hash_policy)
+        print "\n\nWHOLE HASH TABLE:" 
+        for entry in self.hash_table.find():
+            print entry
+        print "\n\n\n"
+        
+    
     def get_all_deltas(self):
         ''' Gets a list of all deltas and returns in the following format:
             {'id': Delta ID,
@@ -1316,11 +1413,9 @@ class SenseAPI(AtlanticWaveManager):
 
     def _convert_delta(self, delta, unpickle=False):
         ''' Helper to convert DB's form to what the endpoints are expecting. '''
-        print "\n\nCONVERT_DELTA\n%s\n\n\n" % delta
         raw_request = delta['raw_request']
         if unpickle:
             raw_request = pickle.loads(str(raw_request))
-        print "\n\nRAW REQUEST!\n%s\n\n" % raw_request
         reduction = raw_request['reduction']
         addition = raw_request['addition']
             
@@ -1332,9 +1427,8 @@ class SenseAPI(AtlanticWaveManager):
              'addition':addition}
         return d
                         
-    def _put_delta(self, delta_id, raw_request=None, sdx_rule=None,
-                   model_id=None, status=None, hashval=None,
-                   update=False):
+    def _put_delta(self, delta_id, raw_request=None, addition=None,
+                   reduction=None, model_id=None, status=None, update=False):
         ''' Helper Function, just puts delta into DB. 
             Overwrites older versions for updates (when update=True). 
             status isn't required for creating: default of HTTP_CREATED will 
@@ -1360,21 +1454,28 @@ class SenseAPI(AtlanticWaveManager):
                     "Delta with ID %s already exists" % delta_id)
             if status == None:
                 status = STATUS_ACCEPTED
+            if (addition == None and
+                reduction == None):
+                raise SenseAPIError(
+                    "Delta %s requires at least an addition or a reduction " +
+                    "(%s, %s, %s, %s, %s)" %
+                    (delta_id, raw_request, addition, reduction, model_id,
+                     status))
             if (raw_request == None or
-                sdx_rule == None or
                 model_id == None or
                 status == None):
                 raise SenseAPIError(
-                    "Delta %s requires all fields (%s, %s, %s, %s)" %
-                      (delta_id, raw_request, sdx_rule, model_id, status))
+                    "Delta %s requires all fields (%s, %s, %s, %s, %s)" %
+                    (delta_id, raw_request, addition, reduction, model_id,
+                     status))
             delta = {'delta_id':delta_id,
                      'raw_request':pickle.dumps(raw_request),
-                     'sdx_rule':pickle.dumps(sdx_rule),
+                     'addition':pickle.dumps(addition),
+                     'reduction':pickle.dumps(reduction),
                      'status':status,
                      'last_modified':last_modified,
                      'timestamp':last_modified, #Both of these will be the same
-                     'model_id':model_id,
-                     'hash':hashval}
+                     'model_id':model_id}
             # insert dictionary into DB
             self.dlogger.debug("Inserting delta %s" % delta_id)                
             self.delta_table.insert(delta)
@@ -1394,18 +1495,18 @@ class SenseAPI(AtlanticWaveManager):
             if raw_request != None:
                 delta['raw_request'] = pickle.dumps(raw_request)
                 rows.append('raw_request')
-            if sdx_rule != None:
-                delta['sdx_rule'] = pickle.dumps(sdx_rule)
-                rows.append('sdx_rule')
+            if addition != None:
+                delta['addition'] = pickle.dumps(addition)
+                rows.append('addition')
+            if reduction != None:
+                delta['reduction'] = pickle.dumps(reduction)
+                rows.append('reduction')
             if status != None:
                 delta['status'] = status
                 rows.append('status')
             if model_id != None:
                 delta['model_id'] = model_id
                 rows.append('model_id')
-            if hashval != None:
-                delta['hash'] = hashval
-                rows.append('hash')
 
             if len(rows) == 0:
                 raise SenseAPIError(
