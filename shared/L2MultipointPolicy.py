@@ -101,6 +101,7 @@ class L2MultipointPolicy(UserPolicy):
     def breakdown_rule(self, tm, ai):
         self.breakdown = []
         self.resources = []
+        self.external_endpoints = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
 

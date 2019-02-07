@@ -35,7 +35,8 @@ class BreakdownEngine(AtlanticWaveModule):
                 ai = AuthorizationInspector()
                 return rule.breakdown_rule(tm, ai)
             except Exception as e:
-                self.dlogger.error("Caught Error for rule %s" % rule)
+                self.dlogger.error("Caught Error \"%s\" for rule %s" %
+                                   (str(e),rule))
                 self.exception_tb(e)
         else:
             tm = TopologyManager()
