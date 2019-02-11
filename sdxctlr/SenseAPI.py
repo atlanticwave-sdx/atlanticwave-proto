@@ -555,6 +555,9 @@ class SenseAPI(AtlanticWaveManager):
 
     def generate_model(self):
         ''' Generates a model of the simplified topology. '''
+
+        list_of_vlan_services = []
+        list_of_physical_ports = []
         
         # Boilerplate prefixes
         output  = "model: @prefix sd: <http://schemas.ogf.org/nsi/2013/12/services/definitions#> ."
@@ -568,7 +571,6 @@ class SenseAPI(AtlanticWaveManager):
         
         # Get all endpoints and active services
         endpoints = ""
-        list_of_endpoints = []
         self.generate_simplified_topology()
         self.generate_list_of_services()
 
@@ -578,8 +580,8 @@ class SenseAPI(AtlanticWaveManager):
             # For each endpoint:
             #  - Get endpoint name
             node = self.simplified_topo.node[ep]
-            epname = "%s:%s" % (fullurn, ep)
-            list_of_endpoints.append(epname)
+            epname = "%s::%s" % (fullurn, ep)
+            list_of_physical_ports.append(epname)
             
             #  - Definition of VLANs available on said endpoint
             # FIXME: does this need to remove in-use VLANs?
@@ -601,13 +603,26 @@ class SenseAPI(AtlanticWaveManager):
             bw_def += "                nml:belongsTo <%s> .\n\n" % epname
             
             #  - Definition of Link structure
+            #  -- Get list of BidirectionalPorts
+            bidiports = ""
+            for s in self.list_of_services:
+                for e,f in s['endpoints']:
+                    if e == ep:
+                        bidiports += ", <%s:vlanport+%d>" % (epname, f)
+                        print "%s:vlanport+%d" % (epname, f)
+            if bidiports != "":
+                # trim off the leading ", "
+                bidiports = bidiports[2:] 
+            
             link_def  = "<%s>\n" % epname
-            link_def += "                a nml:BidirectionalPort, owl:NamedIndividual ;\n"
+            link_def += "                a nml:mrs:SwitchingService, owl:NamedIndividual ;\n"
             link_def += "                nml:belongsTo <%s:l2switching>, <%s> ;\n" % (fullurn, fullurn)
             link_def += "                nml:hasLabelGroup <%s> ;\n" % vlan_name
             link_def += "                nml:hasService <%s> ;\n" % bw_name
             if 'alias' in node.keys():
                 link_def += "                nml:isAlias <%s> ;\n" % node['alias']
+            if bidiports != "":
+                link_def += "                nml:hasBidirectionalPort %s ;\n" % bidiports
             link_def += "                nml:name \"%s\" .\n\n" % ep
 
             endpoints += vlan_def
@@ -629,6 +644,7 @@ class SenseAPI(AtlanticWaveManager):
                 (endpointname, vlannum) = e
                 service_str = "%s::%s:resource+links-connection_1:vlan+%d" % (
                     fullurn, servicename, vlannum)
+                list_of_vlan_services.append(service_str)
 
                 # -- Add VLAN label for virtual port
                 services += "<%s::%s:vlanport+%d:label+%d>\n" % (
@@ -662,7 +678,7 @@ class SenseAPI(AtlanticWaveManager):
                 # -- Add virtual port
                 services += "<%s::%s:vlanport+%d>\n" % (
                     fullurn, endpointname, vlannum)
-                services += "        a nml:BidirectionalPort ;\n"
+                services += "        a nml:BidirectionalPort, mrs:SwitchingSubnet ;\n"
                 services += "        nml:belongsTo <%s>,<%s:%s> ;\n" % (
                     service_str, fullurn, endpointname)
                 services += "        nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;\n"
@@ -673,9 +689,7 @@ class SenseAPI(AtlanticWaveManager):
                 services += "        nml:hasService <%s::%s:vlanport+%d:service+bw> ;\n" % (
                     fullurn, endpointname, vlannum)
                 services += "        nml:name \"UNKNOWN\" .\n\n"
-                # -- Add virtual port to list_of_endpoints
-                list_of_endpoints.append("%s:%s:vlanport+%d" % (
-                    fullurn, endpointname, vlannum))
+
                 per_service_endpoints.append("%s:%s:vlanport+%d" % (
                     fullurn, endpointname, vlannum))
                 
@@ -686,7 +700,7 @@ class SenseAPI(AtlanticWaveManager):
             endpoints_str += "<%s> ;" % per_service_endpoints[-1]
             
             services += "<%s>\n" % service_str
-            services += "        a mrs:switchingSubnet ;\n"
+            services += "        a mrs:SwitchingSubnet ;\n"
             services += "        nml:belongsTo <%s> ;\n" % fullurn
             services += "        nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;\n"
             services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
@@ -696,23 +710,29 @@ class SenseAPI(AtlanticWaveManager):
             services += "        nml:labelType <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> .\n\n"
         
         # Add topology (acts as switch)
-        endpoints_str = ""
-        for entry in list_of_endpoints[:-1]:
-            endpoints_str += "<%s>, " % entry
-        endpoints_str += "<%s> ;" % list_of_endpoints[-1]
+        physical_ports_str = ""
+        for entry in list_of_physical_ports[:-1]:
+            physical_ports_str += "<%s>, " % entry
+        physical_ports_str += "<%s> ;" % list_of_physical_ports[-1]
 
         topology = "<%s>\n" % fullurn
         topology += "                a nml:Topology, owl:NamedIndividual ;\n"
         #        topology += "                nml:belongsTo" #Fixme: who?
-        topology += "                nml:hasBidirectionalPort %s\n" % endpoints_str
+        topology += "                nml:hasBidirectionalPort %s\n" % physical_ports_str
         topology += "                nml:hasService <%s:l2switching> ;\n" % fullurn
         topology += "                nml:name \"AtlanticWave/SDX\" .\n\n"
 
         # Add L2 service domain
+        vlan_services_str = ""
+        for entry in list_of_vlan_services[:-1]:
+            vlan_services_str += "<%s>, " % entry
+        vlan_services_str += "<%s> ;" % list_of_vlan_services[-1]
+        
         service_domain  = "<%s:%s>\n" % (fullurn, self.SVC_SENSE)
         service_domain += "                 a nml:SwitchingService, owl:NamedIndividual ;\n"
         service_domain += "                 nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
-        service_domain += "                 nml:hasBidirectionalPort %s\n" % endpoints_str
+        service_domain += "                 mrs:providesSubnet %s\n" % vlan_services_str
+        service_domain += "                 nml:hasBidirectionalPort %s\n" % physical_ports_str
         service_domain += "                 nml:labelSwaping \"false\" .\n\n"
 
         # Add AWave service domain
