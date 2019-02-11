@@ -59,6 +59,19 @@ class L2MultipointPolicy(UserPolicy):
         return "%s(%s,%s,%s)" % (self.get_policy_name(), self.start_time,
                                  self.stop_time, self.endpoints)
 
+
+    def __eq__(self, other):
+        if(type(self) != type(other) or
+           self.start_time != other.start_time or
+           self.bandwidth != other.bandwidth):
+            return False
+
+        # Endpoints are next
+        local_eps = self.endpoints[:]
+        other_eps = other.endpoints[:]
+
+        return (local_eps.sort() == other_eps.sort())
+                
     @classmethod
     def check_syntax(cls, json_rule):
         try:
