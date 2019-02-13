@@ -11,7 +11,7 @@ from shared.L2TunnelPolicy import L2TunnelPolicy
 
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
-from RuleManager import RuleManager
+from RuleManager import RuleManager, RuleManagerError
 from TopologyManager import TopologyManager, TOPO_EDGE_TYPE
 from UserManager import UserManager
 from RuleRegistry import RuleRegistry
@@ -165,9 +165,10 @@ class SenseAPI(AtlanticWaveManager):
                      ('model_table', 'model'),
                      ('hash_table','hash')]
         self._initialize_db(db_filename, db_tuples, True)
+        self._sanitize_db()
         self.delta_table.delete() #FIXME: these shouldn't be needed.
         self.model_table.delete() #FIXME: these shouldn't be needed.
-        self.hash_table.delete()
+        self.hash_table.delete()  #FIXME: these shouldn't be needed.
         
         # Register update functions
         RuleManager().register_for_rule_updates(self.rule_add_callback,
@@ -315,6 +316,63 @@ class SenseAPI(AtlanticWaveManager):
                                                     "2985-04-12T12:34:56",
                                                     4)
 
+    def _sanitize_db(self):
+        #FIXME work in progress
+        ''' This is a helper function to compare what's in the SENSE DB with 
+            what is in the RuleManager's DB. RuleManager is ground truth.'''
+        all_deltas = self.delta_table.find()
+        all_hashes = list(self.hash_table.find())
+        
+        # First, let's clean up the delta table if a rule isn't installed and
+        # has one-or-more hashes in the hash table.
+        # - Loop through deltas and remove those from the DB that don't have a
+        #   hash.
+        # -- If delta doesn't have at least one correstponding hash in the DB,
+        #    remove it from the DB
+        # -- If delta does have one or more hashes:
+        # --- For each rule_hash, check with the  RuleManager to confirm that
+        #     the policy with that rule_hash exists.
+        # ---- If it does, good
+        # ---- If it does not:
+        # ----- Delete delta
+        # ----- We need to loop through all of the rule_hashes associated with
+        #       the that delta:
+        # ------ If RuleManager policy exists, delete it
+        # ------ Delete rule_hash
+        
+        for delta in all_deltas:
+            matches = self.hash_table.find(delta_id=delta['delta_id'])
+            if matches == []:
+                self.delta_table.delete(**delta)
+                continue
+            problem = False
+            for match in matches:
+                all_hashes.remove(match)
+                if RuleManager().get_rule_details(match['hash']) == None:
+                   problem = True
+                   break
+                else:
+                    all_hashes.remove(match)
+            if problem:
+                self.delta_table.delete(**delta)
+                for match in matches:
+                    if RuleManager().get_rule_details(match['hash']) != None:
+                        RuleManager().remove_rule(match['hash'], self.userid)
+                    self.hash_table.delete(**match)
+                
+
+        # Second, we're going to go through the remaining hashes to see if they
+        # exist in the RuleManager. We already know that a corresponding delta
+        # does not exist, based on our loops above.
+        # - Loop through the hashes
+        # -- If RuleManager policy exists, delete it
+        # -- delete rule_hash from hash_table.
+
+        for rule_hash in all_hashes:
+            if RuleManager().get_rule_details(rule_hash['hash']) != None:
+                RuleManager().remove_rule(rule_hash['hash'], self.userid)
+            self.hash_table.delete(**rule_hash)
+            
     def rule_add_callback(self, rule):
         ''' Handles rules being added. '''
         print "rule_add_callback - %s" % rule
@@ -443,17 +501,12 @@ class SenseAPI(AtlanticWaveManager):
         exterior_nodes = self.simplified_topo.nodes()
         exterior_nodes.remove('central')
 
-        print "\nEXTERIOR NODES: %s" % exterior_nodes
-        print "\nRULES: %s\n\n" % self.current_rules
-        
         # Loop through rules
-
         for r in self.current_rules:
             rule = RuleManager().get_raw_rule(r[0])
             potential_endpoints = rule.get_endpoints()
             # - Loop through endpoints
             endpoints = []
-            print "\n RULE: %s\n    ENDPOINTS: %s" % (rule, potential_endpoints)
             for (e, f, v) in potential_endpoints:
                 print "   endpoint: %s, %s, %d" % (e, f, v)
                 # -- check if rule ends on an exterior port
@@ -490,8 +543,6 @@ class SenseAPI(AtlanticWaveManager):
             #   if user is self.userid, then give back uuid
             if user == self.userid:
                 # -- find the delta in the local database to get the UUID
-                print "------Trying to get by rule hash %s" % rule_hash
-                
                 delta = self._get_delta_by_rule_hash(rule_hash)
                 # -- Put together service name.
                 service_name = "%s:conn+%s" % (self.SVC_SENSE,
@@ -724,9 +775,11 @@ class SenseAPI(AtlanticWaveManager):
 
         # Add L2 service domain
         vlan_services_str = ""
-        for entry in list_of_vlan_services[:-1]:
-            vlan_services_str += "<%s>, " % entry
-        vlan_services_str += "<%s> ;" % list_of_vlan_services[-1]
+        self.dlogger.debug("LIST_OF_VLAN_SERVICES: %s" % list_of_vlan_services)
+        if len(list_of_vlan_services) > 0:
+            for entry in list_of_vlan_services[:-1]:
+                vlan_services_str += "<%s>, " % entry
+            vlan_services_str += "<%s> ;" % list_of_vlan_services[-1]
         
         service_domain  = "<%s:%s>\n" % (fullurn, self.SVC_SENSE)
         service_domain += "                 a nml:SwitchingService, owl:NamedIndividual ;\n"
@@ -919,18 +972,14 @@ class SenseAPI(AtlanticWaveManager):
     
     def process_deltas(self, args):
         # Parse the args
-        self.dlogger.debug("process_delta() begin with args: %s" % args)
-        print("\n\n---- BEGIN OF PROCESS_DELTAS ----")
-        self.__print_all_deltas()
-        print("\n\n")
-        
+        self.dlogger.debug("process_delta() begin with args: %s" % args) 
+       
         keys = args.keys()
         if ('id' not in keys or
             'lastModified' not in keys or
             'modelId' not in keys):
             raise SenseAPIArgumentError(
                 "Missing id, lastModified, or modelId: %s" % keys)
-
 
         if ('reduction' not in keys and
             'addition' not in keys):
@@ -946,6 +995,7 @@ class SenseAPI(AtlanticWaveManager):
         parsed_reductions = None
         parsed_additions = None
         status = HTTP_GOOD
+        self.logger.info("process_delta() on delta_id %s" % delta_id)
 
         if 'reduction' in keys and len(args['reduction']) > 0:
             try:
@@ -955,7 +1005,7 @@ class SenseAPI(AtlanticWaveManager):
                                    (e, args['reduction']))
                 return None, HTTP_BAD_REQUEST
                                    
-        elif 'addition' in keys and len(args['addition']) > 0:
+        if 'addition' in keys and len(args['addition']) > 0:
             try:
                 addition = self._decode_b64_gunzip(args['addition'])
             except Exception as e:
@@ -969,14 +1019,13 @@ class SenseAPI(AtlanticWaveManager):
         #  - find matching hashes per policy
         #  - if they don't exist, reject the reduction
         if reduction != None:
-            parsed_reductions = self._parse_delta(reduction)
-            #try:
-            #    parsed_reductions = self._parse_delta(reduction)
-            #except SenseAPIClientError as e:
-            #    self.dlogger.error(
-            #        "process_deltas: reduction parsing received %s" %
-            #                       e)
-            #    return None, HTTP_BAD_REQUEST
+            try:
+                parsed_reductions = self._parse_delta(reduction)
+            except SenseAPIClientError as e:
+                self.dlogger.error(
+                    "process_deltas: reduction parsing received %s" %
+                                   e)
+                return None, HTTP_BAD_REQUEST
 
             for policy in parsed_reductions:
                 rule_hash = self._get_rule_hash_by_policy(policy)
@@ -1002,7 +1051,17 @@ class SenseAPI(AtlanticWaveManager):
             
             for policy in parsed_additions:
                 bd = RuleManager().test_add_rule(policy)            
-        
+
+        if parsed_reductions != None:
+            self.dlogger.debug("_parse_delta(): parsed_reductions:")
+            for p in parsed_reductions:
+                self.dlogger.debug("  %s" % p)
+        if parsed_additions != None:
+            self.dlogger.debug("_parse_delta(): parsed_additions:")
+            for p in parsed_additions:
+                self.dlogger.debug("  %s" % p)
+            
+                           
         # Have good addition and/or reduction,
         # - Put the delta into the db
         # - Get delta from db
@@ -1022,17 +1081,16 @@ class SenseAPI(AtlanticWaveManager):
 
         self.dlogger.debug("process_deltas: returning %s, %s" %
                            (retdelta, status))
+        self.logger.info("process_deltas(): Processed delta_id %s, status %s" %
+                         (delta_id, status))
 
-        print("\n\n---- END OF PROCESS_DELTAS ----")
-        self.__print_all_deltas()
-        print("\n\n")
                    
         
         return retdelta, status
     
     def _parse_delta(self, raw_delta):
-        # This is based on part of nrmDelta.processDelta() from senserm_oscars's
-        # sensrm_delta.py.
+        # This is based on part of nrmDelta.processDelta() from
+        # senserm_oscars's senserm_delta.py.
         # Parses the raw_delta, and returns back the policies that it thinks
         # matches the delta
         #
@@ -1042,11 +1100,11 @@ class SenseAPI(AtlanticWaveManager):
 
         def __get_uuid_and_service_name(s):
             # I'm sorry for this ugly string manipulation...
-            print "__get_uuid_and_service_name: %s" %s
             uuid = s.split("conn+")[1].split(":")[0]
             svcname = ":".join(s.split("conn+")[1].split(":")[1:])
             return uuid, svcname
 
+        self.dlogger.debug("_parse_delta(): Begin")
         gr = rdflib.Graph()
         try:
             result = gr.parse(data=raw_delta, format='ttl')
@@ -1067,15 +1125,12 @@ class SenseAPI(AtlanticWaveManager):
         # --- Extract vlan
         # --- Extract bandwidth (shared, but each port has its own copy)
         services = {}
-        print "\n\n\n"
         for s in list2set(gr.subjects()):
-            #print s
             if awaveurn not in str(s):
                 continue
             if ('ServiceDomain' in str(s) and
                 'conn' in str(s) and
                 'lifetime' not in str(s)):
-                print "   MATCH %s" % s
                 uuid, svcname = __get_uuid_and_service_name(s)
                 if uuid not in services.keys():
                     services[uuid] = {}
@@ -1084,23 +1139,24 @@ class SenseAPI(AtlanticWaveManager):
 
                 for p,o in gr.predicate_objects(s):
                     # Start and end times
-                    print "  s: %s\n   p: %s\n   o: %s" % (s,p,o)
                     if "existsDuring" in str(p):
                         for p2,o2 in gr.predicate_objects(o):
                             if "start" in str(p2):
-                                print "----- STARTTIME %s" % o2
                                 starttime = datetime.strftime(
                                     datetime.strptime(str(o2)[:-5],
                                                       sensetimeformat),
                                     rfc3339format)
+                                self.dlogger.debug("  starttime: %s" %
+                                                   starttime)
                                 services[uuid][svcname]['starttime'] = starttime
                             elif "end" in str(p2):
-                                print "----- END  TIME %s" % o2
                                 endtime = datetime.strftime(
                                     datetime.strptime(str(o2)[:-5],
                                                       sensetimeformat),
                                     rfc3339format)
                                 services[uuid][svcname]['endtime'] = endtime
+                                self.dlogger.debug("  endtime:   %s" %
+                                                   endtime)
                                 
                     # Ports
                     elif "hasBidirectionalPort" in str(p):
@@ -1112,19 +1168,24 @@ class SenseAPI(AtlanticWaveManager):
                                 for p3,o3 in gr.predicate_objects(o2):
                                     if "value" in str(p3):
                                         vlan = int(str(o3))
+                                        self.dlogger.debug("  vlan: %s" % vlan)
                             # - Bandwidth
                             elif ("hasService" in str(p2) and
                                   "service+bw" in str(o2)):
                                 for p3,o3 in gr.predicate_objects(o2):
                                     if "reservableCapacity" in str(p3):
-                                          bw = int(o3)
+                                        bw = int(o3)
+                                        self.dlogger.debug("  bw: %s" % bw)
                         # Get endpoint from port
+
                         epname = str(o).split("::")[1].split(":+:")[0]
                         ep, switchname = str(epname).split('-')
                         port = self.current_topo[switchname][ep][switchname]
+                        self.dlogger.debug("  port: %s" % port)
                         endpoint = {'switch':switchname,
                                     'port':port,
-                                    'vlan':vlan}                        
+                                    'vlan':vlan}
+                        self.dlogger.debug("  endpoint: %s" % endpoint)
                         
                         services[uuid][svcname]['endpoints'].append(endpoint)
                         if bw != None:
@@ -1136,6 +1197,15 @@ class SenseAPI(AtlanticWaveManager):
         for uuid in services.keys():
             for svc in services[uuid].keys():
                 endpointcount = len(services[uuid][svc]['endpoints'])
+
+                # These are exclusively for error cases.
+                starttime = None
+                endtime = None
+                bandwidth = None
+                ep0 = None
+                ep1 = None
+                endpoints = None
+                
                 if endpointcount < 2:
                     raise SenseAPIClientError(
                         "There are fewer than 2 endpoints: %s, %s, %s" %
@@ -1171,9 +1241,6 @@ class SenseAPI(AtlanticWaveManager):
                     
                 elif endpointcount > 2:
                     # L2Multipoint
-                    print "services %s" % services
-                    print "services[%s][%s]" % (uuid, svc,
-                                                services[uuid][svc])
                     try:
                         starttime = services[uuid][svc]['starttime']
                         endtime = services[uuid][svc]['endtime']
@@ -1196,6 +1263,9 @@ class SenseAPI(AtlanticWaveManager):
 
         self.logger.info("_parse_delta: Generated %d policies for UUIDs %s" %
                          (len(generated_rules), str(services.keys())))
+        self.dlogger.debug("_parse_delta: Generated policies:")
+        for pol in generated_rules:
+            self.dlogger.debug("    %s" % pol)
         return generated_rules
 
     def get_delta(self, deltaid):
@@ -1230,12 +1300,10 @@ class SenseAPI(AtlanticWaveManager):
                            deltaid)
         # Get the delta information
         delta = self._get_delta_by_id(deltaid)
+        if delta == None:
+            return HTTP_NOT_FOUND
 
         # Make sure additions can still work
-        print "\n\n%s\n\n" % delta
-        print "    &&&&&&&&\n    %s\n\n  %s\n\n%s" % (delta,
-                                                      delta['addition'],
-                                                      delta['reduction'])
         if delta['addition'] != None:
             for policy in delta['addition']:
                 try:
@@ -1258,8 +1326,12 @@ class SenseAPI(AtlanticWaveManager):
                 try:
                     RuleManager().remove_rule(rule_hash, self.userid)
                 except RuleManagerError as e:
-                    self.dlogger.info("commit: reduction failed, continuing: %s"
-                                      % rule_hash)
+                    self.dlogger.info("commit: reduction failed: %s" %
+                                      rule_hash)
+                    self.logger.error("commit: reduction failed: %s, %s" %
+                                      (rule_hash, e))
+                    #FIXME: Is this the right return code?
+                    return HTTP_SERVER_ERROR 
 
         # Addition commit second
         # - Loop through second time
@@ -1272,10 +1344,17 @@ class SenseAPI(AtlanticWaveManager):
                     self._put_rule_hash_by_policy(policy, rule_hash,
                                                   deltaid)
                 except:
-                    raise
+                    self.dlogger.info("commit: addition failed: %s" %
+                                      rule_hash)
+                    self.logger.error("commit: addition failed: %s, %s" %
+                                      (rule_hash, e))
+                    #FIXME: Is this the right return code?
+                    return HTTP_SERVER_ERROR
 
         # Update status
         self._put_delta(deltaid, status=STATUS_ACTIVATED, update=True)
+        self.logger.info("commit: successfully commited delta_id %s" %
+                         deltaid)
         # Return good status
         return HTTP_GOOD
     
@@ -1357,7 +1436,7 @@ class SenseAPI(AtlanticWaveManager):
         '''
 
         raw_hash = self.hash_table.find_one(hash=rule_hash)
-        print "\n\nRAW_HASH = %s\n\n" % raw_hash
+
         if raw_hash == None:
             return None
 
@@ -1708,19 +1787,19 @@ class ModelsAPI(SenseAPIResource):#FIXME
         self.dlogger.debug("get() start")
 
         retval = marshal(self.model, model_fields)
-        self.logger.info("get() returning %s" % retval)
-        self.dlogger.debug("get() complete")
+        self.dlogger.debug("get() returning %s" % retval)
+        self.logger.info("get() complete")
         return retval
     
     def post(self):
         self.dlogger.debug("post() start")
 
         args = self.reqparse.parse_args()
-        self.logger.info("post() args %s" % args)
+        self.dlogger.debug("post() args %s" % args)
         retval = {'models': marshal(self.models, model_fields)}, 201 #FIXME
         
-        self.logger.info("post() returning %s" % retval)
-        self.dlogger.debug("post() complete")
+        self.dlogger.debug("post() returning %s" % retval)
+        self.dlogger.info("post() complete")
         return retval
     
 class DeltasAPI(SenseAPIResource):
@@ -1781,26 +1860,6 @@ class DeltaAPI(SenseAPIResource):
         retval = {'state': str(phase), 'deltaid': str(deltaid)}, status
         self.logger.info("get() returning %s" % str(retval))
         self.dlogger.debug("get() complete")
-        return retval
-
-    def delete(self, deltaid):
-        self.dlogger.debug("delete() start")
-        self.logger.info("delete() deltaid %s" % deltaid)
-        status = SenseAPI().delete(deltaid)
-        retval = None
-        if int(status) == HTTP_NO_CONTENT:
-            retval = status
-        elif int(status) == HTTP_NOT_FOUND:
-            retval = {"error": "conflict",
-                      "error_description": "Delta ID %s not found" % deltaid,
-                      "error_uri": None} #FIXME: this should be a real URI
-        else:
-            retval = {"error": "%s" % status,
-                      "error_description": "Failure %s" % status,
-                      "error_uri": None} #FIXME: this should be a real URI
-
-        self.logger.info("delete() returning %s" % retval)
-        self.dlogger.debug("delete() complete")
         return retval
 
 class CommitsAPI(SenseAPIResource):
