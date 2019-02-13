@@ -9,13 +9,22 @@
                 "l2path+urn:ogf:network:service+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links:connection_1" ;
         <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
                 <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links-connection_1:vlan+3603:lifetime> ;
         <http://schemas.ogf.org/nml/2013/03/base#encoding>
                 <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
         <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
                 <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3603> , <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3603>, <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn2-br2:+:vlanport+3603> ;
         <http://schemas.ogf.org/nml/2013/03/base#labelSwapping>
                 "true" .
-
+                
+<urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+20b9bce6-6b2f-4c85-a398-94cf0cf63235:resource+links-connection_1:vlan+3603:lifetime>
+        a <http://schemas.ogf.org/nml/2013/03/base#Lifetime> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/nml/2013/03/base#end>
+                "2019-12-31T23:59:59.000-0500"^^xsd:string ;
+        <http://schemas.ogf.org/nml/2013/03/base#start>
+                "2018-12-31T23:59:59.000-0500"^^xsd:string .
+                
 <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3603:service+bw>
         a       rdfs:Resource , owl:Thing , <http://schemas.ogf.org/mrs/2013/12/topology#BandwidthService> ;
         <http://schemas.ogf.org/mrs/2013/12/topology#availableCapacity>
