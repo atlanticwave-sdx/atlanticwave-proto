@@ -166,9 +166,6 @@ class SenseAPI(AtlanticWaveManager):
                      ('hash_table','hash')]
         self._initialize_db(db_filename, db_tuples, True)
         self._sanitize_db()
-        self.delta_table.delete() #FIXME: these shouldn't be needed.
-        self.model_table.delete() #FIXME: these shouldn't be needed.
-        self.hash_table.delete()  #FIXME: these shouldn't be needed.
         
         # Register update functions
         RuleManager().register_for_rule_updates(self.rule_add_callback,
@@ -261,13 +258,26 @@ class SenseAPI(AtlanticWaveManager):
         print("\n\nEDGES WITH DETAILS\n%s\n\n\n" %
               json.dumps(topo.edges(data=True), indent=4, sort_keys=True))
 
-    def __print_all_deltas(self):
+    def __print_all_deltas(self, all_details=True):
         deltas = self.get_all_deltas()
 
         print "\n\n&&&&& DELTAS &&&&&"
         for d in deltas:
-            print d
+            if all_details:
+                print d
+            else:
+                print "%s" % d['id']
         print "&&&&&        &&&&&\n\n"
+
+    def __print_all_rule_hashes(self):
+        hashes = self.hash_table.find()
+
+        print "\n\n&&&&& RULE_HASHES &&&&&"
+        for h in hashes:
+            print "%s - %s %s" % (h['hash'], h['delta_id'],
+                                  pickle.loads(str(h['policy'])))
+        print "&&&&&        &&&&&\n\n"
+
         
 
     def _INTERNAL_TESTING_DELETE_FINAL_CHECKIN(self):
@@ -339,10 +349,18 @@ class SenseAPI(AtlanticWaveManager):
         #       the that delta:
         # ------ If RuleManager policy exists, delete it
         # ------ Delete rule_hash
+        print "\n\n\n\n\n"
+        self.__print_all_deltas(False)
+        self.__print_all_rule_hashes()
         
         for delta in all_deltas:
-            matches = self.hash_table.find(delta_id=delta['delta_id'])
+            print "    _sanitize_db() - Looking at delta %s" % delta['delta_id']
+            matches = list(self.hash_table.find(delta_id=delta['delta_id']))
+            print "    _sanitize_db() - matches on delta %s" % len(matches)
+            for m in matches:
+                print "      %s" % m
             if matches == []:
+                print "    _sanitize_db() - Attempting to remove - NO HASH - %s" % delta['delta_id']
                 self.delta_table.delete(**delta)
                 continue
             problem = False
@@ -350,13 +368,16 @@ class SenseAPI(AtlanticWaveManager):
                 all_hashes.remove(match)
                 if RuleManager().get_rule_details(match['hash']) == None:
                    problem = True
+                   print "    _sanitize_db() - Problem: match %s  isn't in RuleManager" % match['hash']
                    break
-                else:
-                    all_hashes.remove(match)
+                    
             if problem:
+                print "    _sanitize_db() - Attempting to remove - NO RM - %s" % delta['delta_id']
                 self.delta_table.delete(**delta)
                 for match in matches:
+                    print "    _sanitize_db() - Removing hash - NO RM - %s" % match['hash']
                     if RuleManager().get_rule_details(match['hash']) != None:
+                        print "     _sanitize_db() - Removing rule - NO RM - %s" % match['hash']
                         RuleManager().remove_rule(match['hash'], self.userid)
                     self.hash_table.delete(**match)
                 
@@ -369,10 +390,16 @@ class SenseAPI(AtlanticWaveManager):
         # -- delete rule_hash from hash_table.
 
         for rule_hash in all_hashes:
+            print "    _sanitize_db() - Removing hash - NO DELTA - %s" % rule_hash['hash']
             if RuleManager().get_rule_details(rule_hash['hash']) != None:
+                print "    _sanitize_db() - Removing rule - NO DELTA - %s" % rule_hash['hash']
                 RuleManager().remove_rule(rule_hash['hash'], self.userid)
             self.hash_table.delete(**rule_hash)
-            
+
+        self.__print_all_deltas(False)
+        self.__print_all_rule_hashes()
+        print "\n\n\n\n\n"
+        
     def rule_add_callback(self, rule):
         ''' Handles rules being added. '''
         print "rule_add_callback - %s" % rule
