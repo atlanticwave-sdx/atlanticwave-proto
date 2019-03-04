@@ -422,7 +422,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if config_count == 0:
             # Nothing configured, get configs from config file
             for entry in lcdata['switchinfo']:
-                dpid = str(entry['dpid'])
+                dpid = str(int(entry['dpid'],0)) # This is to normalize the DPID.
                 ic = entry['internalconfig']
                 ic['name'] = entry['name']
                 self._add_switch_internal_config_to_db(dpid, ic)
@@ -1495,7 +1495,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if switch_rules == None or switch_table == None:
             self.logger.error(
                 "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
-                 (sdx_rule, switch_rules, switch_table)
+                 (sdx_rule, switch_rules, switch_table))
             #FIXME: This shouldn't happen...
             pass
         
