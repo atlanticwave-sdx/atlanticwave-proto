@@ -83,6 +83,22 @@ class PopVLAN(LCAction):
         retstr = "%s" % (self._name)
         return retstr
 
+class PushMPLS(LCAction):
+    def __init__(self):
+        super(PushMPLS, self).__init__("PushMPLS")
+
+    def __str__(self):
+        retstr = "%s" % (self._name)
+        return retstr
+    
+class PopMPLS(LCAction):
+    def __init__(self):
+        super(PopMPLS, self).__init__("PopMPLS")
+
+    def __str__(self):
+        retstr = "%s" % (self._name)
+        return retstr
+    
 class Continue(LCAction):
     ''' Continues on to the next table. '''
     def __init__(self):

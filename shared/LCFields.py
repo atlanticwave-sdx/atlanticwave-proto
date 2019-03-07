@@ -275,6 +275,11 @@ class VLAN_VID(number_field):
                                self.cfi)
         return retstr
 
+class MPLS_LABEL(number_field):
+    def __init__(self, value):
+        super(MPLS_LABEL, self).__init__('mpls_label', value=value,
+                                         minval=0, maxval=2**20-1)
+
 class METADATA(number_field):
     def __init__(self, value=None, mask=2**64-1):
         super(METADATA, self).__init__('metadata', value=value,

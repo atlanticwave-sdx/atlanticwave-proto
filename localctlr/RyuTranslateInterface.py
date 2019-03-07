@@ -925,9 +925,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #    See "Rule Needed Once", below, as to why this happens
                 #   - set metadata(endpoint)
                 #   - set VLAN tag to intermediate
-                matches = [METADATA(MD_L2M_TRANSLATE, MD_L2M_MASK),
+                matches = [MPLS_LABEL(MD_L2M_TRANSLATE),
                            VLAN_VID(port)]
-                actions = [WriteMetadata(port, MD_L2M_MASK),
+                actions = [SetField(MPLS_LABEL(port)),
                            SetField(VLAN_VID(intermediate_vlan))]
                 priority = PRIORITY_L2MULTIPOINT_TRANSLATE
                 marule = MatchActionLCRule(switch_id, matches, actions)
@@ -942,9 +942,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #   - match metadata(endpoint), vlan(intermediate)
                 #    - continue
                 #    - Forward to controller
-                matches = [METADATA(port, MD_L2M_MASK),
+                matches = [MPLS_LABEL(port),
                            VLAN_VID(intermediate_vlan)]
-                actions = [Continue(), Forward(OFPP_CONTROLLER)]
+                actions = [PopMPLS(), Continue(), Forward(OFPP_CONTROLLER)]
                 priority = PRIORITY_L2MULTIPOINT_LEARNING
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
@@ -963,7 +963,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             matches = [IN_PORT(internal_config['corsabwout']),
                        VLAN_VID(intermediate_vlan)]
             actions = [PopVLAN(),
-                       WriteMetadata(MD_L2M_TRANSLATE, MD_L2M_MASK),
+                       SetField(MPLS_LABEL(MD_L2M_TRANSLATE)),
                        GotoTable(translate_table)]
             priority = PRIORITY_L2MULTIPOINT
             marule = MatchActionLCRule(switch_id, matches, actions)
@@ -1035,11 +1035,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
             for port in ports:
                 matches = []
                 if port in endpoint_ports:
-                    matches = [METADATA(port, MD_L2M_MASK),
+                    matches = [MPLS_LABEL(port),
                                VLAN_VID(intermediate_vlan)]
                 elif port in flooding_ports:
                     matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
-                actions = []
+                actions = [PopMPLS()]
                 for outport in flooding_ports:
                     if outport != port:
                         actions.append(Forward(outport))
@@ -1056,7 +1056,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
                 if port in endpoint_ports:
-                    matches = [METADATA(port, MD_L2M_MASK), 
+                    matches = [MPLS_LABEL(port),
                                VLAN_VID(intermediate_vlan), 
                                ETH_DST('ff:ff:ff:ff:ff:ff')]
                 elif port in flooding_ports:
@@ -1226,6 +1226,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
             elif isinstance(action, PopVLAN):
                 aa_results.append(parser.OFPActionPopVlan())
                 continue
+            elif isinstance(action, PushMPLS):
+                aa_results.append(parser.OFPActionPushMpls())
+                continue
+            elif isinstance(action, PopMPLS):
+                aa_results.append(parser.OFPActionPopMpls())
+                continue                
+                       
             # If we've gotten this far, that means the next action is *not* a
             # Forward, SetField, PushVLAN, or PopVLAN action, but will use a
             # different Instruction type, so wrap up the existing actions in an
