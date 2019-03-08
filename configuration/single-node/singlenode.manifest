@@ -58,7 +58,8 @@
             "corsaratelimiterbridge":"br21",
             "corsaratelimiterports":[2,3]
 	      }
-      ],
+        }
+      ]
       "operatorinfo": {
         "organization": "Georgia Tech/RNOC",
         "administrator": "Sean Donovan",
