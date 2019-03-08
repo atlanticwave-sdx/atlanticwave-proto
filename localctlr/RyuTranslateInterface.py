@@ -43,6 +43,9 @@ LOCALHOST = "127.0.0.1"
 
 CONF = cfg.CONF
 
+
+CORSA_REST_ACTIVE = False
+
 class TranslatedRuleContainer(object):
     ''' Parent class for holding both LC and Corsa rules '''
     pass
@@ -701,38 +704,39 @@ class RyuTranslateInterface(app_manager.RyuApp):
             tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                           bridge + "/tunnels?list=true")
             print "Requesting tunnels from %s" % tunnel_url
-            rest_return = requests.get(tunnel_url,
+            if CORSA_REST_ACTIVE:
+                rest_return = requests.get(tunnel_url,
                                        headers={'Authorization':
                                                 internal_config['corsatoken']},
                                        verify=False) #FIXME: HARDCODED
 
-            print "Looking for %s on ports %s" % (vlan,
+                print "Looking for %s on ports %s" % (vlan,
                                       internal_config['corsaratelimitports'])
                 
-            for entry in rest_return.json()['list']:
-                if (entry['vlan-id'] == vlan and
-                    int(entry['port']) in internal_config['corsaratelimitports']):
+                for entry in rest_return.json()['list']:
+                    if (entry['vlan-id'] == vlan and
+                        int(entry['port']) in internal_config['corsaratelimitports']):
 
-                    request_url = entry['links']['self']['href']
-                    # This implements Red/Green, per Corsa's spec. Anything over
-                    # the CIR value (and not part of a CBS burst) will be marked
-                    # red and dropped.
-                    jsonval = [{'op':'replace',
-                                'path':'/meter/cir',
-                                'value':bandwidth},
-                               {'op':'replace',
-                                'path':'/meter/cbs',
-                                'value':bandwidth},
-                               {'op':'replace',
-                                'path':'/meter/eir',
-                                'value':0},
-                               {'op':'replace',
-                                'path':'/meter/ebs',
-                                'value':0}]
-                    valid_responses = [204]
+                        request_url = entry['links']['self']['href']
+                        # This implements Red/Green, per Corsa's spec. Anything
+                        # over the CIR value (and not part of a CBS burst) will
+                        # be marked red and dropped.
+                        jsonval = [{'op':'replace',
+                                    'path':'/meter/cir',
+                                    'value':bandwidth},
+                                   {'op':'replace',
+                                    'path':'/meter/cbs',
+                                    'value':bandwidth},
+                                   {'op':'replace',
+                                    'path':'/meter/eir',
+                                    'value':0},
+                                   {'op':'replace',
+                                    'path':'/meter/ebs',
+                                    'value':0}]
+                        valid_responses = [204]
 
-                    print "Patching %s:%s" % (request_url, json)
-                    results.append(TranslatedCorsaRuleContainer("patch",
+                        print "Patching %s:%s" % (request_url, json)
+                        results.append(TranslatedCorsaRuleContainer("patch",
                                                 request_url,
                                                 jsonval,
                                                 internal_config['corsatoken'],
@@ -925,7 +929,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #    See "Rule Needed Once", below, as to why this happens
                 #   - set metadata(endpoint)
                 #   - set VLAN tag to intermediate
-                matches = [MPLS_LABEL(MD_L2M_TRANSLATE),
+                matches = [ETH_TYPE(0x8847),
+                           MPLS_LABEL(MD_L2M_TRANSLATE),
                            VLAN_VID(port)]
                 actions = [SetField(MPLS_LABEL(port)),
                            SetField(VLAN_VID(intermediate_vlan))]
@@ -942,7 +947,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #   - match metadata(endpoint), vlan(intermediate)
                 #    - continue
                 #    - Forward to controller
-                matches = [MPLS_LABEL(port),
+                matches = [ETH_TYPE(0x8847),
+                           MPLS_LABEL(port),
                            VLAN_VID(intermediate_vlan)]
                 actions = [PopMPLS(), Continue(), Forward(OFPP_CONTROLLER)]
                 priority = PRIORITY_L2MULTIPOINT_LEARNING
@@ -962,7 +968,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             #   - goto translate_table
             matches = [IN_PORT(internal_config['corsabwout']),
                        VLAN_VID(intermediate_vlan)]
-            actions = [PopVLAN(),
+            actions = [PushVLAN(),
                        SetField(MPLS_LABEL(MD_L2M_TRANSLATE)),
                        GotoTable(translate_table)]
             priority = PRIORITY_L2MULTIPOINT
@@ -979,39 +985,40 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                           bridge + "/tunnels?list=true")
-            rest_return = requests.get(tunnel_url,
+            if CORSA_REST_ACTIVE:
+                rest_return = requests.get(tunnel_url,
                                        headers={'Authorization':
                                                 internal_config['corsatoken']},
                                        verify=False) #FIXME: HARDCODED
 
-            # - Corsa BW Management rule
-            for entry in rest_return.json()['list']:
-                if (entry['vlan-id'] == vlan and
-                    int(entry['port']) in internal_config['corsaratelimitports']):
+                # - Corsa BW Management rule
+                for entry in rest_return.json()['list']:
+                    if (entry['vlan-id'] == vlan and
+                        int(entry['port']) in internal_config['corsaratelimitports']):
 
-                    request_url = entry['links']['self']['href']
-                    jsonval = [{'op':'replace',
-                                'path':'/meter/cir',
-                                'value':bandwidth},
-                               {'op':'replace',
-                                'path':'/meter/cbs',
-                                'value':bandwidth},
-                               {'op':'replace',
-                                'path':'/meter/eir',
-                                'value':0},
-                               {'op':'replace',
-                                'path':'/meter/ebs',
-                                'value':0}]
-                              #[{'op':'replace',
-                              #  'path':'/meter/cir',
-                              #  'value':bandwidth},
-                              # {'op':'replace',
-                              #  'path':'/meter/eir',
-                              #  'value':bandwidth}]
-                    valid_responses = [204]
+                        request_url = entry['links']['self']['href']
+                        jsonval = [{'op':'replace',
+                                    'path':'/meter/cir',
+                                    'value':bandwidth},
+                                   {'op':'replace',
+                                    'path':'/meter/cbs',
+                                    'value':bandwidth},
+                                   {'op':'replace',
+                                    'path':'/meter/eir',
+                                    'value':0},
+                                   {'op':'replace',
+                                    'path':'/meter/ebs',
+                                    'value':0}]
+                                   #[{'op':'replace',
+                                   #  'path':'/meter/cir',
+                                   #  'value':bandwidth},
+                                   # {'op':'replace',
+                                   #  'path':'/meter/eir',
+                                   #  'value':bandwidth}]
+                        valid_responses = [204]
 
-                    print "Patching %s:%s" % (request_url, json)
-                    results.append(TranslatedCorsaRuleContainer("patch",
+                        print "Patching %s:%s" % (request_url, json)
+                        results.append(TranslatedCorsaRuleContainer("patch",
                                                 request_url,
                                                 jsonval,
                                                 internal_config['corsatoken'],
@@ -1035,7 +1042,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
             for port in ports:
                 matches = []
                 if port in endpoint_ports:
-                    matches = [MPLS_LABEL(port),
+                    matches = [ETH_TYPE(0x8847),
+                               MPLS_LABEL(port),
                                VLAN_VID(intermediate_vlan)]
                 elif port in flooding_ports:
                     matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
@@ -1056,7 +1064,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
                 if port in endpoint_ports:
-                    matches = [MPLS_LABEL(port),
+                    matches = [ETH_TYPE(0x8847),
+                               MPLS_LABEL(port),
                                VLAN_VID(intermediate_vlan), 
                                ETH_DST('ff:ff:ff:ff:ff:ff')]
                 elif port in flooding_ports:
