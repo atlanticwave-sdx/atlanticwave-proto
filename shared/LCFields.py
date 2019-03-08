@@ -279,7 +279,7 @@ class MPLS_LABEL(number_field):
     def __init__(self, value):
         super(MPLS_LABEL, self).__init__('mpls_label', value=value,
                                          minval=0, maxval=2**20-1,
-                                         prereqs=ETH_TYPE(0x8847))
+                                         prereqs=[ETH_TYPE(0x8847)])
 
 class METADATA(number_field):
     def __init__(self, value=None, mask=2**64-1):
