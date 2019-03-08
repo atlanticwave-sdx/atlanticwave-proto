@@ -487,7 +487,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         msg = ev.msg
         self.logger.error('OFPErrorMsg received: type=0x%02x code=0x%02x '
                           'message=%s' %
-                          msg.type, msg.code, hex_array(msg.data))
+                          (msg.type, msg.code, hex_array(msg.data)))
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
@@ -498,7 +498,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             cb = self.packet_in_cbs[cookie]
             cb(ev)
         else:
-            self.logger.error('Packet-in with cookie 0x%02x has no callback.',
+            self.logger.error('Packet-in with cookie 0x%02x has no callback.' %
                               cookie)
 
 
