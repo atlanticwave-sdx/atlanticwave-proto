@@ -486,7 +486,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def error_msg_handler(self, ev):
         msg = ev.msg
         self.logger.error('OFPErrorMsg received: type=0x%02x code=0x%02x '
-                          'message=%s',
+                          'message=%s' %
                           msg.type, msg.code, hex_array(msg.data))
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
