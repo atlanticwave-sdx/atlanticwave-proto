@@ -733,7 +733,7 @@ class SenseAPI(AtlanticWaveManager):
                 services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
                     service_str)
                 services += "        nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
-                services += "        nml:value %d .\n\n" % vlannum
+                services += "        nml:value \"%d\" .\n\n" % vlannum
                 
                 # -- Add bandwidth on virtual port
                 services += "<%s::%s:vlanport+%d:service+bw>\n" % (
