@@ -833,8 +833,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         intermediate_vlan = mperule.get_intermediate_vlan()
 
         # Non-Corsa first
-        if internal_config['corsaurl'] == "" or
-            L2MULTIPOINTCORSABWDISABLED):
+        if (internal_config['corsaurl'] == "" or
+	            L2MULTIPOINTCORSABWDISABLED):	
             # Endpoint ports
             # - Translate VLANs on ingress on endpoint_table
             # - Install learning rules on intermediate VLAN on ingress on
