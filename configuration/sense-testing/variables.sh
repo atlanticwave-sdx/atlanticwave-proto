@@ -4,21 +4,9 @@
 
 LOCAL_AWAVE_DIRECTORY="/home/sdx/dev"
 CONTAINER_AWAVE_DIRECTORY="/development"
-MANIFEST_FILE="/development/configuration/awave-deployment/awave.manifest"
+MANIFEST_FILE="/development/configuration/sense-testing/twoswitch-onelc-noncorsa.manifest"
 PYTHON_PATH=".:/development/"
 SOX_DOCKER_NETWORK="sox-sdx-net"
-
-#LC_CONTAINER_NAME="sox_local_controller"
-#LC_VOLUMES="$LOCAL_AWAVE_DIRECTORY:$CONTAINER_AWAVE_DIRECTORY:rw"
-#LC_IP_ADDR="192.168.1.21"
-#LC_PORT="6653"
-#LC_SITE="gt-ctlr-216-21"
-#LC_SDXIP="127.0.0.1"
-#LC_SDXIP="143.215.216.21"
-#LC_SDXIP="192.168.1.21"
-#LC_SDXIP="172.17.0.3"
-#LC_SDXIP="sox_sdx_controller"
-#LC_START_COMMAND=""
 
 
 SDX_CONTAINER_NAME="sox_sdx_controller"
@@ -29,3 +17,8 @@ SDX_EXTERNAL_PORT=5000
 SDX_LC_IP="127.0.0.1"
 SDX_LC_PORT=5555
 SDX_START_COMMAND=""
+
+SENSE_CONTAINER_NAME="stackv"
+SENSE_PORT_ONE=8443
+SENSE_PORT_TWO=9993
+SENSE_KC_SERVER=SENSITIVE
