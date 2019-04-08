@@ -638,7 +638,7 @@ class SenseAPI(AtlanticWaveManager):
         list_of_physical_ports = []
         
         # Boilerplate prefixes
-        output  = "model: @prefix sd: <http://schemas.ogf.org/nsi/2013/12/services/definitions#> ."
+        output  = "@prefix sd: <http://schemas.ogf.org/nsi/2013/12/services/definitions#> .\n"
         output += "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
         output += "@prefix owl: <http://www.w3.org/2002/07/owl#> .\n"
         output += "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n"
@@ -806,12 +806,14 @@ class SenseAPI(AtlanticWaveManager):
         if len(list_of_vlan_services) > 0:
             for entry in list_of_vlan_services[:-1]:
                 vlan_services_str += "<%s>, " % entry
-            vlan_services_str += "<%s> ;" % list_of_vlan_services[-1]
+            vlan_services_str += "<%s>" % list_of_vlan_services[-1]
+
         
         service_domain  = "<%s:%s>\n" % (fullurn, self.SVC_SENSE)
         service_domain += "                 a nml:SwitchingService, owl:NamedIndividual ;\n"
         service_domain += "                 nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
-        service_domain += "                 mrs:providesSubnet %s\n" % vlan_services_str
+        if len(list_of_vlan_services) > 0:
+            service_domain += "                 mrs:providesSubnet %s ;\n" % vlan_services_str
         service_domain += "                 nml:hasBidirectionalPort %s\n" % physical_ports_str
         service_domain += "                 nml:labelSwaping \"false\" .\n\n"
 
@@ -992,9 +994,9 @@ class SenseAPI(AtlanticWaveManager):
 
         # Return the correct format
         retdict = {'id':model_id,
-                  'href':href,
-                  'creationTime':creation_time,
-                  'model':model}
+                   'href':href,
+                   'creationTime':creation_time,
+                   'model':model}
         return (retdict, retnew)
     
     def process_deltas(self, args):
@@ -1813,7 +1815,7 @@ class ModelsAPI(SenseAPIResource):#FIXME
     def get(self):
         self.dlogger.debug("get() start")
 
-        retval = marshal(self.model, model_fields)
+        retval = [dict(marshal(self.model, model_fields))]
         self.dlogger.debug("get() returning %s" % retval)
         self.logger.info("get() complete")
         return retval
