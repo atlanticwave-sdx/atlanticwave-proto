@@ -84,10 +84,6 @@ baseurn = "urn:ogf:network:"
 fullurn = baseurn + "atlanticwave-sdx.net"
 awaveurn = "urn:ogf:network:atlanticwave-sdx.net"
 
-SERVICE_DOMAIN_L2_TUNNEL = "l2switching"
-SERVICE_DOMAIN_AWAVE = "AtlanticWaveSDX"
-
-
 
 class SenseAPIError(Exception):
     pass
@@ -147,7 +143,7 @@ class SenseAPI(AtlanticWaveManager):
         self.urlbase = "http://%s:%s" % (host, port)
 
         # SENSE Service constants
-        self.SVC_SENSE    = "ServiceDomain:l2switching"
+        self.SVC_SENSE    = "l2switching"
         self.SVC_NONSENSE = "ServiceDomain:AWaveServices"
         
         # Set up local repositories for rules and topology to perform diffs on.
@@ -694,7 +690,7 @@ class SenseAPI(AtlanticWaveManager):
             
             link_def  = "<%s>\n" % epname
             link_def += "                a nml:mrs:SwitchingService, owl:NamedIndividual ;\n"
-            link_def += "                nml:belongsTo <%s:l2switching>, <%s> ;\n" % (fullurn, fullurn)
+            link_def += "                nml:belongsTo <%s:%s>, <%s> ;\n" % (fullurn, self.SVC_SENSE, fullurn)
             link_def += "                nml:hasLabelGroup <%s> ;\n" % vlan_name
             link_def += "                nml:hasService <%s> ;\n" % bw_name
             if 'alias' in node.keys():
@@ -797,7 +793,8 @@ class SenseAPI(AtlanticWaveManager):
         topology += "                a nml:Topology, owl:NamedIndividual ;\n"
         #        topology += "                nml:belongsTo" #Fixme: who?
         topology += "                nml:hasBidirectionalPort %s\n" % physical_ports_str
-        topology += "                nml:hasService <%s:l2switching> ;\n" % fullurn
+        topology += "                nml:hasService <%s:%s> ;\n" % (fullurn,
+                                                                self.SVC_SENSE)
         topology += "                nml:name \"AtlanticWave/SDX\" .\n\n"
 
         # Add L2 service domain
