@@ -1024,29 +1024,12 @@ class SenseAPI(AtlanticWaveManager):
         last_modified = args['lastModified']
         model_id = args['modelId']
 
-        reduction = None
-        addition = None
+        reduction = args['reduction']
+        addition = args['addition']
         parsed_reductions = None
         parsed_additions = None
         status = HTTP_GOOD
         self.logger.info("process_delta() on delta_id %s" % delta_id)
-
-        if 'reduction' in keys and len(args['reduction']) > 0:
-            try:
-                reduction = self._decode_b64_gunzip(args['reduction'])
-            except Exception as e:
-                self.dlogger.error("Decoding error on Reduction: %s:%s" %
-                                   (e, args['reduction']))
-                return None, HTTP_BAD_REQUEST
-                                   
-        if 'addition' in keys and len(args['addition']) > 0:
-            try:
-                addition = self._decode_b64_gunzip(args['addition'])
-            except Exception as e:
-                self.dlogger.error("Decoding error on Reduction: %s:%s" %
-                                   (e, args['reduction']))
-                return None, HTTP_BAD_REQUEST
-
 
         # If reduction:
         #  - parse reduction
