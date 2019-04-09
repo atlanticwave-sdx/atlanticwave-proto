@@ -689,7 +689,7 @@ class SenseAPI(AtlanticWaveManager):
                 bidiports = bidiports[2:] 
             
             link_def  = "<%s>\n" % epname
-            link_def += "                a nml:mrs:SwitchingService, owl:NamedIndividual ;\n"
+            link_def += "                a nml:BidirectionalPort ;\n"
             link_def += "                nml:belongsTo <%s:%s>, <%s> ;\n" % (fullurn, self.SVC_SENSE, fullurn)
             link_def += "                nml:hasLabelGroup <%s> ;\n" % vlan_name
             link_def += "                nml:hasService <%s> ;\n" % bw_name
@@ -933,6 +933,7 @@ class SenseAPI(AtlanticWaveManager):
               'model': the model itself}
         '''
 
+        self.dlogger.debug("get_latest_model(): start")
         # Dictionary components
         model_id = None
         href = None
@@ -945,7 +946,8 @@ class SenseAPI(AtlanticWaveManager):
 
         
         # Check DB: if there is a latest one, already inserted, use it.
-        result = self.model_table.find_one(order_by=['timestamp'])
+        # The - in front of timestamp gets the latest.
+        result = self.model_table.find_one(order_by=['-timestamp'])
 
         if result != None:
             model_id = result['model_id']
@@ -959,6 +961,7 @@ class SenseAPI(AtlanticWaveManager):
         #  - The latest model in the DB is stale, based on changes to either
         #    the topology or to the rules that are installed
         if creation_time == None:
+            self.dlogger.debug("get_latest_model(): need new model - no creation time in latest.")
             need_new_model = True
         else:
             # Get the most recent time that there was a change
@@ -969,8 +972,12 @@ class SenseAPI(AtlanticWaveManager):
             parsed_rule = datetime.strptime(rule_update_time, rfc3339format)
 
             # Check if model is stale
-            if (parsed_creation < parsed_topo or
-                parsed_creation < parsed_rule):
+            if (parsed_creation < parsed_topo):
+                self.dlogger.debug("get_latest_model(): need new model - Topology changed. Current %s, Topo %s" % (creation_time, topo_update_time))
+                need_new_model = True
+            if (parsed_creation < parsed_rule):
+                # This should be an if, not an elif, because we want good logging
+                self.dlogger.debug("get_latest_model(): need new model - Rules changed.    Current %s, Rule %s" % (creation_time, rule_update_time))
                 need_new_model = True
             
         if need_new_model:
@@ -990,6 +997,7 @@ class SenseAPI(AtlanticWaveManager):
             retnew = True
 
         # Return the correct format
+        self.dlogger.debug("get_latest_model(): Returning model %s" % model_id)
         retdict = {'id':model_id,
                    'href':href,
                    'creationTime':creation_time,
