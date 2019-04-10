@@ -1070,13 +1070,15 @@ class SenseAPI(AtlanticWaveManager):
                 bd = RuleManager().test_add_rule(policy)            
 
         if parsed_reductions != None:
-            self.dlogger.debug("_parse_delta(): parsed_reductions:")
+            self.dlogger.debug("_parse_delta(): parsed_reductions: %d" %
+                               len(parsed_reductions))
             for p in parsed_reductions:
-                self.dlogger.debug("  %s" % p)
+                self.dlogger.debug("  - %s" % p)
         if parsed_additions != None:
-            self.dlogger.debug("_parse_delta(): parsed_additions:")
+            self.dlogger.debug("_parse_delta(): parsed_additions: %d " %
+                               len(parsed_additions))
             for p in parsed_additions:
-                self.dlogger.debug("  %s" % p)
+                self.dlogger.debug("  - %s" % p)
             
                            
         # Have good addition and/or reduction,
@@ -1150,7 +1152,11 @@ class SenseAPI(AtlanticWaveManager):
                 'lifetime' not in str(s)):
                 uuid, svcname = __get_uuid_and_service_name(s)
                 if uuid not in services.keys():
+                    self.dlogger.debug("  _parse_delta(): New UUID %s" % uuid)
+                                       
                     services[uuid] = {}
+                self.dlogger.debug("  _parse_delta(): New service %s:%s"%
+                                   (uuid, svcname)
                 services[uuid][svcname] = {'endpoints':[]}
                 
 
