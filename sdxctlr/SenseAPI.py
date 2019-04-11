@@ -1149,32 +1149,38 @@ class SenseAPI(AtlanticWaveManager):
         for s in list2set(gr.subjects()):
             if awaveurn not in str(s):
                 continue
-            if ('vlanport+' in str(s) and
-                'label' not in str(s)):
-
-                
+            if ('vlanport+' in str(s).split(":")[-1]):
                 # UUID
-                objects = list2set(gr.objects(s,
-                            "http://schemas.ogf.org/mrs/2013/12/topology#tag"))
+                objects = []
+                for p,o in gr.predicate_objects(s):
+                    # For some reason, I can't get objects(s, "...topology#tag")
+                    # to work correctly. Probably some escaped character? Not 
+                    # sure, so working around it this way. Ugly.
+                    if (str(p) == 
+                        "http://schemas.ogf.org/mrs/2013/12/topology#tag"):
+                        objects.append(o)
                 if len(objects) != 1:
                     raise SenseAPIClientError("More than one http://schemas.ogf.org/mrs/2013/12/topology#tag: %s" % str(objects))
                     
-                uuid, svcname = __get_uuid_and_service_name(s)
+                uuid, svcname = __get_uuid_and_service_name(objects[0])
 
                 if uuid not in services.keys():
                     self.dlogger.debug("  _parse_delta(): New UUID %s" % uuid)
                     # Initialize new service things with defaults.
-                    services[uuid] = {'starttime':
-                                      datetime.strftime(datetime.now(),
-                                                        rfc3339format),
-                                      'endtime':
-                                      datetime.strftime((datetime.now() +
-                                                         timedelta(365*10)),
-                                                        rfc3339format)}
+                    services[uuid] = {}
+                    services[uuid][svcname] = {'endpoints':[],
+                                               'starttime':
+                                               datetime.strftime(
+                                                   datetime.now(),
+                                                   rfc3339format),
+                                               'endtime':
+                                               datetime.strftime(
+                                                   (datetime.now() +
+                                                    timedelta(365*10)),
+                                                   rfc3339format)}
 
                 self.dlogger.debug("  _parse_delta(): New service %s:%s"%
                                    (uuid, svcname))
-                services[uuid][svcname] = {'endpoints':[]}
                 
                 # Get the VLAN, physical port, and switch info
                 vlan = s.split('+')[1]
@@ -1194,6 +1200,7 @@ class SenseAPI(AtlanticWaveManager):
                     if "existsDuring" in str(p):
                         for p2,o2 in gr.predicate_objects(o):
                             if 'start' in str(p2):
+                                self.dlogger.debug( "     starttime: %s" % str(o2))
                                 starttime = datetime.strftime(
                                     datetime.strptime(str(o2)[:-5],
                                                       sensetimeformat),
@@ -1202,6 +1209,7 @@ class SenseAPI(AtlanticWaveManager):
                                                    starttime)
                                 services[uuid][svcname]['starttime'] = starttime
                             elif "end" in str(p2):
+                                self.dlogger.debug( "     endtime  : %s" % str(o2))
                                 endtime = datetime.strftime(
                                     datetime.strptime(str(o2)[:-5],
                                                       sensetimeformat),
@@ -1212,7 +1220,7 @@ class SenseAPI(AtlanticWaveManager):
                     # See if bandwidth exists
                     elif ('hasService' in str(p) and
                           'service+bw' in str(o)):
-                        for p3,o3 in gr.predicate_objects(o2):
+                        for p3,o3 in gr.predicate_objects(o):
                                     if "reservableCapacity" in str(p3):
                                         bw = int(o3)
                                         self.dlogger.debug("  bw: %s" % bw)
@@ -1223,6 +1231,8 @@ class SenseAPI(AtlanticWaveManager):
         generated_rules = []
         for uuid in services.keys():
             for svc in services[uuid].keys():
+                self.dlogger.debug("services[uuid][%s]: %s" % (svc, 
+services[uuid][svc]))
                 endpointcount = len(services[uuid][svc]['endpoints'])
 
                 # These are exclusively for error cases.
@@ -1895,7 +1905,7 @@ class CommitsAPI(SenseAPIResource):
         self.dlogger.debug("__init__() start")
         self.dlogger.debug("__init__() complete")
 
-    def post(self, deltaid):
+    def put(self, deltaid):
         self.dlogger.debug("post() start")
         self.logger.info("post() deltaid %s" % deltaid)
         resp = SenseAPI().commit(deltaid)
