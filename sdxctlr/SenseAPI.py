@@ -1119,8 +1119,8 @@ class SenseAPI(AtlanticWaveManager):
 
         def __get_uuid_and_service_name(s):
             # I'm sorry for this ugly string manipulation...
-            uuid = s.split("conn+")[1].split(":")[0]
-            svcname = ":".join(s.split("conn+")[1].split(":")[1:])
+            uuid = s.split("+")[2].split(":")[0]
+            svcname = ":".join("+".join(s.split("+")[2:]).split(":")[1:])
             return uuid, svcname
 
         self.dlogger.debug("_parse_delta(): Begin")
@@ -1135,36 +1135,65 @@ class SenseAPI(AtlanticWaveManager):
             raise SenseAPIClientError("Delta unparsable %s:%s" %
                                       (e, raw_delta))
 
-        # Get a list of services
-        # - loop thorugh the graph and extract the UUIDs and service name
-        # -- Initialize the services dictionary.
-        # -- When finding a service, get the start-end times
-        # -- When finding a service, get the ports associated with the service
-        # -- Loop through the ports
-        # --- Extract vlan
-        # --- Extract bandwidth (shared, but each port has its own copy)
+
+        # Get list of services
+        # - Loop through graph and find the vlanport link structure
+        # -- Extract UUID.
+        # -- If UUID is new, create service dictionary
+        # --- initialize services dictionary
+        # --- Use dummy values for B/W and start (now) and end (now+100y) times
+        # -- Add port to UUID
+        # -- Find lifetime from link structure - if they exist
+        # -- Find bandwidth from link structure
         services = {}
         for s in list2set(gr.subjects()):
             if awaveurn not in str(s):
                 continue
-            if ('ServiceDomain' in str(s) and
-                'conn' in str(s) and
-                'lifetime' not in str(s)):
+            if ('vlanport+' in str(s) and
+                'label' not in str(s)):
+
+                
+                # UUID
+                objects = list2set(gr.objects(s,
+                            "http://schemas.ogf.org/mrs/2013/12/topology#tag"))
+                if len(objects) != 1:
+                    raise SenseAPIClientError("More than one http://schemas.ogf.org/mrs/2013/12/topology#tag: %s" % str(objects))
+                    
                 uuid, svcname = __get_uuid_and_service_name(s)
+
                 if uuid not in services.keys():
                     self.dlogger.debug("  _parse_delta(): New UUID %s" % uuid)
-                                       
-                    services[uuid] = {}
+                    # Initialize new service things with defaults.
+                    services[uuid] = {'starttime':
+                                      datetime.strftime(datetime.now(),
+                                                        rfc3339format),
+                                      'endtime':
+                                      datetime.strftime((datetime.now() +
+                                                         timedelta(365*10)),
+                                                        rfc3339format)}
+
                 self.dlogger.debug("  _parse_delta(): New service %s:%s"%
-                                   (uuid, svcname)
+                                   (uuid, svcname))
                 services[uuid][svcname] = {'endpoints':[]}
                 
+                # Get the VLAN, physical port, and switch info
+                vlan = s.split('+')[1]
+                epname = s.split("::")[1].split(":")[0]
+                ep, switchname  = str(epname).split('-')
+                port = self.current_topo[switchname][ep][switchname]
+                self.dlogger.debug("  port: %s" % port)
+                endpoint = {'switch':switchname,
+                            'port':port,
+                            'vlan':vlan}
+                self.dlogger.debug("  endpoint: %s" % endpoint)
+                services[uuid][svcname]['endpoints'].append(endpoint)
 
+                # Other stuff: lets loop through since it's easier.
                 for p,o in gr.predicate_objects(s):
-                    # Start and end times
+                    # See if lifetime exists
                     if "existsDuring" in str(p):
                         for p2,o2 in gr.predicate_objects(o):
-                            if "start" in str(p2):
+                            if 'start' in str(p2):
                                 starttime = datetime.strftime(
                                     datetime.strptime(str(o2)[:-5],
                                                       sensetimeformat),
@@ -1180,40 +1209,15 @@ class SenseAPI(AtlanticWaveManager):
                                 services[uuid][svcname]['endtime'] = endtime
                                 self.dlogger.debug("  endtime:   %s" %
                                                    endtime)
-                                
-                    # Ports
-                    elif "hasBidirectionalPort" in str(p):
-                        vlan = None
-                        bw = None
-                        for p2,o2 in gr.predicate_objects(o):
-                            # - VLAN
-                            if "hasLabel" in str(p2):
-                                for p3,o3 in gr.predicate_objects(o2):
-                                    if "value" in str(p3):
-                                        vlan = int(str(o3))
-                                        self.dlogger.debug("  vlan: %s" % vlan)
-                            # - Bandwidth
-                            elif ("hasService" in str(p2) and
-                                  "service+bw" in str(o2)):
-                                for p3,o3 in gr.predicate_objects(o2):
+                    # See if bandwidth exists
+                    elif ('hasService' in str(p) and
+                          'service+bw' in str(o)):
+                        for p3,o3 in gr.predicate_objects(o2):
                                     if "reservableCapacity" in str(p3):
                                         bw = int(o3)
                                         self.dlogger.debug("  bw: %s" % bw)
-                        # Get endpoint from port
-
-                        epname = str(o).split("::")[1].split(":+:")[0]
-                        ep, switchname = str(epname).split('-')
-                        port = self.current_topo[switchname][ep][switchname]
-                        self.dlogger.debug("  port: %s" % port)
-                        endpoint = {'switch':switchname,
-                                    'port':port,
-                                    'vlan':vlan}
-                        self.dlogger.debug("  endpoint: %s" % endpoint)
-                        
-                        services[uuid][svcname]['endpoints'].append(endpoint)
-                        if bw != None:
-                            services[uuid][svcname]['bandwidth'] = bw
-
+                                        services[uuid][svcname]['bandwidth'] =bw
+                                   
         # Have details, now loop through services and create rules that are
         # being described.
         generated_rules = []
