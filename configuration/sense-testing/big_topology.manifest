@@ -1,0 +1,259 @@
+{
+  "endpoints": {
+    "br1dtn1": {
+      "type":"dtn",
+      "friendlyname":"br1dtn1",
+      "location":"0,0",
+      "vlan":2345},
+    "br1dtn2": {
+      "type":"dtn",
+      "friendlyname":"br1dtn2",
+      "location":"0,0",
+      "vlan":2345},
+    "br2dtn1": {
+      "type":"dtn",
+      "friendlyname":"br2dtn1",
+      "location":"0,0",
+      "vlan":2345},
+    "br2dtn2": {
+      "type":"dtn",
+      "friendlyname":"br2dtn2",
+      "location":"0,0",
+      "vlan":2345},
+    "br2dtn3": {
+      "type":"dtn",
+      "friendlyname":"br2dtn3",
+      "location":"0,0",
+      "vlan":2345},
+    "br3dtn1": {
+      "type":"dtn",
+      "friendlyname":"br3dtn1",
+      "location":"0,0",
+      "vlan":2345},
+    "br4dtn1": {
+      "type":"dtn",
+      "friendlyname":"br4dtn1",
+      "location":"0,0",
+      "vlan":2345},
+    "br4dtn2": {
+      "type":"dtn",
+      "friendlyname":"br4dtn2",
+      "location":"0,0",
+      "vlan":2345}
+  },
+  "localcontrollers": {
+    "oneLC":{
+      "shortname": "oneLC",
+      "credentials": "pwd",
+      "location": "0,0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55780,
+        "openflowport": 6680
+      },
+      "switchinfo": [
+        {
+          "name":"br1",
+          "friendlyname":"br1",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "br2"
+	        },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "br3"
+            },
+            {
+      	      "portnumber": 3,
+	      "speed": 8000000000,
+	      "destination": "br2"
+	    },
+	    {
+      	      "portnumber": 4,
+	      "speed": 8000000000,
+	      "destination": "br1dtn1"
+	    },
+	    {
+      	      "portnumber": 5,
+	      "speed": 8000000000,
+	      "destination": "br1dtn2"
+	    }
+	    
+	        ],	
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22],
+            "managementvlan":4085,
+            "managementvlanports":[3,4]
+          }
+        },
+        {
+          "name":"br2",
+          "friendlyname":"br2",
+          "ip": "127.0.0.1",
+          "dpid":"2",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "br1"
+	        },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "br3"
+            },
+            {
+      	      "portnumber": 3,
+	      "speed": 8000000000,
+	      "destination": "br2dtn1"
+	    },
+	    {
+      	      "portnumber": 4,
+	      "speed": 8000000000,
+	      "destination": "br2dtn2"
+	    },
+	    {
+      	      "portnumber": 5,
+	      "speed": 8000000000,
+	      "destination": "br2dtn3"
+	    }
+ 	  ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br2",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22],
+            "managementvlan":4085,
+            "managementvlanports":[3,4]
+          }
+        },
+        {
+          "name":"br3",
+          "friendlyname":"br3",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "br1"
+	        },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "br2"
+            },
+            {
+      	      "portnumber": 3,
+              "speed": 8000000000,
+              "destination": "br4"
+            },
+  	    {
+      	      "portnumber": 4,
+	      "speed": 8000000000,
+	      "destination": "br4dtn1"
+	    }
+          ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22],
+            "managementvlan":4085,
+            "managementvlanports":[3,4]
+          }
+        },
+	{
+          "name":"br4",
+          "friendlyname":"br4",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "br3"
+            },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "br4dtn1"
+            },
+	    {
+              "portnumber": 3,
+              "speed": 8000000000,
+              "destination": "br4dtn2"
+            }
+          ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22],
+            "managementvlan":4085,
+            "managementvlanports":[3,4]
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+  },
+  "participants": {
+    "sdonovan": {
+      "credentials": "1234",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "sdonovan@gatech.edu",
+      "type": "administrator",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    },
+    "jchung": {
+      "credentials": "4321",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "jchung@gatech.edu",
+      "type": "user",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    }
+  }
+}
