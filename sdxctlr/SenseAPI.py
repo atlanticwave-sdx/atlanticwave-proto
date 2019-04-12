@@ -572,7 +572,7 @@ class SenseAPI(AtlanticWaveManager):
                     
                 # -- Put together service name.
                 svc_name = self.SVC_SENSE
-                service_name = "%s:conn+%s" % (svc_name
+                service_name = "%s:conn+%s" % (svc_name,
                                                delta['delta_id'])
                 
             #   if user is other, then make up name
@@ -694,7 +694,7 @@ class SenseAPI(AtlanticWaveManager):
             
             link_def  = "<%s>\n" % epname
             link_def += "                a nml:BidirectionalPort ;\n"
-            link_def += "                nml:belongsTo <%s:%s>, <%s> ;\n" % (fullurn, self.SVC_SENSE, fullurn)
+            link_def += "                nml:belongsTo <%s::%s>, <%s> ;\n" % (fullurn, self.SVC_SENSE, fullurn)
             link_def += "                nml:hasLabelGroup <%s> ;\n" % vlan_name
             link_def += "                nml:hasService <%s> ;\n" % bw_name
             if 'alias' in node.keys():
@@ -797,7 +797,7 @@ class SenseAPI(AtlanticWaveManager):
         topology += "                a nml:Topology, owl:NamedIndividual ;\n"
         #        topology += "                nml:belongsTo" #Fixme: who?
         topology += "                nml:hasBidirectionalPort %s\n" % physical_ports_str
-        topology += "                nml:hasService <%s:%s> ;\n" % (
+        topology += "                nml:hasService <%s::%s> ;\n" % (
             fullurn, self.SVC_SENSE)
         topology += "                nml:name \"AtlanticWave/SDX\" .\n\n"
 
@@ -811,19 +811,19 @@ class SenseAPI(AtlanticWaveManager):
 
 
         # L2 switching
-        service_domain  = "<%s:%s>\n" % (fullurn, self.SVC_SENSE)
-        service_domain += "                 a nml:SwitchingService, owl:NamedIndividual ;\n"
+        service_domain  = "<%s::%s>\n" % (fullurn, self.SVC_SENSE)
+        service_domain += "                 a nml:SwitchingService ;\n"
+        service_domain += "                 sd:hasServiceDefinition <%s::ServiceDefinition:%s> ;\n" % (fullurn, self.SVC_SENSE_L2MP)
         service_domain += "                 nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
         if len(list_of_vlan_services) > 0:
             service_domain += "                 mrs:providesSubnet %s ;\n" % vlan_services_str
         service_domain += "                 nml:hasBidirectionalPort %s\n" % physical_ports_str
-        service_domain += "                 sd:hasServiceDefinition <%s:%s>\n" % (fullurn, self.SVC_SENSE_L2MP)
         service_domain += "                 nml:labelSwaping \"true\" .\n\n"
 
         # L2 MP - This is a service definition, child of the SwitchingService
-        service_domain  = "<%s:%s>\n" % (fullurn, self.SVC_SENSE_L2MP)
+        service_domain += "<%s::ServiceDefinition:%s>\n" % (fullurn, self.SVC_SENSE_L2MP)
         service_domain += "                 a sd:ServiceDefinition ;\n"
-        service_domain += "                 sd:serviceType \"http://services.ogf.org/nsi/2018/06/descriptions/l2-mp-es\" .\n"
+        service_domain += "                 sd:serviceType \"http://services.ogf.org/nsi/2018/06/descriptions/l2-mp-es\" .\n\n"
         
         # Add AWave service domain
         #FIXME
