@@ -528,6 +528,18 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # For last table
         #   - Create a default drop rule (if necessary needed). Priority 0
+        for i in range(MAX_PORTS):
+            matches = [IN_PORT(i)]
+            actions = [Drop()]
+            priorty = PRIORITY_DEFAULT_PLUS_ONE
+            table = LASTTABLE
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+        # Catch-all for those not in the same port
         matches = []
         actions = [Drop()]
         priorty = PRIORITY_DEFAULT
