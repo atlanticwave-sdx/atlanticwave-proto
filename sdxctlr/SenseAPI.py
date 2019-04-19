@@ -638,7 +638,7 @@ class SenseAPI(AtlanticWaveManager):
         list_of_physical_ports = []
         
         # Boilerplate prefixes
-        output  = "@prefix sd: <http://schemas.ogf.org/nsi/2013/12/services/definitions#> .\n"
+        output  = "@prefix sd: <http://schemas.ogf.org/nsi/2013/12/services/definition#> .\n"
         output += "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
         output += "@prefix owl: <http://www.w3.org/2002/07/owl#> .\n"
         output += "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n"
@@ -814,11 +814,12 @@ class SenseAPI(AtlanticWaveManager):
         service_domain  = "<%s::%s>\n" % (fullurn, self.SVC_SENSE)
         service_domain += "                 a nml:SwitchingService ;\n"
         service_domain += "                 sd:hasServiceDefinition <%s::ServiceDefinition:%s> ;\n" % (fullurn, self.SVC_SENSE_L2MP)
-        service_domain += "                 nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
+        service_domain += "                 nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;\n"
+        service_domain += "                 nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
         if len(list_of_vlan_services) > 0:
             service_domain += "                 mrs:providesSubnet %s ;\n" % vlan_services_str
         service_domain += "                 nml:hasBidirectionalPort %s\n" % physical_ports_str
-        service_domain += "                 nml:labelSwaping \"true\" .\n\n"
+        service_domain += "                 nml:labelSwapping true .\n\n"
 
         # L2 MP - This is a service definition, child of the SwitchingService
         service_domain += "<%s::ServiceDefinition:%s>\n" % (fullurn, self.SVC_SENSE_L2MP)
@@ -1188,7 +1189,8 @@ class SenseAPI(AtlanticWaveManager):
                                                datetime.strftime(
                                                    (datetime.now() +
                                                     timedelta(365*10)),
-                                                   rfc3339format)}
+                                                   rfc3339format),
+                                               'bandwidth': 8000000}
 
                 self.dlogger.debug("  _parse_delta(): New service %s:%s"%
                                    (uuid, svcname))
