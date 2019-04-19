@@ -497,7 +497,16 @@ class SenseAPI(AtlanticWaveManager):
 
         # Return text
         return text_vlan
-    
+
+    def _is_default_lifetime(self, start_time, stop_time):
+        start_datetime = datetime.strptime(start_time, rfc3339format)
+        stop_datetime  = datetime.strptime(stop_time, rfc3339format)
+
+        if (stop_datetime - start_datetime) == timedelta(365*100):
+            return True
+        return False
+            
+                                   
     def generate_list_of_services(self):
         ''' Generates a list of external facing services based on endpoints. 
             Any service that has at least one endpoint at the end of the 
@@ -736,22 +745,24 @@ class SenseAPI(AtlanticWaveManager):
                 services += "        nml:value \"%d\" .\n\n" % vlannum
                 
                 # -- Add bandwidth on virtual port
-                services += "<%s::%s:vlanport+%d:service+bw>\n" % (
-                    fullurn, endpointname, vlannum)
-                services += "        a mrs:BandwidthService ;\n"
-                services += "        mrs:reservableCapacity \"%d\"^^xsd:long ;\n" % (bandwidth)
-                services += "        mrs:type \"guaranteedCapped\" ;\n"
-                services += "        mrs:unit \"bps\" ;\n"
-                services += "        nml:belongsTo <%s::%s:vlanport+%d> ;\n" % (
-                    fullurn, endpointname, vlannum)
-                services += "        nml:existsDuring <%s:existsDuring> .\n\n" % (
-                    service_str)
+                if bandwidth != 0:
+                    services += "<%s::%s:vlanport+%d:service+bw>\n" % (
+                        fullurn, endpointname, vlannum)
+                    services += "        a mrs:BandwidthService ;\n"
+                    services += "        mrs:reservableCapacity \"%d\"^^xsd:long ;\n" % (bandwidth)
+                    services += "        mrs:type \"guaranteedCapped\" ;\n"
+                    services += "        mrs:unit \"bps\" ;\n"
+                    services += "        nml:belongsTo <%s::%s:vlanport+%d> ;\n" % (
+                        fullurn, endpointname, vlannum)
+                    services += "        nml:existsDuring <%s:existsDuring> .\n\n" % (
+                        service_str)
                 
                 # -- Add service lifetime
-                services += "<%s:existsDuring>\n" % service_str
-                services += "        a nml:Lifetime ;\n"
-                services += "        nml:end \"%s\" ;\n" % endtime
-                services += "        nml:start \"%s\" .\n\n" % starttime
+                if !self._is_default_lifetime(starttime, endtime):
+                    services += "<%s:existsDuring>\n" % service_str
+                    services += "        a nml:Lifetime ;\n"
+                    services += "        nml:end \"%s\" ;\n" % endtime
+                    services += "        nml:start \"%s\" .\n\n" % starttime
                 
                 # -- Add virtual port
                 services += "<%s::%s:vlanport+%d>\n" % (
@@ -760,12 +771,14 @@ class SenseAPI(AtlanticWaveManager):
                 services += "        nml:belongsTo <%s>,<%s:%s> ;\n" % (
                     service_str, fullurn, endpointname)
                 services += "        nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;\n"
-                services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
-                    service_str)
+                if !self._is_default_lifetime(startime, endtime):
+                    services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
+                        service_str)
                 services += "        nml:hasLabel <%s::%s:vlanport+%d:label+%d> ;\n" % (
                     fullurn, endpointname, vlannum, vlannum)
-                services += "        nml:hasService <%s::%s:vlanport+%d:service+bw> ;\n" % (
-                    fullurn, endpointname, vlannum)
+                if bandwidth != 0:
+                    services += "        nml:hasService <%s::%s:vlanport+%d:service+bw> ;\n" % (
+                        fullurn, endpointname, vlannum)
                 services += "        nml:name \"UNKNOWN\" .\n\n"
 
                 per_service_endpoints.append("%s:%s:vlanport+%d" % (
@@ -1188,9 +1201,9 @@ class SenseAPI(AtlanticWaveManager):
                                                'endtime':
                                                datetime.strftime(
                                                    (datetime.now() +
-                                                    timedelta(365*10)),
+                                                    timedelta(365*100)),
                                                    rfc3339format),
-                                               'bandwidth': 8000000}
+                                               'bandwidth': 0}
 
                 self.dlogger.debug("  _parse_delta(): New service %s:%s"%
                                    (uuid, svcname))
