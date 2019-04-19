@@ -4,7 +4,7 @@
       "type":"dtn",
       "friendlyname":"br1dtn1",
       "location":"0,0",
-      "vlan":2345},
+      "available_vlans":101},
     "br1dtn2": {
       "type":"dtn",
       "friendlyname":"br1dtn2",
@@ -14,7 +14,7 @@
       "type":"dtn",
       "friendlyname":"br2dtn1",
       "location":"0,0",
-      "vlan":2345},
+      "available_vlans":201},
     "br2dtn2": {
       "type":"dtn",
       "friendlyname":"br2dtn2",
@@ -24,7 +24,7 @@
       "type":"dtn",
       "friendlyname":"br2dtn3",
       "location":"0,0",
-      "vlan":2345},
+      "available_vlans":203},
     "br3dtn1": {
       "type":"dtn",
       "friendlyname":"br3dtn1",
@@ -39,7 +39,7 @@
       "type":"dtn",
       "friendlyname":"br4dtn2",
       "location":"0,0",
-      "vlan":2345}
+      "available_vlans":402}
   },
   "localcontrollers": {
     "oneLC":{
@@ -171,7 +171,7 @@
   	    {
       	      "portnumber": 4,
 	      "speed": 8000000000,
-	      "destination": "br4dtn1"
+	      "destination": "br3dtn1"
 	    }
           ],
           "internalconfig": {
