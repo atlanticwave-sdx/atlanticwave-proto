@@ -1050,8 +1050,14 @@ class SenseAPI(AtlanticWaveManager):
 
         def __get_uuid_and_service_name(s):
             # I'm sorry for this ugly string manipulation...
-            uuid = s.split("+")[1].split(":")[0]
-            svcname = s.split("+")[2].split(":")[0].split("-")[1]
+            # belongsTo
+            if awaveurn in s:
+                uuid = s.split("+")[1].split(":")[0]
+                svcname = s.split("+")[2].split(":")[0].split("-")[1]
+                return uuid, svcname
+            # tag
+            uuid = s.split("+")[2].split(":")[0]
+            svcname = s.split(":")[-1]
             return uuid, svcname
 
         self.dlogger.debug("_parse_delta(): Begin")
@@ -1092,10 +1098,16 @@ class SenseAPI(AtlanticWaveManager):
                         "http://schemas.ogf.org/nml/2013/03/base#belongsTo"):
                         if ('l2switching' in str(o)):
                             objects.append(o)
-                        
 
                 if len(objects) != 1:
-                    raise SenseAPIClientError("There is not one http://schemas.ogf.org/nml/2013/03/base#belongsTo: %s" % str(objects))
+                    # Ok, backup path is topology#tag, especially for additions
+                    for p,o in gr.predicate_objects(s):
+                        if (str(p) ==
+                            'http://schemas.ogf.org/mrs/2013/12/topology#tag'):
+                            objects.append(o)
+                            
+                if len(objects) != 1:
+                    raise SenseAPIClientError("There is not one http://schemas.ogf.org/nml/2013/03/base#belongsTo or http://schemas.ogf.org/mrs/2013/12/topology#tag' for %s: %s" % (str(s), str(objects)))
                     
                 uuid, svcname = __get_uuid_and_service_name(objects[0])
 
