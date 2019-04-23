@@ -854,104 +854,6 @@ class SenseAPI(AtlanticWaveManager):
         return output
 
 
-    def send_SENSE_msg(self, msg):
-        ''' Sends over a sense message. Handles formatting, and anything else
-            necessary. '''
-        pass
-
-    def install_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
-                                    bandwidth, starttime, endtime, delta_id):
-        ''' Installs a point-to-point rule. '''
-        # Build policy
-        policy = self._build_point_to_point_rule(endpoint1, endpoint2,
-                                                 vlan1, vlan2, bandwidth,
-                                                 starttime, endtime)
-        
-    def check_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
-                                   bandwidth, starttime, endtime):
-        ''' Checks to see if a rule will be valid before installing. '''
-        # Build policy
-        policy = self._build_point_to_point_rule( endpoint1, endpoint2,
-                                                 vlan1, vlan2, bandwidth,
-                                                 starttime, endtime)
-        return self._check_SDX_rule(policy)
-    
-    def _check_SDX_rule(self, policy):
-        ''' Helper function, so this function can be used in other locations.'''
-        # Install rule
-        try:
-            RuleManager().test_add_rule(policy)
-        except Exception as e:
-            # This means that the rule cannot be added, for whatever reason.
-            # That's fine!
-            self.logger.INFO("check_point_to_point_rule() failed %e" % e)
-            self.logger.INFO("    %s, %s, %s, %s" % (endpoint1, endpoint2,
-                                                     vlan1, vlan2))
-            self.logger.INFO("    %s, %s, %s" % (bandwidth, starttime, endtime))
-            return False
-        else:
-            return True
-        
-
-    def _build_point_to_point_rule(self, endpoint1, endpoint2, vlan1, vlan2,
-                                   bandwidth, starttime, endtime):
-        # Find the src switch and switch port
-        src = self.simplified_topo.node[endpoint1]['start_node']
-        srcswitch = self.simplified_topo.node[endpoint1]['end_node']
-        srcport = self.current_topo[srcswitch][src][srcswitch]
-
-        # Find the dst switch and switch port
-        dst = self.simplified_topo.node[endpoint2]['start_node']
-        dstswitch = self.simplified_topo.node[endpoint2]['end_node']
-        dstport = self.current_topo[dstswitch][dst][dstswitch]
-        
-        # Make JSON version
-        jsonrule = {"L2Tunnel":{
-            "starttime":starttime,
-            "endtime":endtime,
-            "srcswitch":srcswitch,
-            "dstswitch":dstswitch,
-            "srcport":srcport,
-            "dstport":dstport,
-            "srcvlan":vlan1,
-            "dstvlan":vlan2,
-            "bandwidth":bandwidth}}
-        
-        # Perform check_syntax
-        L2TunnelPolicy.check_syntax(jsonrule)
-
-        # Make policy class
-        policy = L2TunnelPolicy(self.userid, jsonrule)
-
-        return policy 
-    
-    def install_point_to_multipoint_rule(self, endpointvlantuplelist,
-                                         bandwidth,  starttime, endtime):
-        ''' Installs a point-to-multipoint rule. '''
-        #FIXME: this will need to reworked, but it's useful for prototyping
-        # Make JSON version
-        endpoints = []
-        for (sw, po, vlan) in endpointvlantuplelist:
-            endpoints.append({"switch":sw, "port":po, "vlan":vlan})
-        jsonrule = {"L2Multipoint":{
-            "starttime":starttime,
-            "endtime":endtime,
-            "bandwidth":bandwidth,
-            "endpoints":endpoints}}
-        
-        # Perform check_syntax
-        L2MultipointPolicy.check_syntax(jsonrule)
-
-        # Make policy class
-        policy = L2MultipointPolicy(self.userid, jsonrule)
-
-        # Install rule
-        hash = RuleManager().add_rule(policy)
-
-        #FIXME: What should be returned?
-        #FIXME: What to do about Exceptions?
-        pass
-
     def get_latest_model(self):
         ''' Gets the latest model. 
             Returns tuple of the dictionary (described below), and bool whether
@@ -1425,23 +1327,6 @@ services[uuid][svc]))
         # Return good status
         return HTTP_GOOD
     
-    def delete(self, deltaid):
-        ''' deletes a specified deltaid.
-            Returns:
-              - HTTP_NO_CONTENT if successfully deleted
-              - HTTP_NOT_FOUND if delta is not found
-        '''
-        # Does it exist?
-        delta = self._get_delta_by_id(deltaid)
-        if delta != None:
-            # Delete deltaid from DB
-            self.delta_table.delete(delta_id=deltaid)
-            # If delta is installed,
-            if delta['status'] == STATUS_ACTIVATED:
-                self._remove_policy(delta)
-            return HTTP_NO_CONTENT
-        return HTTP_NOT_FOUND
-    
 
     def _get_current_time(self):
         ''' Helper function, 
@@ -1736,12 +1621,6 @@ services[uuid][svc]))
         self.dlogger.debug("Inserting model %s" % model_id)
         self.model_table.insert(model)
     
-    def _find_alternative(self, deltaid):
-        # Used to find alternative times/VLANs.
-        #FIXME: How to do this?
-
-        pass
-
     def _encode_gzip_b64(self, data):
         ''' Helper function that handles gziping then encoding into base64 
             string.
