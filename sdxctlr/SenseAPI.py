@@ -67,17 +67,17 @@ HTTP_CONFLICT       = 409
 HTTP_SERVER_ERROR   = 500     # RETURNED BY FLASK-RESTFUL ONLY
 
 # SENSE status codes
-STATUS_ACCEPTING    = "Accepting"
-STATUS_ACCEPTED     = "Accepted"
-STATUS_COMMITTING   = "Committing"
-STATUS_COMMITTED    = "Committed"
-STATUS_ACTIVATING   = "Activating"
-STATUS_ACTIVATED    = "Activated"
-STATUS_FAILED       = "Failed"
+STATUS_ACCEPTING    = "ACCEPTING"
+STATUS_ACCEPTED     = "ACCEPTED"
+STATUS_COMMITTING   = "COMMITTING"
+STATUS_COMMITTED    = "COMMITTED"
+STATUS_ACTIVATING   = "ACTIVATING"
+STATUS_ACTIVATED    = "ACTIVATED"
+STATUS_FAILED       = "FAILED"
 
 # PHASE definition
-PHASE_RESERVED        = "PHASE_RESERVED"
-PHASE_COMMITTED       = "PHASE_COMMITTED"
+PHASE_RESERVED        = "RESERVED"
+PHASE_COMMITTED       = "COMMITTED"
 
 # URN info
 baseurn = "urn:ogf:network:"
@@ -499,6 +499,7 @@ class SenseAPI(AtlanticWaveManager):
         return text_vlan
 
     def _is_default_lifetime(self, start_time, stop_time):
+        return False
         start_datetime = datetime.strptime(start_time, rfc3339format)
         stop_datetime  = datetime.strptime(stop_time, rfc3339format)
 
@@ -739,8 +740,9 @@ class SenseAPI(AtlanticWaveManager):
                 services += "        a nml:Label ;\n"
                 services += "        nml:belongsTo <%s::%s:vlanport+%d> ;\n" % (
                     fullurn, endpointname, vlannum)
-                services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
-                    service_str)
+                if not self._is_default_lifetime(starttime, endtime):
+                    services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
+                        service_str)
                 services += "        nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;\n"
                 services += "        nml:value \"%d\" .\n\n" % vlannum
                 
@@ -754,15 +756,16 @@ class SenseAPI(AtlanticWaveManager):
                     services += "        mrs:unit \"bps\" ;\n"
                     services += "        nml:belongsTo <%s::%s:vlanport+%d> ;\n" % (
                         fullurn, endpointname, vlannum)
-                    services += "        nml:existsDuring <%s:existsDuring> .\n\n" % (
-                        service_str)
+                    if not self._is_default_lifetime(starttime, endtime):
+                        services += "        nml:existsDuring <%s:existsDuring> .\n\n" % (
+                            service_str)
                 
                 # -- Add service lifetime
-                if !self._is_default_lifetime(starttime, endtime):
+                if not self._is_default_lifetime(starttime, endtime):
                     services += "<%s:existsDuring>\n" % service_str
                     services += "        a nml:Lifetime ;\n"
-                    services += "        nml:end \"%s\" ;\n" % endtime
-                    services += "        nml:start \"%s\" .\n\n" % starttime
+                    services += "        nml:end \"%s.000000-0000\" ;\n" % endtime
+                    services += "        nml:start \"%s.000000-0000\" .\n\n" % starttime
                 
                 # -- Add virtual port
                 services += "<%s::%s:vlanport+%d>\n" % (
@@ -771,7 +774,7 @@ class SenseAPI(AtlanticWaveManager):
                 services += "        nml:belongsTo <%s>,<%s:%s> ;\n" % (
                     service_str, fullurn, endpointname)
                 services += "        nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;\n"
-                if !self._is_default_lifetime(startime, endtime):
+                if not self._is_default_lifetime(starttime, endtime):
                     services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
                         service_str)
                 services += "        nml:hasLabel <%s::%s:vlanport+%d:label+%d> ;\n" % (
@@ -794,8 +797,9 @@ class SenseAPI(AtlanticWaveManager):
             services += "        a mrs:SwitchingSubnet ;\n"
             services += "        nml:belongsTo <%s> ;\n" % fullurn
             services += "        nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;\n"
-            services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
-                service_str)
+            if not self._is_default_lifetime(starttime, endtime):
+                services += "        nml:existsDuring <%s:existsDuring> ;\n" % (
+                    service_str)
             services += "        nml:hasBidirectionalPort %s\n" % endpoints_str
             services += "        nml:labelSwapping true ;\n"
             services += "        nml:labelType <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> .\n\n"
@@ -883,7 +887,7 @@ class SenseAPI(AtlanticWaveManager):
             self.logger.INFO("check_point_to_point_rule() failed %e" % e)
             self.logger.INFO("    %s, %s, %s, %s" % (endpoint1, endpoint2,
                                                      vlan1, vlan2))
-            self.logger.INFO("    %s, %s, %s" % (bandwidth, startime, endtime))
+            self.logger.INFO("    %s, %s, %s" % (bandwidth, starttime, endtime))
             return False
         else:
             return True
@@ -1920,7 +1924,7 @@ class DeltaAPI(SenseAPIResource):
         self.logger.info("get() deltaid %s" % deltaid)
         status, phase = SenseAPI().get_delta(deltaid)
         self.dlogger.debug("get() %s:%s" % (status, phase))
-        retval = {'state': str(phase), 'deltaid': str(deltaid)}, status
+        retval = {'state': str(status), 'deltaid': str(deltaid)}, HTTP_GOOD
         self.logger.info("get() returning %s" % str(retval))
         self.dlogger.debug("get() complete")
         return retval
@@ -1932,11 +1936,11 @@ class CommitsAPI(SenseAPIResource):
         self.dlogger.debug("__init__() complete")
 
     def put(self, deltaid):
-        self.dlogger.debug("post() start")
-        self.logger.info("post() deltaid %s" % deltaid)
+        self.dlogger.debug("put() start")
+        self.logger.info("put() deltaid %s" % deltaid)
         resp = SenseAPI().commit(deltaid)
         retval = {'result': True}, resp
-        self.logger.info("post() returning %s" % str(retval))
-        self.dlogger.debug("post() complete")
+        self.logger.info("put() returning %s" % str(retval))
+        self.dlogger.debug("put() complete")
         return retval
 
