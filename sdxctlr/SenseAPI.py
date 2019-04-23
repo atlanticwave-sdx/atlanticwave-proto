@@ -1050,8 +1050,8 @@ class SenseAPI(AtlanticWaveManager):
 
         def __get_uuid_and_service_name(s):
             # I'm sorry for this ugly string manipulation...
-            uuid = s.split("+")[2].split(":")[0]
-            svcname = ":".join("+".join(s.split("+")[2:]).split(":")[1:])
+            uuid = s.split("+")[1].split(":")[0]
+            svcname = s.split("+")[2].split(":")[0].split("-")[1]
             return uuid, svcname
 
         self.dlogger.debug("_parse_delta(): Begin")
@@ -1083,15 +1083,19 @@ class SenseAPI(AtlanticWaveManager):
             if ('vlanport+' in str(s).split(":")[-1]):
                 # UUID
                 objects = []
+
                 for p,o in gr.predicate_objects(s):
                     # For some reason, I can't get objects(s, "...topology#tag")
                     # to work correctly. Probably some escaped character? Not 
                     # sure, so working around it this way. Ugly.
-                    if (str(p) == 
-                        "http://schemas.ogf.org/mrs/2013/12/topology#tag"):
-                        objects.append(o)
+                    if (str(p) ==
+                        "http://schemas.ogf.org/nml/2013/03/base#belongsTo"):
+                        if ('l2switching' in str(o)):
+                            objects.append(o)
+                        
+
                 if len(objects) != 1:
-                    raise SenseAPIClientError("More than one http://schemas.ogf.org/mrs/2013/12/topology#tag: %s" % str(objects))
+                    raise SenseAPIClientError("There is not one http://schemas.ogf.org/nml/2013/03/base#belongsTo: %s" % str(objects))
                     
                 uuid, svcname = __get_uuid_and_service_name(objects[0])
 
