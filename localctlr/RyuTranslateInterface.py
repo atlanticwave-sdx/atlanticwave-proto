@@ -618,8 +618,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Create Outbound Rule
         # There are two options here: Corsa or Non-Corsa. Non-Corsa is for
         # regular OpenFlow switches (such as OVS) and is more straight forward.
+        # NOTE: if bandwidth isn't being reserved, use non-Corsa path.
 
-        if internal_config['corsaurl'] == "":
+        if (internal_config['corsaurl'] == "" or
+            vlanrule.get_bandwidth() == 0):
             # Make the equivalent MatchActionLCRule, translate it, and use these
             # as the results. Easier translation!
             switch_id = 0  # This is unimportant:
@@ -843,7 +845,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         intermediate_vlan = mperule.get_intermediate_vlan()
 
         # Non-Corsa first
-        if internal_config['corsaurl'] == "":
+        # NOTE: if bandwidth isn't being reserved, use non-Corsa path.
+
+        if (internal_config['corsaurl'] == "" or
+            vlanrule.get_bandwidth() == 0):
             # Endpoint ports
             # - Translate VLANs on ingress on endpoint_table
             # - Install learning rules on intermediate VLAN on ingress on
@@ -1462,6 +1467,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             translate_table = SDXEGRESSRULETABLE
             flood_table = FORWARDINGTABLE
             learning_table = LEARNINGTABLE
+            switch_table = endpoint_table    # Used in some logs down below.
             self.logger.error("L2MultipointEndpo: %d,%d:%d:%s" % (
                 endpoint_table, flood_table,
                 of_cookie,

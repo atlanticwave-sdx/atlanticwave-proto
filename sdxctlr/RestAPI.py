@@ -1487,14 +1487,17 @@ class RestAPI(AtlanticWaveModule):
 
         except Exception as e:
              #FIXME - proper response
+            errorstr = str(e)
+            RestAPI().dlogger.warning("Exception caught on %s" % policytype)
+            RestAPI().exception_tb(e)
+
+            print "\n\nerrorstr %s\ntojsonify %s" % (errorstr, {"Error":str(e)})
             if request_wants_json(request):
                 RestAPI().logger.error("POST %s ERROR: %s" % (policyname, e,))
                 return make_response(jsonify({"Error":str(e)}), 400)
             #FIXME:  NEED HTML response written
             RestAPI().logger.error("POST %s ERROR: %s" % (policyname, e,))
             return make_response(jsonify({"Error":str(e)}), 400)
-
-
 
 
     # Login endpoint

@@ -46,14 +46,12 @@
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "atldtn",
-              "available_vlans":"2345"
+              "destination": "atldtn"
             },
             {
       	      "portnumber": 3,
 	          "speed": 8000000000,
-	          "destination": "br2",
-              "available_vlans": "1000-1100,4000-4080"
+	          "destination": "br2"
 	        }
 	        ],
           "internalconfig": {
@@ -63,7 +61,9 @@
             "corsabwin":11,
             "corsabwout":12,
             "corsaratelimiterbridge":"br21",
-            "corsaratelimiterports":[21,22]
+            "corsaratelimiterports":[21,22],
+            "managementvlan":4085,
+            "managementvlanports":[3,4]
           }
         },
         {
@@ -82,14 +82,12 @@
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "miadtn",
-              "available_vlans":"2345"
+              "destination": "miadtn"
             },
             {
       	      "portnumber": 3,
 	          "speed": 8000000000,
-	          "destination": "br1",
-              "available_vlans": "1000-1003,4000-4080"
+	          "destination": "br1"
 	        }
 	        ],
           "internalconfig": {
@@ -99,7 +97,9 @@
             "corsabwin":11,
             "corsabwout":12,
             "corsaratelimiterbridge":"br21",
-            "corsaratelimiterports":[21,22]
+            "corsaratelimiterports":[21,22],
+            "managementvlan":4085,
+            "managementvlanports":[3,4]
           }
         }
       ],
