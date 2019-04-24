@@ -172,6 +172,7 @@ class RuleManager(AtlanticWaveManager):
 
         rule.pre_add_callback(TopologyManager(), AuthorizationInspector())
         self._add_rule_to_db(rule)
+
         self._call_install_callbacks(rule)
         self.dlogger.info("add_rule: Rule added to db: %s" % rule)
 
