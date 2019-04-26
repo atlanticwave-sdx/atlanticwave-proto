@@ -35,6 +35,9 @@ class EdgePortPolicy(UserPolicy):
         # Anything specific here?
         pass
 
+    def __str__(self):
+        return "%s(%s)" % (self.get_policy_name(), self.switch)
+    
     @classmethod
     def check_syntax(cls, json_rule):
         try:
@@ -43,7 +46,13 @@ class EdgePortPolicy(UserPolicy):
 
             switch = json_rule[cls.get_policy_name()]['switch']
 
-        except e:
+        except Exception as e:
+            import os
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            lineno = exc_tb.tb_lineno
+            print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
+                                                 str(e), filename,lineno)
             raise
             
     def breakdown_rule(self, tm, ai):

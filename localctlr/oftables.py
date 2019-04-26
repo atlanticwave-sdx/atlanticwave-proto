@@ -24,9 +24,11 @@ ALL_TABLES_EXCEPT_LAST = [L2TUNNELTABLE,
                           LEARNINGTABLE]
 
 
+MAX_PORTS              = 16
 
 # Which tables to use for specific activities
 PRIORITY_DEFAULT                       = 0
+PRIORITY_DEFAULT_PLUS_ONE              = 0
 
 #L2TUNNELTABLE - Table 0
 PRIORITY_DEFAULT_L2TABLE               = 0
@@ -57,3 +59,8 @@ PRIORITY_DESTINATION_FORWARDING        = 2
 PRIORITY_L2M_FLOOD_FORWARDING          = 3
 PRIORITY_L2M_BROADCAST_FORWARDING      = 4
 PRIORITY_L2M_DESTINATION_FORWARDING    = 4
+
+
+# METADATA - All metadata use should use the same mask
+MD_L2M_MASK                             = 2**16-1
+MD_L2M_TRANSLATE                        = 1

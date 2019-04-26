@@ -6,6 +6,7 @@ from UserPolicy import *
 from datetime import datetime
 from shared.constants import *
 from shared.VlanTunnelLCRule import VlanTunnelLCRule
+from shared.PathResource import VLANPathResource, BandwidthPathResource,  VLANPortResource, BandwidthPortResource
 
 class L2TunnelPolicy(UserPolicy):
     ''' This policy is for network administrators to create L2 tunnels, similar 
@@ -53,11 +54,42 @@ class L2TunnelPolicy(UserPolicy):
         # Derived values
         self.intermediate_vlan = None
         self.fullpath = None
+
+        # For get_endpoints()
+        self.endpoints = []
         
         super(L2TunnelPolicy, self).__init__(username, json_rule)
 
         # Anything specific here?
         pass
+    
+    def __str__(self):
+        return "%s(%s,%s,SRC(%s,%s,%s),DST(%s,%s,%s),%s" % (
+            self.get_policy_name(), self.start_time, self.stop_time,
+            self.src_switch, self.src_port, self.src_vlan,
+            self.dst_switch, self.dst_port, self.dst_vlan,
+            self.bandwidth)
+
+    def __eq__(self, other):
+        if (type(self) != type(other) or
+            self.start_time != other.start_time or
+            self.stop_time != other.stop_time or
+            self.bandwidth != other.bandwidth):
+            return False
+
+        # Src and Dst could be flipped. Same thing, just backwards.
+        return ((self.src_switch == other.src_switch and
+                 self.src_port == other.src_port and
+                 self.src_vlan == other.src_vlan and
+                 self.dst_switch == other.dst_switch and
+                 self.dst_port == other.dst_port and
+                 self.dst_vlan == other.dst_vlan) or
+                (self.src_switch == other.dst_switch and
+                 self.src_port == other.dst_port and
+                 self.src_vlan == other.dst_vlan and
+                 self.dst_switch == other.src_switch and
+                 self.dst_port == other.src_port and
+                 self.dst_vlan == other.src_vlan))
 
     @classmethod
     def check_syntax(cls, json_rule):
@@ -97,12 +129,18 @@ class L2TunnelPolicy(UserPolicy):
                 (dst_vlan > 4090)):
                 raise UserPolicyValueError("dst_vlan is out of range %d" %
                                            dst_vlan)
-
-        except e:
+        except Exception as e:
+            import os
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            lineno = exc_tb.tb_lineno
+            print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
+                                                 str(e), filename,lineno)
             raise
-            
+        
     def breakdown_rule(self, tm, ai):
         self.breakdown = []
+        self.resources = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
         # Get a path from the src_switch to the dst_switch form the topology
@@ -126,9 +164,36 @@ class L2TunnelPolicy(UserPolicy):
         self.intermediate_vlan = tm.find_vlan_on_path(self.fullpath)
         if self.intermediate_vlan == None:
             raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
-        tm.reserve_vlan_on_path(self.fullpath, self.intermediate_vlan)
-        tm.reserve_bw_on_path(self.fullpath, self.bandwidth)
 
+        # Add necessary resource
+        self.resources.append(VLANPathResource(self.fullpath,
+                                               self.intermediate_vlan))
+        self.resources.append(VLANPortResource(self.src_switch,
+                                               self.src_port,
+                                               self.src_vlan))
+        self.resources.append(VLANPortResource(self.dst_switch,
+                                               self.dst_port,
+                                               self.dst_vlan))
+        self.resources.append(BandwidthPathResource(self.fullpath,
+                                                    self.bandwidth))
+        self.resources.append(BandwidthPortResource(self.src_switch,
+                                                    self.src_port,
+                                                    self.bandwidth))
+        self.resources.append(BandwidthPortResource(self.dst_switch,
+                                                    self.dst_port,
+                                                    self.bandwidth))
+
+        # Fill out self.endpoints
+        self.endpoints = []
+        self.endpoints.append((self.src_switch,
+                               tm.get_switch_port_neighbor(self.src_switch,
+                                                           self.src_port),
+                               self.src_vlan))
+        self.endpoints.append((self.dst_switch,
+                               tm.get_switch_port_neighbor(self.dst_switch,
+                                                           self.dst_port),
+                               self.dst_vlan))
+        
         # Special case: Single node:
         if len(self.fullpath) == 1:
             if (self.src_switch != self.dst_switch):
@@ -148,7 +213,7 @@ class L2TunnelPolicy(UserPolicy):
             rule = VlanTunnelLCRule(switch_id, inport, outport, invlan, outvlan,
                                     True, bandwidth)
             bd.add_to_list_of_rules(rule)
-            self.breakdown.append(bd)
+            self.breakdown.append(bd)            
             return self.breakdown
 
         
@@ -224,6 +289,15 @@ class L2TunnelPolicy(UserPolicy):
         # Return the breakdown, now that we've finished.
         return self.breakdown
 
+    def _get_neighbor(self, topo, node, port):
+        ''' helper function that gets the name of the neighbor '''
+        for n in topo[node].keys():
+            if topo[node][n][node] == port:
+                return n
+
+        # This shouldn't happen...
+        return None
+
     
     def check_validity(self, tm, ai):
         #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
@@ -263,11 +337,12 @@ class L2TunnelPolicy(UserPolicy):
         ''' This is called before a rule is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
-        # Release VLAN and BW in use
-        tm.unreserve_vlan_on_path(self.fullpath, self.intermediate_vlan)
-        tm.unreserve_bw_on_path(self.fullpath, self.bandwidth)
-        
+        pass        
 
+    def get_endpoints(self):
+        return self.endpoints
 
+    def get_bandwidth(self):
+        return self.bandwidth
 
 

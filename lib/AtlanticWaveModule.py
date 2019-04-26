@@ -9,6 +9,8 @@
 from Singleton import Singleton
 import logging
 import dataset
+import os
+import sys
 from traceback import format_stack
 
 class AtlanticWaveModuleValueError(ValueError):
@@ -55,7 +57,7 @@ class AtlanticWaveModule(object):
         if logfilename != None:
             formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
             console = logging.StreamHandler()
-            console.setLevel(logging.WARNING)
+            console.setLevel(logging.DEBUG)
             console.setFormatter(formatter)
             logfile = logging.FileHandler(logfilename)
             logfile.setLevel(logging.DEBUG)
@@ -84,7 +86,16 @@ class AtlanticWaveModule(object):
             all_tb = all_tb + line
         self.dlogger.warning(all_tb)
 
-    def _initialize_db(self, db_filename, db_tables_tuples):
+    def exception_tb(self, e):
+        ''' Print out current error. '''
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        lineno = exc_tb.tb_lineno
+        self.dlogger.warning("Exception %s at %s:%d" % (str(e), filename,
+                                                        lineno))
+
+    def _initialize_db(self, db_filename, db_tables_tuples,
+                       print_table_on_load=False):
         # A lot of modules will need DB access for storing data, but some use a
         # DB for storing configuration information as well. This is *optional*
         # to use, which is why it's not part of __init__()
@@ -101,7 +112,15 @@ class AtlanticWaveModule(object):
             try:
                 self.logger.info("Trying to load %s from DB" % name)
                 t = self.db.load_table(table)
+                if print_table_on_load:
+                    entries = t.find()
+                    print "\n\n&&&&& ENTRIES in %s &&&&&" % name
+                    for e in entries:
+                        print "\n%s" % str(e)
+                    print "&&&&& END ENTRIES &&&&&\n\n"
+                    
                 setattr(self, name, t)
+                
             except:
                 # If load_table() fails, that's fine! It means that the
                 # table doesn't yet exist. So, create it.

@@ -47,6 +47,12 @@ class SDXPolicy(UserPolicy):
         # Anything specific here?
         pass
 
+    def __str__(self):
+        return "%s(%s,%s,%s,%s,%s)" % (self.get_policy_name(), self.start_time,
+                                       self.stop_time, self.switch,
+                                       self.matches, self.actions)
+
+
     @classmethod
     def check_syntax(cls, json_rule):
         try:
@@ -123,7 +129,14 @@ class SDXPolicy(UserPolicy):
                 # Same magic as above
                 action = SDXAction.lookup_action_type(a)(v)
                 actions.append(action)
-        except: raise
+        except Exception as e:
+            import os
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            lineno = exc_tb.tb_lineno
+            print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
+                                                 str(e), filename,lineno)
+            raise
 
     def check_validity(self, tm, ai):
         #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.

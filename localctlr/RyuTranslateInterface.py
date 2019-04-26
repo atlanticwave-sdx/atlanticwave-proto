@@ -133,7 +133,7 @@ class GotoTable(LCAction):
         to all the other LCActions. '''
     def __init__(self, table):
         self.table = table
-        super(GotoTable, self)._-init__("GotoTable")
+        super(GotoTable, self).__init__("GotoTable")
 
     def __str__(self):
         retstr = "%s:%s" % (self._name, self.table)
@@ -422,7 +422,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if config_count == 0:
             # Nothing configured, get configs from config file
             for entry in lcdata['switchinfo']:
-                dpid = str(entry['dpid'])
+                dpid = str(int(entry['dpid'],0)) # This is to normalize the DPID.
                 ic = entry['internalconfig']
                 ic['name'] = entry['name']
                 self._add_switch_internal_config_to_db(dpid, ic)
@@ -528,6 +528,18 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # For last table
         #   - Create a default drop rule (if necessary needed). Priority 0
+        for i in range(MAX_PORTS):
+            matches = [IN_PORT(i)]
+            actions = [Drop()]
+            priorty = PRIORITY_DEFAULT_PLUS_ONE
+            table = LASTTABLE
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+        # Catch-all for those not in the same port
         matches = []
         actions = [Drop()]
         priorty = PRIORITY_DEFAULT
@@ -606,8 +618,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Create Outbound Rule
         # There are two options here: Corsa or Non-Corsa. Non-Corsa is for
         # regular OpenFlow switches (such as OVS) and is more straight forward.
+        # NOTE: if bandwidth isn't being reserved, use non-Corsa path.
 
-        if internal_config['corsaurl'] == "":
+        if (internal_config['corsaurl'] == "" or
+            vlanrule.get_bandwidth() == 0):
             # Make the equivalent MatchActionLCRule, translate it, and use these
             # as the results. Easier translation!
             switch_id = 0  # This is unimportant:
@@ -683,7 +697,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 matches = [IN_PORT(vlanrule.get_outport()),
                            VLAN_VID(vlanrule.get_vlan_out())]
                 actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
-                           Forward(internal_config['corsa_bw_out'])]
+                           Forward(internal_config['corsabwout'])]
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
                                                              table,
@@ -831,7 +845,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         intermediate_vlan = mperule.get_intermediate_vlan()
 
         # Non-Corsa first
-        if internal_config['corsaurl'] == "":
+        # NOTE: if bandwidth isn't being reserved, use non-Corsa path.
+
+        if (internal_config['corsaurl'] == "" or
+            vlanrule.get_bandwidth() == 0):
             # Endpoint ports
             # - Translate VLANs on ingress on endpoint_table
             # - Install learning rules on intermediate VLAN on ingress on
@@ -925,10 +942,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #    See "Rule Needed Once", below, as to why this happens
                 #   - set metadata(endpoint)
                 #   - set VLAN tag to intermediate
-                matches = [METADATA(MD_L2M_TRANSLATE),
+                matches = [METADATA(MD_L2M_TRANSLATE, MD_L2M_MASK),
                            VLAN_VID(port)]
-                actions = [WriteMetadata(port),
-                           SetFields(VLAN_VID(Intermediate_vlan))]
+                actions = [WriteMetadata(port, MD_L2M_MASK),
+                           SetField(VLAN_VID(intermediate_vlan))]
                 priority = PRIORITY_L2MULTIPOINT_TRANSLATE
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
@@ -942,7 +959,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #   - match metadata(endpoint), vlan(intermediate)
                 #    - continue
                 #    - Forward to controller
-                matches = [METADATA(port),
+                matches = [METADATA(port, MD_L2M_MASK),
                            VLAN_VID(intermediate_vlan)]
                 actions = [Continue(), Forward(OFPP_CONTROLLER)]
                 priority = PRIORITY_L2MULTIPOINT_LEARNING
@@ -963,12 +980,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
             matches = [IN_PORT(internal_config['corsabwout']),
                        VLAN_VID(intermediate_vlan)]
             actions = [PopVLAN(),
-                       WriteMetadata(MD_L2M_TRANSLATE),
+                       WriteMetadata(MD_L2M_TRANSLATE, MD_L2M_MASK),
                        GotoTable(translate_table)]
             priority = PRIORITY_L2MULTIPOINT
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
-                                                         translate_table,
+                                                         endpoint_table,
                                                          of_cookie,
                                                          marule,
                                                          priority)
@@ -994,8 +1011,20 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 'path':'/meter/cir',
                                 'value':bandwidth},
                                {'op':'replace',
+                                'path':'/meter/cbs',
+                                'value':bandwidth},
+                               {'op':'replace',
                                 'path':'/meter/eir',
-                                'value':bandwidth}]
+                                'value':0},
+                               {'op':'replace',
+                                'path':'/meter/ebs',
+                                'value':0}]
+                              #[{'op':'replace',
+                              #  'path':'/meter/cir',
+                              #  'value':bandwidth},
+                              # {'op':'replace',
+                              #  'path':'/meter/eir',
+                              #  'value':bandwidth}]
                     valid_responses = [204]
 
                     print "Patching %s:%s" % (request_url, json)
@@ -1023,7 +1052,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
             for port in ports:
                 matches = []
                 if port in endpoint_ports:
-                    matches = [METADATA(port), VLAN_VID(intermediate_vlan)]
+                    matches = [METADATA(port, MD_L2M_MASK),
+                               VLAN_VID(intermediate_vlan)]
                 elif port in flooding_ports:
                     matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
                 actions = []
@@ -1043,7 +1073,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
                 if port in endpoint_ports:
-                    matches = [METADATA(port), 
+                    matches = [METADATA(port, MD_L2M_MASK), 
                                VLAN_VID(intermediate_vlan), 
                                ETH_DST('ff:ff:ff:ff:ff:ff')]
                 elif port in flooding_ports:
@@ -1245,7 +1275,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # separetely
             elif isinstance(action, WriteMetadata):
                 (value, mask) = action.get()
-                aa_results.append(parser.OFPInstructionWriteMetadata(value,
+                instructions.append(parser.OFPInstructionWriteMetadata(value,
                                                                      mask))
 
         # Are there any values in aa_results? If so, put them in APPLY_ACTIONS
@@ -1437,6 +1467,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             translate_table = SDXEGRESSRULETABLE
             flood_table = FORWARDINGTABLE
             learning_table = LEARNINGTABLE
+            switch_table = endpoint_table    # Used in some logs down below.
             self.logger.error("L2MultipointEndpo: %d,%d:%d:%s" % (
                 endpoint_table, flood_table,
                 of_cookie,
@@ -1450,6 +1481,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                                 sdx_rule)
             self._register_packet_in_cb(of_cookie,
                                         self.l2multipoint_unknown_source_cb)
+            # This is to keep some logs down below happy. L2MultipointEndpoints
+            # are weird, and the loggingisn't well suited.
+            switch_table = endpoint_table
+            
         elif isinstance(sdx_rule, L2MultipointLearnedDestinationLCRule):
             # Learning switch forwarding rules happen as a fallback at the end
             switch_table = FORWARDINGTABLE
@@ -1477,8 +1512,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         if switch_rules == None or switch_table == None:
             self.logger.error(
-                "switch_rules or switch_table is None for msg: %s" %
-                sdx_rules)
+                "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
+                 (sdx_rule, switch_rules, switch_table))
             #FIXME: This shouldn't happen...
             pass
         

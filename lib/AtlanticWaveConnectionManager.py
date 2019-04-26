@@ -118,13 +118,14 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
         self.clients.append(client_connection)
         self.listening_callback(client_connection)
         
-    def open_outbound_connection(self, ip, port):
+    def open_outbound_connection(self, host, port):
         ''' This opens an outbound connection to a given address. Returns a 
             Connection that can be used for sending or receiving. '''
         timeout = 1.0
 
         while True:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            ip = socket.gethostbyname(host)
 
             try:
                 self.logger.critical("Connecting to %s:%s" % (ip, port))

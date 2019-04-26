@@ -21,6 +21,7 @@ from RuleRegistry import *
 from TopologyManager import *
 from ValidityInspector import *
 from UserManager import *
+from SenseAPI import *
 
 # Known UserPolicies
 #FIXME: from shared.JsonUploadPolicy import *
@@ -117,6 +118,8 @@ class SDXController(AtlanticWaveModule):
 
         self.rapi = RestAPI(self.loggerid,
                             options.host, options.port, options.shib)
+        self.sapi = SenseAPI(self.loggerid,
+                             host=options.host, port=options.sport)
 
 
         # Install any rules switches will need. 
@@ -395,6 +398,9 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", dest="port", default=5000, 
                         action="store", type=int, 
                         help="Port number of web interface")
+    parser.add_argument("-e", "--sense", dest="sport", default=5001, 
+                        action="store", type=int, 
+                        help="Port number of SENSE interface")
     parser.add_argument("-l", "--lcport", dest="lcport", default=PORT,
                         action="store", type=int,
                         help="Port number for LCs to connect to")

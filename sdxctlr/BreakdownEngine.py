@@ -6,6 +6,8 @@ from lib.AtlanticWaveModule import AtlanticWaveModule
 from AuthorizationInspector import AuthorizationInspector
 from TopologyManager import TopologyManager
 
+CATCH_ERRORS = True
+
 class BreakdownEngine(AtlanticWaveModule):
     ''' The BreakdownEngine is one of the more complex pieces of the SDX 
         controller. It takes participant-level rules and breaks them down into 
@@ -27,10 +29,16 @@ class BreakdownEngine(AtlanticWaveModule):
             permissions determined by the AuthorizationInspector for proposed 
             rules (e.g., if a user cannot create paths through a particular LC, 
             reroute around that LC). '''
-        try:
+        if CATCH_ERRORS:
+            try:
+                tm = TopologyManager()
+                ai = AuthorizationInspector()
+                return rule.breakdown_rule(tm, ai)
+            except Exception as e:
+                self.dlogger.error("Caught Error \"%s\" for rule %s" %
+                                   (str(e),rule))
+                self.exception_tb(e)
+        else:
             tm = TopologyManager()
             ai = AuthorizationInspector()
             return rule.breakdown_rule(tm, ai)
-        except Exception as e:
-            raise
-    

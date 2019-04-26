@@ -124,9 +124,20 @@ class RuleManager(AtlanticWaveManager):
 
         print "Rule number = %d" % self.rule_number
 
+        last_modified = self.config_table.find_one(key='last_modified')
+        if last_modified == None:
+            now = datetime.now()
+            last_modified = now.strftime(rfc3339format)
+            self.config_table.insert({'key':'last_modified',
+                                      'value':last_modified})
+
         # Use these to send the rule to the Local Controller
         self.set_send_add_rule(send_user_rule_breakdown_add)
         self.set_send_rm_rule(send_user_rule_breakdown_remove)
+
+        # Setup callback lists:
+        self.install_callbacks = []
+        self.remove_callbacks = []
 
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
@@ -143,21 +154,28 @@ class RuleManager(AtlanticWaveManager):
             returns a reference to the rule (e.g., a tracking number) so that 
             more details can be retrieved in the future. '''
 
+        self.logger.info("add_rule: Beging with rule: %s" % rule)
+        self._update_last_modified_timestamp()
         try:
             breakdown = self._determine_breakdown(rule)
-        except Exception as e: raise
+        except Exception: raise
+        self.dlogger.info("add_rule: breakdowns %s" % breakdown)        
 
         # If everything passes, set the hash, cookie, and breakdown,
-        # put into database
+        # put into database and call install_callbacks
         rulehash = self._get_new_rule_number()
         rule.set_rule_hash(rulehash)
         for entry in breakdown:
             entry.set_cookie(rulehash)
         rule.set_breakdown(breakdown)
+        self.dlogger.info("add_rule: hash and cookies set to %s" % rulehash)
 
         rule.pre_add_callback(TopologyManager(), AuthorizationInspector())
         self._add_rule_to_db(rule)
-            
+
+        self._call_install_callbacks(rule)
+        self.dlogger.info("add_rule: Rule added to db: %s" % rule)
+
         return rulehash
         
 
@@ -179,6 +197,7 @@ class RuleManager(AtlanticWaveManager):
         if self.rule_table.find_one(hash=rule_hash) == None:
             raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
 
+        self._update_last_modified_timestamp()
         rule = pickle.loads(str(self.rule_table.find_one(hash=rule_hash)['rule']))
         authorized = None
         try:
@@ -191,6 +210,7 @@ class RuleManager(AtlanticWaveManager):
         rule.pre_remove_callback(TopologyManager(),
                                  AuthorizationInspector())
         self._rm_rule_from_db(rule)
+        self._call_remove_callbacks(rule)
 
     def remove_all_rules(self, user):
         ''' Removes all rules. Just an alias for repeatedly calling 
@@ -300,6 +320,50 @@ class RuleManager(AtlanticWaveManager):
 
         return None
 
+    def get_raw_rule(self, rule_hash):
+        ''' This will return the actual rule, for advanced manipulation. '''
+        table_entry = self.rule_table.find_one(hash=rule_hash)
+        if table_entry != None:
+            rule = pickle.loads(str(table_entry['rule']))
+            return rule
+        return None
+
+    def register_for_rule_updates(self, install_callback, remove_callback):
+        ''' Callback will be called when there is a rule update (install or 
+            delete. 
+            install_callback will be called when there's a new rule installed.
+            remove_callback will be called when a rule is removed.
+            Both callbacks can be the same function.
+        '''
+        if install_callback != None:
+            self.install_callbacks.append(install_callback)
+        if remove_callback != None:
+            self.remove_callbacks.append(remove_callback)
+
+    def unregister_for_topology_updates(self, install_callback=None,
+                                        remove_callback=None):
+        ''' Remove callback from list of callbacks to be called. '''
+        if install_callback != None:
+            try:
+                self.install_callbacks.remove(install_callback)
+            except:
+                raise RuleManagerError("Trying to remove %s, not in install_callbacks: %s" % (install_callback, self.install_callbacks))
+        if remove_callback != None:
+            try:
+                self.remove_callbacks.remove(remove_callback)
+            except:
+                raise RuleManagerError("Trying to remove %s, not in remove_callbacks: %s" % (remove_callback, self.remove_callbacks))
+
+    def _call_install_callbacks(self, rule):
+        ''' Call all install_callbacks. '''
+        for cb in self.install_callbacks:
+            cb(rule)
+
+    def _call_remove_callbacks(self, rule):
+        ''' Call all remove_callbacks. '''
+        for cb in self.remove_callbacks:
+            cb(rule)
+
     def _get_new_rule_number(self):
         ''' Returns a new rule number for use. For now, it's incrementing by 
             one, but this can be a security risk, so should be a random 
@@ -324,16 +388,23 @@ class RuleManager(AtlanticWaveManager):
         # Check if valid rule
         try:
             valid = ValidityInspector().is_valid_rule(rule)
-        except Exception as e: raise
+        except Exception as e:
+            self.dlogger.error("Caught Error for rule %s" % rule)
+            self.exception_tb(e)
+            raise
         
         if valid != True:
             raise RuleManagerValidationError(
                 "Rule cannot be validated: %s" % rule)
         
         # Get the breakdown of the rule
+        breakdown = BreakdownEngine().get_breakdown(rule)
         try:
             breakdown = BreakdownEngine().get_breakdown(rule)
-        except Exception as e: raise
+        except Exception as e:
+            self.dlogger.error("Caught Error for rule %s" % rule)
+            self.exception_tb(e)
+            raise
 
         if breakdown == None:
             raise RuleManagerBreakdownError(
@@ -342,7 +413,10 @@ class RuleManager(AtlanticWaveManager):
         # Check if the user is authorized to perform those actions.
         try:
             authorized = AuthorizationInspector().is_authorized(rule.username, rule)
-        except Exception as e: raise
+        except Exception as e:
+            self.dlogger.error("Caught Error for rule %s" % rule)
+            self.exception_tb(e)
+            raise
             
         if authorized != True:
             raise RuleManagerAuthorizationError(
@@ -350,10 +424,25 @@ class RuleManager(AtlanticWaveManager):
 
         return breakdown
 
+    def _update_last_modified_timestamp(self):
+        ''' Used for setting the last_modified timestamp. '''
+        now = datetime.now()
+        last_modified = now.strftime(rfc3339format)
+        self.config_table.update({'key':'last_modified',
+                                  'value':last_modified},
+                                 ['key'])
+
+    def get_last_modified_timestamp(self):
+        ''' Get the last_modified timestamp. '''
+        last_modified_dict = self.config_table.find_one(key='last_modified')
+        last_modified = last_modified_dict['value']
+        return last_modified
+
     def _add_rule_to_db(self, rule):
         ''' Adds rule to the database, which also include handling timed 
             insertion of rules. '''
-
+        self.dlogger.info("_add_rule_to_db: %s:%s" % (rule,
+                                                      rule.get_rule_hash()))
         state = INACTIVE_RULE
 
         # Should this be installed now? e.g., Is the begin time before *now*?
@@ -376,9 +465,11 @@ class RuleManager(AtlanticWaveManager):
 #        print "Remove  : %s" % remove_time
 
         if remove_time != None and now >= remove_time:
+            self.dlogger.info("  EXPIRED_RULE")
             state = EXPIRED_RULE
         elif now >= install_time: # implicitly, before remove_time
             state = ACTIVE_RULE
+            self.dlogger.info("  ACTIVE_RULE")
             self._install_rule(rule)
 
         # Push into DB.
@@ -394,6 +485,7 @@ class RuleManager(AtlanticWaveManager):
 
         # Restart install timer if it's a rule starting the future
         if state == INACTIVE_RULE:
+            self.dlogger.info("  INACTIVE_RULE")
             self._restart_install_timer()
 
 
@@ -436,10 +528,24 @@ class RuleManager(AtlanticWaveManager):
     def _install_rule(self, rule):
         ''' Helper function that installs a rule into the switch. '''
         try:
-            self.logger.debug("_install_rule")
+            self.dlogger.debug("_install_rule: %s:%d" % (rule,
+                                                         rule.get_rule_hash()))
+            self._reserve_resources(rule.get_resources())
             self._install_breakdown(rule.get_breakdown())
         except Exception as e: raise
         self._restart_remove_timer()
+
+    def _reserve_resources(self, resource_list):
+        ''' Helper function that reserves resources that a rule needs. '''
+        for resource in resource_list:
+            self.logger.debug("_reserve_resources: %s" % resource)
+            TopologyManager().reserve_resource(resource)
+        
+    def _unreserve_resources(self, resource_list):
+        ''' Helper function that unreserves resources that a rule needs. '''
+        for resource in resource_list:
+            self.logger.debug("_unreserve_resources: %s" % resource)
+            TopologyManager().unreserve_resource(resource)
 
     def _install_breakdown(self, breakdown):
         try:
@@ -460,6 +566,7 @@ class RuleManager(AtlanticWaveManager):
             if extendedbd != None:
                 for bd in extendedbd:
                     self.send_user_rm_rule(bd)
+            self._unreserve_resources(rule.get_resources())
         except Exception as e: raise
         
     def _rule_install_timer_cb(self):
