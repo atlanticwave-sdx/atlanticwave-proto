@@ -14,10 +14,9 @@
 ####################
 
 from ryu.base import app_manager
-from ryu.controller import dpset
 from ryu.controller import ofp_event
-from ryu.controller import handler
-from ryu.ofproto import ofproto_v1_2
+from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
+from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ether
 from ryu.ofproto import inet
 from ryu.lib import mac
@@ -34,6 +33,7 @@ import array
 import netaddr
 
 LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 class ArpSender(app_manager.RyuApp):
 
@@ -42,26 +42,27 @@ class ArpSender(app_manager.RyuApp):
     OUTPUT_PORT = 1    #OF Port number
 
     # NOT USER CONFIGURATION 
-    _CONTEXTS = {'dpset': dpset.DPSet}
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
-    ZERO_MAC = mac.haddr_to_bin('00:00:00:00:00:00')
-    BROADCAST_MAC = mac.haddr_to_bin('ff:ff:ff:ff:ff:ff')
-    RYU_MAC = mac.haddr_to_bin('fe:ee:ee:ee:ee:ef')
-    HOST_MAC = mac.haddr_to_bin('00:00:00:00:00:01')
+    ZERO_MAC =      '00:00:00:00:00:00'
+    BROADCAST_MAC = 'ff:ff:ff:ff:ff:ff'
+    #RYU_MAC =       mac.haddr_to_bin('fe:ee:ee:ee:ee:ef')
+    RYU_MAC =       '01:02:03:04:05:06'
+    HOST_MAC =      '00:00:00:00:00:01'
     RYU_IP = int(netaddr.IPAddress('10.0.0.100'))
     HOST_IP = int(netaddr.IPAddress('10.0.0.1'))
 
     def __init__(self, *args, **kwargs):
-        super(RunTestMininet, self).__init__(*args, **kwargs)
+        super(ArpSender, self).__init__(*args, **kwargs)
+        LOG.debug("ArpSender - INIT COMPLETE")
 
     def _arp_thread(self, interval, dp):
         count = 0
-        while(interval > 0)
+        while(interval > 0):
             sleep(interval)
             pkt = self._arp_request()
             LOG.debug("--- send Pkt: ARP_REQUEST %d" % count)
-            self._send_msg(dp, OUTPUT_PORT, pkt)
+            self._send_msg(dp, self.OUTPUT_PORT, pkt)
             count += 1
 
 
@@ -160,7 +161,7 @@ class ArpSender(app_manager.RyuApp):
         p = self._build_echo(icmp.ICMP_ECHO_REPLY, echo)
         return p.data
 
-    @handler.set_ev_cls(ofp_event.EventOFPPacketIn, handler.MAIN_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         msg = ev.msg
         dp = msg.datapath
@@ -205,13 +206,15 @@ class ArpSender(app_manager.RyuApp):
             elif p_icmp.type == icmp.ICMP_ECHO_REPLY:
                 LOG.debug("--- PacketIn: Echo_Reply: %s->%s", src, dst)
 
-    @handler.set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
-    def handler_datapath(self, ev):
-        if ev.enter:
-            dp = ev.dp
+#    @handler.set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    def switch_features_handler(self, ev):
+        LOG.debug("Handling new DP")
+        dp = ev.msg.datapath
+        LOG.debug("new DP %s" % dp.id)
 
-            # Start sender thread
-            self.arp_thread = Thread(target=self._arp_thread,
-                                     args=(ARP_INTERVAL, dp))
-            self.arp_thread.daemon = True
-            self.arp_thread.start()
+        # Start sender thread
+        self.arp_thread = Thread(target=self._arp_thread,
+                                 args=(self.ARP_INTERVAL, dp))
+        self.arp_thread.daemon = True
+        self.arp_thread.start()
