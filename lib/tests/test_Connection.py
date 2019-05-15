@@ -113,7 +113,7 @@ class SendTest(unittest.TestCase):
                 
     def test_send(self):
         self.SendingSocket.send(self.object_to_send)
-        sleep(0.1 )  # Rather than messing about with locks.
+        sleep(0.25 )  # Rather than messing about with locks.
         self.failUnlessEqual(self.object_received, self.object_to_send)
 
 
@@ -187,7 +187,7 @@ class RecvNonBlockingTest(unittest.TestCase):
     def test_blocking_receive(self):
         self.ReceivingConnection.register_receive_callback(self.receiving_callback)
         self.ReceivingConnection.start_receive_thread()
-        sleep(0.1) # Rather than messing about with locks.
+        sleep(0.25) # Rather than messing about with locks.
         self.failUnlessEqual(self.object_received, self.object_to_send)
 
     def receiving_callback(self, data):
@@ -221,7 +221,7 @@ class ValidSelectTest(unittest.TestCase):
         self.SendingSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.SendingSock.connect((self.ip, self.port))
 
-        sleep(0.1)
+        sleep(0.25)
         
         data_raw = pickle.dumps(self.object_to_send)
         self.SendingSock.sendall(struct.pack('>i', len(data_raw))+data_raw)

@@ -12,11 +12,30 @@ from lib.AtlanticWaveModule import *
 class InitTest(unittest.TestCase):
     def test_singleton(self):
         pass
+    
+class DefaultLogSetupTest(unittest.TestCase):
+    def setUp(self):
+        self.logfilename = "logname.log"
+        #Debug log file name uses the defaults
 
+    def test_log_setup(self):
+         # Initialize
+        module = AtlanticWaveModule(__name__,
+                                    self.logfilename)
+
+        # Check Logfile
+        with LogCapture() as l:
+            module.logger.warning("Test1")
+            module.dlogger.error("Test2")
+
+            l.check((__name__, 'WARNING', "Test1"),
+                    ("debug."+__name__, 'ERROR', "Test2"))       
+        del module
+        
 class LogSetupTest(unittest.TestCase):
     def setUp(self):
-        self.logfilename = "/Users/sdonovan/ownCloud/2019-summer/dev/lib/tests/logname.log"
-        self.debuglogfilename = "/Users/sdonovan/ownCloud/2019-summer/dev/lib/tests/debuglogname.log"
+        self.logfilename = "logname.log"
+        self.debuglogfilename = "debuglogname.log"
 
         #from time import sleep
         #sleep(10)
@@ -28,7 +47,7 @@ class LogSetupTest(unittest.TestCase):
             os.remove(self.debuglogfilename)
         
 
-    def atearDown(self):
+    def tearDown(self):
         # If it exists, delete log file
         if (os.path.isfile(self.logfilename)):
             os.remove(self.logfilename)
@@ -49,7 +68,7 @@ class LogSetupTest(unittest.TestCase):
 
             l.check((__name__, 'WARNING', "Test1"),
                     ("debug."+__name__, 'ERROR', "Test2"))
-
+        del module
 
     def test_dlogger_tb_LogCapture(self):
         try:
@@ -62,8 +81,9 @@ class LogSetupTest(unittest.TestCase):
                                             self.debuglogfilename)
 
                 module.dlogger_tb()
-
+                
                 self.assertEquals(("Traceback: id: " in str(l)), True)
+                del module
 
     def test_exception_tb_LogCapture(self):
         try:
@@ -77,6 +97,7 @@ class LogSetupTest(unittest.TestCase):
                 module.exception_tb(e)
 
                 self.assertEquals(("Exception " in str(l)), True)
+                del module
 
     def exception_thrower(self):
         # Throw an exception to be caught.
@@ -115,46 +136,6 @@ class DBSetupTest(unittest.TestCase):
             os.remove(self.test_bad_db)
 
             
-    def run_db_test(self, key, value, db_location=":memory:"):
-        module = AtlanticWaveModule(__name__,
-                                    self.logfilename,
-                                    self.debuglogfilename)
-    
-        # Create a new DB        
-        module._initialize_db(db_location,
-                              [('key_table','keys')])
-        keys = module.key_table.find()
-        count = 0
-        for k in keys:
-            count += 1
-        self.assertEqual(count, 0)
-        
-        # install new line
-        module.key_table.insert({"key": key,
-                                 "value": value})
-        
-        # Delete example module
-        del module
-        
-        # Reconnect to DB
-        module2 = AtlanticWaveModule(__name__,
-                                     self.logfilename,
-                                     self.debuglogfilename)
-    
-        module2._initialize_db(db_location,
-                               [('key_table','keys')])
-        keys = module2.key_table.find()
-        count = 0
-        for k in keys:
-            count += 1
-        self.assertEqual(count, 1)
-        
-        # Check value
-        entry = module2.key_table.find_one()
-        self.assertNotEqual(entry, None)
-        self.assertEqual(entry['key'], key)
-        self.assertEqual(entry['value'], value)
-        
     
     def test_good_db_setup_in_memory(self):
         key = 'a'
@@ -166,7 +147,8 @@ class DBSetupTest(unittest.TestCase):
     
         # Create a new DB        
         module._initialize_db(db_location,
-                              [('key_table','keys')])
+                              [('key_table','keys')],
+                              True)
         keys = module.key_table.find()
         count = 0
         for k in keys:
@@ -193,6 +175,7 @@ class DBSetupTest(unittest.TestCase):
             count += 1
         # DB should be empty: it's in-memory and not persistant.
         self.assertEqual(count, 0)
+        del module2
         
         
         
@@ -240,7 +223,10 @@ class DBSetupTest(unittest.TestCase):
         self.assertNotEqual(entry, None)
         self.assertEqual(entry['key'], key)
         self.assertEqual(entry['value'], value)
+        del module2
 
+
+                            
         
 if __name__ == '__main__':
     unittest.main()

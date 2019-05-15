@@ -37,7 +37,7 @@ class OpenListeningPortTest(unittest.TestCase):
         self.SendThread.daemon = True
         self.SendThread.start()
         
-        sleep(0.1) # Rather than messing about with locks.
+        sleep(0.25) # Rather than messing about with locks.
         self.failUnlessEqual(self.object_received, self.object_to_send)
 
     def listening_thread(self):
@@ -128,6 +128,10 @@ class OpenSendingText(unittest.TestCase):
             # Clean up the connection
             connection.close()
 
+class FailureTests(unittest.TestCase):
+    def test_connection_type_failure(self):
+        self.failUnlessRaises(TypeError, AtlanticWaveConnectionManager,
+                              __name__, unittest.TestCase)
 
         
 if __name__ == '__main__':
