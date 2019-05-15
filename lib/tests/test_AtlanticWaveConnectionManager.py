@@ -6,13 +6,15 @@
 import unittest
 import threading
 from time import sleep
-from lib.ConnectionManager import *
+from lib.AtlanticWaveConnectionManager import *
 from lib.Connection import *
+
+loggerid = "ConnectionManagerTest"
 
 class InitTest(unittest.TestCase):
     def test_singleton(self):
-        firstManager = ConnectionManager()
-        secondManager = ConnectionManager()
+        firstManager =  AtlanticWaveConnectionManager(loggerid)
+        secondManager = AtlanticWaveConnectionManager(loggerid)
 
         self.failUnless(firstManager is secondManager)
 
@@ -20,7 +22,7 @@ class InitTest(unittest.TestCase):
 
 class OpenListeningPortTest(unittest.TestCase):
     def setUp(self):
-        self.manager = ConnectionManager()
+        self.manager = AtlanticWaveConnectionManager(loggerid)
         self.ip = "127.0.0.1"
         self.port = 5560
         self.object_to_send = {'a':1, 'b':2, 'c':{'x':7, 'y':8, 'z':9}}
@@ -59,7 +61,7 @@ class OpenListeningPortTest(unittest.TestCase):
 
 class OpenSendingText(unittest.TestCase):
     def setUp(self):
-        self.manager = ConnectionManager()
+        self.manager = AtlanticWaveConnectionManager(loggerid)
         self.ip = "127.0.0.1"
         self.port = 5561
         self.object_to_send = {'a':1, 'b':2, 'c':{'x':7, 'y':8, 'z':9}}
@@ -126,8 +128,6 @@ class OpenSendingText(unittest.TestCase):
             # Clean up the connection
             connection.close()
 
-
-        
 
         
 if __name__ == '__main__':

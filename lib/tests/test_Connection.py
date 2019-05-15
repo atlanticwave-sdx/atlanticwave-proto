@@ -1,7 +1,7 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
-# Unit tests for shared.Connection module.
+# Unit tests for lib.Connection module.
 
 import unittest
 import socket
@@ -233,7 +233,7 @@ class ValidSelectTest(unittest.TestCase):
         wlist = []
         xlist = rlist
 
-        readable, writable, exceptional = select(rlist, wlist, xlist, 2)
+        readable, writable, exceptional = select(rlist, wlist, xlist, 2.0)
 
         self.failIf(readable == [])
 
