@@ -32,7 +32,9 @@ class OpenListeningPortTest(unittest.TestCase):
         self.ListeningThread = threading.Thread(target=self.listening_thread)
         self.ListeningThread.daemon = True
         self.ListeningThread.start()
-        
+
+        sleep(0.25)
+                
         self.SendThread = threading.Thread(target=self.sending_thread)
         self.SendThread.daemon = True
         self.SendThread.start()
@@ -53,6 +55,7 @@ class OpenListeningPortTest(unittest.TestCase):
         self.SendingSock.close()
 
     def receiving_thread(self, cxn):
+        print "Recieving Conne cction NEW! %s" % str(cxn)
         self.ReceivingConnection = cxn
         data = self.ReceivingConnection.recv()
         self.object_received = data
