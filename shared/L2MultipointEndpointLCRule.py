@@ -44,7 +44,8 @@ class L2MultipointEndpointLCRule(LCRule):
                                   (port, type(port)))
         if type(endpoint_ports_and_vlans) != list:
             raise LCRuleTypeError("endpoint_ports_and_vlans is not a list: %s, %s" % 
-                                  (edgeport, type(edgeport)))
+                                  (endpoint_ports_and_vlans,
+                                   type(endpoint_ports_and_vlans)))
         for p_and_v in endpoint_ports_and_vlans:
             if type(p_and_v) != tuple:
                 raise LCRuleTypeError("Port and VLAN in endpoint_ports_and_vlans is not a tuple: %s, %s" %
@@ -68,9 +69,9 @@ class L2MultipointEndpointLCRule(LCRule):
                                       (intermediate_vlan,
                                        type(intermediate_vlan)))
         
-        if not (type(bandwidth) == None or type(bandwidth) == int):
+        if not (type(bandwidth) == type(None) or type(bandwidth) == int):
             raise LCRuleTypeError("bandwidth is not None or an int: %s, %s" %
-                                      (bandwidth, type(bandwith)))
+                                      (bandwidth, type(bandwidth)))
                 
         # Save off inputs.
         self.flooding_ports = flooding_ports
@@ -79,11 +80,21 @@ class L2MultipointEndpointLCRule(LCRule):
         self.bandwidth = bandwidth
         
     def __str__(self):
-        retstr = ("EdgePortLCRule: switch %s, %s:(%s), (%s), %s, %s" %
+        retstr = ("L2MultipointEndpointLCRule: switch %s, %s:(%s), (%s), %s, %s" %
                   (self.switch_id, self.cookie, self.flooding_ports,
                    self.endpoint_ports_and_vlans, self.intermediate_vlan,
                    self.bandwidth))
         return retstr
+
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.get_switch_id() == other.get_switch_id() and
+                self.get_cookie() == other.get_cookie() and
+                self.get_flooding_ports() == other.get_flooding_ports() and
+                self.get_endpoint_ports_and_vlans() == other.get_endpoint_ports_and_vlans() and
+                self.get_intermediate_vlan() == other.get_intermediate_vlan() and
+                self.get_bandwidth() == other.get_bandwidth())            
+                
 
     def get_flooding_ports(self):
         return self.flooding_ports

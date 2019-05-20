@@ -44,10 +44,18 @@ class L2MultipointFloodLCRule(LCRule):
         self.intermediate_vlan = intermediate_vlan
         
     def __str__(self):
-        retstr = ("EdgePortLCRule: switch %s, %s:(%s),  %s" %
+        retstr = ("L2MultipointFloodLCRule: switch %s, %s:(%s), %s" %
                   (self.switch_id, self.cookie, self.flooding_ports,
                    self.intermediate_vlan))
         return retstr
+
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.get_switch_id() == other.get_switch_id() and
+                self.get_cookie() == other.get_cookie() and
+                self.get_flooding_ports() == other.get_flooding_ports() and
+                self.get_intermediate_vlan() == other.get_intermediate_vlan())
+        
 
     def get_flooding_ports(self):
         return self.flooding_ports

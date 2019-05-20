@@ -28,10 +28,15 @@ class PathResource(object):
         return retstr
 
     def __eq__(self, other):
-        if type(other) != type(self):
-            return False
-        return (self.location, self.value)
+        return (type(self) == type(other) and
+                self.get_location() == other.get_location() and
+                self.get_value() == self.get_value())
+    
+    def get_location(self):
+        return self.location
 
+    def get_value(self):
+        return self.value
 
         
 class VLANPortResource(PathResource):

@@ -134,7 +134,7 @@ class SDXPolicy(UserPolicy):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
-            print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
+            print "%s: Exception %s at %s:%d" % (cls.get_policy_name(),
                                                  str(e), filename,lineno)
             raise
 
@@ -147,7 +147,8 @@ class SDXPolicy(UserPolicy):
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
         if jsonstring not in json_rule.keys():
-            raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))
+            raise UserPolicyValueError("%s value %s not in entry:\n    %s" %
+                                       ('rules', jsonstring, json_rule))
         
         self.start_time = json_rule[jsonstring]['starttime']
         self.stop_time = json_rule[jsonstring]['endtime']

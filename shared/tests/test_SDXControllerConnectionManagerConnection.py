@@ -10,17 +10,34 @@ from time import sleep
 from shared.SDXControllerConnectionManagerConnection import *
 from lib.Connection import select as cxnselect
 
+class dummy_rule(object):
+    def __init__(self, name, switch_id):
+        self.name = name
+        self.switch_id = switch_id
+
+    def get_switch_id(self):
+        return self.switch_id
+                 
+
 def get_initial_rules_5(dummy):
     print "### Getting rules for %s" % dummy
-    return ['rule1',
-            'rule2',
-            'rule3',
-            'rule4',
-            'rule5']
+    return [dummy_rule('rule1', 1),
+            dummy_rule('rule2', 2),
+            dummy_rule('rule3', 3),
+            dummy_rule('rule4', 4),
+            dummy_rule('rule5', 5)]
 def get_initial_rules_0(dummy):
     print "### Getting rules for %s" % dummy
     return []
+def set_name_1(dummy):
+    print "### Setting name to %s" % dummy
 
+def new_callback(dummy):
+    print "New Callback %s" % dummy
+    
+def del_callback(dummy):
+    print "Del Callback %s" % dummy
+    
 def install_rule(rule):
     print "--- install_rule(%s)" %rule
 
@@ -165,7 +182,10 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
 
         self.ServerCxn = SDXControllerConnection(self.ip, self.port,
                                                         sock)
-        self.ServerCxn.transition_to_main_phase_SDX(get_initial_rules_5)
+        self.ServerCxn.set_new_callback(new_callback)
+        self.ServerCxn.set_delete_callback(del_callback)
+        self.ServerCxn.transition_to_main_phase_SDX(set_name_1,
+                                                    get_initial_rules_5)
         
 
     def test_connection_establishment(self):
@@ -175,6 +195,8 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
         self.ClientSocket.connect((self.ip, self.port))
         self.ClientCxn = SDXControllerConnection(self.ip, self.port,
                                                         self.ClientSocket)
+        self.ClientCxn.set_new_callback(new_callback)
+        self.ClientCxn.set_delete_callback(del_callback)
         self.ClientCxn.transition_to_main_phase_LC('TESTING', "asdfjkl;",
                                                     install_rule)
         print "pre close"
@@ -214,7 +236,10 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
 
         self.ServerCxn = SDXControllerConnection(self.ip, self.port,
                                                         sock)
-        self.ServerCxn.transition_to_main_phase_SDX(get_initial_rules_0)
+        self.ServerCxn.set_new_callback(new_callback)
+        self.ServerCxn.set_delete_callback(del_callback)
+        self.ServerCxn.transition_to_main_phase_SDX(set_name_1,
+                                                    get_initial_rules_0)
         
 
     def test_connection_establishment_empty(self):
@@ -224,6 +249,8 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
         self.ClientSocket.connect((self.ip, self.port))
         self.ClientCxn = SDXControllerConnection(self.ip, self.port,
                                                         self.ClientSocket)
+        self.ClientCxn.set_new_callback(new_callback)
+        self.ClientCxn.set_delete_callback(del_callback)
         self.ClientCxn.transition_to_main_phase_LC('TESTING', "asdfjkl;",
                                                     install_rule)
         print "pre close"
@@ -254,6 +281,8 @@ class SDXConnectionHeartbeatTest(unittest.TestCase):
         self.ClientSocket.connect((self.ip, self.port))
         self.ClientCxn = SDXControllerConnection(self.ip, self.port,
                                                  self.ClientSocket)
+        self.ClientCxn.set_new_callback(new_callback)
+        self.ClientCxn.set_delete_callback(del_callback)
         self.ClientCxn.transition_to_main_phase_LC('TESTING', "qwerJ:LK",
                                                    install_rule)
 
@@ -271,7 +300,10 @@ class SDXConnectionHeartbeatTest(unittest.TestCase):
 
         self.ServerCxn = SDXControllerConnection(self.ip, self.port,
                                                         sock)
-        self.ServerCxn.transition_to_main_phase_SDX(get_initial_rules_5)
+        self.ServerCxn.set_new_callback(new_callback)
+        self.ServerCxn.set_delete_callback(del_callback)
+        self.ServerCxn.transition_to_main_phase_SDX(set_name_1,
+                                                    get_initial_rules_5)
 
 
         cxns = [self.ServerCxn, self.ClientCxn]

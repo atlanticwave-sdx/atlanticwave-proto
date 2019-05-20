@@ -34,3 +34,9 @@ class LCRule(object):
     def set_cookie(self, cookie):
         # used by the RuleManager for internal tracking.
         self.cookie = cookie
+
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.get_switch_id() == other.get_switch_id() and
+                self.get_cookie() == other.get_cookie())
+    

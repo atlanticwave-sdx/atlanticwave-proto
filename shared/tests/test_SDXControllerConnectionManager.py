@@ -10,6 +10,8 @@ from time import sleep
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
 
+dummy_log = "Testing"
+
 def get_initial_rules_5(dummy):
     print "### Getting rules for %s" % dummy
     return ['rule1',
@@ -21,13 +23,22 @@ def get_initial_rules_0(dummy):
     print "### Getting rules for %s" % dummy
     return []
 
+def set_name_1(dummy):
+    print "### Setting name to %s" % dummy
+
+def new_callback(dummy):
+    print "New Callback %s" % dummy
+    
+def del_callback(dummy):
+    print "Del Callback %s" % dummy
+    
 def install_rule(rule):
     print "--- install_rule(%s)" %rule
 
 class InitTest(unittest.TestCase):
     def test_singleton(self):
-        firstManager = SDXControllerConnectionManager()
-        secondManager = SDXControllerConnectionManager()
+        firstManager = SDXControllerConnectionManager(dummy_log)
+        secondManager = SDXControllerConnectionManager(dummy_log)
 
         self.failUnless(firstManager is secondManager)
 
@@ -50,7 +61,8 @@ class OpenListeningPortTest(unittest.TestCase):
 
     def receiving_thread(self, cxn):
         self.servercxn = cxn
-        self.servercxn.transition_to_main_phase_SDX(get_initial_rules_0)
+        self.servercxn.transition_to_main_phase_SDX(set_name_1,
+                                                    get_initial_rules_0)
         self.serverstate = self.servercxn.get_state()
 
 
@@ -60,6 +72,8 @@ class OpenListeningPortTest(unittest.TestCase):
         client_sock.connect((self.ip, self.port))
         self.clientcxn = SDXControllerConnection(self.ip, self.port,
                                                  client_sock)
+        self.clientcxn.set_new_callback(new_callback)
+        self.clientcxn.set_delete_callback(del_callback)
 
         self.clientcxn.transition_to_main_phase_LC('TESTING', 'asdfjkl;',
                                                    install_rule)
@@ -67,12 +81,14 @@ class OpenListeningPortTest(unittest.TestCase):
 
                                 
     def test_open_listening_port(self):
-        self.manager = SDXControllerConnectionManager()
+        self.manager = SDXControllerConnectionManager(dummy_log)
 
         self.ListeningThread = threading.Thread(target=self.listening_thread)
         self.ListeningThread.daemon = True
         self.ListeningThread.start()
 
+        sleep(0.25)
+        
         self.SendThread = threading.Thread(target=self.sending_thread)
         self.SendThread.daemon = True
         self.SendThread.start()
@@ -89,6 +105,8 @@ class OpenSendPortTest(unittest.TestCase):
         self.manager = None
         self.clientcxn = None
         self.servercxn = None
+        self.clientstate = None
+        self.serverstate = None
 
     def tearDown(self):
         if self.clientcxn != None:
@@ -105,7 +123,10 @@ class OpenSendPortTest(unittest.TestCase):
 
         sock, client_address = self.receiving_socket.accept()
         self.servercxn = SDXControllerConnection(self.ip, self.port, sock)
-        self.servercxn.transition_to_main_phase_SDX(get_initial_rules_0)
+        self.servercxn.set_new_callback(new_callback)
+        self.servercxn.set_delete_callback(del_callback)
+        self.servercxn.transition_to_main_phase_SDX(set_name_1,
+                                                    get_initial_rules_0)
         self.serverstate = self.servercxn.get_state()
 
 
@@ -119,12 +140,14 @@ class OpenSendPortTest(unittest.TestCase):
 
 
     def test_open_send_port(self):
-        self.manager = SDXControllerConnectionManager()
+        self.manager = SDXControllerConnectionManager(dummy_log)
 
         self.ListeningThread = threading.Thread(target=self.listening_thread)
         self.ListeningThread.daemon = True
         self.ListeningThread.start()
 
+        sleep(0.25)
+        
         self.SendThread = threading.Thread(target=self.sending_thread)
         self.SendThread.daemon = True
         self.SendThread.start()
