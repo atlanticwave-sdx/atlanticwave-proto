@@ -70,7 +70,9 @@ class UserManager(AtlanticWaveManager):
     def get_user(self, user):
         self.logger.info("getting user: {}".format(user))
         user = self.user_table.find_one(username=user)
-        return self._convert_db_user(user)
+        if None != user:
+            return self._convert_db_user(user)
+        return None
 
     def get_users(self):
         self.logger.info("getting all users") 

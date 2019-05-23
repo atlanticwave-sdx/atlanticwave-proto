@@ -17,45 +17,50 @@ STEINER_LOOP_CONFIG_FILE = 'test_manifests/steiner-loop.manifest'
 
 class SingletonTest(unittest.TestCase):
     def test_singleton(self):
-        firstManager = TopologyManager.instance(CONFIG_FILE) 
-        secondManager = TopologyManager.instance(CONFIG_FILE)
+        firstManager = TopologyManager(topology_file=CONFIG_FILE) 
+        secondManager = TopologyManager(topology_file=CONFIG_FILE)
 
         self.failUnless(firstManager is secondManager)
 
 class VerifyTopoTest(unittest.TestCase):
+    def setUp(self):
+        man = TopologyManager(topology_file=CONFIG_FILE)
+        man.topo = nx.Graph()
+        man._import_topology(CONFIG_FILE)
+        
     def test_get_topo(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
         self.failUnless(isinstance(topo, nx.Graph))
         
     def test_simple_topo(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
-        # Should contain: atl-switch, mia-switch, Georgia Tech, FIU
-        expected_nodes = ['atl-switch', 'mia-switch', 'gru-switch',
-                          'atlh1', 'atlh2', 'atldtn',
-                          'miah1', 'miah2',
-                          'gruh1', 'gruh2', 'grudtn'
-                          ]
+        expected_nodes = ['br1', 'br2', 'br3', 'br4',
+                          'br1dtn1', 'br1dtn2',
+                          'br2dtn1', 'br2dtn2', 'br2dtn3',
+                          'br3dtn1',
+                          'br4dtn1', 'br4dtn2',
+                          'oneLC'] # The LC counts as a node, just in case.
         nodes = topo.nodes()
-        self.failUnless(len(nodes) == len(expected_nodes))
+        #print "\nNODES : %s" % nodes
+        #print "EXPECT: %s" % expected_nodes
+        self.assertEquals(len(nodes), len(expected_nodes))
         for node in expected_nodes:
             self.failUnless(node in nodes)
 
         #FIXME: Need to look at details! In the future, anyway.
 
         # Should contain
-        expected_edges = [('atl-switch', 'mia-switch'),
-                          ('mia-switch', 'gru-switch'),
-                          ('atl-switch', 'atlh1'),
-                          ('atl-switch', 'atlh2'),
-                          ('atl-switch', 'atldtn'),
-                          ('mia-switch', 'miah1'),
-                          ('mia-switch', 'miah2'),
-                          ('gru-switch', 'gruh1'),
-                          ('gru-switch', 'gruh2'),
-                          ('gru-switch', 'grudtn')]
+        expected_edges = [
+            ('br1', 'br1dtn1'), ('br1', 'br1dtn2'),
+            ('br2', 'br2dtn1'), ('br2', 'br2dtn2'), ('br2', 'br2dtn3'),
+            ('br3', 'br3dtn1'),
+            ('br4', 'br4dtn1'), ('br4', 'br4dtn2'),
+            ('br1', 'br2'), ('br1', 'br3'),
+            ('br2', 'br3'),
+            ('br3', 'br4')]
         edges = topo.edges()
 
         self.failUnless(len(edges) == len(expected_edges))
@@ -74,96 +79,107 @@ class VerifyTopoTest(unittest.TestCase):
 
 
 class VLANTopoTest(unittest.TestCase):
+    def setUp(self):
+        man = TopologyManager(topology_file=CONFIG_FILE)
+        man.topo = nx.Graph()
+        man._import_topology(CONFIG_FILE)
+        
     
     def test_path_empty(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br1", target="br4")
         
         # It should return 1
         vlan = man.find_vlan_on_path(path)
         self.failUnlessEqual(vlan, 1)
 
     def test_path_with_node_set(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br3")
 
         # Should return 1
         vlan = man.find_vlan_on_path(path)
-        self.failUnlessEqual(vlan, 1)
+        self.assertEqual(vlan, 1)
 
         # Add VLAN 1 to one of the points on the path
-        man.topo.node["mia-switch"]['vlans_in_use'].append(1)
+        man.topo.node["br4"]['vlans_in_use'].append(1)
         
         # Should return 2
         vlan = man.find_vlan_on_path(path)
-        self.failUnlessEqual(vlan, 2)
+        self.assertEqual(vlan, 2)
+        man.topo.node["br4"]['vlans_in_use'].remove(1)
 
     def test_path_with_edge_set(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br2", target="br4")
 
         # Should return 1
         vlan = man.find_vlan_on_path(path)
-        self.failUnlessEqual(vlan, 1)
+        self.assertEqual(vlan, 1)
         
         # Add VLAN 1 to one of the points on the path
-        man.topo.edge["mia-switch"]["atl-switch"]['vlans_in_use'].append(1)
+        print "\n%s" % man.topo.edge['br3']['br4']
+        man.topo.edge["br3"]["br4"]['vlans_in_use'].append(1)
+        print man.topo.edge['br3']['br4']
         
         # Should return 2
         vlan = man.find_vlan_on_path(path)
-        self.failUnlessEqual(vlan, 2)
+        self.assertEqual(vlan, 2)
+        man.topo.edge["br3"]["br4"]['vlans_in_use'].remove(1)
 
     def test_path_node_filled(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br3")
 
         # Should return 1
         vlan = man.find_vlan_on_path(path)
         self.failUnlessEqual(vlan, 1)
         
         # Add VLANs 1-4090 to one of the points on the path        
-        man.topo.node["mia-switch"]['vlans_in_use'] = range(1,4090)
+        man.topo.node["br4"]['vlans_in_use'] = range(1,4090)
         
         # Should return None
         vlan = man.find_vlan_on_path(path)
         self.failUnlessEqual(vlan, None)
+        man.topo.node["br4"]['vlans_in_use'] = []
 
 
     def test_path_edge_filled(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br1")
 
         # Should return 1
         vlan = man.find_vlan_on_path(path)
         self.failUnlessEqual(vlan, 1)
         
         # Add VLANs 1-4090 to one of the points on the path        
-        man.topo.edge["mia-switch"]["atl-switch"]['vlans_in_use'] = range(1,4090)
+        man.topo.edge["br4"]["br3"]['vlans_in_use'] = range(1,4090)
         # Should return None
         vlan = man.find_vlan_on_path(path)
         self.failUnlessEqual(vlan, None)
+        man.topo.edge["br4"]["br3"]['vlans_in_use'] = []
 
     def test_reserve_on_empty(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br1")
 
         # Reserve path on VLAN 1
         man.reserve_vlan_on_path(path, 1)
@@ -171,14 +187,14 @@ class VLANTopoTest(unittest.TestCase):
 
     def test_reserve_on_invalid(self):
         # Get a path
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br1")
         
         # set VLAN 1 on one of the points on the path
-        man.topo.edge["mia-switch"]["atl-switch"]['vlans_in_use'].append(1)
+        man.topo.edge["br4"]["br3"]['vlans_in_use'].append(1)
 
         # Reserve path on VLAN 1
         self.failUnlessRaises(Exception, man.reserve_vlan_on_path, path, 1)
@@ -186,64 +202,69 @@ class VLANTopoTest(unittest.TestCase):
 
     def test_unreserve_vlan(self):
         # Get a path
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br3")
         
-        # Reserve path on VLAN 1
-        man.reserve_vlan_on_path(path, 1)
+        # Reserve path on VLAN 100
+        man.reserve_vlan_on_path(path, 100)
 
-        # Reserve path on VLAN 1
-        self.failUnlessRaises(Exception, man.reserve_vlan_on_path, path, 1)
+        # Reserve path on VLAN 100
+        self.failUnlessRaises(Exception, man.reserve_vlan_on_path, path, 100)
         # Should throw an exception
 
         # Unreserve path
-        man.unreserve_vlan_on_path(path, 1)
+        man.unreserve_vlan_on_path(path, 100)
 
         # This should pass:
-        man.reserve_vlan_on_path(path, 1)
+        man.reserve_vlan_on_path(path, 100)
 
 
 class BWTopoTest(unittest.TestCase):
-
+    def setUp(self):
+        man = TopologyManager(topology_file=CONFIG_FILE)
+        man.topo = nx.Graph()
+        man._import_topology(CONFIG_FILE)
+        
     def test_valid_reservation(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br1")
 
         man.reserve_bw_on_path(path, 100)
         man.reserve_bw_on_path(path, 100)
         man.reserve_bw_on_path(path, 100)
         
     def test_reserve_maximum(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br3")
 
-        man.reserve_bw_on_path(path, 80000000000) 
+        man.reserve_bw_on_path(path, 8000000000)
+        man.unreserve_bw_on_path(path, 8000000000)
 
     def test_reserve_too_much(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br2")
 
         self.failUnlessRaises(Exception, man.reserve_bw_on_path, path, 
-                              80000000001)
+                              8000000001)
 
     def test_unreserve_reservation(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br1")
 
         man.reserve_bw_on_path(path, 100)
         man.reserve_bw_on_path(path, 100)
@@ -254,11 +275,11 @@ class BWTopoTest(unittest.TestCase):
         man.unreserve_bw_on_path(path, 100)
 
     def test_unreserve_too_much(self):
-        man = TopologyManager(CONFIG_FILE)
+        man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="atl-switch", target="mia-switch")
+        path = nx.shortest_path(topo, source="br4", target="br3")
 
         man.reserve_bw_on_path(path, 100)
         man.unreserve_bw_on_path(path, 100)
@@ -281,10 +302,15 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         +--+--+             +--+--+
         | sw3 |             | sw8 |
         +-----+             +-----+
-    ''' 
+    '''
+
+    def setUp(self):
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
+        man.topo = nx.Graph()
+        man._import_topology(STEINER_NO_LOOP_CONFIG_FILE)
 
     def test_steiner_tree_no_loop(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
         topo = man.get_topology()
         
         # Get a tree connecting sw1, sw8, and sw6
@@ -308,7 +334,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
             self.failUnless(node in returned_tree_nodes)
 
     def test_find_vlan(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
         topo = man.get_topology()
         
         # Get a tree connecting sw1, sw8, and sw6
@@ -319,7 +345,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         vlan = man.find_vlan_on_tree(tree)
     
     def test_reserve_vlan(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
         topo = man.get_topology()
         
         # Get a tree connecting sw1, sw8, and sw6
@@ -333,7 +359,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         man.reserve_vlan_on_tree(tree, vlan)
 
     def test_unreserve_vlan(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
         topo = man.get_topology()
         
         # Get a tree connecting sw1, sw8, and sw6
@@ -353,7 +379,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         man.reserve_vlan_on_tree(tree, vlan)
 
     def test_reserve_on_invalid(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
         topo = man.get_topology()
         
         # Get a tree connecting sw1, sw8, and sw6
@@ -370,7 +396,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         self.failUnlessRaises(Exception, man.reserve_vlan_on_tree, tree, vlan)
 
     def test_reserve_bandwidth(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
 
         # Get a tree connecting sw1, sw8, and sw6
         nodes = ['sw1', 'sw8', 'sw6']
@@ -380,10 +406,13 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         man.reserve_bw_on_tree(tree, 100)
         man.reserve_bw_on_tree(tree, 100)
         man.reserve_bw_on_tree(tree, 100)        
+        man.unreserve_bw_on_tree(tree, 100)
+        man.unreserve_bw_on_tree(tree, 100)
+        man.unreserve_bw_on_tree(tree, 100)        
 
 
     def test_reserve_maximum(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
 
         # Get a tree connecting sw1, sw8, and sw6
         nodes = ['sw1', 'sw8', 'sw6']
@@ -391,9 +420,10 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
 
         # Should work
         man.reserve_bw_on_tree(tree, 80000000000)
+        man.unreserve_bw_on_tree(tree, 80000000000)
 
     def test_reserve_too_much(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
 
         # Get a tree connecting sw1, sw8, and sw6
         nodes = ['sw1', 'sw8', 'sw6']
@@ -404,7 +434,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
                               80000000001)
 
     def test_unreserve_bw(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
 
         # Get a tree connecting sw1, sw8, and sw6
         nodes = ['sw1', 'sw8', 'sw6']
@@ -421,7 +451,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         man.unreserve_bw_on_tree(tree, 100)        
 
     def test_unreserve_too_much(self):
-        man = TopologyManager(STEINER_NO_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
 
         # Get a tree connecting sw1, sw8, and sw6
         nodes = ['sw1', 'sw8', 'sw6']
@@ -435,7 +465,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
 
         man.reserve_bw_on_tree(tree, 100)
         self.failUnlessRaises(Exception, man.unreserve_bw_on_tree, tree, 200)
-
+        man.unreserve_bw_on_tree(tree, 100)
 
     
 
@@ -453,8 +483,13 @@ class SteinerTreeWithLoopTest(unittest.TestCase):
         | sw3 +-------------+ sw8 |
         +-----+             +-----+
     '''
+    def setUp(self):
+        man = TopologyManager(topology_file=STEINER_LOOP_CONFIG_FILE)
+        man.topo = nx.Graph()
+        man._import_topology(STEINER_LOOP_CONFIG_FILE)
+
     def test_steiner_tree_with_loop(self):
-        man = TopologyManager(STEINER_LOOP_CONFIG_FILE)
+        man = TopologyManager(topology_file=STEINER_LOOP_CONFIG_FILE)
         topo = man.get_topology()
         
         # Get a tree connecting sw1, sw4, and sw7

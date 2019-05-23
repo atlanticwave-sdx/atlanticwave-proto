@@ -13,10 +13,6 @@ import os
 from time import sleep
 
 from shared.UserPolicy import *
-from sdxctlr.BreakdownEngine import *
-from sdxctlr.TopologyManager import TopologyManager
-from sdxctlr.ParticipantManager import ParticipantManager
-from sdxctlr.LocalControllerManager import LocalControllerManager
 from sdxctlr.SDXController import *
 from localctlr.LocalController import *
 
@@ -54,9 +50,6 @@ class ConnectivityTest(unittest.TestCase):
 
         # Setup RyuControllerInterface, which sets up RyuTranslateInterface
         # Only returns once RyuTranslateInterface has a datapath.
-        part = ParticipantManager(PART_CONFIG_FILE)
-        topo = TopologyManager(TOPO_CONFIG_FILE)
-        lc = LocalControllerManager(TOPO_CONFIG_FILE)
         cls.sdxctlr = SDXController()
         cls.ctlrint = LocalController()
 

@@ -56,6 +56,7 @@
 	  "friendlyname":"switch1",
           "ip": "127.0.0.1",
           "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -111,6 +112,7 @@
 	  "friendlyname":"switch2",
           "ip": "127.0.0.1",
           "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -176,6 +178,7 @@
 	  "friendlyname":"switch3",
           "ip": "127.0.0.1",
           "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -237,6 +240,7 @@
 	  "friendlyname":"switch4",
           "ip": "127.0.0.1",
           "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -294,9 +298,10 @@
       "switchinfo": [
         {
           "name": "sw5",
-	  "friendlyname":"switch5",
+          "friendlyname":"switch5",
           "ip": "127.0.0.1",
           "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -362,6 +367,7 @@
 	  "friendlyname":"switch6",
           "ip": "127.0.0.1",
           "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -422,6 +428,7 @@
 	  "friendlyname":"switch7",
           "ip": "127.0.0.1",
           "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -484,9 +491,10 @@
       "switchinfo": [
         {
           "name": "sw8",
-	  "friendlyname":"switch8",
+          "friendlyname":"switch8",
           "ip": "127.0.0.1",
           "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
           "brand": "Open vSwitch",
           "model": "2.3.0",
           "portinfo": [

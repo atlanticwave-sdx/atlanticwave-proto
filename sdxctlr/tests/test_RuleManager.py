@@ -16,16 +16,25 @@ from sdxctlr.TopologyManager import TopologyManager
 
 
 TOPO_CONFIG_FILE = 'test_manifests/topo.manifest'
-db = dataset.connect('sqlite:///:memory:',
-                     engine_kwargs={'connect_args':
-                                    {'check_same_thread':False}})
+db = ':memory:'
+dbcxn = dataset.connect("sqlite:///"+db,
+                        engine_kwargs={'connect_args':
+                                       {'check_same_thread':False}})
 def rmhappy(param):
     pass
+
+class RuleStandin(object):
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return "RuleStandin %s" % self.name
+    def set_cookie(self, cookie):
+        return
 
 class UserPolicyStandin(UserPolicy):
     # Use the username as a return value for checking validity.
     def __init__(self, username, json_rule):
-        super(UserPolicyStandin, self).__init__(username, 'standin', json_rule)
+        super(UserPolicyStandin, self).__init__(username, json_rule)
         self.valid = username
         self.breakdown = json_rule
         
@@ -39,67 +48,72 @@ class UserPolicyStandin(UserPolicy):
     
     def breakdown_rule(self, topology, authorization_func):
         # Verify that topology is a nx.Graph, and authorization_func is ???
-        if not isinstance(topology, nx.Graph):
+        if not isinstance(topology, TopologyManager):
+            print "- Raising Exception"
             raise Exception("Topology is not nx.Graph")
         if self.breakdown == True:
-            return [UserPolicyBreakdown("1.2.3.4", ["rule1", "rule2"])]
+            return [UserPolicyBreakdown("1.2.3.4",
+                                        [RuleStandin("rule1"),
+                                         RuleStandin("rule2")])]
         raise Exception("NO BREAKDOWN")
     
     def _parse_json(self, json_rule):
         return
 
+
+
 class SingletonTest(unittest.TestCase):
     def test_singleton(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        firstManager = RuleManager.instance(db, rmhappy, rmhappy)
-        secondManager = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        firstManager = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
+        secondManager = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
 
         self.failUnless(firstManager is secondManager)
 
 class AddRuleTest(unittest.TestCase):
     def test_good_test_add_rule(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        man = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         valid_rule = UserPolicyStandin(True, True)
 
         #FIXME
         man.test_add_rule(valid_rule)
 
     def test_invalid_test_add_rule(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        man = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         invalid_rule = UserPolicyStandin(False, True)
 
         self.failUnlessRaises(Exception,
                               man.test_add_rule, invalid_rule)
 
     def test_no_breakdown_test_add_rule(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        man = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         invalid_rule = UserPolicyStandin(True, False)
 
         self.failUnlessRaises(Exception,
                               man.test_add_rule, invalid_rule)
 
     def test_good_add_rule(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        man = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         valid_rule = UserPolicyStandin(True, True)
 
 #        print man.add_rule(valid_rule)
         self.failUnless(isinstance(man.add_rule(valid_rule), int))
 
     def test_invalid_add_rule(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        man = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         invalid_rule = UserPolicyStandin(False, True)
 
         self.failUnlessRaises(Exception,
                               man.add_rule, invalid_rule)
 
     def test_no_breakdown_add_rule(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        man = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         invalid_rule = UserPolicyStandin(True, False)
 
         self.failUnlessRaises(Exception,
@@ -107,8 +121,8 @@ class AddRuleTest(unittest.TestCase):
 
 class RemoveRuleTest(unittest.TestCase):
     def test_good_remove_rule(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        man = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         valid_rule = UserPolicyStandin(True, True)
 
         #FIXME
@@ -121,8 +135,8 @@ class RemoveRuleTest(unittest.TestCase):
 
 class GetRules(unittest.TestCase):
     def test_get_rules(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        man = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         valid_rule = UserPolicyStandin(True, True)
 
         hash = man.add_rule(valid_rule)
@@ -131,8 +145,8 @@ class GetRules(unittest.TestCase):
 
 class RemoveAllRules(unittest.TestCase):
     def test_remove_all_rules(self):
-        topo = TopologyManager.instance(TOPO_CONFIG_FILE)
-        man = RuleManager.instance(db, rmhappy, rmhappy)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+        man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         valid_rule = UserPolicyStandin(True, True)
 
         # Add a rule.

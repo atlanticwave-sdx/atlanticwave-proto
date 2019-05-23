@@ -23,7 +23,7 @@ class UserPolicyStandin(UserPolicy):
     def check_validity(self, topology, authorization_func):
         # Verify that topology is a nx.Graph, and authorization_func is ???
         if not isinstance(topology, nx.Graph):
-            raise Exception("Topology is not nx.Graph")
+            raise Exception("Topology is not nx.Graph (%s)" % topology)
         if self.retval == True:
             return True
         raise Exception("BAD")
@@ -33,7 +33,7 @@ class UserPolicyStandin(UserPolicy):
 
 class SingletonTest(unittest.TestCase):
     def test_singleton(self):
-        topo = TopologyManager(TOPO_CONFIG_FILE)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
         firstInspector = ValidityInspector()
         secondInspector = ValidityInspector()
 

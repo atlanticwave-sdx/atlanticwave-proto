@@ -23,10 +23,13 @@ class AddingRulesTest(unittest.TestCase):
         class FakeRuleType(object):
             def __init__(self):
                 self.status = "I am Fake!"
+            @classmethod
+            def get_policy_name(cls):
+                return cls.__name__
 
         reg = RuleRegistry()
-        reg.add_ruletype("fakerule", FakeRuleType)
-        retval = reg.get_rule_class("fakerule")
+        reg.add_ruletype(FakeRuleType)
+        retval = reg.get_rule_class("FakeRuleType")
         self.failUnless(retval is FakeRuleType)
 
 

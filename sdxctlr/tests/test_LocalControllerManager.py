@@ -10,13 +10,13 @@ import mock
 
 from sdxctlr.LocalControllerManager import *
 
-CONFIG_FILE = 'test_manifests/topo.manifest'
+CONFIG_FILE = 'test_manifests/lcmanagertest.manifest'
 class SingletonTest(unittest.TestCase):
     @mock.patch('sdxctlr.LocalControllerManager.AuthenticationInspector',
                 autospec=True)
     def test_singleton(self, authentication):
-        firstManager = LocalControllerManager(CONFIG_FILE)
-        secondManager = LocalControllerManager(CONFIG_FILE)
+        firstManager = LocalControllerManager(manifest=CONFIG_FILE)
+        secondManager = LocalControllerManager(manifest=CONFIG_FILE)
 
         self.failUnless(firstManager is secondManager)
 
@@ -25,7 +25,7 @@ class VerifyLCTest(unittest.TestCase):
     @mock.patch('sdxctlr.LocalControllerManager.AuthenticationInspector',
                 autospec=True)
     def test_get_user(self, authentication):
-        man = LocalControllerManager(CONFIG_FILE)
+        man = LocalControllerManager(manifest=CONFIG_FILE)
 
         ctlrname = 'atl'
         credentials = "atlpw"
@@ -33,11 +33,11 @@ class VerifyLCTest(unittest.TestCase):
         switchips = ['10.10.10.11']
 
         part = man._get_controller(ctlrname)
-        self.failUnless(part != None)
-        self.failUnless(part.shortname == ctlrname)
-        self.failUnless(part.credentials == credentials)
-        self.failUnless(part.lcip == lcip)
-        self.failUnless(part.switchips == switchips)
+        self.assertNotEqual(part, None)
+        self.assertEquals(part.shortname, ctlrname)
+        self.assertEquals(part.credentials, credentials)
+        self.assertEquals(part.lcip, lcip)
+        self.assertEquals(part.switchips, switchips)
                
         ctlrname = 'mia'
         credentials = "miapw"
@@ -45,17 +45,28 @@ class VerifyLCTest(unittest.TestCase):
         switchips = ['10.10.10.21']
 
         part = man._get_controller(ctlrname)
-        self.failUnless(part != None)
-        self.failUnless(part.shortname == ctlrname)
-        self.failUnless(part.credentials == credentials)
-        self.failUnless(part.lcip == lcip)
-        self.failUnless(part.switchips == switchips)
+        self.assertNotEqual(part, None)
+        self.assertEquals(part.shortname, ctlrname)
+        self.assertEquals(part.credentials, credentials)
+        self.assertEquals(part.lcip, lcip)
+        self.assertEquals(part.switchips, switchips)
 
+        ctlrname = 'gru'
+        credentials = "grupw"
+        lcip = "10.10.10.30"
+        switchips = ['10.10.10.31']
+
+        part = man._get_controller(ctlrname)
+        self.assertNotEqual(part, None)
+        self.assertEquals(part.shortname, ctlrname)
+        self.assertEquals(part.credentials, credentials)
+        self.assertEquals(part.lcip, lcip)
+        self.assertEquals(part.switchips, switchips)
 
     @mock.patch('sdxctlr.LocalControllerManager.AuthenticationInspector',
                 autospec=True)
     def test_get_bad_ctlr(self, authentication):
-        man = LocalControllerManager(CONFIG_FILE)
+        man = LocalControllerManager(manifest=CONFIG_FILE)
 
         ctlrname = "NOTREAL"
         self.failUnless(man._get_controller(ctlrname) == None)
@@ -80,11 +91,11 @@ class VerifyLCTest(unittest.TestCase):
         switchips = ['10.10.10.11']
 
         part = man._get_controller(ctlrname)
-        self.failUnless(part != None)
-        self.failUnless(part.shortname == ctlrname)
-        self.failUnless(part.credentials == credentials)
-        self.failUnless(part.lcip == lcip)
-        self.failUnless(part.switchips == switchips)
+        self.assertNotEqual(part, None)
+        self.assertEquals(part.shortname, ctlrname)
+        self.assertEquals(part.credentials, credentials)
+        self.assertEquals(part.lcip, lcip)
+        self.assertEquals(part.switchips, switchips)
                
         ctlrname = 'mia'
         credentials = "miapw"
@@ -92,16 +103,28 @@ class VerifyLCTest(unittest.TestCase):
         switchips = ['10.10.10.21']
 
         part = man._get_controller(ctlrname)
-        self.failUnless(part != None)
-        self.failUnless(part.shortname == ctlrname)
-        self.failUnless(part.credentials == credentials)
-        self.failUnless(part.lcip == lcip)
-        self.failUnless(part.switchips == switchips)
+        self.assertNotEqual(part, None)
+        self.assertEquals(part.shortname, ctlrname)
+        self.assertEquals(part.credentials, credentials)
+        self.assertEquals(part.lcip, lcip)
+        self.assertEquals(part.switchips, switchips)
+
+        ctlrname = 'gru'
+        credentials = "grupw"
+        lcip = "10.10.10.30"
+        switchips = ['10.10.10.31']
+
+        part = man._get_controller(ctlrname)
+        self.assertNotEqual(part, None)
+        self.assertEquals(part.shortname, ctlrname)
+        self.assertEquals(part.credentials, credentials)
+        self.assertEquals(part.lcip, lcip)
+        self.assertEquals(part.switchips, switchips)
 
     @mock.patch('sdxctlr.LocalControllerManager.AuthenticationInspector',
                 autospec=True)
     def test_add_ctlr(self, authentication):
-        man = LocalControllerManager(CONFIG_FILE)
+        man = LocalControllerManager(manifest=CONFIG_FILE)
 
 
         

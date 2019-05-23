@@ -19,13 +19,17 @@ class UserPolicyStandin(UserPolicy):
     def __init__(self, username, json_rule):
         super(UserPolicyStandin, self).__init__(username, json_rule)
         self.retval = username
+        print "retval = %s" % self.retval
         
     def breakdown_rule(self, topology, authorization_func):
         # Verify that topology is a nx.Graph, and authorization_func is ???
-        if not isinstance(topology, nx.Graph):
+        print "breakdown_rule called: %s:%s" % (authorization_func, topology)
+        if not isinstance(topology, TopologyManager):
+            print "- Raising Exception"
             raise Exception("Topology is not nx.Graph")
         if self.retval == True:
-            return True
+            print "- Success"
+            return "Success"
         raise Exception("BAD")
     def _parse_json(self, json_rule):
         return
@@ -33,26 +37,34 @@ class UserPolicyStandin(UserPolicy):
 
 class SingletonTest(unittest.TestCase):
     def test_singleton(self):
-        topo = TopologyManager(TOPO_CONFIG_FILE)
+        print "&&& TEST_SINGLETON &&&"
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
         first = BreakdownEngine()
         second =  BreakdownEngine()
 
         self.failUnless(first is second)
+        del topo
 
 #FIXME: Nothing's mocked here!
 
 class BreakdownTest(unittest.TestCase):
     def test_good_valid(self):
+        print "&&& GOOD &&&"
         valid_rule = UserPolicyStandin(True, "")
-        topo = TopologyManager(TOPO_CONFIG_FILE)
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
         engine = BreakdownEngine()
-        self.failUnless(engine.get_breakdown(valid_rule))
+        self.assertEquals(engine.get_breakdown(valid_rule), "Success")
+        del topo
                         
     def test_bad_valid(self):
+        print "&&& BAD &&&"
         invalid_rule = UserPolicyStandin(False, "")
-        topo = TopologyManager(TOPO_CONFIG_FILE)
-        engine = BreakdownEngine()
+        topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
+                               
+        engine = BreakdownEngine(CATCH_ERRORS=False)
         self.failUnlessRaises(Exception, engine.get_breakdown, invalid_rule)
+        del engine
+
 
 if __name__ == '__main__':
     unittest.main()
