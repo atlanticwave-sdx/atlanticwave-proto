@@ -56,7 +56,8 @@ class SDXMessage(object):
     def __eq__(self, other):
         if other == None:
             return False
-        return ((self.name == other.name) and
+        return (type(self) == type(other) and
+                (self.name == other.name) and
                 (self.validity == other.validity) and
                 (self.data_json_name == other.data_json_name) and
                 (self.data == other.data))

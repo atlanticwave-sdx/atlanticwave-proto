@@ -4,12 +4,13 @@
 import unittest
 
 from localctlr.LCRuleManager import *
+from shared.SDXControllerConnectionManagerConnection import SDXMessageInstallRule, SDXMessageRemoveRule
 
 
 class InitTest(unittest.TestCase):
     def test_singleton(self):
-        firstManager = LCRuleManager.instance()
-        secondManager = LCRuleManager.instance()
+        firstManager = LCRuleManager()
+        secondManager = LCRuleManager()
 
         print ">>>>>>>>>>>> %s" % (firstManager is secondManager)
         self.failUnless(firstManager is secondManager)
@@ -32,7 +33,7 @@ class AddRuleTest(unittest.TestCase):
     def test_add_bad_status(self):
         m = LCRuleManager()
         rule = "FAKE RULE"
-        cookie = 1
+        cookie = 2
         switch_id = 10
         status = "NOT A REAL STATUS"
         self.failUnlessRaises(LCRuleManagerTypeError,
@@ -41,7 +42,7 @@ class AddRuleTest(unittest.TestCase):
     def test_duplicate_add(self):
         m = LCRuleManager()
         rule = "FAKE RULE"
-        cookie = 1
+        cookie = 3
         switch_id = 10
         status = RULE_STATUS_INSTALLING
         m.add_rule(cookie, switch_id, rule, status)
@@ -56,7 +57,7 @@ class GetRuleTest(unittest.TestCase):
         # Add rule, then get it to confirm that it was correct.
         m = LCRuleManager()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 11
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
@@ -65,7 +66,7 @@ class GetRuleTest(unittest.TestCase):
         self.failUnlessEqual(rule1, getrules[0])
 
         rule2 = "TOTALLY REAL RULE"
-        cookie2 = 2
+        cookie2 = 12
         switch_id2 = 20
         status2 = RULE_STATUS_INSTALLING
         m.add_rule(cookie2, switch_id2, rule2, status2)
@@ -81,14 +82,14 @@ class GetRuleTest(unittest.TestCase):
         # Try to get a rule that doesn't exist, should return none
         m = LCRuleManager()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 13
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
 
 
         rule2 = "TOTALLY REAL RULE"
-        cookie2 = 2
+        cookie2 = 14
         switch_id2 = 20
         status2 = RULE_STATUS_INSTALLING
         # NOT ADDING THIS ONE!
@@ -108,19 +109,21 @@ class FindRuleTest(unittest.TestCase):
     def test_find_all_empty_rules(self):
         # Immediately check for rules
         m = LCRuleManager()
+        m.__init__()
         rules = m._find_rules()
         self.failUnlessEqual([], rules)
 
     def test_find_all_rules(self):
         m = LCRuleManager()
+        m.__init__()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 21
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
 
         rule2 = "TOTALLY REAL RULE"
-        cookie2 = 2
+        cookie2 = 22
         switch_id2 = 20
         status2 = RULE_STATUS_INSTALLING
         m.add_rule(cookie2, switch_id2, rule2, status2)
@@ -131,31 +134,33 @@ class FindRuleTest(unittest.TestCase):
 
     def test_find_filtered_cookie_rules(self):
         m = LCRuleManager()
+        m.__init__()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 23
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
 
         rule2 = "TOTALLY REAL RULE"
-        cookie2 = 2
+        cookie2 = 24
         switch_id2 = 20
         status2 = RULE_STATUS_INSTALLING
         m.add_rule(cookie2, switch_id2, rule2, status2)
 
-        rules = m._find_rules({'cookie':1})
+        rules = m._find_rules({'cookie':23})
         self.failUnlessEqual(len(rules), 1)
 
     def test_find_filtered_status_rules(self):
         m = LCRuleManager()
+        m.__init__()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 25
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
 
         rule2 = "TOTALLY REAL RULE"
-        cookie2 = 2
+        cookie2 = 26
         switch_id2 = 20
         status2 = RULE_STATUS_ACTIVE
         m.add_rule(cookie2, switch_id2, rule2, status2)
@@ -173,8 +178,9 @@ class FindRuleTest(unittest.TestCase):
 class ChangeStatusTest(unittest.TestCase):
     def test_good_status_change(self):
         m = LCRuleManager()
+        m.__init__()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 31
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
@@ -200,8 +206,9 @@ class ChangeStatusTest(unittest.TestCase):
 
     def test_invalid_status_change(self):
         m = LCRuleManager()
+        m.__init__()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 32
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
@@ -220,8 +227,9 @@ class ChangeStatusTest(unittest.TestCase):
 class RemoveRuleTest(unittest.TestCase):
     def test_remove_known_rule(self):
         m = LCRuleManager()
+        m.__init__()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 41
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
@@ -235,15 +243,17 @@ class RemoveRuleTest(unittest.TestCase):
     
     def test_remove_unknown_rule(self):
         m = LCRuleManager()
-        cookie1 = 1
+        m.__init__()
+        cookie1 = 42
         switch_id1 = 10
         self.failUnlessRaises(LCRuleManagerDeletionError,
                               m.rm_rule, cookie1, switch_id1)
 
     def test_duplicate_remove_rule(self):
         m = LCRuleManager()
+        m.__init__()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 43
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
@@ -265,18 +275,20 @@ class InitialRulesTest(unittest.TestCase):
     def test_add_initial_rule(self):
         # Make sure it doesn't blow up
         m = LCRuleManager()
-        cookie1 = 1
+        m.__init__()
+        cookie1 = 51
         switch_id1 = 10
-        rule1 = "FAKE RULE"
+        rule1 = SDXMessageInstallRule("Fake Rule")
         m.add_initial_rule(rule1, cookie1, switch_id1)
     
     def test_add_initial_rule_in_db(self):
         # With empty DB, add initial rule, then call initial rules complete
         # Verify that rule was added
         m = LCRuleManager()
-        cookie1 = 1
+        m.__init__()
+        cookie1 = 52
         switch_id1 = 10
-        rule1 = "FAKE RULE"
+        rule1 = SDXMessageInstallRule("FAKE RULE")
         status1 = RULE_STATUS_INSTALLING
         m.add_initial_rule(rule1, cookie1, switch_id1)
 
@@ -305,8 +317,9 @@ class InitialRulesTest(unittest.TestCase):
         # initial rules complete, confirm that one still exists and the other is
         # removed.
         m = LCRuleManager()
+        m.__init__()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 53
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
         m.add_rule(cookie1, switch_id1, rule1, status1)
@@ -319,7 +332,7 @@ class InitialRulesTest(unittest.TestCase):
             self.failUnlessEqual(rule1, r)
 
         rule2 = "TOTALLY REAL RULE"
-        cookie2 = 2
+        cookie2 = 54
         switch_id2 = 20
         status2 = RULE_STATUS_INSTALLING
         m.add_rule(cookie2, switch_id2, rule2, status2)
@@ -341,7 +354,7 @@ class InitialRulesTest(unittest.TestCase):
             (c,sw,r,s) = rule
             self.failUnlessEqual(rule2, r)
 
-        m.add_initial_rule(rule1, cookie1, switch_id1)
+        m.add_initial_rule(SDXMessageInstallRule(rule1), cookie1, switch_id1)
         
         (del_list, add_list) = m.initial_rules_complete()
         m.clear_initial_rules()
@@ -367,17 +380,18 @@ class InitialRulesTest(unittest.TestCase):
         # again, add a different initial_rule, confirm that only the second
         # initial rule is added 
         m = LCRuleManager()
+        m.__init__()
         rule1 = "FAKE RULE"
-        cookie1 = 1
+        cookie1 = 55
         switch_id1 = 10
         status1 = RULE_STATUS_INSTALLING
 
         rule2 = "TOTALLY REAL RULE"
-        cookie2 = 2
+        cookie2 = 56
         switch_id2 = 20
         status2 = RULE_STATUS_INSTALLING
 
-        m.add_initial_rule(rule1, cookie1, switch_id1)
+        m.add_initial_rule(SDXMessageInstallRule(rule1), cookie1, switch_id1)
 
         (del_list, add_list) = m.initial_rules_complete()
         m.clear_initial_rules()
@@ -394,7 +408,7 @@ class InitialRulesTest(unittest.TestCase):
         self.failIfEqual(rules, [])
         for rule in rules:
             (c, sw, r, s) = rule
-            self.failUnlessEqual(rule1, r)
+            self.assertEqual(rule1, r.data['rule'])
         rules = m.get_rules(cookie2, switch_id2)
         self.failUnlessEqual(rules, [])
 
@@ -404,7 +418,7 @@ class InitialRulesTest(unittest.TestCase):
         rules = m._find_rules()
         self.failUnlessEqual(0, len(rules)) #empty
         
-        m.add_initial_rule(rule2, cookie2, switch_id2)
+        m.add_initial_rule(SDXMessageInstallRule(rule2), cookie2, switch_id2)
 
         (del_list, add_list) = m.initial_rules_complete()
         m.clear_initial_rules()
@@ -424,7 +438,7 @@ class InitialRulesTest(unittest.TestCase):
         self.failIfEqual(rules, [])
         for rule in rules:
             (c,sw,r,s) = rule
-            self.failUnlessEqual(rule2, r)
+            self.failUnlessEqual(rule2, r.data['rule'])
 
 if __name__ == '__main__':
     unittest.main()
