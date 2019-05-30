@@ -281,7 +281,7 @@
           "model": "2.3.0",
           "portinfo": [
             { 
-              "portnumber": 2,
+              "portnumber": 1,
               "speed": 80000000000,
               "destination": "dukes1"
             },
@@ -305,7 +305,7 @@
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[2,11]
+            "managementvlanports":[1,11]
           }
         }
       ],
