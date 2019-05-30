@@ -15,14 +15,9 @@
       "friendlyname": "RENCI BF40G Node",
       "location": "35.939796, -79.018203",
       "vlan": 1421},
-    "rencibm4": {
+    "rencibm8": {
       "type": "dtn",
-      "friendlyname": "RENCI BM4 Node",
-      "location": "35.939796, -79.018203",
-      "vlan": 1425},
-    "rencibm9": {
-      "type": "dtn",
-      "friendlyname": "RENCI BM9 Node",
+      "friendlyname": "RENCI BM8 Node",
       "location": "35.939796, -79.018203",
       "vlan": 1425},
     "dukectlr": {
@@ -132,14 +127,9 @@
               "destination": "rencis1"
             },
             {
-              "portnumber": 4,
+              "portnumber": 8,
                "speed": 80000000000,
-               "destination": "rencibm4"
-            },
-            {
-              "portnumber": 9,
-               "speed": 80000000000,
-               "destination": "rencibm9"
+               "destination": "rencibm8"
             }
           ],
           "internalconfig": {
