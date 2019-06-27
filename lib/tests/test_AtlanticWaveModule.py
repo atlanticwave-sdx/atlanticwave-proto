@@ -108,8 +108,8 @@ class DBSetupTest(unittest.TestCase):
         self.test_good_db = "good.db"
         self.test_memory_db = ":memory:"
         self.test_bad_db =  "bad.db"
-        self.logfilename = "/Users/sdonovan/ownCloud/2019-summer/dev/lib/tests/logname.log"
-        self.debuglogfilename = "/Users/sdonovan/ownCloud/2019-summer/dev/lib/tests/debuglogname.log"
+        self.logfilename = os.getcwd() + "logfilename.log"
+        self.debuglogfilename = os.getcwd() + "debuglogfilename.log"
 
         # If it exists, delete log file
         if (os.path.isfile(self.logfilename)):
