@@ -278,6 +278,7 @@ class SDXConnectionHeartbeatTest(unittest.TestCase):
         self.RecvThread = threading.Thread(target=self.receiving_thread)
         self.RecvThread.daemon = True
         self.RecvThread.start()
+        sleep(.5)
 
         self.ClientSocket = socket.socket(socket.AF_INET,
                                           socket.SOCK_STREAM)
