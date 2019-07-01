@@ -153,7 +153,7 @@ class SDXMessageInitTest(unittest.TestCase):
 class SDXConnectionEstablishmentTest(unittest.TestCase):
     def setUp(self):
         self.ip = "127.0.0.1"
-        self.port = 5555
+        self.port = 5585
 
         # This is for the listening socket. 
         self.ReceivingSocket = socket.socket(socket.AF_INET,
@@ -207,8 +207,8 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
 class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
     def setUp(self):
         self.ip = "127.0.0.1"
-        self.port = 5556
-
+        self.port = 5586
+        
         # This is for the listening socket. 
         self.ReceivingSocket = socket.socket(socket.AF_INET,
                                              socket.SOCK_STREAM)
@@ -261,7 +261,7 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
 class SDXConnectionHeartbeatTest(unittest.TestCase):
     def setUp(self):
         self.ip = "127.0.0.1"
-        self.port = 5557
+        self.port = 5587
 
         # This is for the listening socket. 
         self.ReceivingSocket = socket.socket(socket.AF_INET,
