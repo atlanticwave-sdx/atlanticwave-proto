@@ -64,15 +64,15 @@ class RemoteControllerHarness(object):
         #                         instruction_APPLY_ACTIONS([action_SET_FIELD(ETH_SRC("00:00:00:00:00:04"))])))
 
         self.examples.append(SDXIngressPolicy('dummy',
-            '{"SDXEgress":{'
-            '"starttime":"1985-04-12T23:20:50",'
-            '"endtime":"2085-04-12T23:20:50",'
-            '"switch":"atl-switch",'
-            '"matches":[DSTMAC("00:00:00:00:00:05"),'
-            '           ETHTYPE(0x0800), '
-            '           SRCIP("4.5.6.7")],'
-            '"actions":[ModifySRCMAC("00:00:00:00:00:04"),'
-            '           DSTIP("5.6.7.8")]}}'
+            ('{"SDXEgress":{'
+             '"starttime":"1985-04-12T23:20:50",'
+             '"endtime":"2085-04-12T23:20:50",'
+             '"switch":"atl-switch",'
+             '"matches":[DSTMAC("00:00:00:00:00:05"),'
+             '           ETHTYPE(0x0800), '
+             '           SRCIP("4.5.6.7")],'
+             '"actions":[ModifySRCMAC("00:00:00:00:00:04"),'
+             '           DSTIP("5.6.7.8")]}}'
             )))
         #self.examples.append(OFR(OpenFlowMatch([ETH_DST("00:00:00:00:00:05"),
         #                                        ETH_TYPE(0x0800),
