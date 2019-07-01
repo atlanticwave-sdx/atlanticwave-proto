@@ -10,7 +10,7 @@ import mock
 
 from sdxctlr.LocalControllerManager import *
 
-CONFIG_FILE = 'tests/test_manifests/lcmanagertest.manifest'
+CONFIG_FILE = 'sdxctlr/tests/test_manifests/lcmanagertest.manifest'
 class SingletonTest(unittest.TestCase):
     @mock.patch('sdxctlr.LocalControllerManager.AuthenticationInspector',
                 autospec=True)

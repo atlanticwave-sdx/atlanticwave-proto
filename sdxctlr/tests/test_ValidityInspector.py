@@ -13,7 +13,7 @@ from shared.UserPolicy import UserPolicy
 from sdxctlr.ValidityInspector import *
 from sdxctlr.TopologyManager import TopologyManager
 
-TOPO_CONFIG_FILE = 'tests/test_manifests/topo.manifest'
+TOPO_CONFIG_FILE = 'sdxdtlr/tests/test_manifests/topo.manifest'
 class UserPolicyStandin(UserPolicy):
     # Use the username as a return value for checking validity.
     def __init__(self, username, json_rule):
