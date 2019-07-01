@@ -13,7 +13,7 @@ from shared.UserPolicy import UserPolicy
 from sdxctlr.BreakdownEngine import *
 from sdxctlr.TopologyManager import TopologyManager
 
-TOPO_CONFIG_FILE = 'tests/test_manifests/topo.manifest'
+TOPO_CONFIG_FILE = 'sdxctlr/tests/test_manifests/topo.manifest'
 class UserPolicyStandin(UserPolicy):
     # Use the username as a return value 
     def __init__(self, username, json_rule):
