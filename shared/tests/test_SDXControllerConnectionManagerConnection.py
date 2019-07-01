@@ -167,6 +167,7 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
         self.RecvThread = threading.Thread(target=self.receiving_thread)
         self.RecvThread.daemon = True
         self.RecvThread.start()
+        sleep(.5)
 
     def tearDown(self):
         if self.ServerCxn != None:
@@ -221,6 +222,8 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
         self.RecvThread = threading.Thread(target=self.receiving_thread)
         self.RecvThread.daemon = True
         self.RecvThread.start()
+        sleep(.5)
+        
 
     def tearDown(self):
         if self.ServerCxn != None:
