@@ -21,7 +21,7 @@ from shared.constants import rfc3339format, MAXENDTIME
 
 
 DB_FILE = ":memory:"
-BASIC_MANIFEST_FILE = "senseapi_files/twoswitch-onelc-noncorsa.manifest"
+BASIC_MANIFEST_FILE = "sdxctlr/tests/senseapi_files/twoswitch-onelc-noncorsa.manifest"
 
 def add_rule(param):
     # For Rule Manager
@@ -300,7 +300,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        addition_filename = "senseapi_files/addition_10.txt"
+        addition_filename = "sdxctlr/tests/senseapi_files/addition_10.txt"
         with open(addition_filename, 'r') as addition_file:
             addition = addition_file.read()
 
@@ -325,7 +325,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        reduction_filename = "senseapi_files/reduction_10.txt"
+        reduction_filename = "sdxctlr/tests/senseapi_files/reduction_10.txt"
         with open(reduction_filename, 'r') as reduction_file:
             reduction = reduction_file.read()
 
@@ -350,7 +350,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        addition_filename = "senseapi_files/addition_10.txt"
+        addition_filename = "sdxctlr/tests/senseapi_files/addition_10.txt"
         with open(addition_filename, 'r') as addition_file:
             addition = addition_file.read()
 
@@ -403,7 +403,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        addition_filename = "senseapi_files/addition_2.txt"
+        addition_filename = "sdxctlr/tests/senseapi_files/addition_2.txt"
         with open(addition_filename, 'r') as addition_file:
             addition = addition_file.read()
 
@@ -446,7 +446,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        full_delta_filename = "senseapi_files/delta_red_1.txt"
+        full_delta_filename = "sdxctlr/tests/senseapi_files/delta_red_1.txt"
         with open(full_delta_filename, 'r') as delta_file:
             deltadata = eval(delta_file.read())
 
@@ -464,7 +464,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        full_delta_filename = "senseapi_files/delta_red_1.txt"
+        full_delta_filename = "sdxctlr/tests/senseapi_files/delta_red_1.txt"
         with open(full_delta_filename, 'r') as delta_file:
             deltadata = eval(delta_file.read())
 
@@ -502,7 +502,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        full_delta_filename = "senseapi_files/delta_add_1.txt"
+        full_delta_filename = "sdxctlr/tests/senseapi_files/delta_add_1.txt"
         with open(full_delta_filename, 'r') as delta_file:
             deltadata = eval(delta_file.read())
         # Install rule
@@ -512,7 +512,7 @@ class DeltaTest(unittest.TestCase):
         self.assertNotEqual(None, raw_delta)
         
         # Remove it
-        full_delta_filename = "senseapi_files/delta_red_1.txt"
+        full_delta_filename = "sdxctlr/tests/senseapi_files/delta_red_1.txt"
         with open(full_delta_filename, 'r') as delta_file:
             deltadata = eval(delta_file.read())
 
@@ -529,7 +529,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        full_delta_filename = "senseapi_files/delta_red_bad_1.txt"
+        full_delta_filename = "sdxctlr/tests/senseapi_files/delta_red_bad_1.txt"
         with open(full_delta_filename, 'r') as delta_file:
             deltadata = eval(delta_file.read())
 
@@ -547,7 +547,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        full_delta_filename = "senseapi_files/delta_add_bad_1.txt"
+        full_delta_filename = "sdxctlr/tests/senseapi_files/delta_add_bad_1.txt"
         with open(full_delta_filename, 'r') as delta_file:
             deltadata = eval(delta_file.read())
 
@@ -565,7 +565,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        full_delta_filename = "senseapi_files/delta_red_bad_2.txt"
+        full_delta_filename = "sdxctlr/tests/senseapi_files/delta_red_bad_2.txt"
         with open(full_delta_filename, 'r') as delta_file:
             deltadata = eval(delta_file.read())
 
@@ -583,7 +583,7 @@ class DeltaTest(unittest.TestCase):
 
         api = SenseAPI(DB_FILE)
 
-        full_delta_filename = "senseapi_files/delta_add_bad_2.txt"
+        full_delta_filename = "sdxctlr/tests/senseapi_files/delta_add_bad_2.txt"
         with open(full_delta_filename, 'r') as delta_file:
             deltadata = eval(delta_file.read())
 

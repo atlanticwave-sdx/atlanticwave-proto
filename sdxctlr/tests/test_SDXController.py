@@ -19,9 +19,9 @@ from sdxctlr.SDXController import *
 from shared.L2TunnelPolicy import *
 
 db = ":memory:"
-TOPO_CONFIG_FILE = 'test_manifests/topo.manifest'
-PART_CONFIG_FILE = 'test_manifests/participants.manifest'
-JSON_POLICY_FILE = 'test_manifests/example_config.json'
+TOPO_CONFIG_FILE = 'sdxctlr/tests/test_manifests/topo.manifest'
+PART_CONFIG_FILE = 'sdxctlr/tests/test_manifests/participants.manifest'
+JSON_POLICY_FILE = 'sdxctlr/tests/test_manifests/example_config.json'
 
 class RuleStandin(object):
     def __init__(self, name):
