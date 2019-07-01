@@ -24,7 +24,7 @@ class OpenListeningPortTest(unittest.TestCase):
     def setUp(self):
         self.manager = AtlanticWaveConnectionManager(loggerid)
         self.ip = "127.0.0.1"
-        self.port = 5560
+        self.port = 5570
         self.object_to_send = {'a':1, 'b':2, 'c':{'x':7, 'y':8, 'z':9}}
         self.object_received = None
         
@@ -66,7 +66,7 @@ class OpenSendingText(unittest.TestCase):
     def setUp(self):
         self.manager = AtlanticWaveConnectionManager(loggerid)
         self.ip = "127.0.0.1"
-        self.port = 5561
+        self.port = 5571
         self.object_to_send = {'a':1, 'b':2, 'c':{'x':7, 'y':8, 'z':9}}
         self.object_received = None
 

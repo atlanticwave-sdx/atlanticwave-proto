@@ -156,7 +156,7 @@ class RecvBlockingTest(unittest.TestCase):
 class RecvNonBlockingTest(unittest.TestCase):
     def setUp(self):
         self.ip = "127.0.0.1"
-        self.port = 5557
+        self.port = 5558
         self.object_to_send = {'a':1, 'b':2, 'c':{'x':7, 'y':8, 'z':9}}
         self.object_received = None
 
@@ -197,7 +197,7 @@ class RecvNonBlockingTest(unittest.TestCase):
 class ValidSelectTest(unittest.TestCase):
     def setUp(self):
         self.ip = "127.0.0.1"
-        self.port = 5558
+        self.port = 5559
         self.object_to_send = {'a':1, 'b':2, 'c':{'x':7, 'y':8, 'z':9}}
         self.object_received = None
 
