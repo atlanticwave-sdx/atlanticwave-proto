@@ -185,6 +185,7 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
                                                         sock)
         self.ServerCxn.set_new_callback(new_callback)
         self.ServerCxn.set_delete_callback(del_callback)
+        sleep(.5) # Waiting for connection.
         self.ServerCxn.transition_to_main_phase_SDX(set_name_1,
                                                     get_initial_rules_5)
         
@@ -306,6 +307,7 @@ class SDXConnectionHeartbeatTest(unittest.TestCase):
                                                         sock)
         self.ServerCxn.set_new_callback(new_callback)
         self.ServerCxn.set_delete_callback(del_callback)
+        sleep(.5) # Wait for connection.
         self.ServerCxn.transition_to_main_phase_SDX(set_name_1,
                                                     get_initial_rules_5)
 

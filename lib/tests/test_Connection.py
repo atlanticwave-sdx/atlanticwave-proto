@@ -57,6 +57,7 @@ class SendTest(unittest.TestCase):
         self.ReceiveThread = threading.Thread(target=self.receiving_thread)
         self.ReceiveThread.daemon = True
         self.ReceiveThread.start()
+        sleep(.5)
         
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((self.ip, self.port))
