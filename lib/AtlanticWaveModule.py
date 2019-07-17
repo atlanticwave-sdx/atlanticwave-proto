@@ -109,7 +109,7 @@ class AtlanticWaveModule(object):
 
         #Try loading the tables, if they don't exist, create them.
         for (name, table) in db_tables_tuples:
-            try:
+            if table in self.db: #https://github.com/pudo/dataset/issues/281
                 self.logger.info("Trying to load %s from DB" % name)
                 t = self.db.load_table(table)
                 if print_table_on_load:
@@ -121,7 +121,7 @@ class AtlanticWaveModule(object):
                     
                 setattr(self, name, t)
                 
-            except:
+            else:
                 # If load_table() fails, that's fine! It means that the
                 # table doesn't yet exist. So, create it.
                 self.logger.info("Failed to load %s from DB, creating table" %
