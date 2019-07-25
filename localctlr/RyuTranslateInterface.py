@@ -240,12 +240,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # <lcname>-config - Columns are 'key' and 'value'
         config_table_name = self.name + "-config"
         rule_table_name = self.name + "-rule"
-        try:
+        if config_table_name in self.db:
             self.logger.info("Trying to load %s from DB" % config_table_name)
             self.config_table = self.db.load_table(config_table_name)
             self.logger.info("Trying to load %s from DB" % rule_table_name)
             self.rule_table = self.db.load_table(rule_table_name)
-        except:
+        else:
             # If load_table() fails, that's fine! It means that the table
             # doesn't yet exist. So, create it.
             self.logger.info("Failed to load %s from DB, creating new table" %

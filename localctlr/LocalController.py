@@ -116,6 +116,7 @@ class LocalController(AtlanticWaveModule):
                         if cxn in rlist:
                             # Already there. Weird, but OK
                             pass
+                        self.logger.debug("Adding Cxn to rlist: %s" % cxn)
                         rlist.append(cxn)
                         wlist = []
                         xlist = rlist
@@ -166,6 +167,7 @@ class LocalController(AtlanticWaveModule):
                     msg = entry.recv_protocol()
                 except SDXMessageConnectionFailure as e:
                     # Connection needs to be disconnected.
+                    self.logger.warning("CXN Failure: %s %s" % (entry, e))
                     self.cxn_q.put((DEL_CXN, entry))
                     entry.close()
                     continue
@@ -220,14 +222,14 @@ class LocalController(AtlanticWaveModule):
                       type(msg) == SDXMessageRemoveRuleFailure and
                       type(msg) == SDXMessageUnknownSource and
                       type(msg) == SDXMessageSwitchChangeCallback):
-                    raise TypeError("msg type %s - not valid: %s" % (type(msg),
-                                                                     msg))
+                    self.logger.warning("msg type %s - not valid: %s" % 
+                                        (type(msg), msg))
                 
                 # All other types are something that shouldn't be seen, likely
                 # because they're from the a Message that's not currently valid
                 else:
-                    raise TypeError("msg type %s - not valid: %s" % (type(msg),
-                                                                     msg))
+                    self.logger.warning("msg type %s - not valid: %s" % 
+                                        (type(msg), msg))
 
 
             # Loop through writable
@@ -501,8 +503,7 @@ class LocalController(AtlanticWaveModule):
             self.start_cxn_thread = None
             raise     
         
-        # Upon successful return of connection, add NEW_CXN to cxn_q
-        self.cxn_q.put((NEW_CXN, self.sdx_connection))
+        self.logger.warning("Connection fully established to SDX")
 
         # Finish up thread
         self.start_cxn_thread = None

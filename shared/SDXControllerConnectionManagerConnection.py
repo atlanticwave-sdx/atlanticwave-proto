@@ -518,6 +518,8 @@ class SDXControllerConnection(Connection):
             a heartbeat
         '''
         
+        #print "%s recv_protocol: Begin" % (threading.current_thread().ident)
+
         # If the socket is closed unexpectedly, it's possible the socket just
         # disappears. Annoying. Very annoying.
         if self.sock == None:
@@ -578,6 +580,11 @@ class SDXControllerConnection(Connection):
 
             # If it's a heartbeat request/heartbeat_response, send to heartbeat
             # handler and return None
+
+            #print "%s recv_protocol: %s %s" % (
+            #    threading.current_thread().ident,
+            #    self.connection_state, msg)
+
             if type(msg) == SDXMessageHeartbeatRequest:
                 self._heartbeat_request_handler(msg)
                 return None
@@ -586,7 +593,6 @@ class SDXControllerConnection(Connection):
                 return None
 
             #FIXME: Checking of rule validity
-                                           
             return msg
         
         except socket.error as e:
@@ -598,6 +604,10 @@ class SDXControllerConnection(Connection):
                 self._del_callback(self)
                 raise SDXMessageConnectionFailure("Connection reset by peer - %s"
                                                   % self)
+            elif (e.errno == 11):  # Resource temporarily unavailable
+                # Not great, but happens. 
+                sleep(.001)
+                print "errno 11!"
             else:
                 raise
         except AttributeError as e:
@@ -613,6 +623,8 @@ class SDXControllerConnection(Connection):
     def send_protocol(self, sdx_message):
         # Based on Connection.send(), but updated for the additional protocol
         # related info.
+        #print "%s send_protocol: %s %s" % (threading.current_thread().ident,
+        #                                self.connection_state, sdx_message)
         
         # If the socket is closed unexpectedly, it's possible the socket just
         # disappears. Annoying. Very annoying.
@@ -719,9 +731,11 @@ class SDXControllerConnection(Connection):
 
         # Transition to main phase and start the heartbeat thread
         self.connection_state = 'MAIN_PHASE'
-        self.hb_thread = threading.Thread(target=_heartbeat_thread,
+        self.hb_thread = threading.Thread(target=_LC_heartbeat_thread,
                                           args=(self,))
         self.hb_thread.daemon = True
+        print("%s Starting heartbeat thread LC" % 
+              (threading.current_thread().ident))
         self.hb_thread.start()
 
         # Add connection!
@@ -790,9 +804,11 @@ class SDXControllerConnection(Connection):
         tmp = SDXMessageTransitionToMainPhase()
         self.send_protocol(tmp)
         self.connection_state = 'MAIN_PHASE'
-        self.hb_thread = threading.Thread(target=_heartbeat_thread,
+        self.hb_thread = threading.Thread(target=_SDX_heartbeat_thread,
                                           args=(self,))
         self.hb_thread.daemon = True
+        print("%s Starting heartbeat thread SDX" % 
+              (threading.current_thread().ident))
         self.hb_thread.start()
 
         # Add connection!
@@ -801,18 +817,22 @@ class SDXControllerConnection(Connection):
 
     def _heartbeat_response_handler(self, hbresp):
         ''' Handles incoming HeartbeatResponses. '''
+        print("%s hb_response_handler: %s" % 
+              (threading.current_thread().ident, hbresp))
         if not self.outstanding_hb:
             raise SDXControllerConnectionValueError("There is no oustanding heartbeat request for this connection %s" % self)
         self.outstanding_hb = False
 
     def _heartbeat_request_handler(self, hbreq):
         ''' Handles incoming HeartbeatRequests. '''
+        print "%s hb_request_handler: %s" % (threading.current_thread().ident,
+                                             hbreq)
         resp = SDXMessageHeartbeatResponse()
         self.send_protocol(resp)
         self._heartbeat_response_sent += 1
 
 
-def _heartbeat_thread(inst):
+def _SDX_heartbeat_thread(inst):
     ''' Handles automatically sending Heartbeats consistently. '''
     # Get set up
     
@@ -821,12 +841,13 @@ def _heartbeat_thread(inst):
         # Check to see if there's an outstanding HB - there shouldn't be
         try:
             if inst.outstanding_hb == True:
-                print "Closing: Missing a heartbeat on %s" % hex(id(inst))
-                raise SDXMessageConnectionFailure("Missing heartbeat on %s" % 
+                print "SDX Closing: Missing a heartbeat on %s" % hex(id(inst))
+                raise SDXMessageConnectionFailure("SDX Missing heartbeat on %s" % 
                                                   hex(id(inst)))
             # Send a heartbeat request over
             req = SDXMessageHeartbeatRequest()
             inst.outstanding_hb = True
+            #print "SDX Send HBREQ"
             inst.send_protocol(req)
             inst._heartbeat_request_sent += 1
         
@@ -834,8 +855,35 @@ def _heartbeat_thread(inst):
             sleep(inst.heartbeat_sleep_time)
         except:
             # Need to signal that the cxn is closed.
-            print "Heartbeat Closing due to error on %s" % hex(id(inst))
+            print "SDX Heartbeat Closing due to error on %s" % hex(id(inst))
             inst.close()
             inst._del_callback(inst)
             return
         
+def _LC_heartbeat_thread(inst):
+    ''' Handles automatically sending Heartbeats consistently. '''
+    # Get set up
+    
+    # Loop
+    while(True):
+        # Check to see if there's an outstanding HB - there shouldn't be
+        try:
+            if inst.outstanding_hb == True:
+                print "LC Closing: Missing a heartbeat on %s" % hex(id(inst))
+                raise SDXMessageConnectionFailure("LC Missing heartbeat on %s" % 
+                                                  hex(id(inst)))
+            # Send a heartbeat request over
+            req = SDXMessageHeartbeatRequest()
+            inst.outstanding_hb = True
+            #print "LC Send HBREQ"
+            inst.send_protocol(req)
+            inst._heartbeat_request_sent += 1
+        
+            # Sleep
+            sleep(inst.heartbeat_sleep_time)
+        except:
+            # Need to signal that the cxn is closed.
+            print "LC Heartbeat Closing due to error on %s" % hex(id(inst))
+            inst.close()
+            inst._del_callback(inst)
+            return

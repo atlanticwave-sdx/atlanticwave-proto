@@ -3,9 +3,11 @@
 
 
 from shared.SDXControllerConnectionManager import *
-from lib.Connection import *
+from lib.Connection import select as cxnselect
 from lib.Singleton import Singleton
+from time import sleep
 import threading
+import os
 
 #from shared.OpenFlowRule import OpenFlowRule as OFR
 #from shared.match import *
@@ -17,6 +19,12 @@ from shared.SDXPolicy import *
 from shared.SDXMatches import *
 from shared.SDXActions import *
 
+from shared.MatchActionLCRule import *
+from shared.LCFields import *
+from shared.LCAction import *
+
+dummy_log = "Testing"
+
 class RemoteControllerHarness(object):
     ''' Harness for local controller testing. '''
     __metaclass__ = Singleton
@@ -24,71 +32,53 @@ class RemoteControllerHarness(object):
     def __init__(self):
         # Create useful examples
         self.examples = []
-        self.examples.append(SDXIngressPolicy('dummy',
-            ('{"SDXIngress":{'
-             '"starttime":"1985-04-12T23:20:50",'
-             '"endtime":"2085-04-12T23:20:50",'
-             '"switch":"atl-switch",'
-             '"matches":[DSTMAC("00:00:00:00:00:00")],'
-             '"actions":[ModifyDSTMAC("00:00:00:00:00:02")]}}'
-            )))
-                             
-        #self.examples.append(OFR(OpenFlowMatch([ETH_DST("00:00:00:00:00:01")]),
-        #                         instruction_APPLY_ACTIONS([action_SET_FIELD(ETH_DST("00:00:00:00:00:02"))])))
 
-        self.examples.append(SDXIngressPolicy('dummy',
-            ('{"SDXEgress":{'
-             '"starttime":"1985-04-12T23:20:50",'
-             '"endtime":"2085-04-12T23:20:50",'
-             '"switch":"atl-switch",'
-             '"matches":[ETHTYPE(0x0800), SRCIP("1.2.3.4")],'
-             '"actions":[ModifySRCIP("2.3.4.5")]}}'
-            )))
-        #self.examples.append(OFR(OpenFlowMatch([ETH_TYPE(0x0800), 
-        #                                        IPV4_SRC("1.2.3.4")]),
-        #                         instruction_APPLY_ACTIONS([action_SET_FIELD(IPV4_DST("2.3.4.5"))])))
+        rule = MatchActionLCRule(1, 
+                                 [ETH_DST("00:00:00:00:00:00")],
+                                 [SetField(ETH_DST("00:00:00:00:00:02"))])
+        rule.set_cookie(100)
+        self.examples.append(rule)
+            
+        rule = MatchActionLCRule(1,
+                                 [ETH_TYPE(0x0800), IPV4_SRC("1.2.3.4")],
+                                 [SetField(IPV4_SRC("2.3.4.5"))])
+        rule.set_cookie(100)
+        self.examples.append(rule)
 
-        self.examples.append(SDXIngressPolicy('dummy',
-            ('{"SDXEgress":{'
-             '"starttime":"1985-04-12T23:20:50",'
-             '"endtime":"2085-04-12T23:20:50",'
-             '"switch":"atl-switch",'
-             '"matches":[DSTMAC("00:00:00:00:00:03"),' 
-             '                  ETHTYPE(0x0800),'
-             '          SRCIP("3.4.5.6")],'
-             '"actions":[ModifySRCMAC("00:00:00:00:00:04")]}}'
-            )))
-        #self.examples.append(OFR(OpenFlowMatch([ETH_DST("00:00:00:00:00:03"), 
-        #                                        ETH_TYPE(0x0800), 
-        #                                        IPV4_SRC("3.4.5.6")]),
-        #                         instruction_APPLY_ACTIONS([action_SET_FIELD(ETH_SRC("00:00:00:00:00:04"))])))
 
-        self.examples.append(SDXIngressPolicy('dummy',
-            ('{"SDXEgress":{'
-             '"starttime":"1985-04-12T23:20:50",'
-             '"endtime":"2085-04-12T23:20:50",'
-             '"switch":"atl-switch",'
-             '"matches":[DSTMAC("00:00:00:00:00:05"),'
-             '           ETHTYPE(0x0800), '
-             '           SRCIP("4.5.6.7")],'
-             '"actions":[ModifySRCMAC("00:00:00:00:00:04"),'
-             '           DSTIP("5.6.7.8")]}}'
-            )))
-        #self.examples.append(OFR(OpenFlowMatch([ETH_DST("00:00:00:00:00:05"),
-        #                                        ETH_TYPE(0x0800),
-        #                                        IPV4_SRC("4.5.6.7")]),
-        #                         instruction_APPLY_ACTIONS([action_SET_FIELD(ETH_SRC("00:00:00:00:00:04")),
-        #                                                    action_SET_FIELD(IPV4_DST("5.6.7.8"))])))
-        
-        self.examples.append(SDXIngressPolicy('dummy',
-            ('{"SDXEgress":{'
-             '"starttime":"1985-04-12T23:20:50",'
-             '"endtime":"2085-04-12T23:20:50",'
-             '"switch":"atl-switch",'
-             '"matches":[IPPROTO(6),'
-             '           ETHTYPE(0x0800)],'
-             '"actions":[Forward(1)]}}'
-            )))
+        rule = MatchActionLCRule(1,
+                                 [ETH_DST("00:00:00:00:00:03"),
+                                  ETH_TYPE(0x0800),
+                                  IPV4_SRC("3.4.5.6")],
+                                 [SetField(ETH_SRC("00:00:00:00:00:04"))])
+        rule.set_cookie(100)
+        self.examples.append(rule)
+
+
+        rule = MatchActionLCRule(1,
+                                 [ETH_DST("00:00:00:00:00:05"),
+                                  ETH_TYPE(0x0800),
+                                  IPV4_SRC("4.5.6.7")],
+                                 [SetField(ETH_SRC("00:00:00:00:00:04")),
+                                  SetField(IPV4_DST("5.6.7.8"))])
+        rule.set_cookie(100)
+        self.examples.append(rule)
+
+
+        rule = MatchActionLCRule(1,
+                                 [IP_PROTO(6), ETH_TYPE(0x0800)],
+                                 [Forward(1)])
+        rule.set_cookie(100)
+        self.examples.append(rule)
+        #self.examples.append(SDXEgressPolicy('dummy',
+        #    {"SDXEgress":
+        #     {"starttime":"1985-04-12T23:20:50",
+        #      "endtime":"2085-04-12T23:20:50",
+        #      "switch":"atl-switch",
+        #      "matches":[{"ip_proto":6},
+        #                 {"eth_type":0x08000}],
+        #      "actions":[{"Forward":1}]}}
+        #    ))
         #self.examples.append(OFR(OpenFlowMatch([IP_PROTO(6),
         #                                        ETH_TYPE(0x0800)]),
 #                                 instruction_WRITE_ACTIONS([action_OUTPUT(1)]),
@@ -103,7 +93,7 @@ class RemoteControllerHarness(object):
         self.ip = IPADDR
         self.port = PORT
         self.client = None
-        self.cm = SDXControllerConnectionManager()
+        self.cm = SDXControllerConnectionManager(dummy_log)
         self.cm_thread = threading.Thread(target=self._cm_thread)
         self.cm_thread.daemon = True
         self.cm_thread.start()
@@ -114,15 +104,60 @@ class RemoteControllerHarness(object):
 
     def connection_cb(self, cxn):
         self.client = cxn
+        self.client.transition_to_main_phase_SDX(lambda a:None, 
+                                                 lambda a: [])
+        self.client_thread = threading.Thread(target=self._client_thread)
+        self.client_thread.daemon = True
+        self.client_thread.start()
+        print("Connection fully established to LC")
+
+    def _client_thread(self):
+        rlist = [self.client]
+        wlist = []
+        xlist = rlist
+        timeout = 1.0
+
+        print "Starting Client Thread: %s" % self.client
+        while(True):
+            print ("RCHarness: Beginning of main loop")
+            try:
+                readable, writeable, exceptional = cxnselect(rlist,
+                                                             wlist,
+                                                             xlist,
+                                                             timeout)
+            except Exception as e:
+                print("RCHarness: Error in select - %s" % e)
+                for entry in rlist:
+                    entry.close()
+                exit()
+            for entry in readable:
+                try:
+                    print("RCHarness: Calling recv_protocol")
+                    msg = entry.recv_protocol()
+                    print("RCHarness: Received %s" % msg)
+                    # Nothing to do with msg - printing to see what's what.
+                except SDXMessageConnectionFailure as e:
+                    print("RCHarness: CXN Failure %s %s" % (entry, e))
+                    rlist.remove(entry)
+                    entry.close()
+            print ("RCHarness: End of main loop")
             
     def is_connected(self):
         # figure out if connected
         return (self.client != None)
 
     def send_new_command(self, cmd):
-        self.client.send_cmd(SDX_NEW_RULE, cmd)
+        switch_id = 1
+        msg = SDXMessageInstallRule(cmd, switch_id)
+        print "about to send: %s" % msg
+        self.client.send_protocol(msg)
+        #self.client.send_cmd(SDX_NEW_RULE, cmd)
 
-    def send_rm_command(self, cmd):
-        self.client.send_cmd(SDX_RM_RULE, cmd)
+    def send_rm_command(self, rule):
+        switch_id = 1
+        msg = SDXMessageRemoveRule(rule.get_cookie(), switch_id)
+        print "about to send: %s" % msg
+        self.client.send_protocol(msg)
+        #self.client.send_cmd(SDX_RM_RULE, cmd)
 
     

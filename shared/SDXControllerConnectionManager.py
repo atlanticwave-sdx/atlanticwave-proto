@@ -143,6 +143,7 @@ class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
 
     def add_new_cxn_to_queue(self, cxn):
         ''' Used by Connections to add themselves to the queue. '''
+        self.logger.debug("ADDING NEW CXN %s" % cxn)
         self.cxn_q.put((NEW_CXN, cxn))
     
     def add_del_cxn_to_queue(self, cxn):
