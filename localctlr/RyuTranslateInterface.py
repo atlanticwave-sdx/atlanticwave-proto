@@ -152,6 +152,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         logfilename = 'localcontroller-%s.log' % CONF['atlanticwave']['lcname']
         debuglogfilename = 'debug'+logfilename
         self._setup_loggers(loggerid, logfilename, debuglogfilename)
+        self.logger.warning("Starting up RyuTranslateInterface")
 
         # Configuration file + parsing
         self.name = CONF['atlanticwave']['lcname']
@@ -164,9 +165,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # from the stored DB (if there is anything), and from the options passed
         # in during startup (including the manifest file)
         self._setup()
+
         
         # Establish connection to RyuControllerInterface
         self.inter_cm = InterRyuControllerConnectionManager()
+        self.logger.info("RyuTranslateInterface: Opening outbound connection to RyuConnectionInterface on %s:%s" % (self.lcip, self.ryu_cxn_port))
         self.inter_cm_cxn = self.inter_cm.open_outbound_connection(self.lcip,
                                                             self.ryu_cxn_port)
 

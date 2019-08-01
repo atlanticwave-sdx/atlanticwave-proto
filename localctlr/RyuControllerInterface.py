@@ -32,7 +32,8 @@ class RyuControllerInterface(ControllerInterface):
 
     def __init__(self, lcname, conffile, lcip,
                  ryu_cxn_port, openflow_port, lc_callback,
-                 loggeridprefix='localcontroller'):
+                 loggeridprefix='localcontroller', 
+                 run_ryu_manager=True, run_main_loop=True):
         loggerid = loggeridprefix + '.ryucontrollerinterface'
         super(RyuControllerInterface, self).__init__(loggerid)
 
@@ -63,34 +64,40 @@ class RyuControllerInterface(ControllerInterface):
         # This doesn't work as it should: Normally, you would have two different
         # strings within the list. For some reason, ryu-manager doesn't like 
         # this, thus one long string.
-        self.logger.debug("About to start ryu-manager.")
-        current_dir = os.path.dirname(os.path.realpath(__file__))
-        self.ryu_process = subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % (current_dir, self.openflow_port, self.lcname, self.conffile)], 
-                                            shell=True,
-                                            preexec_fn=os.setsid)
+        if run_ryu_manager:
+            self.logger.debug("About to start ryu-manager.")
+            current_dir = os.path.dirname(os.path.realpath(__file__))
+            self.ryu_process = subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % (current_dir, self.openflow_port, self.lcname, self.conffile)], 
+                                                shell=True,
+                                                preexec_fn=os.setsid)
 
-        self.logger.debug("Started ryu-manager.")
-        # Don't complete until the connection is received by inter_cm ...
-        self.inter_cm_condition.acquire()
-        self.inter_cm_condition.wait()
+            self.logger.debug("Started ryu-manager.")
 
-        # ... and we've gotten notice that they've gotten a connection with at
-        # least one switch:
-        dps = self.inter_cm_cxn.recv_cmd()
+            # Don't complete until the connection is received by inter_cm ...
+            self.inter_cm_condition.acquire()
+            self.inter_cm_condition.wait()
 
-        # FIXME: This cannot be permanent. Each piece should be opened up
-        # seperately...
+            # ... and we've gotten notice that they've gotten a connection
+            # with at least one switch:
+            dps = self.inter_cm_cxn.recv_cmd()
+
+            # FIXME: This cannot be permanent. Each piece should be opened
+            # upseperately...
         
-        self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
-                                                    hex(id(self))))
+            self.logger.warning("%s initialized: %s" % (
+                self.__class__.__name__, hex(id(self))))
 
-        # Start Main Loop
-        self.start_main_loop()
-        self.logger.info("Main Loop started.")
+        if run_main_loop:
+            # Start Main Loop
+            self.start_main_loop()
+            self.logger.info("Main Loop started.")
 
     def _inter_cm_thread(self):
+        self.logger.debug("RyuControllerInterface: Starting inter_cm_thread: %s:%s" %
+                          (self.lcip, self.ryu_cxn_port))
         self.inter_cm.new_connection_callback(self._new_inter_cm_thread)
         self.inter_cm.open_listening_port(self.lcip, self.ryu_cxn_port)
+        self.logger.debug("RyuControllerInterface: inter_cm_thread - port opened")
 
     def _new_inter_cm_thread(self, cxn):
         self.inter_cm_cxn = cxn

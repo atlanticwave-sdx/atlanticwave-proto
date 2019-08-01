@@ -3,7 +3,7 @@
     "atl": {
       "lcip": "127.0.0.1",
       "internalconfig": {
-        "ryucxninternalport": 56767,
+        "ryucxninternalport": 55767,
 	"openflowport": 6633
       },
       "switchinfo": [{
