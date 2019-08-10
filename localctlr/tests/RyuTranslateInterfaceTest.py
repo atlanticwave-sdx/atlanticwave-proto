@@ -34,7 +34,7 @@ class RyuTranslateTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Setup the virtual switch
-        subprocess.check_call(['mn', '-c'])
+        subprocess.check_call(['sudo', 'mn', '-c'])
         subprocess.call(['fuser', '-k', '55767/tcp'])
         subprocess.call(['fuser', '-k', '55767/tcp'])
         subprocess.check_call(['ovs-vsctl', 'add-br', 'br_ovs'])
