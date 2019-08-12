@@ -36,7 +36,7 @@ class ConnectivityTest(unittest.TestCase):
         # Lovingly stolen from the the Local Controller tests.
 
         print "Set up virtual switch"
-        subprocess.check_call(['sudo', 'mn', '-c'], stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.check_call(['mn', '-c'], stdout=FNULL, stderr=subprocess.STDOUT)
         subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
         subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
         subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
