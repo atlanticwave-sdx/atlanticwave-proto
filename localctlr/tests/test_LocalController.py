@@ -42,7 +42,7 @@ class LocalControllerTest(unittest.TestCase):
 
         # Setup the virtual switch
         print "Set up virtual switch"
-        subprocess.check_call(['sudo', 'mn', '-c'], stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.check_call(['mn', '-c'], stdout=FNULL, stderr=subprocess.STDOUT)
         sleep(1)
         subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
         subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
