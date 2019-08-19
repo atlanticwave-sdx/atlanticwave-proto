@@ -26,7 +26,7 @@ class Dict2Obj(object):
         for key in dictionary:
             setattr(self, key, dictionary[key])
 
-TOPO_CONFIG_FILE = os.getcwd() +'/rtitest.manifest'
+TOPO_CONFIG_FILE = os.path.dirname(os.path.realpath(__file__)) +'/rtitest.manifest'
 
 options = Dict2Obj({'database':":memory:",
                     'manifest':TOPO_CONFIG_FILE,
