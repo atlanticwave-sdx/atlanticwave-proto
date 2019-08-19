@@ -59,6 +59,7 @@ class LocalControllerTest(unittest.TestCase):
 
         # Setup RyuControllerInterface, which sets up RyuTranslateInterface
         # Only returns once RyuTranslateInterface has a datapath.
+        print "LocalControllerTest.setUpClass - Options:\n%s\n" % options
         cls.harness = RemoteControllerHarness()
         cls.ctlrint = LocalController(True, options)
 
