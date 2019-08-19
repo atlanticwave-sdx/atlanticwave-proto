@@ -34,9 +34,9 @@ class RyuTranslateTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Setup the virtual switch
-        subprocess.check_call(['sudo', 'mn', '-c'])
-        subprocess.call(['fuser', '-k', '55767/tcp'])
-        subprocess.call(['fuser', '-k', '55767/tcp'])
+        subprocess.check_call(['mn', '-c'])
+        #subprocess.call(['fuser', '-k', '55767/tcp'])
+        #subprocess.call(['fuser', '-k', '55767/tcp'])
         subprocess.check_call(['ovs-vsctl', 'add-br', 'br_ovs'])
         subprocess.check_call(['ovs-vsctl', 'add-port', 'br_ovs', 'vi0', '--', 'set', 'Interface', 'vi0', 'type=internal'])
         subprocess.check_call(['ovs-vsctl', 'set', 'bridge', 'br_ovs', 'other-config:datapath-id=0000000000000001'])
@@ -57,7 +57,7 @@ class RyuTranslateTests(unittest.TestCase):
         sleep(50)
         cls.ctlrint.inter_cm_cxn.close()
         cls.ctlrint.inter_cm.close_listening_port()
-        subprocess.call(['fuser', '-k', '55767/tcp'])
+        #subprocess.call(['fuser', '-k', '55767/tcp'])
 
     ######################## TRANSLATE MATCH TESTS #########################
     def trans_match_test(self, ofm, ofpm):
