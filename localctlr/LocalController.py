@@ -42,6 +42,8 @@ class LocalController(AtlanticWaveModule):
         self.name = options.name
         self.capabilities = "NOTHING YET" #FIXME: This needs to be updated
         self.logger.info("LocalController %s starting", self.name)
+        import os
+        self.logger.info("PATH: %s" % os.environ['PATH'])
 
         # Import configuration information - this includes pulling information
         # from the stored DB (if there is anything), and from the options passed
