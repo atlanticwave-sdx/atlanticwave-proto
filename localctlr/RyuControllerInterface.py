@@ -67,6 +67,10 @@ class RyuControllerInterface(ControllerInterface):
         if run_ryu_manager:
             self.logger.debug("About to start ryu-manager.")
             current_dir = os.path.dirname(os.path.realpath(__file__))
+            self.logger.debug("ENV")
+            subprocess.Popen(['env'])
+            self.logger.debug("ENV - shell=True")
+            subprocess.Popen(['env'], shell=True)
             self.ryu_process = subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % (current_dir, self.openflow_port, self.lcname, self.conffile)], 
                                                 shell=True,
                                                 #env=os.environ,
