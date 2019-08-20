@@ -1,6 +1,11 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
+import os
+print("PATH       %s" % os.environ['PATH'])
+print("PYTHONPATH %s" % os.environ['PYTHONPATH'])
+        
+
 
 import logging
 import threading
@@ -154,10 +159,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self._setup_loggers(loggerid, logfilename, debuglogfilename)
         self.logger.warning("Starting up RyuTranslateInterface")
 
-        import os
-        self.logger.info("PATH       %s" % os.environ['PATH'])
-        self.logger.info("PYTHONPATH %s" % os.environ['PYTHONPATH'])
-        
         # Configuration file + parsing
         self.name = CONF['atlanticwave']['lcname']
         self.conf_file = CONF['atlanticwave']['conffile']
