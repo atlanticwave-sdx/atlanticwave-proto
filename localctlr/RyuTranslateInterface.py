@@ -154,6 +154,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self._setup_loggers(loggerid, logfilename, debuglogfilename)
         self.logger.warning("Starting up RyuTranslateInterface")
 
+        import os
+        self.logger.info("PATH       %s" % os.environ['PATH'])
+        self.logger.info("PYTHONPATH %s" % os.environ['PYTHONPATH'])
+        
         # Configuration file + parsing
         self.name = CONF['atlanticwave']['lcname']
         self.conf_file = CONF['atlanticwave']['conffile']
