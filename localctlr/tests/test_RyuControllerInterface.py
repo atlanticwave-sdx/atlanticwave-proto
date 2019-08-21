@@ -74,7 +74,7 @@ class RyuControllerFullTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Setup the virtual switch
-        subprocess.check_call(['mn', '-c'])
+        #subprocess.check_call(['mn', '-c'])
         subprocess.call(['fuser', '-k', '55767/tcp'])
         subprocess.call(['fuser', '-k', '55767/tcp'])
         subprocess.check_call(['ovs-vsctl', 'add-br', 'br_ovs'])
@@ -97,6 +97,11 @@ class RyuControllerFullTests(unittest.TestCase):
         subprocess.call(['pkill', 'ryu-manager'])
         cls.ctlrint.inter_cm_cxn.close()
         cls.ctlrint.inter_cm.close_listening_port()
+        
+        subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
+        subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
+        sleep(5)
+        
         #subprocess.check_call(['mn', '-c'])
         #subprocess.call(['fuser', '-k', '55767/tcp'])
         #subprocess.call(['fuser', '-k', '55767/tcp'])

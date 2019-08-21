@@ -42,7 +42,7 @@ class LocalControllerTest(unittest.TestCase):
 
         # Setup the virtual switch
         print "Set up virtual switch"
-        subprocess.check_call(['mn', '-c'], stdout=FNULL, stderr=subprocess.STDOUT)
+        #subprocess.check_call(['mn', '-c'], stdout=FNULL, stderr=subprocess.STDOUT)
         sleep(1)
         #subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
         #subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
@@ -75,8 +75,9 @@ class LocalControllerTest(unittest.TestCase):
     def tearDownClass(cls):
         # Delete virtual switch
         # FIXME: whenever this is called, there is an error: "cannot switch to a different thread"
-        #subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
-        #sleep(5)
+        subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
+        subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
+        sleep(5)
 
 #        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
 #        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)

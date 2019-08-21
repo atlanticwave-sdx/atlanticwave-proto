@@ -34,7 +34,7 @@ class RyuTranslateTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Setup the virtual switch
-        subprocess.check_call(['mn', '-c'])
+        #subprocess.check_call(['mn', '-c'])
         #subprocess.call(['fuser', '-k', '55767/tcp'])
         #subprocess.call(['fuser', '-k', '55767/tcp'])
         subprocess.check_call(['ovs-vsctl', 'add-br', 'br_ovs'])
@@ -53,10 +53,14 @@ class RyuTranslateTests(unittest.TestCase):
         cls.cookie = "1234"
 
     @classmethod
-    def atearDownClass(cls):
+    def tearDownClass(cls):
         sleep(50)
         cls.ctlrint.inter_cm_cxn.close()
         cls.ctlrint.inter_cm.close_listening_port()
+
+        subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
+        subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
+        sleep(5)
         #subprocess.call(['fuser', '-k', '55767/tcp'])
 
     ######################## TRANSLATE MATCH TESTS #########################
