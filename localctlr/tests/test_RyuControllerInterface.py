@@ -6,6 +6,7 @@ import unittest
 import mock
 import subprocess
 import os
+import logging
 from localctlr.RyuControllerInterface import *
 from localctlr.RyuTranslateInterface import *
 from shared.MatchActionLCRule import *

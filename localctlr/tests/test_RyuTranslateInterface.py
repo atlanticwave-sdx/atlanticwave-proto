@@ -9,6 +9,7 @@ import mock
 import subprocess
 import os
 import re
+import logging
 from localctlr.RyuTranslateInterface import *
 from localctlr.RyuControllerInterface import *
 

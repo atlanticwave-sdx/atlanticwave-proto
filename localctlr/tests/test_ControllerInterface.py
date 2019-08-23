@@ -5,6 +5,7 @@
 # Unittests for localctlr/ControllerInterface class
 
 import unittest
+import logging
 from localctlr.ControllerInterface import *
 
 class BasicTests(unittest.TestCase):

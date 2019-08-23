@@ -5,6 +5,7 @@
 # Unittests for localctlr/InterRyuControllerConnectionManager class
 
 import unittest
+import logging
 from localctlr.InterRyuControllerConnectionManager import *
 
 class BasicTests(unittest.TestCase):

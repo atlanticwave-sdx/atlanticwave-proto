@@ -2,7 +2,7 @@
 # AtlanticWave/SDX Project
 
 import unittest
-
+import logging
 from localctlr.LCRuleManager import *
 from shared.SDXControllerConnectionManagerConnection import SDXMessageInstallRule, SDXMessageRemoveRule
 
