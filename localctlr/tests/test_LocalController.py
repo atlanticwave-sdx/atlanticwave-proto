@@ -48,7 +48,7 @@ class LocalControllerTest(unittest.TestCase):
         cls.logger.setLevel(logging.DEBUG)
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__class__.__name__)
+        cls.logger.debug("Beginning %s" % cls.__name__)
 
         # Setup the virtual switch
         print "Set up virtual switch"
@@ -88,7 +88,7 @@ class LocalControllerTest(unittest.TestCase):
         subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
         subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
         sleep(5)
-        cls.logger.debug("Ending %s" % cls.__class__.__name__)
+        cls.logger.debug("Ending %s" % cls.__name__)
 #        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
 #        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
 #        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
