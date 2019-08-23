@@ -8,6 +8,7 @@ import unittest
 import mock
 import subprocess
 import os
+import traceback
 from localctlr.LocalController import *
 from RemoteControllerHarness import RemoteControllerHarness
 from time import sleep
@@ -51,7 +52,7 @@ class LocalControllerTest(unittest.TestCase):
         cls.logger.debug("Beginning %s" % cls.__name__)
 
         # Setup the virtual switch
-        print "Set up virtual switch"
+        cls.logger.debug( "Set up virtual switch")
         #subprocess.check_call(['mn', '-c'], stdout=FNULL, stderr=subprocess.STDOUT)
         sleep(1)
         #subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
@@ -64,18 +65,18 @@ class LocalControllerTest(unittest.TestCase):
         subprocess.check_call(['ovs-vsctl', 'set', 'bridge', 'br_ovs', 'other-config:datapath-id=0000000000000001'])
 
         subprocess.check_call(['ovs-vsctl', 'set-controller', 'br_ovs', 'tcp:127.0.0.1:6633'])
-        print "Virtual switch is setup\n"
+        cls.logger.debug("Virtual switch is setup\n")
 
 
         # Setup RyuControllerInterface, which sets up RyuTranslateInterface
         # Only returns once RyuTranslateInterface has a datapath.
-        print "LocalControllerTest.setUpClass - Options:\n%s\n" % options
+        cls.logger.debug("LocalControllerTest.setUpClass - Options:\n%s\n" % options)
         cls.harness = RemoteControllerHarness()
         cls.ctlrint = LocalController(True, options)
 
 #        cls.ctlrint.start_sdx_controller_connection()
         while cls.harness.is_connected() == False:
-            print "Waiting for harness connection"
+            cls.logger.debug("Waiting for harness connection")
             sleep(1)
 
        # sleep(20)
@@ -98,20 +99,20 @@ class LocalControllerTest(unittest.TestCase):
     def call_test_rule_installation(self, num, test5, test6, test7=None, 
                                     test8=None, test9=None, test10=None):
         sleep(1)
-        #print "test_rule_installation_" + str(num)
-        print "LC: %s" % (self.ctlrint)
-        print "SENDING NEW COMMAND: %s" % self.harness.examples[num]
+        #self.logger.debug("test_rule_installation_" + str(num))
+        self.logger.debug("LC: %s" % (self.ctlrint))
+        self.logger.debug("SENDING NEW COMMAND: %s" % self.harness.examples[num])
         self.harness.send_new_command(self.harness.examples[num])
         sleep(1) # To make sure the rule changes have propogated.
                  # 0.1 second isn't enough
         output = subprocess.check_output(['ovs-ofctl', '-O', 'OpenFlow13','dump-flows', 'br_ovs'])
-        print "\nINSTALL OUTPUT: %s\n" % output
+        self.logger.debug("INSTALL OUTPUT: %s" % output)
         lines = output.split('\n')
 
         self.harness.send_rm_command(self.harness.examples[num])
         sleep(1) # To make sure the rule changes have propogated.
         output = subprocess.check_output(['ovs-ofctl', '-O', 'OpenFlow13','dump-flows', 'br_ovs'])
-        print "\nREMOVE OUTPUT: %s\n" % output
+        self.logger.debug("REMOVE OUTPUT: %s" % output)
         rmlines = output.split('\n')
 
         # Installation tests
@@ -119,10 +120,10 @@ class LocalControllerTest(unittest.TestCase):
             #int "CHECKING LINE: %s" % line
             if "priority=100" not in line:
                 continue
-            print "MATCHED LINE:\n     %s" % line
+            self.logger.debug("MATCHED LINE:\n     %s" % line)
             count = 0
             for e in line.split(','):
-                print "%d:%s" % (count, e)
+                self.logger.debug("%d:%s" % (count, e))
                 count += 1
             self.failUnlessEqual(line.split(',')[5].strip(), test5)
             self.failUnlessEqual(line.split(',')[6].strip(), test6)
@@ -141,21 +142,33 @@ class LocalControllerTest(unittest.TestCase):
                 
             
     def test_rule_installation_0(self):
+        stack = traceback.extract_stack()
+        filename, codeline, func, text = stack[-2]
+        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
         self.call_test_rule_installation(0, 
                                          "priority=100",
                                          "dl_dst=00:00:00:00:00:00 actions=set_field:00:00:00:00:00:02->eth_dst")
     def test_rule_installation_1(self):
+        stack = traceback.extract_stack()
+        filename, codeline, func, text = stack[-2]
+        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
         self.call_test_rule_installation(1, 
                                          "priority=100",
                                          "ip",
                                          "nw_src=1.2.3.4 actions=set_field:2.3.4.5->ip_src")
     def test_rule_installation_2(self):
+        stack = traceback.extract_stack()
+        filename, codeline, func, text = stack[-2]
+        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
         self.call_test_rule_installation(2,
                                          "priority=100",
                                          "ip",
                                          "dl_dst=00:00:00:00:00:03",
                                          "nw_src=3.4.5.6 actions=set_field:00:00:00:00:00:04->eth_src")
     def test_rule_installation_3(self):
+        stack = traceback.extract_stack()
+        filename, codeline, func, text = stack[-2]
+        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
         self.call_test_rule_installation(3, 
                                          "priority=100",
                                          "ip",
@@ -164,6 +177,9 @@ class LocalControllerTest(unittest.TestCase):
                                          "set_field:5.6.7.8->ip_dst")
 
     def test_rule_installation_4(self):
+        stack = traceback.extract_stack()
+        filename, codeline, func, text = stack[-2]
+        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
         self.call_test_rule_installation(4,
                                          "priority=100",
                                          "tcp actions=output:1")
