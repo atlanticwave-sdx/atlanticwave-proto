@@ -40,6 +40,16 @@ class LocalControllerTest(unittest.TestCase):
     def setUpClass(cls):
         # Taken and modified from  RyuControllerInterfaceTest.py
 
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__class__.__name__)
+
         # Setup the virtual switch
         print "Set up virtual switch"
         #subprocess.check_call(['mn', '-c'], stdout=FNULL, stderr=subprocess.STDOUT)
@@ -78,7 +88,7 @@ class LocalControllerTest(unittest.TestCase):
         subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
         subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
         sleep(5)
-
+        cls.logger.debug("Ending %s" % cls.__class__.__name__)
 #        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
 #        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
 #        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
