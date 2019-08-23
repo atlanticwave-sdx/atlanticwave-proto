@@ -29,10 +29,23 @@ def lccallback(a,b):
 
 class RyuControllerInterfaceInit(unittest.TestCase):
     @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
+    @classmethod
     def tearDownClass(cls):
         subprocess.call(['pkill', 'ryu-manager'])
 
     def test_basic_init(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         ctlrint = RyuControllerInterface(NAME, MANIFEST, IP, 
                                          RYUCXNPORT, OFPORT,
                                          lccallback,
@@ -43,11 +56,24 @@ class RyuControllerInterfaceInit(unittest.TestCase):
 class RyuControllerInterfaceSendRecv(unittest.TestCase):
 
     @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
+    @classmethod
     def tearDownClass(cls):
         subprocess.call(['pkill', 'ryu-manager'])
 
 
     def test_send_recv(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         ctlrint = RyuControllerInterface(NAME, MANIFEST, IP, 
                                          RYUCXNPORT, OFPORT,
                                          lccallback,
@@ -73,6 +99,16 @@ class RyuControllerFullTests(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
         # Setup the virtual switch
         #subprocess.check_call(['mn', '-c'])
         #subprocess.call(['fuser', '-k', '55767/tcp'])
@@ -154,6 +190,7 @@ class RyuControllerFullTests(unittest.TestCase):
             self.failUnless("priority=100" not in line)
 
     def test_rule_installation(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         matches = [ETH_DST("00:00:00:00:00:01")]
         actions = [SetField(ETH_DST("00:00:00:00:00:02"))]
         rule = MatchActionLCRule(self.switch_id, matches, actions)

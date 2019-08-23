@@ -33,6 +33,17 @@ class RyuTranslateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
         # Setup the virtual switch
         #subprocess.check_call(['mn', '-c'])
         #subprocess.call(['fuser', '-k', '55767/tcp'])
@@ -65,6 +76,7 @@ class RyuTranslateTests(unittest.TestCase):
 
     ######################## TRANSLATE MATCH TESTS #########################
     def trans_match_test(self, ofm, ofpm):
+        self.logger.warning("BEGIN %s" % (self.id()))
         pass
         if type(ofm) != type([]):
             matches = [ofm]
@@ -98,48 +110,61 @@ class RyuTranslateTests(unittest.TestCase):
 
 
     def test_trans_match_IN_PORT(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(IN_PORT(1), "in_port=1")
 
     def test_trans_match_ETH_DST(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(ETH_DST("00:00:00:00:00:01"), 
                               "dl_dst=00:00:00:00:00:01")
 
     def test_trans_match_ETH_SRC(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(ETH_SRC("00:00:00:00:00:02"), 
                               "dl_src=00:00:00:00:00:02")
 
     def test_trans_match_IP_PROTO(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(IP_PROTO(6), "tcp")
         self.trans_match_test(IP_PROTO(17), "udp")
         self.trans_match_test(IP_PROTO(22), "ip,nw_proto=22")
 
     def test_trans_match_IPV4_SRC(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(IPV4_SRC("1.2.3.4"), "ip,nw_src=1.2.3.4")
 
     def test_trans_match_IPV4_DST(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(IPV4_DST("2.3.4.5"), "ip,nw_dst=2.3.4.5")
 
 #    def test_trans_match_IPV6_SRC(self):
+#        self.logger.warning("BEGIN %s" % (self.id()))
 #        self.trans_match_test(IPV6_SRC("2001:0db8:0000:0042:0000:8a2e:0370:7334"), 
 #                        {'ipv6_src':"2001:0db8:0000:0042:0000:8a2e:0370:7334"})
 
 #    def test_trans_match_IPV6_DST(self):
+#        self.logger.warning("BEGIN %s" % (self.id()))
 #        self.trans_match_test(IPV6_DST("2001:0db8:0000:0042:0000:8a2e:0370:7335"), 
 #                        {'ipv6_dst':"2001:0db8:0000:0042:0000:8a2e:0370:7335"})
 
     def test_trans_match_TCP_SRC(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(TCP_SRC(6), "tcp,tp_src=6")
 
     def test_trans_match_TCP_DST(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(TCP_DST(7), "tcp,tp_dst=7")
 
     def test_trans_match_UDP_SRC(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(UDP_SRC(8), "udp,tp_src=8")
 
     def test_trans_match_UDP_DST(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_match_test(UDP_DST(9), "udp,tp_dst=9")
 
     def test_trans_match_multi(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
          #ip not needed in the check string, as tcp implies ip
         self.trans_match_test([IPV4_SRC("4.5.6.7"), TCP_DST(3456)],
                               "tcp,nw_src=4.5.6.7,tp_dst=3456")
@@ -152,6 +177,7 @@ class RyuTranslateTests(unittest.TestCase):
     ######################## TRANSLATE ACTION TESTS #########################
 
     def trans_action_test(self, ofa, ofpa):
+        self.logger.warning("BEGIN %s" % (self.id()))
         matches = [IPV4_DST("6.4.5.6"), UDP_SRC(456),IN_PORT(3)]
         if type(ofa) != type([]):
             actions = [ofa]
@@ -195,6 +221,7 @@ class RyuTranslateTests(unittest.TestCase):
 
 
     def test_trans_action_SetField(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_action_test(SetField(ETH_DST("00:00:00:00:00:02")),
                                "set_field:00:00:00:00:00:02->eth_dst")
         self.trans_action_test(SetField(UDP_SRC(3456)),
@@ -205,6 +232,7 @@ class RyuTranslateTests(unittest.TestCase):
                                "set_field:00:00:00:00:00:02->eth_dst,set_field:3456->udp_src")
 
     def test_trans_action_Forward(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_action_test(Forward(3),
                                "output:3")
         self.trans_action_test(Forward(5),
@@ -213,14 +241,17 @@ class RyuTranslateTests(unittest.TestCase):
                                "output:5,output:1")
 
     def test_trans_action_Continue(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_action_test(Continue(),
                                "goto_table:2")
 
     def test_trans_action_Drop(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_action_test(Drop(),
                                "clear_actions")
 
     def test_trans_action_SetField_and_Continue(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.trans_action_test([SetField(UDP_SRC(3456)),
                                 Continue()],
                                "set_field:3456->udp_src,goto_table:2")

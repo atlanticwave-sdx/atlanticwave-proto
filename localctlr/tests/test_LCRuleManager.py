@@ -8,7 +8,20 @@ from shared.SDXControllerConnectionManagerConnection import SDXMessageInstallRul
 
 
 class InitTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
     def test_singleton(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         firstManager = LCRuleManager()
         secondManager = LCRuleManager()
 
@@ -16,12 +29,26 @@ class InitTest(unittest.TestCase):
         self.failUnless(firstManager is secondManager)
 
     def test_init_fields(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager("lcrulemanagertest.db")
         # if this doesn't blow up, we should be good.
         #FIXME: how to verify the DB is good?
 
 class AddRuleTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
     def test_good_add_rules(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         rule = "FAKE RULE"
         cookie = 1
@@ -31,6 +58,7 @@ class AddRuleTest(unittest.TestCase):
         # We'll test that we can get the rule in a bit.
 
     def test_add_bad_status(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         rule = "FAKE RULE"
         cookie = 2
@@ -40,6 +68,7 @@ class AddRuleTest(unittest.TestCase):
                               m.add_rule, cookie, switch_id, rule, status)
 
     def test_duplicate_add(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         rule = "FAKE RULE"
         cookie = 3
@@ -53,7 +82,20 @@ class AddRuleTest(unittest.TestCase):
 
     
 class GetRuleTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
     def test_get_known_rule(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         # Add rule, then get it to confirm that it was correct.
         m = LCRuleManager()
         rule1 = "FAKE RULE"
@@ -79,6 +121,7 @@ class GetRuleTest(unittest.TestCase):
         self.failUnlessEqual(rule2, getrules[0])
 
     def test_get_unknown_rule(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         # Try to get a rule that doesn't exist, should return none
         m = LCRuleManager()
         rule1 = "FAKE RULE"
@@ -101,12 +144,26 @@ class GetRuleTest(unittest.TestCase):
         self.failUnlessEqual([], getrules)
 
     def test_get_rule_full_tuple(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         #FIXME
         pass
     
 
 class FindRuleTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
     def test_find_all_empty_rules(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         # Immediately check for rules
         m = LCRuleManager()
         m.__init__()
@@ -114,6 +171,7 @@ class FindRuleTest(unittest.TestCase):
         self.failUnlessEqual([], rules)
 
     def test_find_all_rules(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         m.__init__()
         rule1 = "FAKE RULE"
@@ -133,6 +191,7 @@ class FindRuleTest(unittest.TestCase):
         self.failUnlessEqual(len(rules), 2)
 
     def test_find_filtered_cookie_rules(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         m.__init__()
         rule1 = "FAKE RULE"
@@ -151,6 +210,7 @@ class FindRuleTest(unittest.TestCase):
         self.failUnlessEqual(len(rules), 1)
 
     def test_find_filtered_status_rules(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         m.__init__()
         rule1 = "FAKE RULE"
@@ -170,13 +230,28 @@ class FindRuleTest(unittest.TestCase):
 
 
     def test_find_filtered_rule_rules(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         #FIXME: This is impractical right now, so not going to test it.
         pass
     
     
 
 class ChangeStatusTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
     def test_good_status_change(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         m.__init__()
         rule1 = "FAKE RULE"
@@ -205,6 +280,7 @@ class ChangeStatusTest(unittest.TestCase):
         self.failIfEqual(status1, status2)
 
     def test_invalid_status_change(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         m.__init__()
         rule1 = "FAKE RULE"
@@ -225,7 +301,20 @@ class ChangeStatusTest(unittest.TestCase):
     
 
 class RemoveRuleTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
     def test_remove_known_rule(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         m.__init__()
         rule1 = "FAKE RULE"
@@ -242,6 +331,7 @@ class RemoveRuleTest(unittest.TestCase):
         self.failUnlessEqual(post_rule, [])
     
     def test_remove_unknown_rule(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         m.__init__()
         cookie1 = 42
@@ -250,6 +340,7 @@ class RemoveRuleTest(unittest.TestCase):
                               m.rm_rule, cookie1, switch_id1)
 
     def test_duplicate_remove_rule(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         m = LCRuleManager()
         m.__init__()
         rule1 = "FAKE RULE"
@@ -272,7 +363,20 @@ class RemoveRuleTest(unittest.TestCase):
 
 
 class InitialRulesTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger(cls.__class__.__name__)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(formatter)
+        cls.logger.setLevel(logging.DEBUG)
+        cls.logger.addHandler(console)
+
+        cls.logger.debug("Beginning %s" % cls.__name__)
+
     def test_add_initial_rule(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         # Make sure it doesn't blow up
         m = LCRuleManager()
         m.__init__()
@@ -282,6 +386,7 @@ class InitialRulesTest(unittest.TestCase):
         m.add_initial_rule(rule1, cookie1, switch_id1)
     
     def test_add_initial_rule_in_db(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         # With empty DB, add initial rule, then call initial rules complete
         # Verify that rule was added
         m = LCRuleManager()
@@ -313,6 +418,7 @@ class InitialRulesTest(unittest.TestCase):
             self.failUnlessEqual(r, rule1)
 
     def test_initial_rule_rm_rule(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         # Add two rules, add only one of them as an initial rule, call
         # initial rules complete, confirm that one still exists and the other is
         # removed.
@@ -376,6 +482,7 @@ class InitialRulesTest(unittest.TestCase):
         
 
     def test_initial_rule_twice_rule(self):
+        self.logger.warning("BEGIN %s" % (self.id()))
         # Empty DB, add rule with initial_rules, remove same rule so DB's empty
         # again, add a different initial_rule, confirm that only the second
         # initial rule is added 

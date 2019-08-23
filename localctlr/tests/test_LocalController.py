@@ -8,7 +8,6 @@ import unittest
 import mock
 import subprocess
 import os
-import traceback
 from localctlr.LocalController import *
 from RemoteControllerHarness import RemoteControllerHarness
 from time import sleep
@@ -142,33 +141,25 @@ class LocalControllerTest(unittest.TestCase):
                 
             
     def test_rule_installation_0(self):
-        stack = traceback.extract_stack()
-        filename, codeline, func, text = stack[-2]
-        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.call_test_rule_installation(0, 
                                          "priority=100",
                                          "dl_dst=00:00:00:00:00:00 actions=set_field:00:00:00:00:00:02->eth_dst")
     def test_rule_installation_1(self):
-        stack = traceback.extract_stack()
-        filename, codeline, func, text = stack[-2]
-        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.call_test_rule_installation(1, 
                                          "priority=100",
                                          "ip",
                                          "nw_src=1.2.3.4 actions=set_field:2.3.4.5->ip_src")
     def test_rule_installation_2(self):
-        stack = traceback.extract_stack()
-        filename, codeline, func, text = stack[-2]
-        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.call_test_rule_installation(2,
                                          "priority=100",
                                          "ip",
                                          "dl_dst=00:00:00:00:00:03",
                                          "nw_src=3.4.5.6 actions=set_field:00:00:00:00:00:04->eth_src")
     def test_rule_installation_3(self):
-        stack = traceback.extract_stack()
-        filename, codeline, func, text = stack[-2]
-        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.call_test_rule_installation(3, 
                                          "priority=100",
                                          "ip",
@@ -177,9 +168,7 @@ class LocalControllerTest(unittest.TestCase):
                                          "set_field:5.6.7.8->ip_dst")
 
     def test_rule_installation_4(self):
-        stack = traceback.extract_stack()
-        filename, codeline, func, text = stack[-2]
-        self.logger.warning("BEGIN %s:%s" % (self.__class__.__name__, func))
+        self.logger.warning("BEGIN %s" % (self.id()))
         self.call_test_rule_installation(4,
                                          "priority=100",
                                          "tcp actions=output:1")
