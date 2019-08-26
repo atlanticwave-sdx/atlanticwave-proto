@@ -66,17 +66,26 @@ class RyuTranslateTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        sleep(50)
+        cls.logger.debug("tearDownClass %s - Errors below are due to bad cleanup, please ignore!")
+        #sleep(50)
+        subprocess.check_call(['pkill', 'ryu-manager'])
         cls.ctlrint.inter_cm_cxn.close()
         cls.ctlrint.inter_cm.close_listening_port()
 
         subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
         subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
-        sleep(5)
+
+        sleep(0)
+        cls.logger.debug("Ending %s" % cls.__name__)
         #subprocess.call(['fuser', '-k', '55767/tcp'])
 
     ######################## TRANSLATE MATCH TESTS #########################
-    def trans_match_test(self, ofm, ofpm):
+    def trans_match_test(self, ofm=None, ofpm=None):
+        # nose isn't that smart, since it has "test" in the name, it tries to 
+        # run it as a test. This breaks things. So, workaround.
+        if ofm == None:
+            return
+        
         self.logger.warning("BEGIN %s" % (self.id()))
         pass
         if type(ofm) != type([]):
@@ -177,7 +186,12 @@ class RyuTranslateTests(unittest.TestCase):
 
     ######################## TRANSLATE ACTION TESTS #########################
 
-    def trans_action_test(self, ofa, ofpa):
+    def trans_action_test(self, ofa=None, ofpa=None):
+        # nose isn't that smart, since it has "test" in the name, it tries to 
+        # run it as a test. This breaks things. So, workaround.
+        if ofa == None:
+            return
+
         self.logger.warning("BEGIN %s" % (self.id()))
         matches = [IPV4_DST("6.4.5.6"), UDP_SRC(456),IN_PORT(3)]
         if type(ofa) != type([]):
