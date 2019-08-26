@@ -66,11 +66,11 @@ class RyuTranslateTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.logger.debug("tearDownClass %s - Errors below are due to bad cleanup, please ignore!")
+        cls.logger.debug("tearDownClass %s - Errors below are due to bad cleanup, please ignore!" % cls.__name__)
         #sleep(50)
         subprocess.check_call(['pkill', 'ryu-manager'])
-        cls.ctlrint.inter_cm_cxn.close()
-        cls.ctlrint.inter_cm.close_listening_port()
+        #cls.ctlrint.inter_cm_cxn.close()
+        #cls.ctlrint.inter_cm.close_listening_port()
 
         subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
         subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])

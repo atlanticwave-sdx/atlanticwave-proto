@@ -85,6 +85,8 @@ class LocalControllerTest(unittest.TestCase):
     def tearDownClass(cls):
         # Delete virtual switch
         # FIXME: whenever this is called, there is an error: "cannot switch to a different thread"
+        cls.logger.debug("tearDownClass %s - Errors below are due to bad cleanup, please ignore!" % cls.__name__)
+        subprocess.check_call(['pkill', 'ryu-manager'])
         subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
         subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
         sleep(5)
