@@ -95,8 +95,22 @@ class LocalControllerTest(unittest.TestCase):
 #        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
         pass
 
-    def call_test_rule_installation(self, num, test5, test6, test7=None, 
-                                    test8=None, test9=None, test10=None):
+    def call_test_rule_installation(self, num=None, test5=None, test6=None, 
+                                    test7=None, test8=None, test9=None, 
+                                    test10=None):
+        # nose isn't that smart, since it has "test" in the name, it tries to 
+        # run it as a test. This breaks things. So, workaround.
+        if num == None:
+            return
+        if test5 == None or test6 == None:
+            argcount = 2 # self, num
+            if test5 != None:
+                argcount += 1
+            if test6 != None:
+                argcount += 1
+
+            raise(TypeError("call_test_rule_installation() takes at least 4 arguments (%d given)" % argcount))
+
         sleep(1)
         #self.logger.debug("test_rule_installation_" + str(num))
         self.logger.debug("LC: %s" % (self.ctlrint))
