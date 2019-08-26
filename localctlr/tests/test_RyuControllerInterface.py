@@ -146,8 +146,20 @@ class RyuControllerFullTests(unittest.TestCase):
         #subprocess.call(['fuser', '-k', '6633/tcp'])
         sleep(1)
 
-    def call_test_rule_installation(self, rule, test5, test6, test7=None, 
-                                    test8=None, test9=None, test10=None):
+    def call_test_rule_installation(self, rule=None, test5=None, test6=None, 
+                                    test7=None, test8=None, test9=None, 
+                                    test10=None):
+        # nose isn't that smart, since it has "test" in the name, it tries to 
+        # run it as a test. This breaks things. So, workaround.
+        if rule == None:
+            return
+        if test5 == None or test6 == None:
+            argcount = 2 # self, rule
+            if test5 != None:
+                argcount += 1
+            if test6 != None:
+                argcount += 1
+
         sleep(1)
         #print "test_rule_installation_" + str(num)
         #print "LC: %s" % (self.ctlrint)
