@@ -40,12 +40,13 @@ class LocalControllerTest(unittest.TestCase):
     def setUpClass(cls):
         # Taken and modified from  RyuControllerInterfaceTest.py
 
-        cls.logger = logging.getLogger(cls.__class__.__name__)
+        cls.logger = logging.getLogger(cls.__name__)
         formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
         console = logging.StreamHandler()
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s" % cls.__name__)
@@ -85,11 +86,12 @@ class LocalControllerTest(unittest.TestCase):
     def tearDownClass(cls):
         # Delete virtual switch
         # FIXME: whenever this is called, there is an error: "cannot switch to a different thread"
+        sleep(1)
         cls.logger.debug("tearDownClass %s - Errors below are due to bad cleanup, please ignore!" % cls.__name__)
         subprocess.check_call(['pkill', 'ryu-manager'])
         subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
         subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
-        sleep(5)
+        sleep(1)
         cls.logger.debug("Ending %s" % cls.__name__)
 #        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
 #        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)

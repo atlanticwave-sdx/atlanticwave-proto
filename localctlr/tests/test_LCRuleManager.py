@@ -10,12 +10,13 @@ from shared.SDXControllerConnectionManagerConnection import SDXMessageInstallRul
 class InitTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.logger = logging.getLogger(cls.__class__.__name__)
+        cls.logger = logging.getLogger(cls.__name__)
         formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
         console = logging.StreamHandler()
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s" % cls.__name__)
@@ -37,7 +38,7 @@ class InitTest(unittest.TestCase):
 class AddRuleTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.logger = logging.getLogger(cls.__class__.__name__)
+        cls.logger = logging.getLogger(cls.__name__)
         formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
         console = logging.StreamHandler()
         console.setLevel(logging.DEBUG)

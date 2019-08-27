@@ -31,23 +31,27 @@ def lccallback(a,b):
 class RyuControllerInterfaceInit(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.logger = logging.getLogger(cls.__class__.__name__)
+        cls.logger = logging.getLogger(cls.__name__)
         formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
         console = logging.StreamHandler()
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.ctlrint = None
 
     @classmethod
     def tearDownClass(cls):
         subprocess.call(['pkill', 'ryu-manager'])
+        #cls.ctlrint.inter_cm_cxn.close()
+        #cls.ctlrint.inter_cm.close_listening_port()
 
     def test_basic_init(self):
         self.logger.warning("BEGIN %s" % (self.id()))
-        ctlrint = RyuControllerInterface(NAME, MANIFEST, IP, 
+        self.ctlrint = RyuControllerInterface(NAME, MANIFEST, IP, 
                                          RYUCXNPORT, OFPORT,
                                          lccallback,
                                          run_ryu_manager=False,
@@ -58,24 +62,27 @@ class RyuControllerInterfaceSendRecv(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.logger = logging.getLogger(cls.__class__.__name__)
+        cls.logger = logging.getLogger(cls.__name__)
         formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
         console = logging.StreamHandler()
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.ctlrint = None
 
     @classmethod
     def tearDownClass(cls):
         subprocess.call(['pkill', 'ryu-manager'])
-
-
+        #cls.ctlrint.inter_cm_cxn.close()
+        #cls.ctlrint.inter_cm.close_listening_port()
+        
     def test_send_recv(self):
         self.logger.warning("BEGIN %s" % (self.id()))
-        ctlrint = RyuControllerInterface(NAME, MANIFEST, IP, 
+        self.ctlrint = RyuControllerInterface(NAME, MANIFEST, IP, 
                                          RYUCXNPORT, OFPORT,
                                          lccallback,
                                          run_ryu_manager=False,
@@ -100,12 +107,13 @@ class RyuControllerFullTests(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        cls.logger = logging.getLogger(cls.__class__.__name__)
+        cls.logger = logging.getLogger(cls.__name__)
         formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
         console = logging.StreamHandler()
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s" % cls.__name__)
@@ -131,6 +139,7 @@ class RyuControllerFullTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.logger.debug("tearDownClass %s - Errors below are due to bad cleanup, please ignore!" % cls.__name__)
         subprocess.call(['pkill', 'ryu-manager'])
         cls.ctlrint.inter_cm_cxn.close()
         cls.ctlrint.inter_cm.close_listening_port()
@@ -145,6 +154,7 @@ class RyuControllerFullTests(unittest.TestCase):
         #subprocess.call(['fuser', '-k', '6633/tcp'])
         #subprocess.call(['fuser', '-k', '6633/tcp'])
         sleep(1)
+        cls.logger.debug("Ending %s" % cls.__name__)
 
     def call_test_rule_installation(self, rule=None, test5=None, test6=None, 
                                     test7=None, test8=None, test9=None, 
