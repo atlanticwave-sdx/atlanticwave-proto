@@ -79,7 +79,7 @@ class LocalControllerTest(unittest.TestCase):
             cls.logger.debug("Waiting for harness connection")
             sleep(1)
 
-       # sleep(20)
+        #sleep(200)
 #        cls.ctlrint.start_main_loop()
 
     @classmethod
@@ -88,15 +88,17 @@ class LocalControllerTest(unittest.TestCase):
         # FIXME: whenever this is called, there is an error: "cannot switch to a different thread"
         sleep(1)
         cls.logger.debug("tearDownClass %s - Errors below are due to bad cleanup, please ignore!" % cls.__name__)
-        subprocess.check_call(['pkill', 'ryu-manager'])
+#        subprocess.check_call(['pkill', 'ryu-manager'])
         subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
         subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
-        sleep(1)
+        sleep(2)
         cls.logger.debug("Ending %s" % cls.__name__)
 #        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
 #        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
 #        subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
 #        subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
+        #sleep(15)
+        sleep(1)
         pass
 
     def call_test_rule_installation(self, num=None, test5=None, test6=None, 

@@ -48,6 +48,7 @@ class RyuControllerInterfaceInit(unittest.TestCase):
         subprocess.call(['pkill', 'ryu-manager'])
         #cls.ctlrint.inter_cm_cxn.close()
         #cls.ctlrint.inter_cm.close_listening_port()
+        pass
 
     def test_basic_init(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -79,6 +80,7 @@ class RyuControllerInterfaceSendRecv(unittest.TestCase):
         subprocess.call(['pkill', 'ryu-manager'])
         #cls.ctlrint.inter_cm_cxn.close()
         #cls.ctlrint.inter_cm.close_listening_port()
+        pass
         
     def test_send_recv(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -140,9 +142,10 @@ class RyuControllerFullTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.logger.debug("tearDownClass %s - Errors below are due to bad cleanup, please ignore!" % cls.__name__)
-        subprocess.call(['pkill', 'ryu-manager'])
+        #subprocess.call(['pkill', 'ryu-manager'])
         cls.ctlrint.inter_cm_cxn.close()
         cls.ctlrint.inter_cm.close_listening_port()
+        del(cls.ctlrint)
         
         subprocess.check_call(['ovs-vsctl', 'del-port', 'vi0'])
         subprocess.check_call(['ovs-vsctl', 'del-br', 'br_ovs'])
@@ -153,7 +156,7 @@ class RyuControllerFullTests(unittest.TestCase):
         #subprocess.call(['fuser', '-k', '55767/tcp'])
         #subprocess.call(['fuser', '-k', '6633/tcp'])
         #subprocess.call(['fuser', '-k', '6633/tcp'])
-        sleep(1)
+        #sleep(1)
         cls.logger.debug("Ending %s" % cls.__name__)
 
     def call_test_rule_installation(self, rule=None, test5=None, test6=None, 

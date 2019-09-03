@@ -46,8 +46,13 @@ class RyuTranslateTests(unittest.TestCase):
 
         cls.logger.debug("Beginning %s" % cls.__name__)
 
+        sleep(1)
         # Setup the virtual switch
         #subprocess.check_call(['mn', '-c'])
+        #output = subprocess.check_call(['pgrep','ryu'])
+        output = subprocess.check_call(['ps'])        
+        #subprocess.check_call(['pkill', 'ryu-manager'])
+        #cls.logger.debug("output of pgrep:\n%s\n" % output)
         #subprocess.call(['fuser', '-k', '55767/tcp'])
         #subprocess.call(['fuser', '-k', '55767/tcp'])
         subprocess.check_call(['ovs-vsctl', 'add-br', 'br_ovs'])
@@ -55,6 +60,8 @@ class RyuTranslateTests(unittest.TestCase):
         subprocess.check_call(['ovs-vsctl', 'set', 'bridge', 'br_ovs', 'other-config:datapath-id=0000000000000001'])
         subprocess.check_call(['ovs-vsctl', 'set-controller', 'br_ovs', 'tcp:127.0.0.1:6633'])
 
+        output = subprocess.call(['ovs-vsctl','show'])
+        cls.logger.debug("FIRST output of ovs-vsctl show\n%s\n" % output)
 
         # Setup RyuControllerInterface, which sets up RyuTranslateInterface
         # Only returns once RyuTranslateInterface has a datapath.
@@ -64,6 +71,21 @@ class RyuTranslateTests(unittest.TestCase):
                                              print_callback)
         cls.switch_id = 1
         cls.cookie = "1234"
+        
+        loop = 0
+        while loop < 100:
+            output = subprocess.check_output(['ovs-vsctl','show'])
+            #cls.logger.debug("SECOND output of ovs-vsctl show\n%s\n" % output)
+            cls.logger.info(str(output))
+            nuts = "is_connected" in str(output)
+            cls.logger.info("Output: %s %s" % (type(output), nuts))
+            sleep(.5)
+            if nuts:
+                break
+            loop += 1
+
+
+
 
     @classmethod
     def tearDownClass(cls):
@@ -98,13 +120,15 @@ class RyuTranslateTests(unittest.TestCase):
         rule.set_cookie(self.cookie)
 
         self.ctlrint.send_command(self.switch_id, rule)
-        sleep(DEFAULT_SLEEP_TIME)
+        sleep(DEFAULT_SLEEP_TIME)#*100)
 
         output = subprocess.check_output(['ovs-ofctl', 'dump-flows', 'br_ovs'])
+        self.logger.debug("OUTPUT OF ovs-ofctl dump-flows br_ovs:\n%s\n" % 
+                          output)
         match = output.split("priority=100,")[1].split(" ")[0]
-#        print "Installation: %s" % output
-#        print "\n    ofm:   %s" % str(ofm)
-#        print "    match: %s\n" % match
+        print "Installation: %s" % output
+        print "\n    ofm:   %s" % str(ofm)
+        print "    match: %s\n" % match
 
 
         self.ctlrint.remove_rule(self.switch_id, self.cookie)
