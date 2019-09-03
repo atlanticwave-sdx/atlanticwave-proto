@@ -61,12 +61,7 @@ class LocalController(AtlanticWaveModule):
         self._initial_rules_dict = {}
         
         # Setup switch
-        self.switch_connection = RyuControllerInterface(self.name,
-                                    self.manifest, self.lcip,
-                                    self.ryu_cxn_port, self.openflow_port,
-                                    self.switch_message_cb,
-                                    self.loggerid)
-        self.logger.info("RyuControllerInterface setup finish.")
+        self._setup_switch()
 
         # Setup connection manager
         self.cxn_q = Queue()
@@ -89,6 +84,15 @@ class LocalController(AtlanticWaveModule):
         if runloop:
             self.start_main_loop()
             self.logger.info("Main Loop started.")
+
+    def _setup_switch(self):
+        self.switch_connection = RyuControllerInterface(self.name,
+                                    self.manifest, self.lcip,
+                                    self.ryu_cxn_port, self.openflow_port,
+                                    self.switch_message_cb,
+                                    self.loggerid)
+        self.logger.info("RyuControllerInterface setup finish.")
+
 
     def start_main_loop(self):
         self.main_loop_thread = threading.Thread(target=self._main_loop)
@@ -606,6 +610,16 @@ class LocalController(AtlanticWaveModule):
             # Create an SDXMessageSwitchChangeCallback and send it.
             msg = SDXMessageSwitchChangeCallback(opaque)
             self.sdx_connection.send_protocol(msg)
+
+        elif cmd == SM_INTER_RYU_FAILURE:
+            # This one's different. This is a failure we have to handle.
+            # - Kill the RyuControllerInterface (RCI)
+            # - Restart RCI
+            self.logger.error("Received SM_INTER_RYU_FAILURE(%s), killing RCI" %
+                              opaque)
+            self.switch_connection = None
+            self._setup_switch()
+            
 
         #FIXME: Else?
 

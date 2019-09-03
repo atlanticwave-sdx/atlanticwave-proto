@@ -72,15 +72,17 @@ class RyuTranslateTests(unittest.TestCase):
         cls.switch_id = 1
         cls.cookie = "1234"
         
+        cls.logger.info("Looping through for up to 100 seconds, waiting for OVS to connect with LC.")
         loop = 0
-        while loop < 100:
+        while loop < 200:
             output = subprocess.check_output(['ovs-vsctl','show'])
             #cls.logger.debug("SECOND output of ovs-vsctl show\n%s\n" % output)
-            cls.logger.info(str(output))
+            #cls.logger.info(str(output))
             nuts = "is_connected" in str(output)
-            cls.logger.info("Output: %s %s" % (type(output), nuts))
+            #cls.logger.info("Output: %s %s" % (type(output), nuts))
             sleep(.5)
             if nuts:
+                cls.logger.info("Connection found on loop %d" % loop)
                 break
             loop += 1
 

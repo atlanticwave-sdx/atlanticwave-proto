@@ -456,24 +456,28 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         while True:
 
-            # FIXME - This is static: only installing rules right now.
-            event_type, event_data = self.inter_cm_cxn.recv_cmd()
-            (switch_id, event) = event_data
-            if switch_id not in self.datapaths.keys():
-                self.logging.warning("switch_id %s does not match known switches: %s" %
-                                     (switch_id, self.datapaths.keys()))
+            try:
+                # FIXME - This is static: only installing rules right now.
+                event_type, event_data = self.inter_cm_cxn.recv_cmd()
+                (switch_id, event) = event_data
+                if switch_id not in self.datapaths.keys():
+                    self.logging.warning("switch_id %s does not match known switches: %s" %
+                                         (switch_id, self.datapaths.keys()))
                                      
-                # FIXME - Need to update this for sending errors back
-                continue
+                    # FIXME - Need to update this for sending errors back
+                    continue
                 
-            datapath = self.datapaths[switch_id]
+                datapath = self.datapaths[switch_id]
             
-            if event_type == ICX_ADD:
-                self.install_rule(datapath, event)
-            elif event_type == ICX_REMOVE:
-                self.remove_rule(datapath, event)
+                if event_type == ICX_ADD:
+                    self.install_rule(datapath, event)
+                elif event_type == ICX_REMOVE:
+                    self.remove_rule(datapath, event)
                 
-
+            except Exception as e:
+                self.logger.error("main_loop: Caught %s" % e)
+                self.logger.error("main_loop: Exiting!")
+                exit()
             # FIXME - There may need to be more options here. This is just a start.
 
     # Handles switch connect event

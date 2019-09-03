@@ -110,6 +110,13 @@ class RyuControllerInterface(ControllerInterface):
         self.inter_cm_condition.notify()
         self.inter_cm_condition.release()
 
+    def _kill_inter_cm(self):
+        if self.inter_cm_cxn != None:
+            self.inter_cm_cxn.close()
+            self.inter_cm_cxn = None
+        if self.ryu_process != None:
+            self.ryu_process.kill()
+
     def send_command(self, switch_id, rule):
         if not isinstance(rule, LCRule):
             raise ControllerInterfaceTypeError("rule is not of type LCRule: " + str(type(rule)) + 
@@ -152,6 +159,15 @@ class RyuControllerInterface(ControllerInterface):
             except Exception as e:
                 self.logger.error("Error in select - %s" % (e))
                 self.logger.error("rlist: %s" % rlist)
+                # This means that the Inter-Ry connection has died. 
+                # - Kill it with the LocalController
+                # - Kill the subprocess -
+                # - Return out of main loop
+
+                self.lc_callback(SM_INTER_RYU_FAILURE, None)
+                self._kill_inter_cm()
+                return
+                
                 
 
             # Loop through readable
