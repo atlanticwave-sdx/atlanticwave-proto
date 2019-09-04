@@ -45,6 +45,7 @@ class AddRuleTest(unittest.TestCase):
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
@@ -93,6 +94,7 @@ class GetRuleTest(unittest.TestCase):
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
@@ -162,6 +164,7 @@ class FindRuleTest(unittest.TestCase):
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
@@ -251,6 +254,7 @@ class ChangeStatusTest(unittest.TestCase):
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
@@ -315,6 +319,7 @@ class RemoveRuleTest(unittest.TestCase):
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
@@ -378,6 +383,7 @@ class InitialRulesTest(unittest.TestCase):
         console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         cls.logger.setLevel(logging.DEBUG)
+        cls.logger.handlers = []
         cls.logger.addHandler(console)
 
         cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
