@@ -60,6 +60,9 @@ class LocalControllerTest(unittest.TestCase):
         #subprocess.call(['fuser', '-k', '55767/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
         #subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
         #subprocess.call(['fuser', '-k', '5555/tcp'], stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call(['ovs-vsctl', 'del-port', 'vi0'])  # blind call
+        subprocess.call(['ovs-vsctl', 'del-br', 'br_ovs']) # blind call
+        
         subprocess.check_call(['ovs-vsctl', 'add-br', 'br_ovs'])
         subprocess.check_call(['ovs-vsctl', 'add-port', 'br_ovs', 'vi0', '--', 'set', 'Interface', 'vi0', 'type=internal'])
         subprocess.check_call(['ovs-vsctl', 'set', 'bridge', 'br_ovs', 'protocols=OpenFlow13'])
