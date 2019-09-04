@@ -163,7 +163,7 @@ class LocalController(AtlanticWaveModule):
                                                             xlist,
                                                             timeout)
             except Exception as e:
-                self.logger.error("Error in select - %s" % (e))
+                self.logger.error("LocalController: Error in select - %s" % (e))
                 
 
             # Loop through readable

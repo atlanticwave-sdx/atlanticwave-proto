@@ -157,7 +157,7 @@ class RyuControllerInterface(ControllerInterface):
                                                             wlist,
                                                             xlist)
             except Exception as e:
-                self.logger.error("Error in select - %s" % (e))
+                self.logger.error("RCI: Error in select - %s" % (e))
                 self.logger.error("rlist: %s" % rlist)
                 # This means that the Inter-Ry connection has died. 
                 # - Kill it with the LocalController
