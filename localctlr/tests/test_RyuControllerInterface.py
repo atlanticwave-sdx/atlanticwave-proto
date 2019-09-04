@@ -40,7 +40,8 @@ class RyuControllerInterfaceInit(unittest.TestCase):
         cls.logger.handlers = []
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
         cls.ctlrint = None
 
     @classmethod
@@ -69,7 +70,8 @@ class RyuControllerInterfaceSendRecv(unittest.TestCase):
         cls.logger.handlers = []
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
         cls.ctlrint = None
 
     @classmethod
@@ -112,7 +114,8 @@ class RyuControllerFullTests(unittest.TestCase):
         cls.logger.handlers = []
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
         # Setup the virtual switch
         #subprocess.check_call(['mn', '-c'])

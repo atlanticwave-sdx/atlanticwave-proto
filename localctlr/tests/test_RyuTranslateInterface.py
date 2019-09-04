@@ -44,7 +44,8 @@ class RyuTranslateTests(unittest.TestCase):
         cls.logger.handlers = []
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
         sleep(1)
         # Setup the virtual switch

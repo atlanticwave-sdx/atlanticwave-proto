@@ -3,6 +3,7 @@
 
 import unittest
 import logging
+import os
 from localctlr.LCRuleManager import *
 from shared.SDXControllerConnectionManagerConnection import SDXMessageInstallRule, SDXMessageRemoveRule
 
@@ -18,8 +19,8 @@ class InitTest(unittest.TestCase):
         cls.logger.setLevel(logging.DEBUG)
         cls.logger.handlers = []
         cls.logger.addHandler(console)
-
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
     def test_singleton(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -46,7 +47,8 @@ class AddRuleTest(unittest.TestCase):
         cls.logger.setLevel(logging.DEBUG)
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
     def test_good_add_rules(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -93,7 +95,8 @@ class GetRuleTest(unittest.TestCase):
         cls.logger.setLevel(logging.DEBUG)
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
     def test_get_known_rule(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -161,7 +164,8 @@ class FindRuleTest(unittest.TestCase):
         cls.logger.setLevel(logging.DEBUG)
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
     def test_find_all_empty_rules(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -249,7 +253,8 @@ class ChangeStatusTest(unittest.TestCase):
         cls.logger.setLevel(logging.DEBUG)
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
     def test_good_status_change(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -312,7 +317,8 @@ class RemoveRuleTest(unittest.TestCase):
         cls.logger.setLevel(logging.DEBUG)
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
     def test_remove_known_rule(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -374,7 +380,8 @@ class InitialRulesTest(unittest.TestCase):
         cls.logger.setLevel(logging.DEBUG)
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
     def test_add_initial_rule(self):
         self.logger.warning("BEGIN %s" % (self.id()))

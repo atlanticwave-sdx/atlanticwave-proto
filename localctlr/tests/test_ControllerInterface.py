@@ -6,6 +6,7 @@
 
 import unittest
 import logging
+import os
 from localctlr.ControllerInterface import *
 
 class BasicTests(unittest.TestCase):
@@ -20,7 +21,8 @@ class BasicTests(unittest.TestCase):
         cls.logger.handlers = []
         cls.logger.addHandler(console)
 
-        cls.logger.debug("Beginning %s" % cls.__name__)
+        cls.logger.debug("Beginning %s:%s" % (os.path.basename(__file__),
+                                              cls.__name__))
 
     def test_init(self):
         self.logger.warning("BEGIN %s" % (self.id()))
