@@ -1,11 +1,6 @@
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
-import os
-print("PATH       %s" % os.environ['PATH'])
-print("PYTHONPATH %s" % os.environ['PYTHONPATH'])
-        
-
 
 import logging
 import threading
@@ -170,7 +165,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # from the stored DB (if there is anything), and from the options passed
         # in during startup (including the manifest file)
         self._setup()
-
         
         # Establish connection to RyuControllerInterface
         self.inter_cm = InterRyuControllerConnectionManager()
