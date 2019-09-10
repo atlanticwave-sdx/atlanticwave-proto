@@ -114,6 +114,11 @@ class SDXMatchVLAN(SDXMatch):
         field = VLAN_VID(value)
         super(SDXMatchVLAN, self).__init__('VLAN', value, field)
 
+class SDXMatchSRCPORT(SDXMatch):
+    def __init__(self, value):
+        field = IN_PORT(value)
+        super(SDXMatchSRCPORT, self).__init__('SRCPORT', value, field)
+
         
 
 
@@ -128,6 +133,7 @@ SDXMATCH_TO_CLASS = {
     'udp_dst':SDXMatchTCPDST,
     'ip_proto':SDXMatchIPPROTO,
     'eth_type':SDXMatchETHTYPE,
-    'vlan':SDXMatchVLAN
+    'vlan':SDXMatchVLAN,
+    'src_port':SDXMatchSRCPORT
 }
 

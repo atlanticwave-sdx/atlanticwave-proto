@@ -251,7 +251,7 @@ class SDXIngressPolicy(SDXPolicy):
         functionality built in. '''
     _valid_matches = ['src_mac', 'src_ip', 'tcp_src', 'udp_src',
                       'dst_mac', 'dst_ip', 'tcp_dst', 'udp_dst',
-                      'ip_proto', 'eth_type', 'vlan']
+                      'ip_proto', 'eth_type', 'vlan', 'src_port']
     _valid_actions = ['ModifyDSTMAC', 'ModifyDSTIP',
                       'ModifyTCPDST', 'ModifyUDPDST',
                       'ModifyVLAN', 'Drop', 'Continue']
