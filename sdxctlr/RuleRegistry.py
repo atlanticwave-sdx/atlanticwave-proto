@@ -69,6 +69,7 @@ class RuleRegistry(AtlanticWaveRegistry):
                     #print "  %s" % classvalue
                     self.add_ruletype(classvalue)
 
+        sys.path.remove(polpath)
         self.logger.info("%s Found all policy types in %s" % (
             self.__class__.__name__, polpath))
 
