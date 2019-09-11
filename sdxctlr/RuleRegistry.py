@@ -42,14 +42,15 @@ class RuleRegistry(AtlanticWaveRegistry):
             polpath = os.path.abspath(policylocation)
 
         polpath = policylocation
-        sys.path.append(polpath)
-        import UserPolicy # so it's importing UserPolicy the say way it's importing everything from the shared directory.
-                    
 
         # Thanks to this stackoverflow thread:
         # https://stackoverflow.com/questions/3178285/list-classes-in-directory-python
         self.logger.info("%s looking for policies in %s" % (
             self.__class__.__name__, polpath))
+
+        sys.path.append(polpath)
+        import UserPolicy # so it's importing UserPolicy the say way it's importing everything from the shared directory.
+                    
 
 
         for file in glob(os.path.join(polpath, "*.py")):
