@@ -18,12 +18,20 @@ class RuleRegistry(AtlanticWaveRegistry):
         user rules into the class that implements them. 
         Singleton. '''
 
-    def __init__(self, loggeridprefix='sdxcontroller',
-                 policylocation='../shared'):
+    def __init__(self, loggeridprefix='sdxcontroller'):
         loggerid = loggeridprefix + '.ruleregistry'
         super(RuleRegistry, self).__init__(loggerid)
 
-        self.policylocation = policylocation
+        # Find where UserPolicy is defined
+        for d in sys.path:
+            for root, dirs, files in os.walk(d, topdown=False):
+                for name in files:
+                    if "UserPolicy.py" == name:
+                        self.logger.warning("%s found UserPolicy: %s" %
+                                            (self.__class__.__name__,
+                                             os.path.join(root, name)))
+                        self.policylocation = root
+                        break
         
         # Initialize rule DB
         self.ruletype_db = {}
@@ -35,6 +43,8 @@ class RuleRegistry(AtlanticWaveRegistry):
         if policylocation == None:
             policylocation = self.policylocation
 
+        
+            
         polpath = None
         if ".." in policylocation:
             polpath = os.path.dirname(os.path.relpath(policylocation))#, __file__))
