@@ -16,7 +16,7 @@ from AuthorizationInspector import AuthorizationInspector
 from RuleManager import RuleManager
 from TopologyManager import TopologyManager
 from UserManager import UserManager
-from RuleRegistry import RuleRegistry, RuleRegistryTypeError
+from PolicyRegistry import PolicyRegistry, PolicyRegistryTypeError
 
 #API Stuff
 import flask
@@ -96,8 +96,8 @@ class RestAPI(AtlanticWaveModule):
         AuthenticationInspector if the participant is authentic. It will check 
         with the AuthorizationInspector if a particular action is available to a 
         given participant. Once authorized, rules will be pushed to the 
-        RuleManager. It will draw some of its API from the RuleRegistry, 
-        specifically for the libraries that register with the RuleRegistry. 
+        RuleManager. It will draw some of its API from the PolicyRegistry, 
+        specifically for the libraries that register with the PolicyRegistry. 
         Singleton. '''
 
     global User, app, login_manager, shibboleth
@@ -1245,7 +1245,7 @@ class RestAPI(AtlanticWaveModule):
     def v1policiestype():
         base_url = request.base_url
         retdict = {'href':base_url}
-        policies = RuleRegistry().get_list_of_policies()
+        policies = PolicyRegistry().get_list_of_policies()
 
         for policy in policies:
             p = {'type':policy,
@@ -1343,9 +1343,9 @@ class RestAPI(AtlanticWaveModule):
     @staticmethod
     @app.route(EP_POLICIESTYPESPECEXAMPLE, methods=['GET'])
     def v1policiestypeexample(policytype):
-        rr = ruleregistry
+        pr = PolicyRegistry()
         try:
-            html = rr.get_rule_class(policytype).get_html_help()
+            html = pr.get_policy_class(policytype).get_html_help()
             return html
             
         except TypeError as e:
@@ -1461,7 +1461,7 @@ class RestAPI(AtlanticWaveModule):
                              
         # Get UserPolicy
         try:
-            policyclass = RuleRegistry().get_rule_class(policytype)
+            policyclass = PolicyRegistry().get_policy_class(policytype)
             RestAPI().dlogger.debug("POST %s: %s" % (policytype, policyclass))
             policyclass.check_syntax(data)
             RestAPI().dlogger.debug("  - check_syntax successful")
@@ -1478,7 +1478,7 @@ class RestAPI(AtlanticWaveModule):
             # else: HTML
             return flask.redirect(policy_url, code=303)
         
-        except RuleRegistryTypeError:
+        except PolicyRegistryTypeError:
             #FIXME - proper response
             if request_wants_json(request):
                 return make_response(jsonify({}), 404)

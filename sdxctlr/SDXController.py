@@ -17,7 +17,7 @@ from BreakdownEngine import *
 from LocalControllerManager import *
 from RestAPI import *
 from RuleManager import *
-from RuleRegistry import *
+from PolicyRegistry import *
 from TopologyManager import *
 from ValidityInspector import *
 from UserManager import *
@@ -75,7 +75,7 @@ class SDXController(AtlanticWaveModule):
         self.aci = AuthenticationInspector(self.loggerid)
         self.azi = AuthorizationInspector(self.loggerid)
         self.be = BreakdownEngine(self.loggerid)
-        self.rr = RuleRegistry(self.loggerid)
+        self.pr = PolicyRegistry(self.loggerid)
         self.vi = ValidityInspector(self.loggerid)
         self.um = UserManager(self.db_filename, mani, self.loggerid)
 
@@ -97,7 +97,7 @@ class SDXController(AtlanticWaveModule):
         self.cm_thread.start()
 
         # Register known UserPolicies
-        self.rr.find_policies()
+        self.pr.find_policies()
 
         # Start these modules last!
         if self.run_topo:

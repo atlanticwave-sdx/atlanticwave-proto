@@ -228,7 +228,7 @@ class RuleManager(AtlanticWaveManager):
             rule_table.insert() action. There is some variation (the rule is 
             pickled, so not useful), but it tracks most of the colunmns. '''
 
-        #FIXME: make this more general, so that it can actually search for something like "starts between 8 and 10am". Further, should be able to tell users what values are valid for particular fields. the RuleRegistry should help out here.
+        #FIXME: make this more general, so that it can actually search for something like "starts between 8 and 10am". Further, should be able to tell users what values are valid for particular fields. the PolicyRegistry should help out here.
 
         return self._valid_table_columns
 

@@ -14,7 +14,6 @@ from AuthorizationInspector import AuthorizationInspector
 from RuleManager import RuleManager, RuleManagerError
 from TopologyManager import TopologyManager, TOPO_EDGE_TYPE
 from UserManager import UserManager
-from RuleRegistry import RuleRegistry
 
 from threading import Lock
 import cPickle as pickle
