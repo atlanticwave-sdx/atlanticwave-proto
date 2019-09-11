@@ -39,19 +39,8 @@ class RuleRegistry(AtlanticWaveRegistry):
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
 
-    def find_policies(self, policylocation=None):
-        if policylocation == None:
-            policylocation = self.policylocation
-
-        
-            
-        polpath = None
-        if ".." in policylocation:
-            polpath = os.path.dirname(os.path.relpath(policylocation))#, __file__))
-        else:
-            polpath = os.path.abspath(policylocation)
-
-        polpath = policylocation
+    def find_policies(self):
+        polpath = self.policylocation
 
         # Thanks to this stackoverflow thread:
         # https://stackoverflow.com/questions/3178285/list-classes-in-directory-python

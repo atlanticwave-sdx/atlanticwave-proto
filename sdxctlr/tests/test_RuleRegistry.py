@@ -43,7 +43,7 @@ class NonRuleTest(unittest.TestCase):
 class find_policies(unittest.TestCase):
     def test_autopopulate(self):
         reg = RuleRegistry()
-        reg.find_policies("../../shared/")
+        reg.find_policies()
 
 if __name__ == '__main__':
     unittest.main()
