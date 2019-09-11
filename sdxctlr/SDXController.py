@@ -97,14 +97,7 @@ class SDXController(AtlanticWaveModule):
         self.cm_thread.start()
 
         # Register known UserPolicies
-        self.rr.add_ruletype(L2TunnelPolicy)
-        self.rr.add_ruletype(L2MultipointPolicy)
-        self.rr.add_ruletype(EndpointConnectionPolicy)
-        self.rr.add_ruletype(EdgePortPolicy)
-        self.rr.add_ruletype(LearnedDestinationPolicy)
-        self.rr.add_ruletype(FloodTreePolicy)
-        self.rr.add_ruletype(SDXEgressPolicy)
-        self.rr.add_ruletype(SDXIngressPolicy)
+        self.rr.find_policies()
 
         # Start these modules last!
         if self.run_topo:

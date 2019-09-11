@@ -12,14 +12,14 @@ from sdxctlr.RuleRegistry import *
 
 
 class SingletonTest(unittest.TestCase):
-    def test_singleton(self):
+    def atest_singleton(self):
         firstRegistry = RuleRegistry()
         secondRegistry = RuleRegistry()
 
         self.failUnless(firstRegistry is secondRegistry)
 
 class AddingRulesTest(unittest.TestCase):
-    def test_add_ruletype(self):
+    def atest_add_ruletype(self):
         class FakeRuleType(object):
             def __init__(self):
                 self.status = "I am Fake!"
@@ -34,12 +34,16 @@ class AddingRulesTest(unittest.TestCase):
 
 
 class NonRuleTest(unittest.TestCase):
-    def test_non_ruletype(self):
+    def atest_non_ruletype(self):
         reg = RuleRegistry()
         self.failUnlessRaises(RuleRegistryTypeError,
                               reg.get_rule_class, "TotallyDoesNotExist")
         
 
+class find_policies(unittest.TestCase):
+    def test_autopopulate(self):
+        reg = RuleRegistry()
+        reg.find_policies("../../shared/")
 
 if __name__ == '__main__':
     unittest.main()
