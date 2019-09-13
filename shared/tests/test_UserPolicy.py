@@ -24,7 +24,7 @@ class BasicTest(unittest.TestCase):
         up = UserPolicy('sdonovan', 'teststring')
 
         self.failUnlessRaises(NotImplementedError,
-                              up.breakdown_rule,
+                              up.breakdown_policy,
                               None,
                               None)
         self.failUnlessRaises(NotImplementedError,
@@ -47,7 +47,7 @@ class BasicTest(unittest.TestCase):
         self.assertEquals(None, up.get_breakdown())
         self.assertEquals(None, up.get_start_time())
         self.assertEquals(None, up.get_stop_time())
-        self.assertEquals('teststring', up.get_json_rule()) # passed in
+        self.assertEquals('teststring', up.get_json_policy()) # passed in
         self.assertEquals('User', up.get_ruletype()) # Generated
         self.assertEquals('sdonovan', up.get_user()) # passed in
         self.assertEquals(None, up.get_rule_hash())
@@ -61,7 +61,7 @@ class BasicTest(unittest.TestCase):
         # The gets default usually to None or []. Some are passed in at the
         # beginning and some are (predictably) generated.
         self.assertEquals(None, up.get_breakdown())
-        self.assertEquals('teststring', up.get_json_rule()) # passed in
+        self.assertEquals('teststring', up.get_json_policy()) # passed in
         self.assertEquals('User', up.get_ruletype()) # Generated
         self.assertEquals('sdonovan', up.get_user()) # passed in
         self.assertEquals(None, up.get_rule_hash())
