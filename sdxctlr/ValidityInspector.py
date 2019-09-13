@@ -10,17 +10,18 @@ class ValidityInspectorError(Exception):
     ''' Parent class, can be used as a catch-all for the other errors '''
     pass
 
-class ValidityInspectorNotValidRule(ValidityInspectorError):
-    ''' Raised when a rule is not valid. Rule cannot be installed. '''
+class ValidityInspectorNotValidPolicy(ValidityInspectorError):
+    ''' Raised when a policy is not valid. Policy cannot be installed. '''
     pass
 
-class ValidityInspectorOverlappingRule(ValidityInspectorError):
-    ''' Raised when a rule overlaps another rule, but is of different priority.
-        Rule can be installed, but may not have the indented effect. '''
+class ValidityInspectorOverlappingPolicy(ValidityInspectorError):
+    ''' Raised when a policy overlaps another policy, but is of different 
+        priority. Policy can be installed, but may not have the indented effect.
+    '''
     pass
 
 class ValidityInspector(AtlanticWaveInspector):
-    ''' The ValidityInspector will verify that a particular rule is valid. For 
+    ''' The ValidityInspector will verify that a particular policy is valid. For
         instance, confirming that port 16 exists at a given location. To handle 
         validation, external information will be needed. As an example, 
         information about physical setup at each location may be provided by the
@@ -35,10 +36,13 @@ class ValidityInspector(AtlanticWaveInspector):
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
 
-    def is_valid_rule(self, rule):
-        ''' Checks to see if a rule is valid. True if valid. Raises error 
+    def is_valid_policy(self, policy):
+        ''' Checks to see if a policy is valid. True if valid. Raises error 
             describing problem if invalid. '''
-        #FIXME: I am confused. I cannot find an object named 'rule' anywhere and doing a search in the filesystem for objects that call "check_validity" just takes me back here. I need some clarification please.
-        return rule.check_validity(TopologyManager().get_topology(),
+        #FIXME: I am confused. I cannot find an object named 'policy' anywhere
+        #and doing a search in the filesystem for objects that call
+        #"check_validity" just takes me back here. I need some clarification
+        #please.
+        return policy.check_validity(TopologyManager().get_topology(),
                                    AuthorizationInspector().is_authorized)
 

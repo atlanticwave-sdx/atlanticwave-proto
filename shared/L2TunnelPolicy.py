@@ -40,7 +40,7 @@ class L2TunnelPolicy(UserPolicy):
         parsing things into the appropriate types (int, for instance).
     '''
 
-    def __init__(self, username, json_rule):
+    def __init__(self, username, json_policy):
         self.start_time = None
         self.stop_time = None
         self.src_switch = None
@@ -58,7 +58,7 @@ class L2TunnelPolicy(UserPolicy):
         # For get_endpoints()
         self.endpoints = []
         
-        super(L2TunnelPolicy, self).__init__(username, json_rule)
+        super(L2TunnelPolicy, self).__init__(username, json_policy)
 
         # Anything specific here?
         pass
@@ -92,22 +92,22 @@ class L2TunnelPolicy(UserPolicy):
                  self.dst_vlan == other.src_vlan))
 
     @classmethod
-    def check_syntax(cls, json_rule):
+    def check_syntax(cls, json_policy):
         try:
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
             jsonstring = cls.get_policy_name()
-            starttime = datetime.strptime(json_rule[jsonstring]['starttime'],
+            starttime = datetime.strptime(json_policy[jsonstring]['starttime'],
                                          rfc3339format)
-            endtime = datetime.strptime(json_rule[jsonstring]['endtime'],
+            endtime = datetime.strptime(json_policy[jsonstring]['endtime'],
                                          rfc3339format)
-            src_switch = json_rule[jsonstring]['srcswitch']
-            dst_switch = json_rule[jsonstring]['dstswitch']
-            src_port = int(json_rule[jsonstring]['srcport'])
-            dst_port = int(json_rule[jsonstring]['dstport'])
-            src_vlan = int(json_rule[jsonstring]['srcvlan'])
-            dst_vlan = int(json_rule[jsonstring]['dstvlan'])
-            bandwidth = int(json_rule[jsonstring]['bandwidth'])
+            src_switch = json_policy[jsonstring]['srcswitch']
+            dst_switch = json_policy[jsonstring]['dstswitch']
+            src_port = int(json_policy[jsonstring]['srcport'])
+            dst_port = int(json_policy[jsonstring]['dstport'])
+            src_vlan = int(json_policy[jsonstring]['srcvlan'])
+            dst_vlan = int(json_policy[jsonstring]['dstvlan'])
+            bandwidth = int(json_policy[jsonstring]['bandwidth'])
 
             delta = endtime - starttime
             if delta.total_seconds() < 0:
@@ -138,7 +138,7 @@ class L2TunnelPolicy(UserPolicy):
                                                  str(e), filename,lineno)
             raise
         
-    def breakdown_rule(self, tm, ai):
+    def breakdown_policy(self, tm, ai):
         self.breakdown = []
         self.resources = []
         topology = tm.get_topology()
@@ -163,7 +163,9 @@ class L2TunnelPolicy(UserPolicy):
         # Topology manager should be able to provide this for us. 
         self.intermediate_vlan = tm.find_vlan_on_path(self.fullpath)
         if self.intermediate_vlan == None:
-            raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
+            raise UserPolicyError(
+                "There are no available VLANs on path %s for policy %s" %
+                (self.fullpath, self))
 
         # Add necessary resource
         self.resources.append(VLANPathResource(self.fullpath,
@@ -197,7 +199,9 @@ class L2TunnelPolicy(UserPolicy):
         # Special case: Single node:
         if len(self.fullpath) == 1:
             if (self.src_switch != self.dst_switch):
-                raise UserPolicyValueError("Path length is 1, but switches are different: fullpath %s, src_switch %s, dst_switch %s" % (self.fullpath, src_switch, dst_switch))
+                raise UserPolicyValueError(
+                    "Path length is 1, but switches are different: fullpath %s, src_switch %s, dst_switch %s" %
+                    (self.fullpath, src_switch, dst_switch))
                 
             location = self.src_switch
             shortname = topology.node[location]['locationshortname']
@@ -303,38 +307,40 @@ class L2TunnelPolicy(UserPolicy):
         #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
         return True
 
-    def _parse_json(self, json_rule):
-        jsonstring = self.ruletype
-        if type(json_rule) is not dict:
-            raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
-            raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
+    def _parse_json(self, json_policy):
+        jsonstring = self.policytype
+        if type(json_policy) is not dict:
+            raise UserPolicyTypeError(
+                "json_policy is not a dictionary:\n    %s" % json_policy)
+        if jsonstring not in json_policy.keys():
+            raise UserPolicyValueError(
+                "%s value not in entry:\n    %s" % ('policies', json_policy))
 
-        self.start_time = json_rule[jsonstring]['starttime']
-        self.stop_time =  json_rule[jsonstring]['endtime']
+        self.start_time = json_policy[jsonstring]['starttime']
+        self.stop_time =  json_policy[jsonstring]['endtime']
         # Make sure end is after start and after now.
         #FIXME
 
-        self.src_switch = str(json_rule[jsonstring]['srcswitch'])
-        self.dst_switch = str(json_rule[jsonstring]['dstswitch'])
-        self.src_port = int(json_rule[jsonstring]['srcport'])
-        self.dst_port = int(json_rule[jsonstring]['dstport'])
-        self.src_vlan = int(json_rule[jsonstring]['srcvlan'])
-        self.dst_vlan = int(json_rule[jsonstring]['dstvlan'])
-        self.bandwidth = int(json_rule[jsonstring]['bandwidth'])
+        self.src_switch = str(json_policy[jsonstring]['srcswitch'])
+        self.dst_switch = str(json_policy[jsonstring]['dstswitch'])
+        self.src_port = int(json_policy[jsonstring]['srcport'])
+        self.dst_port = int(json_policy[jsonstring]['dstport'])
+        self.src_vlan = int(json_policy[jsonstring]['srcvlan'])
+        self.dst_vlan = int(json_policy[jsonstring]['dstvlan'])
+        self.bandwidth = int(json_policy[jsonstring]['bandwidth'])
 
         #FIXME: Really need some type verifications here.
     
         
     
     def pre_add_callback(self, tm, ai):
-        ''' This is called before a rule is added to the database. For instance,
-            if certain resources need to be locked down or rules authorized,
-            this can do it. May not need to be implemented. '''
+        ''' This is called before a policy is added to the database. For 
+            instance, if certain resources need to be locked down or policies 
+            authorized, this can do it. May not need to be implemented. '''
         pass
 
     def pre_remove_callback(self, tm, ai):
-        ''' This is called before a rule is removed from the database. For 
+        ''' This is called before a policy is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
         pass        

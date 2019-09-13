@@ -13,7 +13,7 @@ from shared.SDXControllerConnectionManager import *
 
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
-from RuleManager import RuleManager
+from PolicyManager import PolicyManager
 from TopologyManager import TopologyManager
 from UserManager import UserManager
 from PolicyRegistry import PolicyRegistry, PolicyRegistryTypeError
@@ -96,7 +96,7 @@ class RestAPI(AtlanticWaveModule):
         AuthenticationInspector if the participant is authentic. It will check 
         with the AuthorizationInspector if a particular action is available to a 
         given participant. Once authorized, rules will be pushed to the 
-        RuleManager. It will draw some of its API from the PolicyRegistry, 
+        PolicyManager. It will draw some of its API from the PolicyRegistry, 
         specifically for the libraries that register with the PolicyRegistry. 
         Singleton. '''
 
@@ -788,7 +788,7 @@ class RestAPI(AtlanticWaveModule):
                 # Permissions - FIXME
                 user['permitted_actions']
                 # Policies
-                rules = RuleManager().get_rules({'user':un})
+                rules = PolicyManager().get_policies({'user':un})
                 policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
                 for rule in rules:
@@ -864,7 +864,7 @@ class RestAPI(AtlanticWaveModule):
             # Permissions - FIXME
             user['permitted_actions']
             # Policies
-            rules = RuleManager().get_rules({'user':username})
+            rules = PolicyManager().get_policies({'user':username})
             policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
             for rule in rules:
@@ -992,7 +992,7 @@ class RestAPI(AtlanticWaveModule):
         if (request.args.get('type') != None):
             query['ruletype'] = request.args.get('type')
         
-        rules = RuleManager().get_rules(query)
+        rules = PolicyManager().get_policies(query)
         policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
         for rule in rules:
@@ -1055,7 +1055,7 @@ class RestAPI(AtlanticWaveModule):
         retdict = {'href': base_url, 'links':{}}
 
         # Get all the rules:
-        rules = RuleManager().get_rules()
+        rules = PolicyManager().get_policies()
         policy_url = base_url + "/number/"
 
         for rule in rules:
@@ -1131,7 +1131,7 @@ class RestAPI(AtlanticWaveModule):
         retdict = {}
 
         # Get all the rules:
-        rule = RuleManager().get_rule_details(policynumber)
+        rule = PolicyManager().get_policy_details(policynumber)
         if rule == None:
             #FIXME - proper response
             if request_wants_json(request):
@@ -1153,7 +1153,7 @@ class RestAPI(AtlanticWaveModule):
         # HTML output
         return flask.render_template('policiesspec.html', policydict=retdict)
         # else: fancy HTML
-        detail = RuleManager().get_rule_details(rule_hash)
+        detail = PolicyManager().get_policy_details(rule_hash)
         return flask.render_template('details.html', detail = detail)
         
     '''
@@ -1183,7 +1183,7 @@ class RestAPI(AtlanticWaveModule):
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         
-        rule = RuleManager().get_rule_details(policynumber)
+        rule = PolicyManager().get_policy_details(policynumber)
         if rule == None:
             #FIXME - proper response
             if request_wants_json(request):
@@ -1193,7 +1193,7 @@ class RestAPI(AtlanticWaveModule):
 
         # Delete rule
         (rule_hash, jsonrule, ruletype, state, user, breakdowns) = rule
-        RuleManager().remove_rule(rule_hash, user)
+        PolicyManager().remove_policy(rule_hash, user)
 
         #FIXME - proper response
         if request_wants_json(request):
@@ -1313,7 +1313,7 @@ class RestAPI(AtlanticWaveModule):
         retdict = {'href': base_url}
 
         # Get all the rules:
-        rules = RuleManager().get_rules()
+        rules = PolicyManager().get_policies()
         policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
         for rule in rules:
@@ -1467,7 +1467,7 @@ class RestAPI(AtlanticWaveModule):
             RestAPI().dlogger.debug("  - check_syntax successful")
             policy = policyclass(userid, data)
             RestAPI().dlogger.debug("  - policy: %s" % policy)
-            hashval = RuleManager().add_rule(policy)
+            hashval = PolicyManager().add_policy(policy)
             RestAPI().dlogger.debug("  - hash: %s" % hashval)
             policy_url = base_url + str(hashval)
             retdict['policy']['href'] = policy_url

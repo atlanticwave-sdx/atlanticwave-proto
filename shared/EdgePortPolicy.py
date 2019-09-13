@@ -26,11 +26,11 @@ class EdgePortPolicy(UserPolicy):
         ports.    
     ''' 
 
-    def __init__(self, username, json_rule):
+    def __init__(self, username, json_policy):
         self.switch = None
 
         super(EdgePortPolicy, self).__init__(username,
-                                             json_rule)
+                                             json_policy)
 
         # Anything specific here?
         pass
@@ -39,12 +39,12 @@ class EdgePortPolicy(UserPolicy):
         return "%s(%s)" % (self.get_policy_name(), self.switch)
     
     @classmethod
-    def check_syntax(cls, json_rule):
+    def check_syntax(cls, json_policy):
         try:
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
 
-            switch = json_rule[cls.get_policy_name()]['switch']
+            switch = json_policy[cls.get_policy_name()]['switch']
 
         except Exception as e:
             import os
@@ -55,8 +55,8 @@ class EdgePortPolicy(UserPolicy):
                                                  str(e), filename,lineno)
             raise
             
-    def breakdown_rule(self, tm, ai):
-        ''' There are two stages to breaking down these rules:
+    def breakdown_policy(self, tm, ai):
+        ''' There are two stages to breaking down these policies:
               - determine edge ports for the local switch
               - create EdgePortLCRules for each edge port
             To determine which ports are edge port, we look at each port and see
@@ -86,29 +86,32 @@ class EdgePortPolicy(UserPolicy):
 
     
     def check_validity(self, tm, ai):
-        #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
+        #FIXME: This is going to be skipped for now, as we need to figure out
+        #what's authorized and what's not.
         return True
 
-    def _parse_json(self, json_rule):
-        jsonstring = self.ruletype
-        if type(json_rule) is not dict:
-            raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
-            raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
+    def _parse_json(self, json_policy):
+        jsonstring = self.policytype
+        if type(json_policy) is not dict:
+            raise UserPolicyTypeError(
+                "json_policy is not a dictionary:\n    %s" % json_policy)
+        if jsonstring not in json_policy.keys():
+            raise UserPolicyValueError(
+                "%s value not in entry:\n    %s" % ('policys', json_policy))
 
-        self.switch = str(json_rule[jsonstring]['switch'])
+        self.switch = str(json_policy[jsonstring]['switch'])
 
         #FIXME: Really need some type verifications here.
         
     
     def pre_add_callback(self, tm, ai):
-        ''' This is called before a rule is added to the database. For instance,
-            if certain resources need to be locked down or rules authorized,
-            this can do it. May not need to be implemented. '''
+        ''' This is called before a policy is added to the database. For 
+            instance, if certain resources need to be locked down or policiess 
+            authorized, this can do it. May not need to be implemented. '''
         pass
 
     def pre_remove_callback(self, tm, ai):
-        ''' This is called before a rule is removed from the database. For 
+        ''' This is called before a policy is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
 

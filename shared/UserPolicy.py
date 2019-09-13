@@ -16,32 +16,33 @@ class UserPolicy(object):
         development, more so than most other interfaces. '''
 
 
-    def __init__(self, username, json_rule):
-        ''' Parses the json_rule passed in to populate the UserPolicy. '''
+    def __init__(self, username, json_policy):
+        ''' Parses the json_policy passed in to populate the UserPolicy. '''
         self.username = username
-        self.ruletype = self.get_policy_name()
-        self.json_rule = json_rule
+        self.policytype = self.get_policy_name()
+        self.json_policy = json_policy
 
         # The breakdown list should be a list of UserPolicyBreakdown objects.
         self.breakdown = None
-        self.rule_hash = None
+        self.policy_hash = None
 
         # The resource list should be a list of PathResource children.
         self.resources = []
 
-        # All rules should have start and stop times. They may be rediculously
-        # far in the past and/or the future, but the should have them.
-        # They should be strings in rfc3339format (see shared.constants).
+        # All policies should have start and stop times. They may be
+        # rediculously far in the past and/or the future, but the should have
+        # them. They should be strings in rfc3339format (see shared.constants).
         self.start_time = None
         self.stop_time = None
 
         # Now that all the fields are set up, parse the json.
-        self._parse_json(self.json_rule)
+        self._parse_json(self.json_policy)
 
 
     @classmethod
-    def check_syntax(cls, json_rule):
-        ''' Used to validate syntax of json user rules before they are parsed.
+    def check_syntax(cls, json_policy):
+        ''' Used to validate syntax of json user policies before they are 
+            parsed.
             Must be implemented by child classes. '''
         raise NotImplementedError("Subclasses must implement this.")
 
@@ -80,8 +81,8 @@ class UserPolicy(object):
             n = n[:0-len("Policy")]
         return n
 
-    def breakdown_rule(self, tm, ai):
-        ''' Called by the BreakdownEngine to break a user rule apart. Should
+    def breakdown_policy(self, tm, ai):
+        ''' Called by the BreakdownEngine to break a user policy apart. Should
             only be called by the BreakdownEngine, which passes the topology
             and authorization_func to it.
             This recieves TopologyManager and AuthorizationEngine references
@@ -98,13 +99,13 @@ class UserPolicy(object):
         raise NotImplementedError("Subclasses must implement this.")
 
     def pre_add_callback(self, tm, ai):
-        ''' This is called before a rule is added to the database. For instance,
-            if certain resources need to be locked down or rules authorized,
+        ''' This is called before a policy is added to the database. For instance,
+            if certain resources need to be locked down or policies authorized,
             this can do it. May not need to be implemented. '''
         pass
 
     def pre_remove_callback(self, tm, ai):
-        ''' This is called before a rule is removed from the database. For 
+        ''' This is called before a policy is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
         pass
@@ -151,26 +152,26 @@ class UserPolicy(object):
     def get_stop_time(self):
         return self.stop_time
 
-    def get_json_rule(self):
-        return self.json_rule
+    def get_json_policy(self):
+        return self.json_policy
 
-    def get_ruletype(self):
-        return self.ruletype
+    def get_policytype(self):
+        return self.policytype
 
     def get_user(self):
         return self.username
 
-    def set_rule_hash(self, hash):
-        self.rule_hash = hash
+    def set_policy_hash(self, hash):
+        self.policy_hash = hash
 
-    def get_rule_hash(self):
-        return self.rule_hash
+    def get_policy_hash(self):
+        return self.policy_hash
 
     def get_resources(self):
         return self.resources
 
 
-    def _parse_json(self, json_rule):
+    def _parse_json(self, json_policy):
         ''' Actually does parsing. 
             Must be implemented by child classes. '''
         raise NotImplementedError("Subclasses must implement this.")
@@ -180,12 +181,13 @@ class UserPolicy(object):
 
         
 class UserPolicyBreakdown(object):
-    ''' This provides a standard way of holding broken down rules. Captures the
-        local controller and the rules passed to them. '''
+    ''' This provides a standard way of holding broken down policies. Captures 
+        the local controller and the rules passed to them. '''
 
     def __init__(self, lc, list_of_rules):
         ''' The lc is the shortname of the local controller. The list_of_rules 
-            is a list of rules that are being sent to the Local Controllers. '''
+            is a list of LC rules that are being sent to the Local Controllers. 
+        '''
         self.lc = lc
         self.rules = list_of_rules
 

@@ -11,7 +11,7 @@ from shared.L2TunnelPolicy import L2TunnelPolicy
 
 from AuthenticationInspector import AuthenticationInspector
 from AuthorizationInspector import AuthorizationInspector
-from RuleManager import RuleManager, RuleManagerError
+from PolicyManager import PolicyManager, PolicyManagerError
 from TopologyManager import TopologyManager, TOPO_EDGE_TYPE
 from UserManager import UserManager
 
@@ -106,7 +106,7 @@ class SenseAPI(AtlanticWaveManager):
     ''' The SenseAPI is the main interface for SENSE integration. It generates
         the appropriate XML for the current configuration status, and sends 
         updates automatically based on changes in rules and topology as provided
-        by the RuleManager and TopologyManager.
+        by the PolicyManager and TopologyManager.
     '''
     # Delta Database entries:
     # {"delta_id":delta_id,
@@ -125,7 +125,7 @@ class SenseAPI(AtlanticWaveManager):
     #  "timestamp": Timestamp of model}
 
     # Hash Database entries:
-    # {"hash": Hash from the RuleManager returned on installing a policy,
+    # {"hash": Hash from the PolicyManager returned on installing a policy,
     #  "policy": Policy that's installed,
     #  "delta_id": Delta ID associated with the policy}
 
@@ -148,7 +148,7 @@ class SenseAPI(AtlanticWaveManager):
         self.SVC_NONSENSE       = "ServiceDomain:AWaveServices"
         
         # Set up local repositories for rules and topology to perform diffs on.
-        self.current_rules = RuleManager().get_rules()
+        self.current_rules = PolicyManager().get_policies()
         self.current_topo = TopologyManager().get_topology()
         self.simplified_topo = None
         self.list_of_services = None
@@ -165,8 +165,8 @@ class SenseAPI(AtlanticWaveManager):
         self._sanitize_db()
         
         # Register update functions
-        RuleManager().register_for_rule_updates(self.rule_add_callback,
-                                                self.rule_rm_callback)
+        PolicyManager().register_for_policy_updates(self.rule_add_callback,
+                                                    self.rule_rm_callback)
         TopologyManager().register_for_topology_updates(
             self.topo_change_callback)
 
@@ -326,7 +326,7 @@ class SenseAPI(AtlanticWaveManager):
     def _sanitize_db(self):
         #FIXME work in progress
         ''' This is a helper function to compare what's in the SENSE DB with 
-            what is in the RuleManager's DB. RuleManager is ground truth.'''
+            what is in the PolicyManager's DB. PolicyManager is ground truth.'''
         all_deltas = self.delta_table.find()
         all_hashes = list(self.hash_table.find())
         
@@ -337,14 +337,14 @@ class SenseAPI(AtlanticWaveManager):
         # -- If delta doesn't have at least one correstponding hash in the DB,
         #    remove it from the DB
         # -- If delta does have one or more hashes:
-        # --- For each rule_hash, check with the  RuleManager to confirm that
+        # --- For each rule_hash, check with the  PolicyManager to confirm that
         #     the policy with that rule_hash exists.
         # ---- If it does, good
         # ---- If it does not:
         # ----- Delete delta
         # ----- We need to loop through all of the rule_hashes associated with
         #       the that delta:
-        # ------ If RuleManager policy exists, delete it
+        # ------ If PolicyManager policy exists, delete it
         # ------ Delete rule_hash
         print "\n\n\n\n\n"
         self.__print_all_deltas(False)
@@ -363,9 +363,9 @@ class SenseAPI(AtlanticWaveManager):
             problem = False
             for match in matches:
                 all_hashes.remove(match)
-                if RuleManager().get_rule_details(match['hash']) == None:
+                if PolicyManager().get_policy_details(match['hash']) == None:
                    problem = True
-                   print "    _sanitize_db() - Problem: match %s  isn't in RuleManager" % match['hash']
+                   print "    _sanitize_db() - Problem: match %s  isn't in PolicyManager" % match['hash']
                    break
                     
             if problem:
@@ -373,24 +373,24 @@ class SenseAPI(AtlanticWaveManager):
                 self.delta_table.delete(**delta)
                 for match in matches:
                     print "    _sanitize_db() - Removing hash - NO RM - %s" % match['hash']
-                    if RuleManager().get_rule_details(match['hash']) != None:
+                    if PolicyManager().get_policy_details(match['hash']) != None:
                         print "     _sanitize_db() - Removing rule - NO RM - %s" % match['hash']
-                        RuleManager().remove_rule(match['hash'], self.userid)
+                        PolicyManager().remove_policy(match['hash'], self.userid)
                     self.hash_table.delete(**match)
                 
 
         # Second, we're going to go through the remaining hashes to see if they
-        # exist in the RuleManager. We already know that a corresponding delta
+        # exist in the PolicyManager. We already know that a corresponding delta
         # does not exist, based on our loops above.
         # - Loop through the hashes
-        # -- If RuleManager policy exists, delete it
+        # -- If PolicyManager policy exists, delete it
         # -- delete rule_hash from hash_table.
 
         for rule_hash in all_hashes:
             print "    _sanitize_db() - Removing hash - NO DELTA - %s" % rule_hash['hash']
-            if RuleManager().get_rule_details(rule_hash['hash']) != None:
+            if PolicyManager().get_policy_details(rule_hash['hash']) != None:
                 print "    _sanitize_db() - Removing rule - NO DELTA - %s" % rule_hash['hash']
-                RuleManager().remove_rule(rule_hash['hash'], self.userid)
+                PolicyManager().remove_policy(rule_hash['hash'], self.userid)
             self.hash_table.delete(**rule_hash)
 
         self.__print_all_deltas(False)
@@ -528,7 +528,7 @@ class SenseAPI(AtlanticWaveManager):
             starttime and endtime are in the SENSE format.
         
             Requires the simplified topology to be generated. '''
-        self.current_rules = RuleManager().get_rules()
+        self.current_rules = PolicyManager().get_policies()
         self.list_of_services = []
         
         # Get exterior ports - from the simplified_topology
@@ -537,7 +537,7 @@ class SenseAPI(AtlanticWaveManager):
 
         # Loop through rules
         for r in self.current_rules:
-            rule = RuleManager().get_raw_rule(r[0])
+            rule = PolicyManager().get_raw_policy(r[0])
             potential_endpoints = rule.get_endpoints()
             # - Loop through endpoints
             endpoints = []
@@ -896,7 +896,7 @@ class SenseAPI(AtlanticWaveManager):
         else:
             # Get the most recent time that there was a change
             topo_update_time = TopologyManager().get_last_modified_timestamp()
-            rule_update_time = RuleManager().get_last_modified_timestamp()
+            rule_update_time = PolicyManager().get_last_modified_timestamp()
             parsed_creation = datetime.strptime(creation_time, rfc3339format)
             parsed_topo = datetime.strptime(topo_update_time, rfc3339format)
             parsed_rule = datetime.strptime(rule_update_time, rfc3339format)
@@ -997,7 +997,7 @@ class SenseAPI(AtlanticWaveManager):
                 return None, HTTP_BAD_REQUEST
             
             for policy in parsed_additions:
-                bd = RuleManager().test_add_rule(policy)            
+                bd = PolicyManager().test_add_policy(policy)            
 
         if parsed_reductions != None:
             self.dlogger.debug("_parse_delta(): parsed_reductions: %d" %
@@ -1291,25 +1291,25 @@ services[uuid][svc]))
         if delta['addition'] != None:
             for policy in delta['addition']:
                 try:
-                    RuleManager().test_add_rule(policy)
+                    PolicyManager().test_add_rule(policy)
                 except Exception as e:
                     # This means that rule cannot be added, for whatever reason,
                     # log it, and return bad status
                     self.logger.error("commit: addition failed, aborting. " +
-                                      "%s, %s" % str(policy), e)
+                                      "%s, %s" % (str(policy), e))
                     return HTTP_CONFLICT
 
         # Reductions first
         # - Loop through the reductions
         # -- get the corresponding rule_hash
-        # -- Call RuleManager().remove_rule() to get rid of the rule
-        # -- if it doesn't exist in the RuleManager, that's fine, but log it!
+        # -- Call PolicyManager().remove_policy() to get rid of the rule
+        # -- if it doesn't exist in the PolicyManager, that's fine, but log it!
         if delta['reduction'] != None:
             for policy in delta['reduction']:
                 rule_hash = self._get_rule_hash_by_policy(policy)
                 try:
-                    RuleManager().remove_rule(rule_hash, self.userid)
-                except RuleManagerError as e:
+                    PolicyManager().remove_policy(rule_hash, self.userid)
+                except PolicyManagerError as e:
                     self.dlogger.info("commit: reduction failed: %s" %
                                       rule_hash)
                     self.logger.error("commit: reduction failed: %s, %s" %
@@ -1324,7 +1324,7 @@ services[uuid][svc]))
         if delta['addition'] != None:
             for policy in delta['addition']:
                 try:
-                    rule_hash = RuleManager().add_rule(policy)
+                    rule_hash = PolicyManager().add_policy(policy)
                     self._put_rule_hash_by_policy(policy, rule_hash,
                                                   deltaid)
                 except:
@@ -1395,7 +1395,7 @@ services[uuid][svc]))
 
     def _get_delta_by_rule_hash(self, rule_hash):
         ''' Helper function, just pulls a delta based on the rule hash (from the
-            RuleManager).
+            PolicyManager).
             Returns:
               - None if rule_hash doesn't exist
               - Dictionary containing delta. See comment at top of SenseAPI

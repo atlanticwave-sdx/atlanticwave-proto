@@ -19,9 +19,9 @@ class FloodTreePolicy(UserPolicy):
 
     '''
 
-    def __init__(self, username, json_rule):
+    def __init__(self, username, json_policy):
         super(FloodTreePolicy, self).__init__(username,
-                                              json_rule)
+                                              json_policy)
 
         # Anythign specific here?
         pass
@@ -30,11 +30,13 @@ class FloodTreePolicy(UserPolicy):
         return "%s()" % (self.get_policy_name())
     
     @classmethod
-    def check_syntax(cls, json_rule):
+    def check_syntax(cls, json_policy):
         try:
-            value = json_rule[cls.get_policy_name()]
+            value = json_policy[cls.get_policy_name()]
             if value != None or value != [] or value != {}:
-                raise UserPolicyValueError("value json_rule should be None, [], or {}, not %s." % value)
+                raise UserPolicyValueError(
+                    "value json_policy should be None, [], or {}, not %s." %
+                    value)
         except Exception as e:
             import os
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -44,7 +46,7 @@ class FloodTreePolicy(UserPolicy):
                                                  str(e), filename,lineno)
             raise
 
-    def breakdown_rule(self, tm, ai):
+    def breakdown_policy(self, tm, ai):
         ''' This is where everything interesting happens. It creates a spanning 
             tree, and takes all the connected ports in the tree, puts them into
             a FloodTreeLCRule. The LC will use the ports to set up appropriate 
@@ -82,25 +84,29 @@ class FloodTreePolicy(UserPolicy):
         return self.breakdown
 
     def check_validity(self, tm, ai):
-        #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
+        #FIXME: This is going to be skipped for now, as we need to figure out
+        #what's authorized and what's not.
         return True
 
-    def _parse_json(self, json_rule):
-        if type(json_rule) is not dict:
-            raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if self.ruletype not in json_rule.keys():
-            raise UserPolicyValueError("%s value not in entry:\n    %s" % (self.ruletype, json_rule)) 
+    def _parse_json(self, json_policy):
+        if type(json_policy) is not dict:
+            raise UserPolicyTypeError(
+                "json_policy is not a dictionary:\n    %s" % json_policy)
+        if self.policytype not in json_policy.keys():
+            raise UserPolicyValueError(
+                "%s value not in entry:\n    %s" %
+                (self.policytype, json_policy)) 
 
         # Not much to do here. There's no data on startup.
 
     def pre_add_callback(self, tm, ai):
-        ''' This is called before a rule is added to the database. For instance,
-            if certain resources need to be locked down or rules authorized,
-            this can do it. May not need to be implemented. '''
+        ''' This is called before a policy is added to the database. For 
+            instance, if certain resources need to be locked down or policies 
+            authorized, this can do it. May not need to be implemented. '''
         pass
 
     def pre_remove_callback(self, tm, ai):
-        ''' This is called before a rule is removed from the database. For 
+        ''' This is called before a policy is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
         pass

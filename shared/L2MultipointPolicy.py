@@ -36,7 +36,7 @@ class L2MultipointPolicy(UserPolicy):
         parsing things into the appropriate types (int, for instance).
     '''
 
-    def __init__(self, username, json_rule):
+    def __init__(self, username, json_policy):
         self.start_time = None
         self.stop_time = None
         self.bandwidth = None
@@ -50,7 +50,7 @@ class L2MultipointPolicy(UserPolicy):
         self.external_endpoints = []
         
         super(L2MultipointPolicy, self).__init__(username,
-                                                 json_rule)
+                                                 json_policy)
 
         # Anything specific here?
         pass
@@ -73,24 +73,26 @@ class L2MultipointPolicy(UserPolicy):
         return (local_eps.sort() == other_eps.sort())
                 
     @classmethod
-    def check_syntax(cls, json_rule):
+    def check_syntax(cls, json_policy):
         try:
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
             jsonstring = cls.get_policy_name()
-            starttime = datetime.strptime(json_rule[jsonstring]['starttime'],
+            starttime = datetime.strptime(json_policy[jsonstring]['starttime'],
                                          rfc3339format)
-            endtime = datetime.strptime(json_rule[jsonstring]['endtime'],
+            endtime = datetime.strptime(json_policy[jsonstring]['endtime'],
                                          rfc3339format)
-            bandwidth = int(json_rule[jsonstring]['bandwidth'])
+            bandwidth = int(json_policy[jsonstring]['bandwidth'])
 
 
             delta = endtime - starttime
             if delta.total_seconds() < 0:
-                raise UserPolicyValueError("Time ends before it begins: begin %s, end %s" % (starttime, endtime))
+                raise UserPolicyValueError(
+                    "Time ends before it begins: begin %s, end %s" %
+                    (starttime, endtime))
 
             # Parse out the endpoints and check them individually
-            for endpoint in json_rule[jsonstring]['endpoints']:
+            for endpoint in json_policy[jsonstring]['endpoints']:
                 switch = str(endpoint['switch'])
                 port = int(endpoint['port'])
                 vlan = int(endpoint['vlan'])
@@ -111,7 +113,7 @@ class L2MultipointPolicy(UserPolicy):
                                                  str(e), filename,lineno)
             raise
             
-    def breakdown_rule(self, tm, ai):
+    def breakdown_policy(self, tm, ai):
         self.breakdown = []
         self.resources = []
         self.external_endpoints = []
@@ -128,7 +130,9 @@ class L2MultipointPolicy(UserPolicy):
         self.tree = tm.find_valid_steiner_tree(nodes, self.bandwidth)
         self.intermediate_vlan = tm.find_vlan_on_tree(self.tree)
         if self.intermediate_vlan == None:
-            raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.tree, self))
+            raise UserPolicyError(
+                "There are no available VLANs on path %s for policy %s" %
+                (self.tree, self))
 
         self.resources.append(VLANTreeResource(self.tree,
                                                self.intermediate_vlan))
@@ -242,20 +246,22 @@ class L2MultipointPolicy(UserPolicy):
         #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
         return True
 
-    def _parse_json(self, json_rule):
-        jsonstring = self.ruletype
-        if type(json_rule) is not dict:
-            raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
-            raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
+    def _parse_json(self, json_policy):
+        jsonstring = self.policytype
+        if type(json_policy) is not dict:
+            raise UserPolicyTypeError(
+                "json_policy is not a dictionary:\n    %s" % json_policy)
+        if jsonstring not in json_policy.keys():
+            raise UserPolicyValueError(
+                "%s value not in entry:\n    %s" % ('policys', json_policy))
 
-        self.start_time = json_rule[jsonstring]['starttime']
-        self.stop_time =  json_rule[jsonstring]['endtime']
-        self.bandwidth = int(json_rule[jsonstring]['bandwidth'])
+        self.start_time = json_policy[jsonstring]['starttime']
+        self.stop_time =  json_policy[jsonstring]['endtime']
+        self.bandwidth = int(json_policy[jsonstring]['bandwidth'])
         # Make sure end is after start and after now.
         #FIXME
 
-        for endpoint in json_rule[jsonstring]['endpoints']:
+        for endpoint in json_policy[jsonstring]['endpoints']:
                 switch = str(endpoint['switch'])
                 port = int(endpoint['port'])
                 vlan = int(endpoint['vlan'])
@@ -271,13 +277,13 @@ class L2MultipointPolicy(UserPolicy):
         
     
     def pre_add_callback(self, tm, ai):
-        ''' This is called before a rule is added to the database. For instance,
-            if certain resources need to be locked down or rules authorized,
+        ''' This is called before a policy is added to the database. For instance,
+            if certain resources need to be locked down or policies authorized,
             this can do it. May not need to be implemented. '''
         pass
 
     def pre_remove_callback(self, tm, ai):
-        ''' This is called before a rule is removed from the database. For 
+        ''' This is called before a policy is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
         pass
@@ -291,7 +297,7 @@ class L2MultipointPolicy(UserPolicy):
                {'dstswitch':switch_id,
                 'dstport':port_number
                 'dstaddress':address}
-            Heavily derived from LearnedDestinationPolicy.breakdown_rule(),
+            Heavily derived from LearnedDestinationPolicy.breakdown_policy(),
             but requires some more work due to VLAN translation.
         '''
         

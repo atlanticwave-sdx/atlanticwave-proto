@@ -50,7 +50,7 @@ class EndpointConnectionPolicy(UserPolicy):
     buffer_time_sec = 300
     buffer_bw_percent = 1.05
 
-    def __init__(self, username, json_rule):
+    def __init__(self, username, json_policy):
         # From JSON
         self.deadline = None
         self.src = None
@@ -67,7 +67,7 @@ class EndpointConnectionPolicy(UserPolicy):
         self.endpoints = []
 
         super(EndpointConnectionPolicy, self).__init__(username,
-                                                       json_rule)
+                                                       json_policy)
 
         print "Passed: %s:%s:%s:%s:%s:%s:%s" % (self.deadline,
                                                 self.src,
@@ -84,14 +84,14 @@ class EndpointConnectionPolicy(UserPolicy):
                                     self.src, self.dst, self.data)
 
     @classmethod
-    def check_syntax(cls, json_rule):
+    def check_syntax(cls, json_policy):
         try:
             jsonstring = cls.get_policy_name()
-            deadline = datetime.strptime(json_rule[jsonstring]['deadline'],
+            deadline = datetime.strptime(json_policy[jsonstring]['deadline'],
                                          rfc3339format)
-            src = json_rule[jsonstring]['srcendpoint']
-            dst = json_rule[jsonstring]['dstendpoint']
-            data = json_rule[jsonstring]['dataquantity']
+            src = json_policy[jsonstring]['srcendpoint']
+            dst = json_policy[jsonstring]['dstendpoint']
+            data = json_policy[jsonstring]['dataquantity']
 
             if type(data) != int:
                 raise UserPolicyTypeError("data is not an int: %s:%s" %
@@ -106,9 +106,9 @@ class EndpointConnectionPolicy(UserPolicy):
                                                  str(e), filename,lineno)
             raise
 
-    def breakdown_rule(self, tm, ai):
+    def breakdown_policy(self, tm, ai):
         # There is a lot of logic borrowed from L2TunnelPolicy's version of
-        # breakdown_rule, but there are some significant differences.
+        # breakdown_policy, but there are some significant differences.
         self.breakdown = []
         self.resources = []
         topology = tm.get_topology()
@@ -138,10 +138,10 @@ class EndpointConnectionPolicy(UserPolicy):
 
         self.intermediate_vlan = tm.find_vlan_on_path(self.switchpath)
         if self.intermediate_vlan == None:
-            raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
+            raise UserPolicyError("There are no available VLANs on path %s for policy %s" % (self.fullpath, self))
         
-        # Third, build the breakdown rules for the path.
-        # This section is heavily based on the L2TunnelPolicy.breakdown_rule()
+        # Third, build the breakdown policies for the path.
+        # This section is heavily based on the L2TunnelPolicy.breakdown_policy()
 
         # Single switch case:
         if len(self.switchpath) == 1:
@@ -265,29 +265,31 @@ class EndpointConnectionPolicy(UserPolicy):
         #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
         return True
 
-    def _parse_json(self, json_rule):
-        jsonstring = self.ruletype
-        if type(json_rule) is not dict:
-            raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
-            raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
+    def _parse_json(self, json_policy):
+        jsonstring = self.policytype
+        if type(json_policy) is not dict:
+            raise UserPolicyTypeError(
+                "json_policy is not a dictionary:\n    %s" % json_policy)
+        if jsonstring not in json_policy.keys():
+            raise UserPolicyValueError(
+                "%s value not in entry:\n    %s" % ('policies', json_policy))
 
-        self.deadline = str(json_rule[jsonstring]['deadline'])
-        self.src = str(json_rule[jsonstring]['srcendpoint'])
-        self.dst = str(json_rule[jsonstring]['dstendpoint'])
-        self.data = int(json_rule[jsonstring]['dataquantity'])
+        self.deadline = str(json_policy[jsonstring]['deadline'])
+        self.src = str(json_policy[jsonstring]['srcendpoint'])
+        self.dst = str(json_policy[jsonstring]['dstendpoint'])
+        self.data = int(json_policy[jsonstring]['dataquantity'])
 
 
 
 
     def pre_add_callback(self, tm, ai):
-        ''' This is called before a rule is added to the database. For instance,
-            if certain resources need to be locked down or rules authorized,
-            this can do it. May not need to be implemented. '''
+        ''' This is called before a policy is added to the database. For 
+            instance, if certain resources need to be locked down or policies 
+            authorized, this can do it. May not need to be implemented. '''
         pass
 
     def pre_remove_callback(self, tm, ai):
-        ''' This is called before a rule is removed from the database. For 
+        ''' This is called before a policy is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
         pass

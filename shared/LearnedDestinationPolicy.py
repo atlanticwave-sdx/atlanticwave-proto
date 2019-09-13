@@ -36,13 +36,13 @@ class LearnedDestinationPolicy(UserPolicy):
         parsing things into the appropriate types (int, for instance).
     '''
 
-    def __init__(self, username, json_rule):
+    def __init__(self, username, json_policy):
         self.dst_switch = None
         self.dst_port = None
         self.dst_address = None
 
         super(LearnedDestinationPolicy, self).__init__(username,
-                                                       json_rule)
+                                                       json_policy)
 
         # Anything specific here?
         pass
@@ -53,14 +53,14 @@ class LearnedDestinationPolicy(UserPolicy):
 
     
     @classmethod
-    def check_syntax(cls, json_rule):
+    def check_syntax(cls, json_policy):
         try:
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
             jsonstring = cls.get_policy_name()
-            dst_switch = json_rule[jsonstring]['dstswitch']
-            dst_port = int(json_rule[jsonstring]['dstport'])
-            dst_address = json_rule[jsonstring]['dstaddress']
+            dst_switch = json_policy[jsonstring]['dstswitch']
+            dst_port = int(json_policy[jsonstring]['dstport'])
+            dst_address = json_policy[jsonstring]['dstaddress']
 
             if ((dst_port < 0) or
                 (dst_port > 24)):
@@ -75,15 +75,15 @@ class LearnedDestinationPolicy(UserPolicy):
                                                  str(e), filename,lineno)
             raise
             
-    def breakdown_rule(self, tm, ai):
+    def breakdown_policy(self, tm, ai):
         ''' This is a bit complicated, so a bit of explanation first.
-            To break down this rule, we need to install rules into all switches
-            that forward to our destination address using shortest paths. To do
-            this, we'll need to get a list of all switches, and then start 
-            creating paths. As we create paths, they will also cover *other*
-            switches, so we won't have to actually go through the process for 
-            those other switches of determing shortest paths and creating 
-            duplicate rules.
+            To break down this policy, we need to install rules into all 
+            switches that forward to our destination address using shortest 
+            paths. To do this, we'll need to get a list of all switches, and 
+            then start creating paths. As we create paths, they will also cover 
+            *other* switches, so we won't have to actually go through the 
+            process for those other switches of determing shortest paths and 
+            creating duplicate rules.
               - Get list of switches, create (empty) list of switches covered
               - For switch in switches:
                 - If in list of covered switches, skip
@@ -143,28 +143,30 @@ class LearnedDestinationPolicy(UserPolicy):
         #FIXME: This is going to be skipped for now, as we need to figure out what's authorized and what's not.
         return True
 
-    def _parse_json(self, json_rule):
-        jsonstring = self.ruletype
-        if type(json_rule) is not dict:
-            raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
-            raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
+    def _parse_json(self, json_policy):
+        jsonstring = self.policytype
+        if type(json_policy) is not dict:
+            raise UserPolicyTypeError(
+                "json_policy is not a dictionary:\n    %s" % json_policy)
+        if jsonstring not in json_policy.keys():
+            raise UserPolicyValueError(
+                "%s value not in entry:\n    %s" % ('policies', json_policy))
 
-        self.dst_switch = str(json_rule[jsonstring]['dstswitch'])
-        self.dst_port = int(json_rule[jsonstring]['dstport'])
-        self.dst_address = str(json_rule[jsonstring]['dstaddress'])
+        self.dst_switch = str(json_policy[jsonstring]['dstswitch'])
+        self.dst_port = int(json_policy[jsonstring]['dstport'])
+        self.dst_address = str(json_policy[jsonstring]['dstaddress'])
 
         #FIXME: Really need some type verifications here.
         
     
     def pre_add_callback(self, tm, ai):
-        ''' This is called before a rule is added to the database. For instance,
-            if certain resources need to be locked down or rules authorized,
-            this can do it. May not need to be implemented. '''
+        ''' This is called before a policy is added to the database. For 
+            instance, if certain resources need to be locked down or policies 
+            authorized, this can do it. May not need to be implemented. '''
         pass
 
     def pre_remove_callback(self, tm, ai):
-        ''' This is called before a rule is removed from the database. For 
+        ''' This is called before a policy is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
 

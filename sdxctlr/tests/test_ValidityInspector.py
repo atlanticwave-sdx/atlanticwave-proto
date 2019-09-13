@@ -13,11 +13,11 @@ from shared.UserPolicy import UserPolicy
 from sdxctlr.ValidityInspector import *
 from sdxctlr.TopologyManager import TopologyManager
 
-TOPO_CONFIG_FILE = 'sdxdtlr/tests/test_manifests/topo.manifest'
+TOPO_CONFIG_FILE = 'sdxctlr/tests/test_manifests/topo.manifest'
 class UserPolicyStandin(UserPolicy):
     # Use the username as a return value for checking validity.
-    def __init__(self, username, json_rule):
-        super(UserPolicyStandin, self).__init__(username, json_rule)
+    def __init__(self, username, json_policy):
+        super(UserPolicyStandin, self).__init__(username, json_policy)
         self.retval = username
         
     def check_validity(self, topology, authorization_func):
@@ -27,7 +27,7 @@ class UserPolicyStandin(UserPolicy):
         if self.retval == True:
             return True
         raise Exception("BAD")
-    def _parse_json(self, json_rule):
+    def _parse_json(self, json_policy):
         return
     
 
@@ -43,14 +43,15 @@ class SingletonTest(unittest.TestCase):
 
 class ValidityTest(unittest.TestCase):
     def test_good_valid(self):
-        valid_rule = UserPolicyStandin(True, "")
+        valid_policy = UserPolicyStandin(True, "")
         inspector = ValidityInspector()
-        self.failUnless(inspector.is_valid_rule(valid_rule))
+        self.failUnless(inspector.is_valid_policy(valid_policy))
                         
     def test_bad_valid(self):
-        invalid_rule = UserPolicyStandin(False, "")
+        invalid_policy = UserPolicyStandin(False, "")
         inspector = ValidityInspector()
-        self.failUnlessRaises(Exception, inspector.is_valid_rule, invalid_rule)
+        self.failUnlessRaises(Exception, inspector.is_valid_policy,
+                              invalid_policy)
 
 if __name__ == '__main__':
     unittest.main()
