@@ -105,8 +105,8 @@ class SenseAPIArgumentError(SenseAPIClientError):
 class SenseAPI(AtlanticWaveManager):
     ''' The SenseAPI is the main interface for SENSE integration. It generates
         the appropriate XML for the current configuration status, and sends 
-        updates automatically based on changes in rules and topology as provided
-        by the PolicyManager and TopologyManager.
+        updates automatically based on changes in SENSE requests and topology 
+        as provided by the PolicyManager and TopologyManager.
     '''
     # Delta Database entries:
     # {"delta_id":delta_id,
@@ -147,8 +147,9 @@ class SenseAPI(AtlanticWaveManager):
         self.SVC_SENSE_L2MP     = "l2mp"
         self.SVC_NONSENSE       = "ServiceDomain:AWaveServices"
         
-        # Set up local repositories for rules and topology to perform diffs on.
-        self.current_rules = PolicyManager().get_policies()
+        # Set up local repositories for policies and topology to perform diffs
+        # on.
+        self.current_policies = PolicyManager().get_policies()
         self.current_topo = TopologyManager().get_topology()
         self.simplified_topo = None
         self.list_of_services = None
@@ -165,8 +166,8 @@ class SenseAPI(AtlanticWaveManager):
         self._sanitize_db()
         
         # Register update functions
-        PolicyManager().register_for_policy_updates(self.rule_add_callback,
-                                                    self.rule_rm_callback)
+        PolicyManager().register_for_policy_updates(self.policy_add_callback,
+                                                    self.policy_rm_callback)
         TopologyManager().register_for_topology_updates(
             self.topo_change_callback)
 
@@ -266,10 +267,10 @@ class SenseAPI(AtlanticWaveManager):
                 print "%s" % d['id']
         print "&&&&&        &&&&&\n\n"
 
-    def __print_all_rule_hashes(self):
+    def __print_all_policy_hashes(self):
         hashes = self.hash_table.find()
 
-        print "\n\n&&&&& RULE_HASHES &&&&&"
+        print "\n\n&&&&& POLICY_HASHES &&&&&"
         for h in hashes:
             print "%s - %s %s" % (h['hash'], h['delta_id'],
                                   pickle.loads(str(h['policy'])))
@@ -298,30 +299,34 @@ class SenseAPI(AtlanticWaveManager):
             if self.simplified_topo.node[srcnode]['type'] != 'central':
                 for dstnode in self.simplified_topo.nodes():
                     if self.simplified_topo.node[dstnode]['type'] != 'central':
-                        self.install_point_to_point_rule(srcnode, dstnode,
-                                                    100, 200,
-                                                    100000,
-                                                    "1985-04-12T12:34:56",
-                                                    "2985-04-12T12:34:56",
-                                                    1)
-                        self.install_point_to_point_rule(srcnode, dstnode,
-                                                    101, 201,
-                                                    100000,
-                                                    "1985-04-12T12:34:56",
-                                                    "2985-04-12T12:34:56",
-                                                    2)
-                        self.install_point_to_point_rule(srcnode, dstnode,
-                                                    102, 202,
-                                                    100000,
-                                                    "1985-04-12T12:34:56",
-                                                    "2985-04-12T12:34:56",
-                                                    3)
-                        self.install_point_to_point_rule(srcnode, dstnode,
-                                                    103, 203,
-                                                    100000,
-                                                    "1985-04-12T12:34:56",
-                                                    "2985-04-12T12:34:56",
-                                                    4)
+                        self.install_point_to_point_policy(
+                            srcnode, dstnode,
+                            100, 200,
+                            100000,
+                            "1985-04-12T12:34:56",
+                            "2985-04-12T12:34:56",
+                            1)
+                        self.install_point_to_point_policy(
+                            srcnode, dstnode,
+                            101, 201,
+                            100000,
+                            "1985-04-12T12:34:56",
+                            "2985-04-12T12:34:56",
+                            2)
+                        self.install_point_to_point_policy(
+                            srcnode, dstnode,
+                            102, 202,
+                            100000,
+                            "1985-04-12T12:34:56",
+                            "2985-04-12T12:34:56",
+                            3)
+                        self.install_point_to_point_policy(
+                            srcnode, dstnode,
+                            103, 203,
+                            100000,
+                            "1985-04-12T12:34:56",
+                            "2985-04-12T12:34:56",
+                            4)
 
     def _sanitize_db(self):
         #FIXME work in progress
@@ -330,25 +335,25 @@ class SenseAPI(AtlanticWaveManager):
         all_deltas = self.delta_table.find()
         all_hashes = list(self.hash_table.find())
         
-        # First, let's clean up the delta table if a rule isn't installed and
+        # First, let's clean up the delta table if a policy isn't installed and
         # has one-or-more hashes in the hash table.
         # - Loop through deltas and remove those from the DB that don't have a
         #   hash.
         # -- If delta doesn't have at least one correstponding hash in the DB,
         #    remove it from the DB
         # -- If delta does have one or more hashes:
-        # --- For each rule_hash, check with the  PolicyManager to confirm that
-        #     the policy with that rule_hash exists.
+        # --- For each policy_hash, check with the  PolicyManager to confirm
+        #     the policy with that policy_hash exists.
         # ---- If it does, good
         # ---- If it does not:
         # ----- Delete delta
-        # ----- We need to loop through all of the rule_hashes associated with
+        # ----- We need to loop through all of the policy_hashes associated with
         #       the that delta:
         # ------ If PolicyManager policy exists, delete it
-        # ------ Delete rule_hash
+        # ------ Delete policy_hash
         print "\n\n\n\n\n"
         self.__print_all_deltas(False)
-        self.__print_all_rule_hashes()
+        self.__print_all_policy_hashes()
         
         for delta in all_deltas:
             print "    _sanitize_db() - Looking at delta %s" % delta['delta_id']
@@ -374,7 +379,7 @@ class SenseAPI(AtlanticWaveManager):
                 for match in matches:
                     print "    _sanitize_db() - Removing hash - NO RM - %s" % match['hash']
                     if PolicyManager().get_policy_details(match['hash']) != None:
-                        print "     _sanitize_db() - Removing rule - NO RM - %s" % match['hash']
+                        print "     _sanitize_db() - Removing policy - NO RM - %s" % match['hash']
                         PolicyManager().remove_policy(match['hash'], self.userid)
                     self.hash_table.delete(**match)
                 
@@ -384,26 +389,26 @@ class SenseAPI(AtlanticWaveManager):
         # does not exist, based on our loops above.
         # - Loop through the hashes
         # -- If PolicyManager policy exists, delete it
-        # -- delete rule_hash from hash_table.
+        # -- delete policy_hash from hash_table.
 
-        for rule_hash in all_hashes:
-            print "    _sanitize_db() - Removing hash - NO DELTA - %s" % rule_hash['hash']
-            if PolicyManager().get_policy_details(rule_hash['hash']) != None:
-                print "    _sanitize_db() - Removing rule - NO DELTA - %s" % rule_hash['hash']
-                PolicyManager().remove_policy(rule_hash['hash'], self.userid)
-            self.hash_table.delete(**rule_hash)
+        for policy_hash in all_hashes:
+            print "    _sanitize_db() - Removing hash - NO DELTA - %s" % policy_hash['hash']
+            if PolicyManager().get_policy_details(policy_hash['hash']) != None:
+                print "    _sanitize_db() - Removing policy - NO DELTA - %s" % policy_hash['hash']
+                PolicyManager().remove_policy(policy_hash['hash'], self.userid)
+            self.hash_table.delete(**policy_hash)
 
         self.__print_all_deltas(False)
-        self.__print_all_rule_hashes()
+        self.__print_all_policy_hashes()
         print "\n\n\n\n\n"
         
-    def rule_add_callback(self, rule):
-        ''' Handles rules being added. '''
-        print "rule_add_callback - %s" % rule
+    def policy_add_callback(self, policy):
+        ''' Handles policies being added. '''
+        print "policy_add_callback - %s" % policy
 
-    def rule_rm_callback(self, rule):
-        ''' Handles rules being removed. '''
-        print "rule_rm_callback - %s" % rule
+    def policy_rm_callback(self, policy):
+        ''' Handles policies being removed. '''
+        print "policy_rm_callback - %s" % policy
 
     def topo_change_callback(self):
         ''' Handles topology changes. 
@@ -528,36 +533,36 @@ class SenseAPI(AtlanticWaveManager):
             starttime and endtime are in the SENSE format.
         
             Requires the simplified topology to be generated. '''
-        self.current_rules = PolicyManager().get_policies()
+        self.current_policies = PolicyManager().get_policies()
         self.list_of_services = []
         
         # Get exterior ports - from the simplified_topology
         exterior_nodes = self.simplified_topo.nodes()
         exterior_nodes.remove('central')
 
-        # Loop through rules
-        for r in self.current_rules:
-            rule = PolicyManager().get_raw_policy(r[0])
-            potential_endpoints = rule.get_endpoints()
+        # Loop through policies
+        for r in self.current_policies:
+            policy = PolicyManager().get_raw_policy(r[0])
+            potential_endpoints = policy.get_endpoints()
             # - Loop through endpoints
             endpoints = []
             for (e, f, v) in potential_endpoints:
                 print "   endpoint: %s, %s, %d" % (e, f, v)
-                # -- check if rule ends on an exterior port
+                # -- check if policy ends on an exterior port
                 if (("%s-%s" % (e,f)) in exterior_nodes):
                     # -- if it does, save off name
                     endpoints.append(("%s-%s" % (e,f), v))
                 elif (("%s-%s" % (f,e)) in exterior_nodes):
                     endpoints.append(("%s-%s" % (f,e), v))
-            # - if list is not empty, then continue. If empty, next rule
+            # - if list is not empty, then continue. If empty, next policy
             if len(endpoints) == 0:
                 continue
             
             # - get start and end times
-            start_time = rule.get_start_time()
-            stop_time = rule.get_stop_time()
+            start_time = policy.get_start_time()
+            stop_time = policy.get_stop_time()
             # - if now < start_time or now > stop_time, don't care about
-            #   the rule
+            #   the policy
             start_datetime = datetime.strptime(start_time, rfc3339format)
             stop_datetime =  datetime.strptime(stop_time,  rfc3339format)
             now = datetime.now()
@@ -566,18 +571,18 @@ class SenseAPI(AtlanticWaveManager):
                 continue
             
             # - get it's bandwidth
-            bandwidth = rule.get_bandwidth()
+            bandwidth = policy.get_bandwidth()
 
             # - get the user
-            user = rule.get_user()
+            user = policy.get_user()
             
             # - create service name:
-            #   Get the rule_hash from the rule
-            rule_hash = rule.get_rule_hash()
+            #   Get the policy_hash from the policy
+            policy_hash = policy.get_policy_hash()
             #   if user is self.userid, then give back uuid
             if user == self.userid:
                 # -- find the delta in the local database to get the UUID
-                delta = self._get_delta_by_rule_hash(rule_hash)
+                delta = self._get_delta_by_policy_hash(policy_hash)
                     
                 # -- Put together service name.
                 svc_name = self.SVC_SENSE
@@ -587,7 +592,7 @@ class SenseAPI(AtlanticWaveManager):
             #   if user is other, then make up name
             else:
                 service_name = "%s:conn+%s" % (self.SVC_NONSENSE,
-                                               rule_hash)
+                                               policy_hash)
             
             # - create new service dictionary
             svc_dict = {"service":service_name,
@@ -889,25 +894,25 @@ class SenseAPI(AtlanticWaveManager):
         # Now, do we need a new model? Two reasons for this:
         #  - There wasn't a model in the DB
         #  - The latest model in the DB is stale, based on changes to either
-        #    the topology or to the rules that are installed
+        #    the topology or to the policies that are installed
         if creation_time == None:
             self.dlogger.debug("get_latest_model(): need new model - no creation time in latest.")
             need_new_model = True
         else:
             # Get the most recent time that there was a change
             topo_update_time = TopologyManager().get_last_modified_timestamp()
-            rule_update_time = PolicyManager().get_last_modified_timestamp()
+            policy_update_time = PolicyManager().get_last_modified_timestamp()
             parsed_creation = datetime.strptime(creation_time, rfc3339format)
             parsed_topo = datetime.strptime(topo_update_time, rfc3339format)
-            parsed_rule = datetime.strptime(rule_update_time, rfc3339format)
+            parsed_policy = datetime.strptime(policy_update_time, rfc3339format)
 
             # Check if model is stale
             if (parsed_creation < parsed_topo):
                 self.dlogger.debug("get_latest_model(): need new model - Topology changed. Current %s, Topo %s" % (creation_time, topo_update_time))
                 need_new_model = True
-            if (parsed_creation < parsed_rule):
+            if (parsed_creation < parsed_policy):
                 # This should be an if, not an elif, because we want good logging
-                self.dlogger.debug("get_latest_model(): need new model - Rules changed.    Current %s, Rule %s" % (creation_time, rule_update_time))
+                self.dlogger.debug("get_latest_model(): need new model - Policies changed.    Current %s, Policy %s" % (creation_time, policy_update_time))
                 need_new_model = True
             
         if need_new_model:
@@ -975,8 +980,8 @@ class SenseAPI(AtlanticWaveManager):
                 return None, HTTP_BAD_REQUEST
 
             for policy in parsed_reductions:
-                rule_hash = self._get_rule_hash_by_policy(policy)
-                if rule_hash == None:
+                policy_hash = self._get_policy_hash_by_policy(policy)
+                if policy_hash == None:
                     self.dlogger.error(
                         "process_deltas: reduction no known hash for policy %s"
                         % str(policy))
@@ -1043,8 +1048,8 @@ class SenseAPI(AtlanticWaveManager):
         # Parses the raw_delta, and returns back the policies that it thinks
         # matches the delta
         #
-        # ASSUMPTION: only one rule is being added with each addition. Changes
-        # would be needed if multiple rules are in each addition.
+        # ASSUMPTION: only one policy is being added with each addition. Changes
+        # would be needed if multiple policies are in each addition.
         #FIXME: anything else that needs to be returned back?
 
         def __get_uuid_and_service_name(s):
@@ -1173,9 +1178,9 @@ class SenseAPI(AtlanticWaveManager):
                                         self.dlogger.debug("  bw: %s" % bw)
                                         services[uuid][svcname]['bandwidth'] =bw
                                    
-        # Have details, now loop through services and create rules that are
+        # Have details, now loop through services and create policies that are
         # being described.
-        generated_rules = []
+        generated_policies = []
         for uuid in services.keys():
             for svc in services[uuid].keys():
                 self.dlogger.debug("services[uuid][%s]: %s" % (svc, 
@@ -1202,18 +1207,18 @@ services[uuid][svc]))
                         starttime = services[uuid][svc]['starttime']
                         endtime = services[uuid][svc]['endtime']
                         bandwidth = services[uuid][svc]['bandwidth']
-                        rule = {L2TunnelPolicy.get_policy_name():
-                                {'starttime':starttime,
-                                 'endtime':endtime,
-                                 'srcswitch':ep0['switch'],
-                                 'dstswitch':ep1['switch'],
-                                 'srcport':ep0['port'],
-                                 'dstport':ep1['port'],
-                                 'srcvlan':ep0['vlan'],
-                                 'dstvlan':ep1['vlan'],
-                                 'bandwidth':bandwidth}}
-                        policy = L2TunnelPolicy(self.userid, rule)
-                        generated_rules.append(policy)
+                        policy = {L2TunnelPolicy.get_policy_name():
+                                  {'starttime':starttime,
+                                   'endtime':endtime,
+                                   'srcswitch':ep0['switch'],
+                                   'dstswitch':ep1['switch'],
+                                   'srcport':ep0['port'],
+                                   'dstport':ep1['port'],
+                                   'srcvlan':ep0['vlan'],
+                                   'dstvlan':ep1['vlan'],
+                                   'bandwidth':bandwidth}}
+                        policy = L2TunnelPolicy(self.userid, policy)
+                        generated_policies.append(policy)
                     except Exception as e:
                         self.dlogger.error(
                            "_parse_delta: Error on L2TunnelPolicy creation - %s:%s:%s:%s:%s" %
@@ -1230,13 +1235,13 @@ services[uuid][svc]))
                         endtime = services[uuid][svc]['endtime']
                         bandwidth = services[uuid][svc]['bandwidth']
                         endpoints = services[uuid][svc]['endpoints']
-                        rule = {L2MultipointPolicy.get_policy_name():
-                                {"starttime":starttime,
-                                 "endtime":endtime,
-                                 "bandwidth":bandwidth,
-                                 "endpoints":endpoints}}
-                        policy = L2MultipointPolicy(self.userid, rule)
-                        generated_rules.append(policy)
+                        policy = {L2MultipointPolicy.get_policy_name():
+                                  {"starttime":starttime,
+                                   "endtime":endtime,
+                                   "bandwidth":bandwidth,
+                                  "endpoints":endpoints}}
+                        policy = L2MultipointPolicy(self.userid, policy)
+                        generated_policies.append(policy)
                     except Exception as e:
                         self.dlogger.error(
                             "_parse_delta: Error on L2MultipointPolicy creation - %s:%s:%s:%s" %
@@ -1246,11 +1251,11 @@ services[uuid][svc]))
                             (starttime, endtime, bandwidth, endpoints))
 
         self.logger.info("_parse_delta: Generated %d policies for UUIDs %s" %
-                         (len(generated_rules), str(services.keys())))
+                         (len(generated_policies), str(services.keys())))
         self.dlogger.debug("_parse_delta: Generated policies:")
-        for pol in generated_rules:
+        for pol in generated_policies:
             self.dlogger.debug("    %s" % pol)
-        return generated_rules
+        return generated_policies
 
     def get_delta(self, deltaid):
         ''' Get the delta.
@@ -1291,47 +1296,48 @@ services[uuid][svc]))
         if delta['addition'] != None:
             for policy in delta['addition']:
                 try:
-                    PolicyManager().test_add_rule(policy)
+                    PolicyManager().test_add_policy(policy)
                 except Exception as e:
-                    # This means that rule cannot be added, for whatever reason,
-                    # log it, and return bad status
+                    # This means that policy cannot be added, for whatever
+                    # reason, log it, and return bad status
                     self.logger.error("commit: addition failed, aborting. " +
                                       "%s, %s" % (str(policy), e))
                     return HTTP_CONFLICT
 
         # Reductions first
         # - Loop through the reductions
-        # -- get the corresponding rule_hash
-        # -- Call PolicyManager().remove_policy() to get rid of the rule
+        # -- get the corresponding policy_hash
+        # -- Call PolicyManager().remove_policy() to get rid of the policy
         # -- if it doesn't exist in the PolicyManager, that's fine, but log it!
         if delta['reduction'] != None:
             for policy in delta['reduction']:
-                rule_hash = self._get_rule_hash_by_policy(policy)
+                policy_hash = self._get_policy_hash_by_policy(policy)
                 try:
-                    PolicyManager().remove_policy(rule_hash, self.userid)
+                    PolicyManager().remove_policy(policy_hash, self.userid)
                 except PolicyManagerError as e:
                     self.dlogger.info("commit: reduction failed: %s" %
-                                      rule_hash)
+                                      policy_hash)
                     self.logger.error("commit: reduction failed: %s, %s" %
-                                      (rule_hash, e))
+                                      (policy_hash, e))
                     #FIXME: Is this the right return code?
                     return HTTP_SERVER_ERROR 
 
         # Addition commit second
         # - Loop through second time
         # -- Install policy this time
-        # -- push the rule_hash into the hashDB with _put_rule_hash_by_policy()
+        # -- push the policy_hash into the hashDB with
+        #    _put_policy_hash_by_policy()
         if delta['addition'] != None:
             for policy in delta['addition']:
                 try:
-                    rule_hash = PolicyManager().add_policy(policy)
-                    self._put_rule_hash_by_policy(policy, rule_hash,
-                                                  deltaid)
+                    policy_hash = PolicyManager().add_policy(policy)
+                    self._put_policy_hash_by_policy(policy, policy_hash,
+                                                    deltaid)
                 except:
                     self.dlogger.info("commit: addition failed: %s" %
-                                      rule_hash)
+                                      policy_hash)
                     self.logger.error("commit: addition failed: %s, %s" %
-                                      (rule_hash, e))
+                                      (policy_hash, e))
                     #FIXME: Is this the right return code?
                     return HTTP_SERVER_ERROR
 
@@ -1393,16 +1399,16 @@ services[uuid][svc]))
         self.dlogger.debug("_get_delta_by_id() on %s successful" % delta_id)
         return delta
 
-    def _get_delta_by_rule_hash(self, rule_hash):
-        ''' Helper function, just pulls a delta based on the rule hash (from the
-            PolicyManager).
+    def _get_delta_by_policy_hash(self, policy_hash):
+        ''' Helper function, just pulls a delta based on the policy hash (from 
+            the PolicyManager).
             Returns:
-              - None if rule_hash doesn't exist
+              - None if policy_hash doesn't exist
               - Dictionary containing delta. See comment at top of SenseAPI
                 definition for keys.
         '''
 
-        raw_hash = self.hash_table.find_one(hash=rule_hash)
+        raw_hash = self.hash_table.find_one(hash=policy_hash)
 
         if raw_hash == None:
             return None
@@ -1411,40 +1417,40 @@ services[uuid][svc]))
         
         delta = self._get_delta_by_id(delta_id)
 
-        self.dlogger.debug("_get_delta_by_rule_hash() on %s successful %s" %
-                           (rule_hash, delta_id))
+        self.dlogger.debug("_get_delta_by_policy_hash() on %s successful %s" %
+                           (policy_hash, delta_id))
         return delta
 
-    def _get_rule_hash_by_policy(self, policy):
-        ''' Helper function, finds the rule hash based on a policy that was in
+    def _get_policy_hash_by_policy(self, policy):
+        ''' Helper function, finds the policy hash based on a policy that was in
             an addition in the past. '''
 
         print "\n\nPOLICY: %s" % policy
 
         for raw_hash in self.hash_table.find():
             if pickle.loads(str(raw_hash['policy'])) == policy:
-                rule_hash = raw_hash['hash']
-                self.dlogger.debug("_get_rule_hash_by_policy() successful %s" %
-                                   rule_hash)
-                return rule_hash
+                policy_hash = raw_hash['hash']
+                self.dlogger.debug(
+                    "_get_policy_hash_by_policy() successful %s" % policy_hash)
+                return policy_hash
                 
-        self.dlogger.debug("_get_rule_hash_by_policy() unsuccessful")
+        self.dlogger.debug("_get_policy_hash_by_policy() unsuccessful")
         return None
 
-    def _put_rule_hash_by_policy(self, policy, rule_hash, delta_id):
-        ''' helper function, puts the rule hash and policy into the hash_table
+    def _put_policy_hash_by_policy(self, policy, policy_hash, delta_id):
+        ''' helper function, puts the policy hash and policy into the hash_table
             to make finding them easier. Note: a delta can have multiple
             policies as part of the addition, which is where this comes in.
             We can find this information other ways, but this is *so* much 
             easier. '''
 
         #FIXME: possible enhancement to check if something matching the
-        # rule_hash is already in the hash_table.
+        # policy_hash is already in the hash_table.
 
-        self.dlogger.info("_put_rule_hash_by_policy: %s, %s" % (rule_hash,
-                                                                delta_id))
+        self.dlogger.info("_put_policy_hash_by_policy: %s, %s" % (policy_hash,
+                                                                  delta_id))
         
-        hash_policy = {'hash':rule_hash,
+        hash_policy = {'hash':policy_hash,
                        'policy':pickle.dumps(policy),
                        'delta_id':delta_id}
         #self.dlogger.debug("Inserting hash_policy %s" % hash_policy)
@@ -1510,7 +1516,7 @@ services[uuid][svc]))
                           (delta_id, update))
         
         # if it's a new entry (update=False)
-        #   - There is no existing rule with delta_id==delta_id
+        #   - There is no existing policy with delta_id==delta_id
         #   - Make sure everything is filled in
         #   - Build dictionary to be inserted into table, including timestamp
         #     and last_modified
@@ -1547,7 +1553,7 @@ services[uuid][svc]))
             self.delta_table.insert(delta)
             
         # else, it's an update (update=True)
-        #   - Make sure there is an existing rule with delta_id==delta_id
+        #   - Make sure there is an existing policy with delta_id==delta_id
         #   - Build dictionary to be inserted into table, including
         #     last_modified
         else:

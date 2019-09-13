@@ -40,7 +40,8 @@ import json
 #after the Process is started. 
 from threading import Thread
 
-#stuff to serve sdxctlr/static content - I will change this in an update but for now this is viable.
+#stuff to serve sdxctlr/static content - I will change this in an update but for
+#now this is viable.
 import SimpleHTTPServer
 import SocketServer
 
@@ -91,11 +92,11 @@ def request_wants_json(r):
 
 class RestAPI(AtlanticWaveModule):
     ''' The REST API will be the main interface for participants to use to push 
-        rules (eventually) down to switches. It will gather authentication 
+        policies (eventually) down to switches. It will gather authentication 
         information from the participant and check with the 
         AuthenticationInspector if the participant is authentic. It will check 
-        with the AuthorizationInspector if a particular action is available to a 
-        given participant. Once authorized, rules will be pushed to the 
+        with the AuthorizationInspector if a particular action is available to a
+        given participant. Once authorized, policies will be pushed to the 
         PolicyManager. It will draw some of its API from the PolicyRegistry, 
         specifically for the libraries that register with the PolicyRegistry. 
         Singleton. '''
@@ -788,16 +789,17 @@ class RestAPI(AtlanticWaveModule):
                 # Permissions - FIXME
                 user['permitted_actions']
                 # Policies
-                rules = PolicyManager().get_policies({'user':un})
+                policies = PolicyManager().get_policies({'user':un})
                 policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
-                for rule in rules:
-                    (rule_hash, jsonrule, ruletype, username, state) = rule
-                    policies['policy'+str(rule_hash)] = {'href':
-                                    policy_url + str(rule_hash),
-                                    'policynumber':rule_hash,
+                for policy in policies:
+                    (policy_hash, jsonpolicy, policytype,
+                     username, state) = policy
+                    policies['policy'+str(policy_hash)] = {'href':
+                                    policy_url + str(policy_hash),
+                                    'policynumber':policy_hash,
                                     'user':un,
-                                    'type':ruletype}
+                                    'type':policytype}
                     
             # Add permissions and policies to the user 
             retdict['links'][un]['permissions'] = perms
@@ -864,16 +866,16 @@ class RestAPI(AtlanticWaveModule):
             # Permissions - FIXME
             user['permitted_actions']
             # Policies
-            rules = PolicyManager().get_policies({'user':username})
+            policies = PolicyManager().get_policies({'user':username})
             policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
-            for rule in rules:
-                (rule_hash, jsonrule, ruletype, un, state) = rule
-                policies['policy'+str(rule_hash)] = {'href':
-                                    policy_url + str(rule_hash),
-                                    'policynumber':rule_hash,
+            for policy in policies:
+                (policy_hash, jsonpolicy, policytype, un, state) = policy
+                policies['policy'+str(policy_hash)] = {'href':
+                                    policy_url + str(policy_hash),
+                                    'policynumber':policy_hash,
                                     'user':username,
-                                    'type':ruletype}
+                                    'type':policytype}
                     
         # Add permissions and policies to the user 
         retdict[username]['permissions'] = perms
@@ -990,18 +992,18 @@ class RestAPI(AtlanticWaveModule):
         query = {'user':username}
         ##### QEURY type #####
         if (request.args.get('type') != None):
-            query['ruletype'] = request.args.get('type')
+            query['policytype'] = request.args.get('type')
         
-        rules = PolicyManager().get_policies(query)
+        policies = PolicyManager().get_policies(query)
         policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
-        for rule in rules:
-            (rule_hash, jsonrule, ruletype, user, state) = rule
-            retdict[username]['policies']['policy'+str(rule_hash)] = {'href':
-                                    policy_url + str(rule_hash),
-                                    'policynumber':rule_hash,
+        for policy in policies:
+            (policy_hash, jsonpolicy, policytype, user, state) = policy
+            retdict[username]['policies']['policy'+str(policy_hash)] = {'href':
+                                    policy_url + str(policy_hash),
+                                    'policynumber':policy_hash,
                                     'user':username,
-                                    'type':ruletype}
+                                    'type':policytype}
 
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
@@ -1054,17 +1056,17 @@ class RestAPI(AtlanticWaveModule):
         base_url = request.base_url
         retdict = {'href': base_url, 'links':{}}
 
-        # Get all the rules:
-        rules = PolicyManager().get_policies()
+        # Get all the policies:
+        policies = PolicyManager().get_policies()
         policy_url = base_url + "/number/"
 
-        for rule in rules:
-            (rule_hash, jsonrule, ruletype, username, state) = rule
-            policy = {'href':policy_url + str(rule_hash),
-                      'policynumber':rule_hash,
+        for policy in policies:
+            (policy_hash, jsonpolicy, policytype, username, state) = policy
+            policy = {'href':policy_url + str(policy_hash),
+                      'policynumber':policy_hash,
                       'user':username,
-                      'type':ruletype}
-            retdict['links']['policy'+str(rule_hash)] = policy
+                      'type':policytype}
+            retdict['links']['policy'+str(policy_hash)] = policy
             
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
@@ -1130,22 +1132,22 @@ class RestAPI(AtlanticWaveModule):
         base_url = request.base_url
         retdict = {}
 
-        # Get all the rules:
-        rule = PolicyManager().get_policy_details(policynumber)
-        if rule == None:
+        # Get all the policies:
+        policy = PolicyManager().get_policy_details(policynumber)
+        if policy == None:
             #FIXME - proper response
             if request_wants_json(request):
                 return make_response(jsonify({'error': 'Not found'}), 404)
             # HTML output
             return make_response(jsonify({'error': 'Not found'}), 404)
 
-        (rule_hash, jsonrule, ruletype, state, user, breakdowns) = rule
+        (policy_hash, jsonpolicy, policytype, state, user, breakdowns) = policy
         policy = {'href':base_url,
-                  'policynumber':rule_hash,
+                  'policynumber':policy_hash,
                   'user':user,
-                  'type':ruletype,
-                  'json':jsonrule}
-        retdict['policy'+str(rule_hash)] = policy
+                  'type':policytype,
+                  'json':jsonpolicy}
+        retdict['policy'+str(policy_hash)] = policy
             
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
@@ -1153,7 +1155,7 @@ class RestAPI(AtlanticWaveModule):
         # HTML output
         return flask.render_template('policiesspec.html', policydict=retdict)
         # else: fancy HTML
-        detail = PolicyManager().get_policy_details(rule_hash)
+        detail = PolicyManager().get_policy_details(policy_hash)
         return flask.render_template('details.html', detail = detail)
         
     '''
@@ -1183,17 +1185,17 @@ class RestAPI(AtlanticWaveModule):
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         
-        rule = PolicyManager().get_policy_details(policynumber)
-        if rule == None:
+        policy = PolicyManager().get_policy_details(policynumber)
+        if policy == None:
             #FIXME - proper response
             if request_wants_json(request):
                 return make_response(jsonify({'error': 'Not found'}), 404)
             #FIXME:  NEED HTML response written
             return make_response(jsonify({'error': 'Not found'}), 404)        
 
-        # Delete rule
-        (rule_hash, jsonrule, ruletype, state, user, breakdowns) = rule
-        PolicyManager().remove_policy(rule_hash, user)
+        # Delete policy
+        (policy_hash, jsonpolicy, policytype, state, user, breakdowns) = policy
+        PolicyManager().remove_policy(policy_hash, user)
 
         #FIXME - proper response
         if request_wants_json(request):
@@ -1312,18 +1314,18 @@ class RestAPI(AtlanticWaveModule):
         base_url = request.base_url
         retdict = {'href': base_url}
 
-        # Get all the rules:
-        rules = PolicyManager().get_policies()
+        # Get all the policies:
+        policies = PolicyManager().get_policies()
         policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
-        for rule in rules:
-            (rule_hash, jsonrule, ruletype, username, state) = rule
-            if ruletype == policytype:
-                policy = {'href':policy_url + str(rule_hash),
-                          'policynumber':rule_hash,
+        for policy in policies:
+            (policy_hash, jsonpolicy, policytype, username, state) = policy
+            if policytype == policytype:
+                policy = {'href':policy_url + str(policy_hash),
+                          'policynumber':policy_hash,
                           'user':username,
-                          'type':ruletype}
-                retdict['policy'+str(rule_hash)] = policy
+                          'type':policytype}
+                retdict['policy'+str(policy_hash)] = policy
             
         # If they requested a JSON, send back the raw JSON
         if request_wants_json(request):
@@ -1356,7 +1358,7 @@ class RestAPI(AtlanticWaveModule):
             return make_response(jsonify({}), 404) 
 
         
-    ##### SPECIFIC RULE POSTS #####
+    ##### SPECIFIC POLICY POSTS #####
 
 
     '''
@@ -1385,7 +1387,8 @@ class RestAPI(AtlanticWaveModule):
                 count = int(data_json['L2Multipoint'].pop('count'))
                 data_json['L2Multipoint']['endpoints']=[]
                 for i in range(1,count+1):
-                    element = data_json['L2Multipoint'].pop('multipointelement_'+str(i))
+                    element = data_json['L2Multipoint'].pop(
+                        'multipointelement_'+str(i))
                     (node, portstr, vlanstr) = str(element).split(',')
                     data_json['L2Multipoint']['endpoints'].append(
                         {"switch":node,

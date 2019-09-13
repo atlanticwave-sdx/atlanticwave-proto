@@ -13,19 +13,20 @@ class AuthorizationInspectorLoginNotAuthorized(AuthorizationInspectorError):
     ''' Raised when a login is disallowed. '''
     pass
 
-class AuthorizationInspectorRuleNotAuthorized(AuthorizationInspectorError):
-    ''' Raised when a rule installation is not authorized. '''
+class AuthorizationInspectorPolicyNotAuthorized(AuthorizationInspectorError):
+    ''' Raised when a policy installation is not authorized. '''
     pass
 
 class AuthorizationInspector(AtlanticWaveInspector):
     ''' The AuthorizationInspector is responsible for authorizing actions. 
-        Actions include viewing status of the network, viewing rules of the
-        network, pushing rules to network, removing own rules from network, and 
-        removing any rules from network. Most users will be authorized for a 
-        subset of these actions, with only administrators able to remove rules 
-        from other participants. In the future, more granularity will be added 
-        (i.e., Alice will be able to install rule types X, Y, and Z, while Bob 
-        can only install rule type X). The actions will likely evolve 
+        Actions include viewing status of the network, viewing policies of the
+        network, pushing policies to network, removing own policies from 
+        network, and removing any policies from network. Most users will be 
+        authorized for a subset of these actions, with only administrators able 
+        to remove policies from other participants. In the future, more 
+        granularity will be added 
+        (i.e., Alice will be able to install policy types X, Y, and Z, while Bob
+        can only install policy type X). The actions will likely evolve 
         significantly.
         Singleton. '''
 

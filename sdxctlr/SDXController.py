@@ -65,7 +65,7 @@ class SDXController(AtlanticWaveModule):
 
         self.db_filename = db
 
-        # self.run_topo decides whether or not to send rules.
+        # self.run_topo decides whether or not to send rules to LocalControllers
         self.run_topo = run_topo
 
         # Modules with configuration files
