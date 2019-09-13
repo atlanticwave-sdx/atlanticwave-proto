@@ -24,7 +24,7 @@ class BasicTest(unittest.TestCase):
         up = UserPolicy('sdonovan', 'teststring')
 
         self.failUnlessRaises(NotImplementedError,
-                              up.breakdown_rule,
+                              up.breakdown_policy,
                               None,
                               None)
         self.failUnlessRaises(NotImplementedError,
@@ -47,10 +47,10 @@ class BasicTest(unittest.TestCase):
         self.assertEquals(None, up.get_breakdown())
         self.assertEquals(None, up.get_start_time())
         self.assertEquals(None, up.get_stop_time())
-        self.assertEquals('teststring', up.get_json_rule()) # passed in
-        self.assertEquals('User', up.get_ruletype()) # Generated
+        self.assertEquals('teststring', up.get_json_policy()) # passed in
+        self.assertEquals('User', up.get_policytype()) # Generated
         self.assertEquals('sdonovan', up.get_user()) # passed in
-        self.assertEquals(None, up.get_rule_hash())
+        self.assertEquals(None, up.get_policy_hash())
         self.assertEquals([], up.get_resources())
         
 
@@ -61,16 +61,16 @@ class BasicTest(unittest.TestCase):
         # The gets default usually to None or []. Some are passed in at the
         # beginning and some are (predictably) generated.
         self.assertEquals(None, up.get_breakdown())
-        self.assertEquals('teststring', up.get_json_rule()) # passed in
-        self.assertEquals('User', up.get_ruletype()) # Generated
+        self.assertEquals('teststring', up.get_json_policy()) # passed in
+        self.assertEquals('User', up.get_policytype()) # Generated
         self.assertEquals('sdonovan', up.get_user()) # passed in
-        self.assertEquals(None, up.get_rule_hash())
+        self.assertEquals(None, up.get_policy_hash())
 
         up.set_breakdown("testbreakdown")
         self.assertEquals("testbreakdown", up.get_breakdown())
 
-        up.set_rule_hash(12345)
-        self.assertEquals(12345, up.get_rule_hash())
+        up.set_policy_hash(12345)
+        self.assertEquals(12345, up.get_policy_hash())
 
 class ClassMethodsTest(unittest.TestCase):
     # There are a couple of ClassMethods we need to test.
