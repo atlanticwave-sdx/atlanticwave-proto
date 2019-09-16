@@ -23,20 +23,20 @@ TOPO_CONFIG_FILE = 'sdxctlr/tests/test_manifests/topo.manifest'
 PART_CONFIG_FILE = 'sdxctlr/tests/test_manifests/participants.manifest'
 JSON_POLICY_FILE = 'sdxctlr/tests/test_manifests/example_config.json'
 
-class RuleStandin(object):
+class PolicyStandin(object):
     def __init__(self, name):
         self.name = name
     def __str__(self):
-        return "RuleStandin %s" % self.name
+        return "PolicyStandin %s" % self.name
     def set_cookie(self, cookie):
         return
     
 class UserPolicyStandin(UserPolicy):
     # Use the username as a return value for checking validity.
-    def __init__(self, username, json_rule):
-        super(UserPolicyStandin, self).__init__(username, json_rule)
+    def __init__(self, username, json_policy):
+        super(UserPolicyStandin, self).__init__(username, json_policy)
         self.valid = username
-        self.breakdown = json_rule
+        self.breakdown = json_policy
         
     def check_validity(self, topology, authorization_func):
         # Verify that topology is a nx.Graph, and authorization_func is ???
@@ -55,11 +55,11 @@ class UserPolicyStandin(UserPolicy):
         if self.valid == True:
             print "- Success"
             return [UserPolicyBreakdown("1.2.3.4",
-                                        [RuleStandin("rule1"),
-                                         RuleStandin("rule2")])]
+                                        [PolicyStandin("policy1"),
+                                         PolicyStandin("policy2")])]
         raise Exception("BAD")
     
-    def _parse_json(self, json_rule):
+    def _parse_json(self, json_policy):
         return
 
     
@@ -104,7 +104,7 @@ class SingletonTest(unittest.TestCase):
         del firstManager
         del secondManager
 
-class AddRuleTest(unittest.TestCase):
+class AddPolicyTest(unittest.TestCase):
     @mock.patch('sdxctlr.SDXController.SDXControllerConnectionManager', autospec=True)
     @mock.patch('sdxctlr.SDXController.RestAPI', autospec=True)
     def test_add_and_remove_no_exception(self, restapi, cxm):
@@ -115,13 +115,13 @@ class AddRuleTest(unittest.TestCase):
         sdxctlr = SDXController(False, no_loop_options)
         
         man = PolicyManager()#'db','sdxcontroller',rmhappy,rmhappy)
-        valid_rule = UserPolicyStandin(True, True)
+        valid_policy = UserPolicyStandin(True, True)
 
         sdxctlr._send_breakdown_rule = mock.MagicMock()
 
-        rule_num = man.add_policy(valid_rule)
+        policy_num = man.add_policy(valid_policy)
 
-        man.remove_policy(rule_num, 'sdonovan')
+        man.remove_policy(policy_num, 'sdonovan')
         
 
 class JsonUploadTest(unittest.TestCase):
@@ -145,10 +145,10 @@ class JsonUploadTest(unittest.TestCase):
             "bandwidth":1}}
 
         # Get a JSON policy from a file
-        l2rule = L2TunnelPolicy('sdonovan', l2json)
+        l2policy = L2TunnelPolicy('sdonovan', l2json)
 
-        rule_num = man.add_policy(l2rule)
-        man.remove_policy(rule_num, 'sdonovan')
+        policy_num = man.add_policy(l2policy)
+        man.remove_policy(policy_num, 'sdonovan')
 
 
     @mock.patch('sdxctlr.SDXController.SDXControllerConnectionManager', autospec=True)
@@ -170,10 +170,10 @@ class JsonUploadTest(unittest.TestCase):
             "bandwidth":1}}
 
         # Get a JSON policy from a file
-        l2rule = L2TunnelPolicy('sdonovan', l2json)
+        l2policy = L2TunnelPolicy('sdonovan', l2json)
 
-        rule_num = man.add_policy(l2rule)
-        man.remove_policy(rule_num, 'sdonovan')
+        policy_num = man.add_policy(l2policy)
+        man.remove_policy(policy_num, 'sdonovan')
 
 
 
