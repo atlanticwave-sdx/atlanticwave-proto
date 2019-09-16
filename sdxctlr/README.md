@@ -1,10 +1,8 @@
 # SDX Controller
 
-** NOTE: The SDX controller has not been coded as of 1 August 2016. **
-
 ## Introduction
 
-The SDX controller is the main part of the controller architecture. It serves as the interface with the participants and pushes rules to the local controllers to implement participants' requests. There are two main pieces of the SDX controller: the REST API, and the rule engine. The REST API is the interface for the participants (either directly, or through a web interface). The rule engine takes very abstract rules from the participants, validates them, and breaks them down into pieces that an individual local controller can implement.
+The SDX controller is the main part of the controller architecture. It serves as as both the interface for participant policies and to push rules to the local controllers to implement participants' requests. There are two main pieces of the SDX controller: the user APIs, and the policy engine. The user APIs are the interface for the participants to instantiate policies. There are currently three different APIs: a REST API for programmatically controlling the SDX controller, a web (HTML) version of the REST interface, and a SENSE API for allowing the SENSE project's orchestrator to issue policies to the SDX controller using the SENSE interface. The policy engine takes policies from the participants, validates them, and breaks them down into rules that an individual local controller can implement.
 
 
 ## REST API
