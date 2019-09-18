@@ -854,6 +854,8 @@ class RestAPI(AtlanticWaveModule):
         retdict = {'href':base_url}
         # Get specific user
         user = UserManager().get_user(username)
+        if user == None:
+            return(json.dumps({}))
         retdict[username] = {'href': base_url,
                              'type': user['type'],
                              'organization': user['organization']}
@@ -925,6 +927,8 @@ class RestAPI(AtlanticWaveModule):
         retdict = {}
         # Get specific user
         user = UserManager().get_user(username)
+        if user == None:
+            return(json.dumps({}))
         retdict[username] = {'href': base_url}
 
         #FIXME - Once this is squared away, this needs to be written.
@@ -985,6 +989,8 @@ class RestAPI(AtlanticWaveModule):
         retdict = {}
         # Get specific user
         user = UserManager().get_user(username)
+        if user == None:
+            return(json.dumps({}))
         retdict[username] = {'href': base_url,
                              'policies':{}}
 

@@ -10,6 +10,9 @@ import inspect
 from glob import glob
 from lib.AtlanticWaveRegistry import AtlanticWaveRegistry
 
+EXCLUSION_LIST = ["<class 'SDXPolicy.SDXPolicy'>",
+                  "<class 'UserPolicy.UserPolicy'>"]
+
 class PolicyRegistryTypeError(TypeError):
     pass
 
@@ -67,7 +70,10 @@ class PolicyRegistry(AtlanticWaveRegistry):
                     inspect.isclass(classvalue) and
                     issubclass(classvalue, UserPolicy.UserPolicy)):
                     #print "  %s" % classvalue
-                    self.add_policytype(classvalue)
+                    # Exclusion list
+                    if str(classvalue) not in EXCLUSION_LIST:
+                        print "str(classvalue): %s" % str(classvalue)
+                        self.add_policytype(classvalue)
 
         sys.path.remove(polpath)
         self.logger.info("%s Found all policy types in %s" % (
