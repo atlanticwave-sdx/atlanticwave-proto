@@ -1496,10 +1496,10 @@ class RestAPI(AtlanticWaveModule):
 
             print "\n\nerrorstr %s\ntojsonify %s" % (errorstr, {"Error":str(e)})
             if request_wants_json(request):
-                RestAPI().logger.error("POST %s ERROR: %s" % (policyname, e,))
+                RestAPI().logger.error("POST %s ERROR: %s" % (policytype, e,))
                 return make_response(jsonify({"Error":str(e)}), 400)
             #FIXME:  NEED HTML response written
-            RestAPI().logger.error("POST %s ERROR: %s" % (policyname, e,))
+            RestAPI().logger.error("POST %s ERROR: %s" % (policytype, e,))
             return make_response(jsonify({"Error":str(e)}), 400)
 
 
