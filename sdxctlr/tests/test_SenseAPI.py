@@ -21,7 +21,7 @@ from shared.constants import rfc3339format, MAXENDTIME
 
 
 DB_FILE = ":memory:"
-BASIC_MANIFEST_FILE = "sdxctlr/tests/senseapi_files/twoswitch-onelc-noncorsa.manifest"
+BASIC_MANIFEST_FILE = "sdxctlr/tests/api_files/twoswitch-onelc-noncorsa.manifest"
 
 def add_policy(param):
     # For Policy Manager
