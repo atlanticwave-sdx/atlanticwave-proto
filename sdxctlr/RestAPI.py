@@ -1143,7 +1143,7 @@ class RestAPI(AtlanticWaveModule):
 
         (policy_hash, jsonpolicy, policytype, state, user, breakdowns) = policy
         policy = {'href':base_url,
-                  'policynumber':policy_hash,
+                  'policynumber':int(policy_hash),
                   'user':user,
                   'type':policytype,
                   'json':jsonpolicy}
