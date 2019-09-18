@@ -774,7 +774,7 @@ class RestAPI(AtlanticWaveModule):
         base_url = request.base_url
         retdict = {'href':base_url, 'links':{}}
         # Get all the users
-        users = UserManager.get_users()
+        users = UserManager().get_users()
         for user in users:
             un = user['username']
             retdict['links'][un] = {'href': base_url + "/" + un,
