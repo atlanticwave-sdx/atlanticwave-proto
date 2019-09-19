@@ -902,13 +902,31 @@ class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
 # POLICY ENDPOINTS - with posts
 class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
     def test_install_and_remove(self):
+        # First, need to figure out the empty output. This includes a FloodTree
+        # Policy, so it's EP_POLICIESSPEC_Test.test_GET_with_login() all over
+        # again
+        endpoint = ENDPOINT_PREFIX + EP_POLICIES
+        output = subprocess.check_output(['curl', '-X', 'GET',
+                                          '-H', "Accept: application/json",
+                                          endpoint,
+                                          '-b', self.cookie_file])
+        output = json.loads(output)
+        print "\n\n\n output: %s\n keys:%s\n\n\n" % (output, output.keys())
+
+        self.assertTrue('links' in output.keys())
+        self.assertEqual(len(output['links'].keys()), 1)
+
+        # Seriously, this is the easy way of doing it...
+        FTpolicynum = output['links'][output['links'].keys()[0]]['policynumber']
+
+        # Find FloodTree policy # and add it to the expected_empty_output
         getendpoint = ENDPOINT_PREFIX + EP_POLICIES
         expected_empty_output = {
             u"href": u"http://127.0.0.1:5000/api/v1/policies",
             u"links": {
-                u"policy2": {
-                    u"href": u"http://127.0.0.1:5000/api/v1/policies/number/2",
-                    u"policynumber": 2,
+                u"policy%d"%FTpolicynum: {
+                    u"href": u"http://127.0.0.1:5000/api/v1/policies/number/%d"%FTpolicynum,
+                    u"policynumber": FTpolicynum,
                     u"type": u"FloodTree",
                     u"user": u"SDXCTLR"}}}
         
@@ -916,9 +934,31 @@ class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
                         EP_POLICIESTYPESPEC, 1)
         postendpoint = ENDPOINT_PREFIX + suffix
         l2tunnel = '{"L2Tunnel":{"starttime": "1985-04-12T23:20:50","endtime": "2085-04-12T23:20:50", "srcswitch": "br1", "dstswitch": "br2", "srcport": 1, "dstport": 2, "srcvlan": 100, "dstvlan": 200, "bandwidth": 100}}'
+        
+                
+        suffix = re.sub(r'(<[a-zA-Z]*>)', '3',
+                        EP_POLICIESSPEC, 1)
+        delendpoint = ENDPOINT_PREFIX + suffix
+        expected_del_output = ""
+        
+        # make sure it's clean
+        self.run_case_json(getendpoint, expected_empty_output, True)
+
+        # install a rule
+        output = subprocess.check_output(['curl', '-X', 'POST',
+                                          '-H','Content-type: application/json',
+                                          '-H','Accept: application/json',
+                                          postendpoint,
+                                          '-d', l2tunnel,
+                                          '-b', self.cookie_file])
+        output = json.loads(output)
+        self.assertTrue('policy' in output.keys())
+        self.assertTrue('href' in output['policy'].keys())
+        installed_policynum = int(output['policy']['href'].split("/")[-1])
+
         expected_install_output = {
             u"policy": {
-                u"href": u"http://127.0.0.1:5000/api/v1/policies/number/3", 
+                u"href": u"http://127.0.0.1:5000/api/v1/policies/number/%d"%installed_policynum, 
                 u"json": {
                     u"L2Tunnel": {
                         u"bandwidth": 100, 
@@ -936,36 +976,24 @@ class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
                 u"user": u"sdonovan"
             }
         }
-        
-        
+        self.assertEqual(output, expected_install_output)
+
+        # make sure rule got installed
         expected_tunnel_output = {
             u"href": u"http://127.0.0.1:5000/api/v1/policies",
             u"links": {
-                u"policy3": {
-                    u"policynumber": 3,
-                    u"href": u"http://127.0.0.1:5000/api/v1/policies/number/3",
+                u"policy%d"%installed_policynum: {
+                    u"policynumber": installed_policynum,
+                    u"href": u"http://127.0.0.1:5000/api/v1/policies/number/%d"%installed_policynum,
                     u"type": u"L2Tunnel",
                     u"user": u"sdonovan"},
-                u"policy2": {
-                    u"policynumber": 2,
-                    u"href": u"http://127.0.0.1:5000/api/v1/policies/number/2",
+                u"policy%d"%FTpolicynum: {
+                    u"policynumber": FTpolicynum,
+                    u"href": u"http://127.0.0.1:5000/api/v1/policies/number/%d"%FTpolicynum,
                     u"type": u"FloodTree",
                     u"user": u"SDXCTLR"}}}
 
-        
-        suffix = re.sub(r'(<[a-zA-Z]*>)', '3',
-                        EP_POLICIESSPEC, 1)
-        delendpoint = ENDPOINT_PREFIX + suffix
-        expected_del_output = ""
-        
-        # make sure it's clean
-        self.run_case_json(getendpoint, expected_empty_output, True)
 
-        # install a rule
-        self.run_case_json(postendpoint, expected_install_output, True,
-                           'POST', l2tunnel) 
-
-        # make sure rule got installed
         self.run_case_json(getendpoint, expected_tunnel_output, True)
 
         # remove rule
