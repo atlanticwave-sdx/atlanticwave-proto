@@ -895,8 +895,8 @@ class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
         endpoint = ENDPOINT_PREFIX + suffix
         expected_output = {
             u"href": u"http://127.0.0.1:5000/api/v1/policies/type/FloodTree",
-            u"policy2": {
-                u"policynumber": 2,
+            u"policy%d"%policynum: {
+                u"policynumber": policynum,
                 u"href": u"http://127.0.0.1:5000/api/v1/policies/number/%d"%policynum,
                 u"type": u"FloodTree",
                 u"user": u"SDXCTLR"}}        
