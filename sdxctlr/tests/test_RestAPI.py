@@ -720,8 +720,11 @@ class EP_POLICIESSPEC_Test(EndpointTestCase):
                                           '-H', "Accept: application/json",
                                           endpoint,
                                           '-b', self.cookie_file])
+
+        print "\n\n\n output:\n%s\n\n\n" % output
         outputjson = json.loads(output)
         self.assertEquals(len(outputjson.keys()), 1)
+
         policynum = int(re.sub(r'(policy)', '', outputjson.keys()[0]))
 
         expected_output = {
