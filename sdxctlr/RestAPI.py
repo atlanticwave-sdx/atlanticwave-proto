@@ -1325,8 +1325,8 @@ class RestAPI(AtlanticWaveModule):
         policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"
 
         for policy in policies:
-            (policy_hash, jsonpolicy, policytype, username, state) = policy
-            if policytype == policytype:
+            (policy_hash, jsonpolicy, ptype, username, state) = policy
+            if ptype == policytype:
                 policy = {'href':policy_url + str(policy_hash),
                           'policynumber':policy_hash,
                           'user':username,
