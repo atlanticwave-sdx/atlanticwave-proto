@@ -1320,6 +1320,10 @@ class RestAPI(AtlanticWaveModule):
         base_url = request.base_url
         retdict = {'href': base_url}
 
+        # See if policy is valid:
+        if policytype not in PolicyRegistry().get_list_of_policies():
+            return json.dumps({})
+
         # Get all the policies:
         policies = PolicyManager().get_policies()
         policy_url = request.url_root[:-1] + EP_POLICIES + "/number/"

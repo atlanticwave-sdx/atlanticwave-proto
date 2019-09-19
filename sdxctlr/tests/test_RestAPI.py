@@ -953,11 +953,6 @@ class EP_POLICIESTYPESPEC_POST_Test(EndpointTestCase):
         l2tunnel = '{"L2Tunnel":{"starttime": "1985-04-12T23:20:50","endtime": "2085-04-12T23:20:50", "srcswitch": "br1", "dstswitch": "br2", "srcport": 1, "dstport": 2, "srcvlan": 100, "dstvlan": 200, "bandwidth": 100}}'
         
                 
-        suffix = re.sub(r'(<[a-zA-Z]*>)', '3',
-                        EP_POLICIESSPEC, 1)
-        delendpoint = ENDPOINT_PREFIX + suffix
-        expected_del_output = ""
-        
         # make sure it's clean
         self.run_case_json(getendpoint, expected_empty_output, True)
 
@@ -1014,6 +1009,11 @@ class EP_POLICIESTYPESPEC_POST_Test(EndpointTestCase):
         self.run_case_json(getendpoint, expected_tunnel_output, True)
 
         # remove rule
+        suffix = re.sub(r'(<[a-zA-Z]*>)', str(installed_policynum),
+                        EP_POLICIESSPEC, 1)
+        delendpoint = ENDPOINT_PREFIX + suffix
+        expected_del_output = ""
+
         self.run_case_json(delendpoint, expected_del_output, True, 'DELETE')
 
         # make sure rule is removed
