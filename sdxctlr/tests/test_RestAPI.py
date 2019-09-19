@@ -708,27 +708,35 @@ class EP_POLICIESSPEC_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def test_GET_with_login(self):
+    def atest_GET_with_login(self):
         # this one's a bit special, due to the policy number isn't always
         # consistent, especial in Jenkins builds, so have to manually do the
         # subprocess.
-        suffix = re.sub(r'(<[a-zA-Z]*>)', "2",
-                        EP_POLICIESSPEC, 1)
-        endpoint = ENDPOINT_PREFIX + suffix
 
+        # Find out the policy number from EP_POLICIES, while making sure
+        # there is only a single policy.
+        endpoint = ENDPOINT_PREFIX + EP_POLICIES
         output = subprocess.check_output(['curl', '-X', 'GET',
                                           '-H', "Accept: application/json",
                                           endpoint,
                                           '-b', self.cookie_file])
+        output = json.loads(output)
+        print "\n\n\n output: %s\n keys:%s\n\n\n" % (output, output.keys())
 
-        print "\n\n\n output:\n%s\n\n\n" % output
-        outputjson = json.loads(output)
-        self.assertEquals(len(outputjson.keys()), 1)
+        self.assertTrue('links' in output.keys())
+        self.assertEqual(len(output['links'].keys()), 1)
 
-        policynum = int(re.sub(r'(policy)', '', outputjson.keys()[0]))
+        # Seriously, this is the easy way of doing it...
+        policynum = output['links'][output['links'].keys()[0]]['policynumber']
 
+        
+        # Build the EP_POLICIESSPEC and expected_output with the new-found
+        # policy number
+        suffix = re.sub(r'(<[a-zA-Z]*>)', str(policynum),
+                        EP_POLICIESSPEC, 1)
+        endpoint = ENDPOINT_PREFIX + suffix
         expected_output = {
-            u"policy2": {
+            u"policy%d"%policynum: {
                 u"href": u"http://127.0.0.1:5000/api/v1/policies/number/%d"%policynum,
                 u"policynumber": policynum,
                 u"json": {
@@ -736,7 +744,8 @@ class EP_POLICIESSPEC_Test(EndpointTestCase):
                 u"type": u"FloodTree",
                 u"user": u"SDXCTLR"}}
 
-        self.assertEquals(expected_output, outputjson)
+        # Run the regular command
+        self.run_case_json(endpoint, expected_output, True)
 
     def atest_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "2345",
@@ -841,7 +850,29 @@ class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
+        # this one's a bit special, due to the policy number isn't always
+        # consistent, especial in Jenkins builds, so have to manually do the
+        # subprocess.
+
+        # Find out the policy number from EP_POLICIES, while making sure
+        # there is only a single policy.
+        endpoint = ENDPOINT_PREFIX + EP_POLICIES
+        output = subprocess.check_output(['curl', '-X', 'GET',
+                                          '-H', "Accept: application/json",
+                                          endpoint,
+                                          '-b', self.cookie_file])
+        output = json.loads(output)
+        print "\n\n\n output: %s\n keys:%s\n\n\n" % (output, output.keys())
+
+        self.assertTrue('links' in output.keys())
+        self.assertEqual(len(output['links'].keys()), 1)
+
+        # Seriously, this is the easy way of doing it...
+        policynum = output['links'][output['links'].keys()[0]]['policynumber']
+
+        # Run regularly with the new policynum
+        
         suffix = re.sub(r'(<[a-zA-Z]*>)', "FloodTree",
                         EP_POLICIESTYPESPEC, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -849,7 +880,7 @@ class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
             u"href": u"http://127.0.0.1:5000/api/v1/policies/type/FloodTree",
             u"policy2": {
                 u"policynumber": 2,
-                u"href": u"http://127.0.0.1:5000/api/v1/policies/number/2",
+                u"href": u"http://127.0.0.1:5000/api/v1/policies/number/%d"%policynum,
                 u"type": u"FloodTree",
                 u"user": u"SDXCTLR"}}        
         self.run_case_json(endpoint, expected_output, True)
