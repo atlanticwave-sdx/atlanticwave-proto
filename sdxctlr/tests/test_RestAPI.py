@@ -155,6 +155,7 @@ class EP_LOGOUT_Test(unittest.TestCase):
 class EndpointTestCase(unittest.TestCase):
     # Test framework - Parent class for endpoint tests below.
     def setUp(self):
+        self.maxDiff = None
         # Get cookie/login
         self.sdx = SDXController(False, no_loop_options)
         self.cookie_file = "testing.cookie"
@@ -687,13 +688,33 @@ class EP_POLICIES_Test(EndpointTestCase):
         self.run_case_json(endpoint, expected_output)
 
     def test_GET_with_login(self):
+        # Find out the policy number from EP_POLICIES, while making sure
+        # there is only a single policy.
+        endpoint = ENDPOINT_PREFIX + EP_POLICIES
+        output = subprocess.check_output(['curl', '-X', 'GET',
+                                          '-H', "Accept: application/json",
+                                          endpoint,
+                                          '-b', self.cookie_file])
+        output = json.loads(output)
+        print "\n\n\n output: %s\n keys:%s\n\n\n" % (output, output.keys())
+
+        self.assertTrue('links' in output.keys())
+        self.assertEqual(len(output['links'].keys()), 1)
+
+        # Seriously, this is the easy way of doing it...
+        policynum = output['links'][output['links'].keys()[0]]['policynumber']
+
+        
+        # Build the EP_POLICIES and expected_output with the new-found
+        # policy number
+        
         endpoint = ENDPOINT_PREFIX + EP_POLICIES
         expected_output = {
             u"href": u"http://127.0.0.1:5000/api/v1/policies",
             u"links": {
-                u"policy2": {
-                    u"href": u"http://127.0.0.1:5000/api/v1/policies/number/2",
-                    u"policynumber": 2,
+                u"policy%d"%policynum: {
+                    u"href": u"http://127.0.0.1:5000/api/v1/policies/number/%d"%policynum,
+                    u"policynumber": policynum,
                     u"type": u"FloodTree",
                     u"user": u"SDXCTLR"}}}
         
@@ -709,10 +730,6 @@ class EP_POLICIESSPEC_Test(EndpointTestCase):
         self.run_case_json(endpoint, expected_output)
 
     def test_GET_with_login(self):
-        # this one's a bit special, due to the policy number isn't always
-        # consistent, especial in Jenkins builds, so have to manually do the
-        # subprocess.
-
         # Find out the policy number from EP_POLICIES, while making sure
         # there is only a single policy.
         endpoint = ENDPOINT_PREFIX + EP_POLICIES
@@ -900,7 +917,7 @@ class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
 # SKIPPING EP_POLICIESSPECEXAMPLE
 
 # POLICY ENDPOINTS - with posts
-class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
+class EP_POLICIESTYPESPEC_POST_Test(EndpointTestCase):
     def test_install_and_remove(self):
         # First, need to figure out the empty output. This includes a FloodTree
         # Policy, so it's EP_POLICIESSPEC_Test.test_GET_with_login() all over
