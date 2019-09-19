@@ -53,7 +53,7 @@ def rm_policy(param):
     print "Rm  Policy %s" % param
 
 class SingletonTest(unittest.TestCase):
-    def atest_singleton(self):
+    def test_singleton(self):
         tm = TopologyManager(topology_file=BASIC_MANIFEST_FILE)
         pm = PolicyManager(DB_FILE,
                            send_user_policy_breakdown_add=add_policy,
@@ -78,12 +78,12 @@ class EP_LOGIN_Test(unittest.TestCase):
             os.remove(self.cookie_file)
         self.sdx = None
 
-    def atest_GET(self):
+    def test_GET(self):
         # Make sure we can get the login form w/o logging in - No cookie.
         output = subprocess.check_call(['curl', '-X', 'GET',
                                         self.endpoint])
 
-    def atest_POST(self):
+    def test_POST(self):
         # Make sure we can get actaully login.
         output = subprocess.check_call(['curl', '-X', 'POST',
                                         '-F', "username=sdonovan",
@@ -95,7 +95,7 @@ class EP_LOGIN_Test(unittest.TestCase):
         # Confirm that cookie exists - proof of login.
         self.failUnless(os.path.exists(self.cookie_file))
 
-    def atest_POST_failure(self):
+    def test_POST_failure(self):
         # Cleanup, if needed, normally taken care of by tearDown().
         if os.path.exists(self.cookie_file):
             os.remove(self.cookie_file)
@@ -135,18 +135,18 @@ class EP_LOGOUT_Test(unittest.TestCase):
             os.remove(self.cookie_file)
         self.sdx = None
 
-    def atest_GET_no_login(self):
+    def test_GET_no_login(self):
         # Make sure we can get the logout form w/o logging in - No cookie.
         output = subprocess.check_call(['curl', '-X', 'GET',
                                         self.endpoint])
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         # Make sure we can get the logout form with login
         output = subprocess.check_call(['curl', '-X', 'GET',
                                         self.endpoint,
                                         '-c', self.cookie_file])
 
-    def atest_POST(self):
+    def test_POST(self):
         # Make sure we can get actaully logout
         output = subprocess.check_call(['curl', '-X', 'POST',
                                         self.endpoint,
@@ -225,7 +225,7 @@ class EndpointTestCase(unittest.TestCase):
 # LOCAL CONTROLLER ENDPOINTS
 
 class EP_LOCALCONTROLLER_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         endpoint = ENDPOINT_PREFIX + EP_LOCALCONTROLLER
         expected_output = {
             u"href": unicode(endpoint),
@@ -238,7 +238,7 @@ class EP_LOCALCONTROLLER_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         endpoint = ENDPOINT_PREFIX + EP_LOCALCONTROLLER
         expected_output = {
             u"href": unicode(endpoint),
@@ -254,7 +254,7 @@ class EP_LOCALCONTROLLER_Test(EndpointTestCase):
 
 
 class EP_LOCALCONTROLLERLC_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC", EP_LOCALCONTROLLERLC)
         endpoint = ENDPOINT_PREFIX + suffix
         expected_output = {
@@ -285,7 +285,7 @@ class EP_LOCALCONTROLLERLC_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC", EP_LOCALCONTROLLERLC)
         endpoint = ENDPOINT_PREFIX + suffix
         expected_output = {
@@ -315,7 +315,7 @@ class EP_LOCALCONTROLLERLC_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "FAKELC", EP_LOCALCONTROLLERLC)
         endpoint = ENDPOINT_PREFIX + suffix
 
@@ -328,14 +328,14 @@ class EP_LOCALCONTROLLERLC_Test(EndpointTestCase):
         
 
 class EP_LOCALCONTROLLERLCINT_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC", EP_LOCALCONTROLLERLCINT)
         endpoint = ENDPOINT_PREFIX + suffix
         expected_output = { u"error": u"User Not Authenticated"}
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC", EP_LOCALCONTROLLERLCINT)
         endpoint = ENDPOINT_PREFIX + suffix
         expected_output = {
@@ -347,7 +347,7 @@ class EP_LOCALCONTROLLERLCINT_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "FAKELC", EP_LOCALCONTROLLERLCINT)
         endpoint = ENDPOINT_PREFIX + suffix
 
@@ -359,14 +359,14 @@ class EP_LOCALCONTROLLERLCINT_Test(EndpointTestCase):
         self.assertEqual(expected_output, output)
         
 class EP_LOCALCONTROLLERLCSW_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC", EP_LOCALCONTROLLERLCSW)
         endpoint = ENDPOINT_PREFIX + suffix
         expected_output = { u"error": u"User Not Authenticated"}
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC", EP_LOCALCONTROLLERLCSW)
         endpoint = ENDPOINT_PREFIX + suffix
         expected_output = {
@@ -383,7 +383,7 @@ class EP_LOCALCONTROLLERLCSW_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "FAKELC", EP_LOCALCONTROLLERLCSW)
         endpoint = ENDPOINT_PREFIX + suffix
 
@@ -396,7 +396,7 @@ class EP_LOCALCONTROLLERLCSW_Test(EndpointTestCase):
 
 
 class EP_LOCALCONTROLLERLCSWSPEC_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC",
                         EP_LOCALCONTROLLERLCSWSPEC, 1)
         suffix = re.sub(r'(<[a-zA-Z]*>)', "br1", suffix, 1)
@@ -405,7 +405,7 @@ class EP_LOCALCONTROLLERLCSWSPEC_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC",
                         EP_LOCALCONTROLLERLCSWSPEC, 1)
         suffix = re.sub(r'(<[a-zA-Z]*>)', "br1", suffix, 1)
@@ -436,7 +436,7 @@ class EP_LOCALCONTROLLERLCSWSPEC_Test(EndpointTestCase):
         
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "FAKELC",
                         EP_LOCALCONTROLLERLCSWSPEC, 1)
         suffix = re.sub(r'(<[a-zA-Z]*>)', 'br1', suffix, 1)
@@ -450,7 +450,7 @@ class EP_LOCALCONTROLLERLCSWSPEC_Test(EndpointTestCase):
         self.assertEqual(expected_output, output)
 
 class EP_LOCALCONTROLLERLCSWSPECPORT_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC",
                         EP_LOCALCONTROLLERLCSWSPECPORT, 1)
         suffix = re.sub(r'(<[a-zA-Z]*>)', "br1", suffix, 1)
@@ -459,7 +459,7 @@ class EP_LOCALCONTROLLERLCSWSPECPORT_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC",
                         EP_LOCALCONTROLLERLCSWSPECPORT, 1)
         suffix = re.sub(r'(<[a-zA-Z]*>)', "br1", suffix, 1)
@@ -482,7 +482,7 @@ class EP_LOCALCONTROLLERLCSWSPECPORT_Test(EndpointTestCase):
         
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "FAKELC",
                         EP_LOCALCONTROLLERLCSWSPECPORT, 1)
         suffix = re.sub(r'(<[a-zA-Z]*>)', 'br1', suffix, 1)
@@ -496,7 +496,7 @@ class EP_LOCALCONTROLLERLCSWSPECPORT_Test(EndpointTestCase):
         self.assertEqual(expected_output, output)
 
 class EP_LOCALCONTROLLERLCSWSPECPORTSPEC_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC",
                         EP_LOCALCONTROLLERLCSWSPECPORTSPEC, 1)
         suffix = re.sub(r'(<[a-zA-Z]*>)', "br1", suffix, 1)
@@ -506,7 +506,7 @@ class EP_LOCALCONTROLLERLCSWSPECPORTSPEC_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "oneLC",
                         EP_LOCALCONTROLLERLCSWSPECPORTSPEC, 1)
         suffix = re.sub(r'(<[a-zA-Z]*>)', "br1", suffix, 1)
@@ -523,7 +523,7 @@ class EP_LOCALCONTROLLERLCSWSPECPORTSPEC_Test(EndpointTestCase):
         
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "FAKELC",
                         EP_LOCALCONTROLLERLCSWSPECPORTSPEC, 1)
         suffix = re.sub(r'(<[a-zA-Z]*>)', 'br1', suffix, 1)
@@ -540,13 +540,13 @@ class EP_LOCALCONTROLLERLCSWSPECPORTSPEC_Test(EndpointTestCase):
 
 # USER ENDPOINTS
 class EP_USERS_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         endpoint = ENDPOINT_PREFIX + EP_USERS
         expected_output = { u"error": u"User Not Authenticated"}
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         endpoint = ENDPOINT_PREFIX + EP_USERS
         expected_output = {
             u"href": u"http://127.0.0.1:5000/api/v1/users",
@@ -572,7 +572,7 @@ class EP_USERS_Test(EndpointTestCase):
     
 
 class EP_USERSSPEC_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "sdonovan",
                         EP_USERSSPEC, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -580,7 +580,7 @@ class EP_USERSSPEC_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "sdonovan",
                         EP_USERSSPEC, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -597,7 +597,7 @@ class EP_USERSSPEC_Test(EndpointTestCase):
         
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "fakeuser",
                         EP_USERSSPEC, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -612,7 +612,7 @@ class EP_USERSSPEC_Test(EndpointTestCase):
 
 class EP_USERSSPECPOLICIES_Test(EndpointTestCase):
     #FIXME: Should this be revisited during policies?
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "sdonovan",
                         EP_USERSSPECPOLICIES, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -620,7 +620,7 @@ class EP_USERSSPECPOLICIES_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "sdonovan",
                         EP_USERSSPECPOLICIES, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -631,7 +631,7 @@ class EP_USERSSPECPOLICIES_Test(EndpointTestCase):
         
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "fakeuser",
                         EP_USERSSPECPOLICIES, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -645,7 +645,7 @@ class EP_USERSSPECPOLICIES_Test(EndpointTestCase):
         self.assertEqual(expected_output, output)
 
 class EP_USERSSPECPERMISSIONS_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "sdonovan",
                         EP_USERSSPECPERMISSIONS, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -653,7 +653,7 @@ class EP_USERSSPECPERMISSIONS_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "sdonovan",
                         EP_USERSSPECPERMISSIONS, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -664,7 +664,7 @@ class EP_USERSSPECPERMISSIONS_Test(EndpointTestCase):
         
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "fakeuser",
                         EP_USERSSPECPERMISSIONS, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -680,13 +680,13 @@ class EP_USERSSPECPERMISSIONS_Test(EndpointTestCase):
         
 # POLICIES ENDPOINTS - get only, simple preliminary tests.
 class EP_POLICIES_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         endpoint = ENDPOINT_PREFIX + EP_POLICIES
         expected_output = { u"error": u"User Not Authenticated"}
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         endpoint = ENDPOINT_PREFIX + EP_POLICIES
         expected_output = {
             u"href": u"http://127.0.0.1:5000/api/v1/policies",
@@ -700,7 +700,7 @@ class EP_POLICIES_Test(EndpointTestCase):
         self.run_case_json(endpoint, expected_output, True)
 
 class EP_POLICIESSPEC_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "2",
                         EP_POLICIESSPEC, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -708,7 +708,7 @@ class EP_POLICIESSPEC_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         # this one's a bit special, due to the policy number isn't always
         # consistent, especial in Jenkins builds, so have to manually do the
         # subprocess.
@@ -747,7 +747,7 @@ class EP_POLICIESSPEC_Test(EndpointTestCase):
         # Run the regular command
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "2345",
                         EP_POLICIESSPEC, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -763,7 +763,7 @@ class EP_POLICIESSPEC_Test(EndpointTestCase):
         
 
 class EP_POLICIESTYPE_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         endpoint = ENDPOINT_PREFIX + EP_POLICIESTYPE
         expected_output ={
             u"href": u"http://127.0.0.1:5000/api/v1/policies/type",
@@ -802,7 +802,7 @@ class EP_POLICIESTYPE_Test(EndpointTestCase):
 
         self.run_case_json(endpoint, expected_output)
 
-    def atest_GET_with_login(self):
+    def test_GET_with_login(self):
         endpoint = ENDPOINT_PREFIX + EP_POLICIESTYPE
         expected_output ={
             u"href": u"http://127.0.0.1:5000/api/v1/policies/type",
@@ -842,7 +842,7 @@ class EP_POLICIESTYPE_Test(EndpointTestCase):
         self.run_case_json(endpoint, expected_output, True)
 
 class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
-    def atest_GET_no_login_json(self):
+    def test_GET_no_login_json(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "FloodTree",
                         EP_POLICIESTYPESPEC, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -885,7 +885,7 @@ class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
                 u"user": u"SDXCTLR"}}        
         self.run_case_json(endpoint, expected_output, True)
 
-    def atest_GET_failure(self):
+    def test_GET_failure(self):
         suffix = re.sub(r'(<[a-zA-Z]*>)', "FAKEPolicy",
                         EP_POLICIESTYPESPEC, 1)
         endpoint = ENDPOINT_PREFIX + suffix
@@ -901,7 +901,7 @@ class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
 
 # POLICY ENDPOINTS - with posts
 class EP_POLICIESTYPESPEC_Test(EndpointTestCase):
-    def atest_install_and_remove(self):
+    def test_install_and_remove(self):
         getendpoint = ENDPOINT_PREFIX + EP_POLICIES
         expected_empty_output = {
             u"href": u"http://127.0.0.1:5000/api/v1/policies",
