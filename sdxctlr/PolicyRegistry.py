@@ -11,7 +11,8 @@ from glob import glob
 from lib.AtlanticWaveRegistry import AtlanticWaveRegistry
 
 EXCLUSION_LIST = ["<class 'SDXPolicy.SDXPolicy'>",
-                  "<class 'UserPolicy.UserPolicy'>"]
+                  "<class 'UserPolicy.UserPolicy'>",
+]
 
 class PolicyRegistryTypeError(TypeError):
     pass
@@ -87,6 +88,13 @@ class PolicyRegistry(AtlanticWaveRegistry):
         name = classlink.get_policy_name()
         self.logger.info("Available Policy type: " + name)
         self.policytype_db[name] = classlink
+
+    def rm_policytype(self, classlink):
+        ''' Adds a new policy type to the registry. '''
+        name = classlink.get_policy_name()
+        self.logger.info("Removing available Policy type: " + name)
+        del self.policytype_db[name]
+        
 
     def get_policy_class(self, policytype):
         ''' From a policytype, get the correct class to use to implement the 

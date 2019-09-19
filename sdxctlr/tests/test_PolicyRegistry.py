@@ -31,7 +31,7 @@ class AddingPoliciesTest(unittest.TestCase):
         reg.add_policytype(FakePolicyType)
         retval = reg.get_policy_class("FakePolicyType")
         self.failUnless(retval is FakePolicyType)
-
+        reg.rm_policytype(FakePolicyType)
 
 class NonPolicyTest(unittest.TestCase):
     def test_non_policytype(self):
