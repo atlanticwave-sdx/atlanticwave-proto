@@ -154,7 +154,7 @@ class PolicyManager(AtlanticWaveManager):
             failed. Also returns a reference to the policy (e.g., a tracking 
             number) so that more details can be retrieved in the future. '''
 
-        self.logger.info("add_policy: Beging with policy: %s" % policy)
+        self.logger.info("add_policy: Beginning with policy: %s" % policy)
         self._update_last_modified_timestamp()
         try:
             breakdown = self._determine_breakdown(policy)
@@ -194,6 +194,8 @@ class PolicyManager(AtlanticWaveManager):
         ''' Removes the policy that corresponds to the policy_hash that was 
             returned either from add_policy() or found with get_policies(). If 
             user does not have removal ability, returns an error. '''
+
+        self.logger.info("remove_policy: Beginning with policy: %s" % policy)
         if self.policy_table.find_one(hash=policy_hash) == None:
             raise PolicyManagerError("policy_hash doesn't exist: %s" %
                                      policy_hash)
@@ -212,11 +214,14 @@ class PolicyManager(AtlanticWaveManager):
             raise PolicyManagerAuthorizationError(
                 "User %s is not authorized to remove policy %s" %
                 (user, policy_hash))
-
+        self.dlogger.info("remove_policy: Starting removal of policy: %s" %
+                          policy)
+        
         policy.pre_remove_callback(TopologyManager(),
                                    AuthorizationInspector())
         self._rm_policy_from_db(policy)
         self._call_remove_callbacks(policy)
+        self.dlogger.info("remove_policy: Policy removed from db: %s" % policy)
 
     def remove_all_policies(self, user):
         ''' Removes all policies. Just an alias for repeatedly calling 
@@ -514,12 +519,17 @@ class PolicyManager(AtlanticWaveManager):
             outstanding timed installations of the policy. '''
 
         # Find policy in DB, get important information: state, start/stop time
+        self.dlogger.info("_rm_policy_from_db: %s:%s" % (policy,
+                                                policy.get_policy_hash()))
         record = self.policy_table.find_one(hash=policy.get_policy_hash())
         state = record['state']
         starttime = record['starttime']
         stoptime = record['stoptime']
 
         if state == ACTIVE_POLICY:
+            self.dlogger.info(
+                "_rm_policy_from_db: removing active policy   %s:%s" %
+                (policy, policy.get_policy_hash()))
             self._remove_policy(policy)
             self.policy_table.delete(hash=policy.get_policy_hash())
 
@@ -529,12 +539,18 @@ class PolicyManager(AtlanticWaveManager):
         # If inactive, 
         # Was it the next install timer to pop? If so, update timer.
         elif state == INACTIVE_POLICY:
+            self.dlogger.info(
+                "_rm_policy_from_db: removing inactive policy %s:%s" %
+                (policy, policy.get_policy_hash()))
             self.policy_table.delete(hash=policy.get_policy_hash())
             self._restart_install_timer()
 
         # If Expired:
         # Nothing specific to do right now
         elif state == EXPIRED_POLICY:
+            self.dlogger.info(
+                "_rm_policy_from_db: removing expired policy  %s:%s" %
+                (policy, policy.get_policy_hash()))
             self.policy_table.delete(hash=policy.get_policy_hash())
             pass
             #FIXME: Recurrent policies are weird. 
@@ -544,6 +560,9 @@ class PolicyManager(AtlanticWaveManager):
         elif state == INSUFFICIENT_PRIVILEGES:
             pass
 
+        self.dlogger.info("_rm_policy_from_db: removed policy %s:%s" %
+                          (policy, policy.get_policy_hash()))
+            
 
     def _install_policy(self, policy):
         ''' Helper function that installs a policy into the switch. '''

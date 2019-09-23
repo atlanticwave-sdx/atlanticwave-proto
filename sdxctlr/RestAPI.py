@@ -1191,6 +1191,7 @@ class RestAPI(AtlanticWaveModule):
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         
+        RestAPI().logger.info("DELETE policy %s" % policynumber)        
         policy = PolicyManager().get_policy_details(policynumber)
         if policy == None:
             #FIXME - proper response
