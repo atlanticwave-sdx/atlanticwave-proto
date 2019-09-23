@@ -195,7 +195,8 @@ class PolicyManager(AtlanticWaveManager):
             returned either from add_policy() or found with get_policies(). If 
             user does not have removal ability, returns an error. '''
 
-        self.logger.info("remove_policy: Beginning with policy: %s" % policy)
+        self.logger.info("remove_policy: Beginning with policy: %s" %
+                         policy_hash)
         if self.policy_table.find_one(hash=policy_hash) == None:
             raise PolicyManagerError("policy_hash doesn't exist: %s" %
                                      policy_hash)
@@ -215,13 +216,14 @@ class PolicyManager(AtlanticWaveManager):
                 "User %s is not authorized to remove policy %s" %
                 (user, policy_hash))
         self.dlogger.info("remove_policy: Starting removal of policy: %s" %
-                          policy)
+                          policy_hash)
         
         policy.pre_remove_callback(TopologyManager(),
                                    AuthorizationInspector())
         self._rm_policy_from_db(policy)
         self._call_remove_callbacks(policy)
-        self.dlogger.info("remove_policy: Policy removed from db: %s" % policy)
+        self.dlogger.info("remove_policy: Policy removed from db: %s" %
+                          policy_hash)
 
     def remove_all_policies(self, user):
         ''' Removes all policies. Just an alias for repeatedly calling 
