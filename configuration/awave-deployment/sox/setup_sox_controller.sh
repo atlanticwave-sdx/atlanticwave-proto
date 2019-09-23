@@ -27,5 +27,7 @@ cd ../lc_container
 sudo docker build -t lc_container .
 #rm helloworld.manifest
 
-
+# Network configuration
+sudo /sbin/sysctl -w net.ipv4.conf.all.forwarding=1
+docker network create sox-sdx-net
 

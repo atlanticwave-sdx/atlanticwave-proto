@@ -1,8 +1,8 @@
 {
   "endpoints": {
-    "gt-app-216-22": {
+    "gt-app-149-224": {
       "type":"host",
-      "friendlyname":"gt-app-162-22",
+      "friendlyname":"gt-app-149-224",
       "location":"0,0",
       "available_vlans":"1416,3922"},
     "mia-app-186-106": {
@@ -10,13 +10,13 @@
       "friendlyname":"mia-app-186-106",
       "location":"0,0",
       "available_vlans":""}
-   }
+   },
    "localcontrollers": {
-     "gt-ctlr-216-21": {
+     "gt-ctlr-149-223": {
        "shortname":"SoXctlr",
        "credentials":"pwd",
        "location":"0,0",
-       "lcip":"x.x.216.21",
+       "lcip":"127.0.0.1",
        "internalconfig": {
          "ryucxninternalport": 55780,
          "openflowport":6653
@@ -25,20 +25,20 @@
          {
            "name":"soxswitch-216-3",
            "friendlyname":"soxswitch",
-           "ip":"x.x.216.3",
-           "dpid":"00007a7e0683b44d",
+           "ip":"143.215.216.3",
+           "dpid":"0x00007a7e0683b44d",
            "brand":"Corsa Technologies",
-           "model":"DP2400 3.x.x",
+           "model":"DP2400 3.0.3",
            "portinfo": [
              {
                "portnumber": 1,
                "speed": 80000000000,
-               "destination": "mia"
+               "destination": "miaswitch-206-198"
              },
              {
-               "portnumber": 3,
+               "portnumber": 4,
                "speed": 80000000000,
-               "destination": "gt-app-216-22"
+               "destination": "gt-app-149-224"
              }
              ],
            "internalconfig": {
@@ -49,8 +49,9 @@
              "corsabwout":12,
              "corsaratelimiterbridge":"",
              "corsaratelimiterports":[21,22],
-             "managementvlan":1416,
-             "managementvlanports":[1,2]
+             "managementvlan":4080,
+             "managementvlanports":[],
+             "untaggedmanagementvlanports":[1,3]
            }
          }
        ],
@@ -64,24 +65,24 @@
        "shortname":"miactlr",
        "credentials":"pwd",
        "location":"0,0",
-       "lcip":"x.x.186.106",
+       "lcip":"127.0.0.1",
        "internalconfig": {
          "ryucxninternalport": 55780,
-         "openflowport":6653
+         "openflowport":6633
        },
        "switchinfo": [
          {
            "name":"miaswitch-206-198",
            "friendlyname":"miaswitch",
-           "ip":"x.x.206.198",
-           "dpid":"00003a43cf114340",
+           "ip":"67.17.206.198",
+           "dpid":"0x00003a43cf114340",
            "brand":"Corsa Technologies",
            "model":"DP2400 3.x.x",
            "portinfo": [
              {
                "portnumber": 1,
                "speed": 80000000000,
-               "destination": "mia-app-IPADDR"
+               "destination": "mia-app-186-106"
              },
              {
                "portnumber": 3,
@@ -97,8 +98,9 @@
              "corsabwout":12,
              "corsaratelimiterbridge":"",
              "corsaratelimiterports":[21,22],
-             "managementvlan":1416,
-             "managementvlanports":[]
+             "managementvlan":4080,
+             "managementvlanports":[],
+             "untaggedmanagementvlanports":[1,2]
            }
          }
        ],
