@@ -64,7 +64,6 @@ class RyuControllerInterface(ControllerInterface):
         # This doesn't work as it should: Normally, you would have two different
         # strings within the list. For some reason, ryu-manager doesn't like 
         # this, thus one long string.
-<<<<<<< Updated upstream
         if run_ryu_manager:
             self.logger.debug("About to start ryu-manager.")
             current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -73,7 +72,11 @@ class RyuControllerInterface(ControllerInterface):
             self.logger.debug("ENV - shell=True")
             subprocess.Popen(['env'], shell=True)
             self.ryu_process = subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --ofp-listen-host %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % 
-                                                 (current_dir, self.openflow_port, '0.0.0.0' self.lcname, self.conffile)], 
+                                                 (current_dir, 
+                                                  self.openflow_port, 
+                                                  '0.0.0.0', 
+                                                  self.lcname, 
+                                                  self.conffile)], 
                                                 shell=True,
                                                 #env=os.environ,
                                                 preexec_fn=os.setsid)
@@ -90,28 +93,6 @@ class RyuControllerInterface(ControllerInterface):
 
             # FIXME: This cannot be permanent. Each piece should be opened
             # upseperately...
-=======
-        self.logger.debug("About to start ryu-manager.")
-        current_dir = os.path.dirname(os.path.realpath(__file__))
-        self.ryu_process = subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --ofp-listen-host %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % (current_dir, self.openflow_port, 
-                    "0.0.0.0",
-                    #"128.61.149.223", 
-self.lcname, self.conffile)], 
-                                            shell=True,
-                                            preexec_fn=os.setsid)
-
-        self.logger.debug("Started ryu-manager.")
-        # Don't complete until the connection is received by inter_cm ...
-        self.inter_cm_condition.acquire()
-        self.inter_cm_condition.wait()
-
-        # ... and we've gotten notice that they've gotten a connection with at
-        # least one switch:
-        dps = self.inter_cm_cxn.recv_cmd()
-
-        # FIXME: This cannot be permanent. Each piece should be opened up
-        # seperately...
->>>>>>> Stashed changes
         
             self.logger.warning("%s initialized: %s" % (
                 self.__class__.__name__, hex(id(self))))
