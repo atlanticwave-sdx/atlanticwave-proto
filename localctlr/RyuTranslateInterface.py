@@ -1180,17 +1180,21 @@ class RyuTranslateInterface(app_manager.RyuApp):
             if vlan_port in mgmt_ports:
                 matches = [VLAN_VID(mgmt_vlan), IN_PORT(vlan_port)]
                 actions = []
-            else:
+            elif len(mgmt_ports) > 0:
                 matches = [IN_PORT(vlan_port)]
                 actions = [PushVLAN(),
                            SetField(VLAN_VID(mgmt_vlan))]
+            else:
+                # Special case where there is no MGMTVLAN, just Forwarding
+                matches = [IN_PORT(vlan_port)]
+                actions = []
 
             # Tagged ports - Forward with already setup VLAN
             for out_port in mgmt_ports:
                 if out_port != vlan_port:
                     actions.append(Forward(out_port))
             # Untagged ports - clear the VLAN first, then forward
-            if len(untagged_mgmt_ports) > 0:
+            if len(untagged_mgmt_ports) > 0 and len(mgmt_ports) > 0:
                 actions.append(PopVLAN())
             for out_port in untagged_mgmt_ports:
                 if out_port != vlan_port:
