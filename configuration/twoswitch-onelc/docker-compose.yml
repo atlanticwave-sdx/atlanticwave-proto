@@ -1,0 +1,33 @@
+version: 3.6
+services:
+  sdxctlr:
+    image: sdx_container
+    container_name: sdxctlr
+    ports:
+      - '5000:5000'
+      - '5555:5555'
+    volumes:
+      - ~/atlanticwave-proto:/development:rw
+    environment:
+     - MANIFEST="/development/configuration/twoswitch-onelc-noncorsa.manifest"
+     - IPADDR="127.0.0.1"
+     - PORT="5000"
+     - LCPORT="5555"
+     - PYTHONPATH=".:/development/"
+     - AWAVEDIR="/development"
+    restart: always
+
+  localctlr:
+    image: lc_container
+    container_name: localctlr
+    ports:
+      - '6653:6653'
+    volumes:
+      - ~/atlanticwave-proto:/development:rw
+    environment:
+      - MANIFEST="/development/configuration/twoswitch-onelc-noncorsa.manifest"
+      - SITE="oneLC"
+      - PYTHONPATH=".:/development/"
+      - SDXIP="127.0.0.1"
+      - AWAVEDIR="/development"
+      
