@@ -1,0 +1,33 @@
+version: '3.3'
+services:
+  sox-sdx-ctlr:
+    image: sdx_container
+    container_name: sox-sdx-ctlr
+    ports:
+      - '5000:5000'
+      - '5555:5555'
+    volumes:
+      - /home/sdx/dev:/development:rw
+    environment:
+     - MANIFEST=/development/configuration/awave-deployment/awave.manifest
+     - IPADDR=0.0.0.0
+     - PORT=5000
+     - LCPORT=5555
+     - PYTHONPATH=.:/development/
+     - AWAVEDIR=/development
+    restart: always
+
+  sox-local-ctlr:
+    image: lc_container
+    container_name: sox-local-ctlr
+    ports:
+      - '6653:6653'
+    volumes:
+      - /home/sdx/dev:/development:rw
+    environment:
+      - MANIFEST=/development/configuration/awave-deployment/awave.manifest
+      - SITE=gt-ctlr-149-223
+      - PYTHONPATH=.:/development/
+      - SDXIP=sox-sdx-ctlr
+      - AWAVEDIR=/development
+      
