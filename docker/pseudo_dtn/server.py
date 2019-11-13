@@ -107,7 +107,7 @@ def run_transfer_thread(remote, filename):
     files = []
     try:
         files = ftp.nlst()
-    except ftplib.error_perm, resp:
+    except ftplib.error_perm as resp:
         if str(resp) == "550 No files found":
             print("No files in this directory")
             in_progress = IP_TRANSFER_FAILED
@@ -146,14 +146,15 @@ class Dir(Resource):
         files = []
         try:
             files = ftp.nlst()
-        except ftplib.error_perm, resp:
+        except ftplib.error_perm as resp:
             if str(resp) == "550 No files found":
                 print("No files in this directory")
                 return("No files in this directory")
             else:
                 print("Some other error occurred: %s" % str(resp))
                 return("Some other error occurred: %s" % str(resp))
-        return files
+        print("Returning the following file list: %s" % files)
+        return (str(files))
 
 class Status(Resource):
     #def __init__(self, urlbase):
@@ -162,7 +163,9 @@ class Status(Resource):
     def get(self):
         global in_progress
         global total_time
-        return ("%s-%s" % (in_progress, total_time))
+        retval = ("%s-%s" % (in_progress, total_time))
+        print("GET status: %s" % retval)
+        return retval
 
 
 

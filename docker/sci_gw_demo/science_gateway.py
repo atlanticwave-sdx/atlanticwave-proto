@@ -27,9 +27,9 @@ HTTP_SERVER_ERROR   = 500     # RETURNED BY FLASK-RESTFUL ONLY
 port = 9999
 
 # List of endpoints
-endpoints = {'atl-dtn':{'ip':'1.2.3.4','port':9999, 
+endpoints = {'atl-dtn':{'ip':'127.0.0.1','port':9999, 
                         'switch':'atl-switch', 'switchport':3, 'vlan':123},
-             'mia-dtn':{'ip':'2.3.4.5','port':9999,
+             'mia-dtn':{'ip':'127.0.0.1','port':9998,
                         'switch':'mia-switch', 'switchport':2, 'vlan':123}}
 
 global sdx_ip, sdx_port, sdx_user, sdx_pw, login_cookie, tunnel_policy
@@ -46,7 +46,8 @@ def create_tunnel(srcswitch, dstswitch, srcport, dstport,
     global sdx_ip, sdx_port, login_cookie, tunnel_policy
     
     rfc3339format = "%Y-%m-%dT%H:%M:%S"
-
+    print("Creating tunnel from %s:%s:%s to %s:%s:%s for %s time." % (
+        srcswitch, srcport, srcvlan, dstswitch, dstport, dstvlan, time))
 
     if login_cookie == None:
         login_to_sdx_controller()
@@ -89,7 +90,7 @@ def delete_tunnel():
     output = subprocess.check_call(['curl', '-X', 'DELETE',
                                     '-H', 'Accept: application/json',
                                     endpoint,
-                                    '-b' login_cookie])
+                                    '-b', login_cookie])
 
     tunnel_policy = None
 
@@ -122,20 +123,21 @@ def print_endpoint(endpoints):
 
 def get_ep_dict_from_num(endpoints, num):
     a = 0
-    for ep in endpoints:
+    for ep in endpoints.keys():
         if a == num:
-            return endpoinep
+            return endpoints[ep]
+        a += 1
 
 def get_dir(srcip, srcport):
     endpoint = 'http://%s:%s/dtn/transfer/%s' % (srcip, srcport, srcip)
     output = subprocess.check_output(['curl', '-X', 'GET', endpoint])
-
+    return output.decode('utf-8')
     
 
 def parse_files(filestr):
     # Split the filestr into a list of files
     # Based on https://stackoverflow.com/questions/1894269/convert-string-representation-of-list-to-list
-    ls = filestr.strip('[]').replace('"', '').replace(' ', '').split(',')
+    ls = filestr.strip('[]').replace('[','').replace(']','').replace('"', '').replace("'", '').replace(' ', '').split(',')
     return ls
 
 
@@ -153,16 +155,19 @@ def transfer_file(srcip, srcport, dstip, dstport, filename):
     endpoint = 'http://%s:%s/dtn/transfer/%s/%s' % (
         dstip, dstport, srcip, filename)
     output = subprocess.check_output(['curl', '-X', 'POST', endpoint])
+    output = output.decode('utf-8')
     print("Transferring file: %s" % output)
 
     # loop here, checking on status
     endpoint = 'http://%s:%s/dtn/status' % (dstip, dstport)
 
-    output =''
     count = 0
-    while('Started Transfer' in output):
-        output = subprocess.check_output(['curl', '-X', 'GET', endpoint])
+    while(('Started transfer' in output) or
+          ('Started Transfer' in output)):
         sleep(1)
+        output = subprocess.check_output(['curl', '-X', 'GET', endpoint])
+        output = output.decode('utf-8')
+        print("Loop %s: %s" % (count, output))
         count += 1
         if count > timeout: break
 
@@ -181,33 +186,36 @@ while(True):
     dst = input("Destination: ")
     
     # Establish a path between src and dst for 1 sec
-    srcdict = get_ep_dict_from_num(endpoints, src)
-    dstdict = get_ep_dict_from_num(endpoints, dst)
-    
-    create_tunnel(srcdict['switch'],     dstdict['switch'],
-                  srcdict['switchport'], dstdict['switchport'], 
-                  srcdict['vlan'],       dstdict['vlan'],
-                  timedelta(0,1))
+    srcdict = get_ep_dict_from_num(endpoints, int(src))
+    dstdict = get_ep_dict_from_num(endpoints, int(dst))
+
+    #print("srcdict - %s" % srcdict)
+    #print("dstdict - %s" % dstdict)
+
+    ####create_tunnel(srcdict['switch'],     dstdict['switch'],
+    #              srcdict['switchport'], dstdict['switchport'], 
+    #              srcdict['vlan'],       dstdict['vlan'],
+    #              timedelta(0,1))
 
     # Get and display files available on src
     rawfiles = get_dir(srcdict['ip'], srcdict['port'])
     fileslist = parse_files(rawfiles)
     print_files(fileslist)
-    delete_tunnel()
+    ####delete_tunnel()
 
     # Let user choose file to transfer
     filenumber = input("Choose a file: ")
-    filename = fileslist[filenumber]
+    filename = fileslist[int(filenumber)]
 
     # Reestablish path between src and dest
-    create_tunnel(srcdict['switch'],     dstdict['switch'],
-                  srcdict['switchport'], dstdict['switchport'],
-                  srcdict['vlan'],       dstdict['vlan'],
-                  timedelta(1,0)) # 1 day, excessive, but we'll delete it, don't worry
+    ####create_tunnel(srcdict['switch'],     dstdict['switch'],
+    #              srcdict['switchport'], dstdict['switchport'],
+    #              srcdict['vlan'],       dstdict['vlan'],
+    #              timedelta(1,0)) # 1 day, excessive, but we'll delete it, don't worry
 
     # Make transfer call
     transfer_file(srcdict['ip'], srcdict['port'],
                   dstdict['ip'], dstdict['port'], filename)    
 
     # Clean up
-    delete_tunnel()
+    ####delete_tunnel()
