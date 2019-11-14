@@ -192,30 +192,30 @@ while(True):
     #print("srcdict - %s" % srcdict)
     #print("dstdict - %s" % dstdict)
 
-    ####create_tunnel(srcdict['switch'],     dstdict['switch'],
-    #              srcdict['switchport'], dstdict['switchport'], 
-    #              srcdict['vlan'],       dstdict['vlan'],
-    #              timedelta(0,1))
+    create_tunnel(srcdict['switch'],     dstdict['switch'],
+                  srcdict['switchport'], dstdict['switchport'], 
+                  srcdict['vlan'],       dstdict['vlan'],
+                  timedelta(0,1))
 
     # Get and display files available on src
     rawfiles = get_dir(srcdict['ip'], srcdict['port'])
     fileslist = parse_files(rawfiles)
     print_files(fileslist)
-    ####delete_tunnel()
+    delete_tunnel()
 
     # Let user choose file to transfer
     filenumber = input("Choose a file: ")
     filename = fileslist[int(filenumber)]
 
     # Reestablish path between src and dest
-    ####create_tunnel(srcdict['switch'],     dstdict['switch'],
-    #              srcdict['switchport'], dstdict['switchport'],
-    #              srcdict['vlan'],       dstdict['vlan'],
-    #              timedelta(1,0)) # 1 day, excessive, but we'll delete it, don't worry
+    create_tunnel(srcdict['switch'],     dstdict['switch'],
+                  srcdict['switchport'], dstdict['switchport'],
+                  srcdict['vlan'],       dstdict['vlan'],
+                  timedelta(1,0)) # 1 day, excessive, but we'll delete it, don't worry
 
     # Make transfer call
     transfer_file(srcdict['ip'], srcdict['port'],
                   dstdict['ip'], dstdict['port'], filename)    
 
     # Clean up
-    ####delete_tunnel()
+    delete_tunnel()
