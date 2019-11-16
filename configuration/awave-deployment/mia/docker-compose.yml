@@ -1,0 +1,32 @@
+version: 3.3
+services:
+  localctlr:
+    image: lc_container
+    container_name: localctlr
+    ports:
+      - '6633:6633'
+    volumes:
+      -/home/sean/atlanticwave-proto:/development:rw
+    environment:
+      - MANIFEST=/development/configuration/awave-deployment/awave.manifest
+      - SITE=mia-ctlr-186-106
+      - PYTHONPATH=.:/development
+      - SDXIP=10.100.1.21
+      - AWAVEDIR=/development
+
+  ftpd:
+    image:metabrains/docker-anon-ftp
+    ports:
+      - "10.201.2.28:20-21:20-21"
+    volumes:
+      - "/tmp:/var/ftp:ro"
+    environment:
+      - FTPD_BANNER=Anonymous FTP Server
+
+  pseudo_dtn:
+    image: pseudo_dtn
+    ports:
+      - SERVERIP=10.100.1.27
+      - SERVERPORT=9999
+
+    

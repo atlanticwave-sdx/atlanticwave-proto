@@ -1,0 +1,19 @@
+services:
+  ftpd:
+    image: metabrainz/docker-anon-ftp
+    ports:
+        - "20-21:20-21"
+        - "65500-65515:65500-65515"
+    volumes:
+        - "/tmp:/var/ftp:ro"
+    environment:
+        - FTPD_BANNER=Anonymous FTP server
+
+  pseudo_dtn:
+    image: pseudo_dtn
+    ports:
+        - "9999:9999"
+    environment:
+        - FTPD_BANNER=Anonymous
+        - SERVERIP=10.100.100.100
+        - SERVERPORT=9999
