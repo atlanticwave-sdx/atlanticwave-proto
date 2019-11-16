@@ -9,7 +9,7 @@
 from flask import Flask, jsonify, abort, make_response, request
 from flask_restful import Api, Resource, reqparse, fields, marshal
 from threading import Thread
-from ftplib import FTP
+from ftplib import FTP, ftplib.err_perm
 from time import sleep
 from datetime import datetime
 import sys
@@ -107,7 +107,7 @@ def run_transfer_thread(remote, filename):
     files = []
     try:
         files = ftp.nlst()
-    except ftplib.error_perm as resp:
+    except error_perm as resp:
         if str(resp) == "550 No files found":
             print("No files in this directory")
             in_progress = IP_TRANSFER_FAILED
@@ -146,7 +146,7 @@ class Dir(Resource):
         files = []
         try:
             files = ftp.nlst()
-        except ftplib.error_perm as resp:
+        except error_perm as resp:
             if str(resp) == "550 No files found":
                 print("No files in this directory")
                 return("No files in this directory")
