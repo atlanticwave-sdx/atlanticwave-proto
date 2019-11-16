@@ -27,13 +27,15 @@ HTTP_SERVER_ERROR   = 500     # RETURNED BY FLASK-RESTFUL ONLY
 port = 9999
 
 # List of endpoints
-endpoints = {'atl-dtn':{'ip':'127.0.0.1','port':9999, 
-                        'switch':'atl-switch', 'switchport':3, 'vlan':123},
-             'mia-dtn':{'ip':'127.0.0.1','port':9998,
-                        'switch':'mia-switch', 'switchport':2, 'vlan':123}}
+endpoints = {'atl-dtn':{'ctrlip':'10.100.1.21','port':9999,
+                        'dataip':'10.201.2.21',
+                        'switch':'atl-switch', 'switchport':4, 'vlan':201},
+             'mia-dtn':{'ctrlip':'10.100.1.27','port':9999,
+                        'dataip':'10.201.2.28',
+                        'switch':'mia-switch', 'switchport':10, 'vlan':124}}
 
 global sdx_ip, sdx_port, sdx_user, sdx_pw, login_cookie, tunnel_policy
-sdx_ip = '1.2.3.4'
+sdx_ip = '10.100.1.21'
 sdx_port = 5555
 sdx_user = 'sdonovan'
 sdx_pw = '1234'
@@ -128,8 +130,8 @@ def get_ep_dict_from_num(endpoints, num):
             return endpoints[ep]
         a += 1
 
-def get_dir(srcip, srcport):
-    endpoint = 'http://%s:%s/dtn/transfer/%s' % (srcip, srcport, srcip)
+def get_dir(ctrlip, dataip, srcport):
+    endpoint = 'http://%s:%s/dtn/transfer/%s' % (ctrlip, srcport, dataip)
     output = subprocess.check_output(['curl', '-X', 'GET', endpoint])
     return output.decode('utf-8')
     
@@ -148,18 +150,18 @@ def print_files(files):
         a += 1
 
 
-def transfer_file(srcip, srcport, dstip, dstport, filename):
+def transfer_file(srcdataip, dstctrlip, dstport, filename):
     timeout = 1000
 
     # Execute file transfer
     endpoint = 'http://%s:%s/dtn/transfer/%s/%s' % (
-        dstip, dstport, srcip, filename)
+        dstctrlip, dstport, srcdataip, filename)
     output = subprocess.check_output(['curl', '-X', 'POST', endpoint])
     output = output.decode('utf-8')
     print("Transferring file: %s" % output)
 
     # loop here, checking on status
-    endpoint = 'http://%s:%s/dtn/status' % (dstip, dstport)
+    endpoint = 'http://%s:%s/dtn/status' % (dstctrlip, dstport)
 
     count = 0
     while(('Started transfer' in output) or
@@ -198,7 +200,7 @@ while(True):
                   timedelta(0,1))
 
     # Get and display files available on src
-    rawfiles = get_dir(srcdict['ip'], srcdict['port'])
+    rawfiles = get_dir(srcdict['ctrlip'], dstdict['dataip'], srcdict['port'])
     fileslist = parse_files(rawfiles)
     print_files(fileslist)
     delete_tunnel()
@@ -214,8 +216,7 @@ while(True):
                   timedelta(1,0)) # 1 day, excessive, but we'll delete it, don't worry
 
     # Make transfer call
-    transfer_file(srcdict['ip'], srcdict['port'],
-                  dstdict['ip'], dstdict['port'], filename)    
+    transfer_file(srcdict['dataip'], dstdict['ctrlip'], dstdict['port'], filename)    
 
     # Clean up
     delete_tunnel()
