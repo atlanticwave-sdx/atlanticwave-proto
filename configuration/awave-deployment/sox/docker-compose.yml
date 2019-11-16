@@ -32,7 +32,7 @@ services:
       - AWAVEDIR=/development
 
   ftpd:
-    image: metabrains/docker-anon-ftp
+    image: metabrainz/docker-anon-ftp:latest
     ports:
       - "10.201.2.21:20-21:20-21"
     volumes:
