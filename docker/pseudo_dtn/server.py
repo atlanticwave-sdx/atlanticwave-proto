@@ -9,7 +9,7 @@
 from flask import Flask, jsonify, abort, make_response, request
 from flask_restful import Api, Resource, reqparse, fields, marshal
 from threading import Thread
-from ftplib import FTP, ftplib.err_perm
+from ftplib import FTP, err_perm
 from time import sleep
 from datetime import datetime
 import sys
