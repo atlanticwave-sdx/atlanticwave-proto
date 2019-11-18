@@ -471,6 +471,8 @@ class RuleManager(AtlanticWaveManager):
             state = ACTIVE_RULE
             self.dlogger.info("  ACTIVE_RULE")
             self._install_rule(rule)
+        else:
+            self.dlogger.info("  FUTURE RULE, still INACTIVE")
 
         # Push into DB.
         # If there are any changes here, update self._valid_table_columns.
@@ -550,7 +552,7 @@ class RuleManager(AtlanticWaveManager):
     def _install_breakdown(self, breakdown):
         try:
             for bd in breakdown:
-                self.logger.debug("Sending breakdown: %s" % bd)
+                self.logger.debug("Sending install breakdown: %s" % bd)
                 for rule in bd.get_list_of_rules():
                     self.logger.debug("    %s" % str(rule))
                 self.send_user_add_rule(bd)
@@ -562,9 +564,11 @@ class RuleManager(AtlanticWaveManager):
             table_entry = self.rule_table.find_one(hash=rule.get_rule_hash())
             extendedbd = pickle.loads(str(table_entry['extendedbd']))
             for bd in rule.get_breakdown():
+                self.logger.debug("Sending remove breakdown: %s" % bd)
                 self.send_user_rm_rule(bd)
             if extendedbd != None:
                 for bd in extendedbd:
+                    self.logger.debug("Sending remove extended breakdown: %s" % bd)
                     self.send_user_rm_rule(bd)
             self._unreserve_resources(rule.get_resources())
         except Exception as e: raise
@@ -704,7 +708,7 @@ class RuleManager(AtlanticWaveManager):
         '''
         table_entry = self.rule_table.find_one(hash=cookie)
         if table_entry == None:
-            raise RuleManagerError("rule_hash doesn't exist: %s" % rule_hash)
+            raise RuleManagerError("rule_hash doesn't exist: %s" % cookie)
 
         policy = pickle.loads(str(table_entry['rule']))
 
@@ -714,7 +718,7 @@ class RuleManager(AtlanticWaveManager):
         if breakdown == None:
             return
 
-        self.logger.debug("_change_callback_dispath")
+        self.logger.debug("_change_callback_dispatch %s"% cookie)
         self._install_breakdown(breakdown)
 
         extendedbd = pickle.loads(str(table_entry['extendedbd']))
