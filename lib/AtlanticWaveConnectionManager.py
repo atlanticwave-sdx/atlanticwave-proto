@@ -146,8 +146,8 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
                 continue
 
             print "Connection established! %s:%s %s" % (ip, port, sock)
-            if self.loggerid_for_cxn != None:
-                return self.connection_cls(ip, port, sock, self.loggerid_for_cxn)
+            if self.loggerid_for_cxns != None:
+                return self.connection_cls(ip, port, sock, self.loggerid_for_cxns)
             #else
             return self.connection_cls(ip, port, sock)
 

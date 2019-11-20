@@ -705,7 +705,7 @@ class SDXControllerConnection(Connection):
 
         rule_count_left = irc.get_data()['initial_rule_count']
         self.logger.debug("%s - %s - Received Initial Rules Count %s" % (
-            id(self), self.connection_state), rule_count_left)
+            id(self), self.connection_state, rule_count_left))
 
         # Loop through initial rules:
         # - Request rule
@@ -726,7 +726,7 @@ class SDXControllerConnection(Connection):
 
             rule_count_left -= 1
             self.logger.debug("%s - %s - Received an initial rule, Initial Rules to go %s" % (
-                id(self), self.connection_state))
+                id(self), self.connection_state, rule_count_left))
 
         # Send Initial Rules Complete, Transition to Initial Rules Complete
         irc = SDXMessageInitialRulesComplete()
