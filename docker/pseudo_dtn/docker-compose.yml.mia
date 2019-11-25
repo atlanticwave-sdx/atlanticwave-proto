@@ -1,0 +1,27 @@
+version: '3.3'
+services:
+  ftpd:
+    image:  metabrainz/docker-anon-ftp:latest
+    ports:
+      - "10.201.2.28:20-21:20-21"
+      - "10000-10015:10000-10015"
+    volumes:
+      - "/tmp:/var/ftp:ro"
+    environment:
+      - FTPD_BANNER=Anonymous FTP Server
+      - PASV_ADDRESS=10.201.2.28
+      - PASV_MIN_PORT=10000
+      - PASV_MAX_PORT=10015
+
+  pseudo_dtn:
+    image: pseudo_dtn
+    ports:
+      - "10.100.1.27:9999:9999"
+    environment:
+      - SERVERIP=0.0.0.0
+      - SERVERPORT=9999
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1496
