@@ -289,6 +289,7 @@ class RuleManager(AtlanticWaveManager):
             for bd in rule.get_breakdown():
                 # If Breakdown is for this LC, add to bd_list
                 rule_lc = bd.get_lc()
+                self.logger.debug("  Rule with LC %s" % rule_lc)
                 if rule_lc == lc:
                     self.logger.info("  Adding %s" % bd)
                     bd_list += bd.get_list_of_rules()
