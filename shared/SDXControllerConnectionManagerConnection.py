@@ -679,8 +679,8 @@ class SDXControllerConnection(Connection):
         # Send hello with name, transition to Capabilities
         hello = SDXMessageHello(self.name)
         self.send_protocol(hello)
-        self.logger.warning("%s - %s - Sent HELLO message, transition to CAPABILITIES" % (
-            id(self), self.connection_state))
+        self.logger.warning("%s - %s - Sent HELLO message for %s, transition to CAPABILITIES" % (
+            id(self), self.connection_state, self.name))
         self.connection_state = 'CAPABILITIES'
 
         # Wait for Request Capabilities
@@ -775,6 +775,8 @@ class SDXControllerConnection(Connection):
         
         self.name = hello.get_data()['name']
         set_name_callback(self.name)
+        self.logger.warning("%s - %s - Getting initial rules for %s" % (
+            id(self), self.connection_state, self.name))
         initial_rules = get_initial_rule_callback(self.name)
 
         # Transition to Capabilities, send request capabilities

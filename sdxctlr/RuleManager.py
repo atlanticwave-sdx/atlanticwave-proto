@@ -279,6 +279,7 @@ class RuleManager(AtlanticWaveManager):
             startup by the SDXController. 
             Returns a list of broken down rules. 
         '''
+        self.logger.info("get_breakdown_rules_by_LC(%s)" % lc)
         bd_list = []
         # Get all rules
         all_rules = self.rule_table.find()
@@ -289,7 +290,10 @@ class RuleManager(AtlanticWaveManager):
                 # If Breakdown is for this LC, add to bd_list
                 rule_lc = bd.get_lc()
                 if rule_lc == lc:
+                    self.logger.info("  Adding %s" % bd)
                     bd_list += bd.get_list_of_rules()
+        self.logger.info("get_breakdown_rules_by_LC(%s) - Returning %d rules" %
+                         (lc, len(bd_list)))
         return bd_list
     
     def get_rule_details(self, rule_hash):
