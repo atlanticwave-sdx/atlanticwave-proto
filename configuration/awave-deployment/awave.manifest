@@ -13,7 +13,7 @@
    },
    "localcontrollers": {
      "gt-ctlr-149-223": {
-       "shortname":"SoXctlr",
+       "shortname":"gt-ctlr-149-223",
        "credentials":"pwd",
        "location":"0,0",
        "lcip":"127.0.0.1",
@@ -62,7 +62,7 @@
        }
      },
      "mia-ctlr-186-106": {
-       "shortname":"miactlr",
+       "shortname":"mia-ctlr-186-106",
        "credentials":"pwd",
        "location":"0,0",
        "lcip":"127.0.0.1",
