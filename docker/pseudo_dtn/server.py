@@ -139,6 +139,7 @@ def run_transfer_thread(remote, filename):
 class Dir(Resource):
     def get(self, remote):
         # Get connection with FTP
+        print("Dir GET: %s" % remote)
         ftp = FTP(remote)
         ftp.login(user='anonymous', passwd='')
     
@@ -163,6 +164,7 @@ class Status(Resource):
     def get(self):
         global in_progress
         global total_time
+        print("Status GET")
         retval = ("%s-%s" % (in_progress, total_time))
         print("GET status: %s" % retval)
         return retval

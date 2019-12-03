@@ -26,7 +26,7 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
         on. One per incoming connection. One for outbound connections. Needs to
         be subclassed, even though much will be in common. Singleton. '''
 
-    def __init__(self, loggerid, connection_cls=Connection):
+    def __init__(self, loggerid, connection_cls=Connection, loggerid_for_connections=None):
         
         super(AtlanticWaveConnectionManager, self).__init__(loggerid)
         
@@ -36,6 +36,7 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
             raise TypeError("%s is not a Connection type." %
                             str(connection_cls))
         self.connection_cls = connection_cls
+        self.loggerid_for_cxns = loggerid_for_connections
         self.listening_callback = None
 
     def __repr__(self):
@@ -114,7 +115,12 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
             passes this to the saved new connection handling function. 
             Private. '''
         client_ip, client_port = address
-        client_connection = self.connection_cls(client_ip, client_port, sock)
+        client_connection = None
+        if(self.loggerid_for_cxns != None):
+           client_connection = self.connection_cls(client_ip, client_port, sock,
+                                                   self.loggerid_for_cxn)
+        else:
+           client_connection = self.connection_cls(client_ip, client_port, sock)
         self.clients.append(client_connection)
         self.listening_callback(client_connection)
         
@@ -140,5 +146,8 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
                 continue
 
             print "Connection established! %s:%s %s" % (ip, port, sock)
+            if self.loggerid_for_cxns != None:
+                return self.connection_cls(ip, port, sock, self.loggerid_for_cxns)
+            #else
             return self.connection_cls(ip, port, sock)
 

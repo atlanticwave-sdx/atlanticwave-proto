@@ -477,7 +477,7 @@ class SDXControllerConnection(Connection):
           - Message data
     '''
 
-    def __init__(self, address, port, sock):
+    def __init__(self, address, port, sock, loggerid):
         self.msg_num = 0
         self.msg_ack = 0
 
@@ -497,7 +497,7 @@ class SDXControllerConnection(Connection):
         self._del_callback = None
         self._new_callback = None
 
-        super(SDXControllerConnection, self).__init__(address, port, sock)
+        super(SDXControllerConnection, self).__init__(address, port, sock, loggerid)
 
     def get_state(self):
         return self.connection_state
@@ -670,6 +670,7 @@ class SDXControllerConnection(Connection):
                                     initial_rules_complete_callback=None):
         #FIXME: These messages should check state.
         # Transition to Initializing
+        self.logger.warning("%s - %s - Initializing" % (id(self), self.connection_state))
         self.connection_state = 'INITIALIZING'
         self.name = name
         self.capabilities = capabilities
@@ -678,17 +679,23 @@ class SDXControllerConnection(Connection):
         # Send hello with name, transition to Capabilities
         hello = SDXMessageHello(self.name)
         self.send_protocol(hello)
+        self.logger.warning("%s - %s - Sent HELLO message for %s, transition to CAPABILITIES" % (
+            id(self), self.connection_state, self.name))
         self.connection_state = 'CAPABILITIES'
 
         # Wait for Request Capabilities
         reqcap = self.recv_protocol()
         if not isinstance(reqcap, SDXMessageCapabilitiesRequest):
             raise SDXControllerConnectionTypeError("SDXMessageCapabilitesRequest not received: %s, %s" % (type(reqcap), reqcap))
+        self.logger.warning("%s - %s - Received Request Capabilities" % (
+            id(self), self.connection_state))
 
         # Send Capabilities, transition to Initial Rules
         #FIXME: DOESN'T EXIST RIGHT NOW. Don't need to fill it out
         respcap = SDXMessageCapabilitiesResponse()
-        self.send_protocol(respcap)        
+        self.send_protocol(respcap)
+        self.logger.warning("%s - %s - Sent Capabilities, transition to INITIAL_RULES" % (
+            id(self), self.connection_state))
         self.connection_state = 'INITIAL_RULES'
 
         # Wait for Initial Rule count
@@ -697,6 +704,8 @@ class SDXControllerConnection(Connection):
             raise SDXControllerConnectionTypeError("SDXMessageInitialRuleCount not received: %s, %s" % (type(irc), irc))
 
         rule_count_left = irc.get_data()['initial_rule_count']
+        self.logger.warning("%s - %s - Received Initial Rules Count %s" % (
+            id(self), self.connection_state, rule_count_left))
 
         # Loop through initial rules:
         # - Request rule
@@ -716,24 +725,33 @@ class SDXControllerConnection(Connection):
             install_rule_callback(rule)
 
             rule_count_left -= 1
+            self.logger.warning("%s - %s - Received an initial rule, Initial Rules to go %s" % (
+                id(self), self.connection_state, rule_count_left))
 
         # Send Initial Rules Complete, Transition to Initial Rules Complete
         irc = SDXMessageInitialRulesComplete()
         self.send_protocol(irc)
         if initial_rules_complete_callback != None:
             initial_rules_complete_callback()
+        self.logger.warning(
+            "%s - %s - Sent Initial Rules Complete, Transitioning to INITIAL_RULES_COMPLETE" %
+            (id(self), self.connection_state))
         self.connection_state = 'INITIAL_RULES_COMPLETE'
 
         # Wait for Transition to main phase
         tmp = self.recv_protocol()
         if not isinstance(tmp, SDXMessageTransitionToMainPhase):
             raise SDXControllerConnectionTypeError("SDXMessageTransitionToMainPhase not received: %s, %s" % (type(tmp), tmp))
+        self.logger.warning("%s - %s - Received Transition message, transitioning to MAIN_PHASE" % (
+            id(self), self.connection_state))
 
         # Transition to main phase and start the heartbeat thread
         self.connection_state = 'MAIN_PHASE'
         self.hb_thread = threading.Thread(target=_LC_heartbeat_thread,
                                           args=(self,))
         self.hb_thread.daemon = True
+        self.logger.warning("%s - %s - Starting heartbeat thread, going to MAIN_PHASE" % (
+            id(self), self.connection_state))
         print("%s Starting heartbeat thread LC" % 
               (threading.current_thread().ident))
         self.hb_thread.start()
@@ -745,32 +763,43 @@ class SDXControllerConnection(Connection):
     def transition_to_main_phase_SDX(self, set_name_callback,
                                      get_initial_rule_callback):
         # Transition to Initializing
+        self.logger.warning("%s - %s - Initializing" % (id(self), self.connection_state))
         self.connection_state = 'INITIALIZING'
 
         # Wait for hello with name, call the get_initial_rule_callback with name
         hello = self.recv_protocol()
         if not isinstance(hello, SDXMessageHello):
             raise SDXControllerConnectionTypeError("SDXMessageHello not received: %s, %s" % (type(hello), hello))
+        self.logger.warning("%s - %s - Received HELLO message, Transitioning to CAPABILITIES" % (
+            id(self), self.connection_state))
         
         self.name = hello.get_data()['name']
         set_name_callback(self.name)
+        self.logger.warning("%s - %s - Getting initial rules for %s" % (
+            id(self), self.connection_state, self.name))
         initial_rules = get_initial_rule_callback(self.name)
 
         # Transition to Capabilities, send request capabilities
         self.connection_state = 'CAPABILITIES'
         reqcap = SDXMessageCapabilitiesRequest()
         self.send_protocol(reqcap)
+        self.logger.warning("%s - %s - Sent request capabilities" % (
+            id(self), self.connection_state))
 
         # Wait for capabilities
         #FIXME: NOTHING REALLY TO DO WITH THIS YET.
         respcap = self.recv_protocol()
         if not isinstance(respcap, SDXMessageCapabilitiesResponse):
             raise SDXControllerConnectionTypeError("SDXMessageCapabilitiesResponse not received: %s, %s" % (type(respcap), respcap))
+        self.logger.warning("%s - %s - Received capabilities, transitioning to INITIAL_RULES" % (
+            id(self), self.connection_state))
 
         # Transition to Initial Rules, send Initial Rule count
         self.connection_state = 'INITIAL_RULES'
         irc = SDXMessageInitialRuleCount(len(initial_rules))
         self.send_protocol(irc)
+        self.logger.warning("%s - %s - Sent Initial Rule Count, count %s" % (
+            id(self), self.connection_state, len(initial_rules)))
         
         # Loop thorugh initial rules:
         # - Wait for request rule or Initial Rules Complete
@@ -785,11 +814,18 @@ class SDXControllerConnection(Connection):
                 r = initial_rules[0]
                 rule = SDXMessageInstallRule(r, r.get_switch_id())
                 self.send_protocol(rule)
+                self.logger.warning(
+                    "%s - %s - InitialRuleRequest received, sending next initial rule" % (
+                    id(self), self.connection_state))
+
                 # Remove that rule form the initial rule list
                 initial_rules = initial_rules[1:]
             elif isinstance(msg, SDXMessageInitialRulesComplete):
                 # Confirm that we don't have any more rules, then bail out of
                 # loop
+                self.logger.warning(
+                    "%s - %s - InitialRuleComplete received, Confirming all rules sent" % (
+                    id(self), self.connection_state))
                 if len(initial_rules) != 0:
                     raise SDXControllerConnectionValueError("initial_rules is not empty (%d: %s) but received InititialRulesComplete" % (len(initial_rules), initial_rules))
                 break
@@ -799,14 +835,22 @@ class SDXControllerConnection(Connection):
                 raise SDXControllerConnectionTypeError("Expecting InitialRUleRequest or InitialRulesComplete, received %s: %s" % 
                                           (type(msg), str(msg)))
 
+        self.logger.warning("%s - %s - Initial Rules are Complete" % (
+                    id(self), self.connection_state))
         # Send Transition to Main Phase, transition to main phase, start
         # heartbeat thread
         tmp = SDXMessageTransitionToMainPhase()
         self.send_protocol(tmp)
+        self.logger.warning("%s - %s - Sent transition to MAIN_PHASE" % (
+                    id(self), self.connection_state))
+
         self.connection_state = 'MAIN_PHASE'
         self.hb_thread = threading.Thread(target=_SDX_heartbeat_thread,
                                           args=(self,))
+        
         self.hb_thread.daemon = True
+        self.logger.warning("%s - %s - Starting heartbeat thread, going to MAIN_PHASE" % (
+            id(self), self.connection_state))
         print("%s Starting heartbeat thread SDX" % 
               (threading.current_thread().ident))
         self.hb_thread.start()

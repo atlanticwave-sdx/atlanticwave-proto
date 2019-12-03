@@ -57,14 +57,16 @@ def create_tunnel(srcswitch, dstswitch, srcport, dstport,
         login_to_sdx_controller()
 
     # Calculate start and end times
-    #starttime = datetime.now() - time
+
+    #starttime = datetime.now()
     #endtime = starttime + time
     # Hardwiring these, so that this will always be installable
-    starttime = datetime(1999, 01, 01)
-    endtime =  datetime(2030, 01, 01)
+    starttime = datetime.datetime(1999, 01, 01)
+    endtime =  datetime.datetime(2030, 01, 01)
 
-    # Issue POST command 
-    endpoint = "http://%s:%s/api/v1/policies/type/L2Tunnel" % (sdx_ip, sdx_port)
+    # Issue POST command
+    endpoint = "http://%s:%s/api/v1/policies/type/l2tunnel" % (sdx_ip, sdx_port)
+
     l2tunnel = '{"L2Tunnel":{"starttime":"%s","endtime":"%s","srcswitch":"%s","dstswitch":"%s","srcport":%s,"dstport":%s,"srcvlan":%s,"dstvlan":%s,"bandwidth":10000000}}' % (
         starttime.strftime(rfc3339format), endtime.strftime(rfc3339format), 
         srcswitch, dstswitch, srcport, dstport, srcvlan, dstvlan)
