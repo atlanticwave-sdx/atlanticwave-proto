@@ -80,7 +80,7 @@
            "model":"DP2400 3.x.x",
            "portinfo": [
              {
-               "portnumber": 1,
+               "portnumber": 2,
                "speed": 80000000000,
                "destination": "mia-app-186-106"
              },

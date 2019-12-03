@@ -9,7 +9,7 @@ import sys
 import subprocess
 from datetime import datetime, timedelta
 from time import sleep
-
+import json
 
 # HTTP status codes:
 HTTP_GOOD           = 200
@@ -26,17 +26,19 @@ HTTP_SERVER_ERROR   = 500     # RETURNED BY FLASK-RESTFUL ONLY
 
 port = 9999
 
+TUNNEL = True
+#TUNNEL = False
 # List of endpoints
 endpoints = {'atl-dtn':{'ctrlip':'10.100.1.21','port':9999,
-                        'dataip':'10.201.2.21',
-                        'switch':'atl-switch', 'switchport':4, 'vlan':201},
+                        'dataip':'10.201.2.21', 'switch':'soxswitch-216-3', 
+                        'switchport':4, 'vlan':201},
              'mia-dtn':{'ctrlip':'10.100.1.27','port':9999,
-                        'dataip':'10.201.2.28',
-                        'switch':'mia-switch', 'switchport':10, 'vlan':124}}
+                        'dataip':'10.201.2.28', 'switch':'miaswitch-206-198', 
+                        'switchport':10, 'vlan':124}}
 
 global sdx_ip, sdx_port, sdx_user, sdx_pw, login_cookie, tunnel_policy
 sdx_ip = '10.100.1.21'
-sdx_port = 5555
+sdx_port = 5000
 sdx_user = 'sdonovan'
 sdx_pw = '1234'
 login_cookie = None
@@ -55,16 +57,19 @@ def create_tunnel(srcswitch, dstswitch, srcport, dstport,
         login_to_sdx_controller()
 
     # Calculate start and end times
-    starttime = datetime.now()
-    endtime = starttime + time
+    #starttime = datetime.now() - time
+    #endtime = starttime + time
+    # Hardwiring these, so that this will always be installable
+    starttime = datetime(1999, 01, 01)
+    endtime =  datetime(2030, 01, 01)
 
-    # Issue POST command
-    endpoint = "http://%s:%s/api/v1/policies/type/l2tunnel" % (sdx_ip, sdx_port)
+    # Issue POST command 
+    endpoint = "http://%s:%s/api/v1/policies/type/L2Tunnel" % (sdx_ip, sdx_port)
     l2tunnel = '{"L2Tunnel":{"starttime":"%s","endtime":"%s","srcswitch":"%s","dstswitch":"%s","srcport":%s,"dstport":%s,"srcvlan":%s,"dstvlan":%s,"bandwidth":10000000}}' % (
         starttime.strftime(rfc3339format), endtime.strftime(rfc3339format), 
         srcswitch, dstswitch, srcport, dstport, srcvlan, dstvlan)
         
-    output = subprocess.check_call(['curl', '-X', 'POST',
+    output = subprocess.check_output(['curl', '-X', 'POST',
                                     '-H',
                                     'Content-type: application/json',
                                     '-H', "Accept: application/json",
@@ -73,11 +78,14 @@ def create_tunnel(srcswitch, dstswitch, srcport, dstport,
                                     '-b', login_cookie])
 
     # Get policy number
-    output = json.loads(output)
+    print("OUTPUT: %s" % output)
+    output = json.loads(output.decode('utf-8'))
     installed_policynum = int(output['policy']['href'].split('/')[-1])
     
     # Set tunnel_policy 
     tunnel_policy = installed_policynum
+
+    sleep(3)
 
 def delete_tunnel():
     global sdx_ip, sdx_port, tunnel_policy, login_cookie
@@ -86,8 +94,12 @@ def delete_tunnel():
         login_to_sdx_controller()
 
     # Issue DELETE command
-    endpoint = "http://%s:%s/api/vl/policies/number/%s" % (
+    print("Deleting policy #%s" % tunnel_policy)
+
+    endpoint = "http://%s:%s/api/v1/policies/number/%s" % (
        sdx_ip, sdx_port, tunnel_policy)
+
+    print("Deleting policy endpoint %s" % endpoint)
 
     output = subprocess.check_call(['curl', '-X', 'DELETE',
                                     '-H', 'Accept: application/json',
@@ -99,6 +111,8 @@ def delete_tunnel():
 def login_to_sdx_controller():
     global sdx_ip, sdx_port, sdx_user, sdx_pw, login_cookie
     
+    print("Logging into SDX Controller: %s:%s - %s:%s" % (
+        sdx_ip, sdx_port, sdx_user, sdx_pw))
     # if there's a saved login, return
     if login_cookie != None:
         return
@@ -131,12 +145,16 @@ def get_ep_dict_from_num(endpoints, num):
         a += 1
 
 def get_dir(ctrlip, dataip, srcport):
+    print("Getting directory info for %s:%s:%s" % (
+        ctrlip, dataip, srcport))
     endpoint = 'http://%s:%s/dtn/transfer/%s' % (ctrlip, srcport, dataip)
+    print("    %s"% endpoint)
     output = subprocess.check_output(['curl', '-X', 'GET', endpoint])
     return output.decode('utf-8')
     
 
 def parse_files(filestr):
+    print("Parsing files")
     # Split the filestr into a list of files
     # Based on https://stackoverflow.com/questions/1894269/convert-string-representation-of-list-to-list
     ls = filestr.strip('[]').replace('[','').replace(']','').replace('"', '').replace("'", '').replace(' ', '').split(',')
@@ -151,11 +169,14 @@ def print_files(files):
 
 
 def transfer_file(srcdataip, dstctrlip, dstport, filename):
+    print("Trying to transfer file %s from %s to %s:%s" % (
+        filename, srcdataip, dstctrlip, dstport))
     timeout = 1000
 
     # Execute file transfer
     endpoint = 'http://%s:%s/dtn/transfer/%s/%s' % (
         dstctrlip, dstport, srcdataip, filename)
+    print("    %s" % endpoint)
     output = subprocess.check_output(['curl', '-X', 'POST', endpoint])
     output = output.decode('utf-8')
     print("Transferring file: %s" % output)
@@ -194,29 +215,33 @@ while(True):
     #print("srcdict - %s" % srcdict)
     #print("dstdict - %s" % dstdict)
 
-    create_tunnel(srcdict['switch'],     dstdict['switch'],
-                  srcdict['switchport'], dstdict['switchport'], 
-                  srcdict['vlan'],       dstdict['vlan'],
-                  timedelta(0,1))
+    if TUNNEL:
+        create_tunnel(srcdict['switch'],     dstdict['switch'],
+                      srcdict['switchport'], dstdict['switchport'], 
+                      srcdict['vlan'],       dstdict['vlan'],
+                      timedelta(100,))
 
     # Get and display files available on src
-    rawfiles = get_dir(srcdict['ctrlip'], dstdict['dataip'], srcdict['port'])
+    rawfiles = get_dir(dstdict['ctrlip'], srcdict['dataip'], dstdict['port'])
     fileslist = parse_files(rawfiles)
     print_files(fileslist)
-    delete_tunnel()
+    if TUNNEL:
+        delete_tunnel()
 
     # Let user choose file to transfer
     filenumber = input("Choose a file: ")
     filename = fileslist[int(filenumber)]
 
     # Reestablish path between src and dest
-    create_tunnel(srcdict['switch'],     dstdict['switch'],
-                  srcdict['switchport'], dstdict['switchport'],
-                  srcdict['vlan'],       dstdict['vlan'],
-                  timedelta(1,0)) # 1 day, excessive, but we'll delete it, don't worry
+    if TUNNEL:
+        create_tunnel(srcdict['switch'],     dstdict['switch'],
+                      srcdict['switchport'], dstdict['switchport'],
+                      srcdict['vlan'],       dstdict['vlan'],
+                      timedelta(100,0)) # 1 day, excessive, but we'll delete it, don't worry
 
     # Make transfer call
     transfer_file(srcdict['dataip'], dstdict['ctrlip'], dstdict['port'], filename)    
 
     # Clean up
-    delete_tunnel()
+    if TUNNEL:
+        delete_tunnel()
