@@ -30,16 +30,6 @@
       "friendlyname": "DUKE BF40G Node",
       "location": "36.003614, -78.938755",
       "vlan": 1422},
-    "uncctlr": {
-      "type": "localcontroller",
-      "friendlyname": "UNC Controller",
-      "location": "35.903395, -79.048370",
-      "vlan": 1411},
-    "uncdtn": {
-      "type": "dtn",
-      "friendlyname": "UNC BF40G Node",
-      "location": "35.903395, -79.048370",
-      "vlan": 1423},
     "ncsuctlr": {
       "type": "localcontroller",
       "friendlyname": "NCSU Controller",
@@ -70,11 +60,6 @@
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
-            {
-      	      "portnumber": 1,
-              "speed": 80000000000,
-              "destination": "uncs1"
-	    },
             {
               "portnumber": 2,
               "speed": 80000000000,
@@ -209,59 +194,6 @@
         "contact": "mcevik@renci.org"
       }
     },
-    "uncctlr":{
-      "shortname": "uncctlr",
-      "credentials": "uncpwd",
-      "location":"35.903395, -79.048370",
-      "lcip": "10.14.11.3",
-      "internalconfig": {
-        "ryucxninternalport": 55783,
-        "openflowport": 6683
-      },
-      "switchinfo": [
-        { 
-          "name":"uncs1",
-          "friendlyname":"UNC Corsa DP2100",
-          "ip": "10.0.203.1",
-          "dpid":"203",
-          "brand":"Open vSwitch",
-          "model": "2.3.0",
-          "portinfo": [
-            { 
-              "portnumber": 1,
-              "speed": 80000000000,
-              "destination": "rencis1"
-            },
-            { 
-              "portnumber": 11,
-               "speed": 80000000000,
-               "destination": "uncctlr"
-            },
-            { 
-              "portnumber": 12,
-               "speed": 80000000000,
-               "destination": "uncdtn"
-            }
-          ],
-          "internalconfig": {
-            "corsaurl": "https://corsa-1.unc.ben/",
-            "corsatoken": "fa18b3d4d84507dba6568678a45fcecdec03247d7b5c18e45c5f288066a52d970cf8ee0bcf7759c698a7b56b92824963c8c03acf77f0a3aa91ad4f64c3aa7b15",
-            "corsabridge": "br23",
-            "corsabwin":19,
-            "corsabwout":20,
-            "corsaratelimitbridge":"br20",
-            "corsaratelimitports":[21,22],
-            "managementvlan":1411,
-            "managementvlanports":[1,11]
-          }
-        }
-      ],
-      "operatorinfo": {
-        "organization": "RENCI",
-        "administrator": "Mert Cevik",
-        "contact": "mcevik@renci.org"
-      }
-    },
     "ncsuctlr":{
       "shortname": "ncsuctlr",
       "credentials": "ncsupwd",
@@ -281,7 +213,7 @@
           "model": "2.3.0",
           "portinfo": [
             { 
-              "portnumber": 2,
+              "portnumber": 1,
               "speed": 80000000000,
               "destination": "dukes1"
             },
@@ -305,7 +237,7 @@
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[2,11]
+            "managementvlanports":[1,11]
           }
         }
       ],
