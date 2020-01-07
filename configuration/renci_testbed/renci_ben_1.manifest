@@ -30,16 +30,6 @@
       "friendlyname": "DUKE BF40G Node",
       "location": "36.003614, -78.938755",
       "vlan": 1422},
-    "uncctlr": {
-      "type": "localcontroller",
-      "friendlyname": "UNC Controller",
-      "location": "35.903395, -79.048370",
-      "vlan": 1411},
-    "uncdtn": {
-      "type": "dtn",
-      "friendlyname": "UNC BF40G Node",
-      "location": "35.903395, -79.048370",
-      "vlan": 1423},
     "ncsuctlr": {
       "type": "localcontroller",
       "friendlyname": "NCSU Controller",
