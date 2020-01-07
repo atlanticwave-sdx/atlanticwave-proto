@@ -341,6 +341,18 @@
         "tbd"
       ]
     },
+    "cwang": {
+      "credentials": "1234",
+      "organization": "RENCI",
+      "contact": "cwang@renci.org",
+      "type": "administrator",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    },
     "yxin": {
       "credentials": "1234",
       "organization": "RENCI",
