@@ -95,7 +95,7 @@
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [21,22],
             "managementvlan":1411,
-            "managementvlanports":[1,2,11,23,30]
+            "managementvlanports":[2,11,23,30]
           }
         },
         {
