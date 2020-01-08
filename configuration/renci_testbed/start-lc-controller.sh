@@ -43,7 +43,7 @@ if [[ -n "${LC_CONTAINER}" ]]; then
 fi
 
 
-docker run --rm --network host -e MANIFEST="/renci_ben.manifest" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} lc_container
+docker run --rm --network host -e MANIFEST="/renci_ben_1.manifest" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} lc_container
 
 echo "The IP of the VM is:"
 ifconfig | awk '/inet addr/{print substr($2,6)}' | awk '/192.168/{print}'

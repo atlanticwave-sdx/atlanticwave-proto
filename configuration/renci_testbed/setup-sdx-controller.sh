@@ -29,14 +29,14 @@ git clone ${AW_REPO}
 # Docker work: build SDX Controller container
 cd atlanticwave-proto
 git checkout ${AW_BRANCH}
-cp configuration/renci_testbed/renci_ben.manifest docker/sdx_container/
+cp configuration/renci_testbed/renci_ben_1.manifest docker/sdx_container/
 
 sudo systemctl restart docker
 
 cd docker/sdx_container
 sed -r -i "s/master/${AW_BRANCH}/g" Dockerfile
 sudo docker build -t sdx_container .
-rm -f renci_ben.manifest 
+rm -f renci_ben_1.manifest 
 
 # Copy over run scripts
 cd ../../configuration/renci_testbed
