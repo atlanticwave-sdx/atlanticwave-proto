@@ -22,3 +22,4 @@ dataset==0.8.0
 ryu==4.11
 docker==3.4.1
 docker-pycreds==0.3.0
+tinyrpc==0.9.4
