@@ -1,6 +1,9 @@
 #/bin/bash
 
-if [ "$#" -eq 2 ]; then
+MODE="$2"
+echo "--- MODE: $MODE"
+
+if [ "$MODE" == "detached" ]; then
   OPTS="dit"
 else
   OPTS="it"

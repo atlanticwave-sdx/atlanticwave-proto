@@ -122,6 +122,7 @@ run_docker_container(){
    SITE=$1
    WORK_DIR=$2
    TYPE=$3
+   MODE=$4
 
    # Run Docker Container ( renci | duke | unc | ncsu )
    cd ${WORK_DIR}
@@ -134,7 +135,7 @@ stop_docker_container(){
 }
 
 
-while getopts "R:B:cbrsH" opt; do
+while getopts "R:B:m:cbrsH" opt; do
     case $opt in
         R)
             AW_REPO=${OPTARG}
@@ -142,8 +143,8 @@ while getopts "R:B:cbrsH" opt; do
         B)
             AW_BRANCH=${OPTARG}
             ;;
-        d)
-            MODE="detached"
+        m)
+            MODE=${OPTARG}
             ;;
         c)
             title "Cleanup Files"
@@ -161,8 +162,8 @@ while getopts "R:B:cbrsH" opt; do
             build_docker_image $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE}
             ;;
         r)
-            title "Run Docker Container for ${TYPE}"
-            run_docker_container $SITE $WORK_DIR $TYPE
+            title "Run Docker Container for ${TYPE} - MODE: $MODE"
+            run_docker_container $SITE $WORK_DIR $TYPE $MODE
             ;;
         s)
             title "Stop Docker Containers"

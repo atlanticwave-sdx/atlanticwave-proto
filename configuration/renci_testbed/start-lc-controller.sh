@@ -1,14 +1,12 @@
 #/bin/bash
 
-if [ "$#" -le 1 ]; then
-  echo "Usage: $0 <SITE>" >&2
-  exit 1
-fi
-
 SITE="$1"
 export SITE
 
-if [ "$#" -eq 2 ]; then
+MODE="$2"
+echo "--- MODE: $MODE"
+
+if [ "$MODE" == "detached" ]; then
   OPTS="dit"
 else
   OPTS="it"
