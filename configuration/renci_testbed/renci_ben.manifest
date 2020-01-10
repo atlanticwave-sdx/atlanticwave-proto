@@ -71,7 +71,7 @@
           "model": "2.3.0",
           "portinfo": [
             {
-      	      "portnumber": 24,
+      	      "portnumber": 1,
               "speed": 80000000000,
               "destination": "uncs1"
 	    },
@@ -110,7 +110,7 @@
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [21,22],
             "managementvlan":1411,
-            "managementvlanports":[24,2,11,23,30]
+            "managementvlanports":[1,2,11,23,30]
           }
         },
         {
@@ -228,7 +228,7 @@
           "model": "2.3.0",
           "portinfo": [
             { 
-              "portnumber": 5,
+              "portnumber": 1,
               "speed": 80000000000,
               "destination": "rencis1"
             },
@@ -244,15 +244,15 @@
             }
           ],
           "internalconfig": {
-            "corsaurl": "https://corsa-1-unc.renci.ben/",
-            "corsatoken": "245c25eac968cb22624438f0e1bcd2d766be666843676e413b6739d86f6c3523bf7aab1e5c3231aa2d7acd6757371dea3d8cbc470a1e60825f93a85dabd01ddb",
+            "corsaurl": "https://corsa-1.unc.ben/",
+            "corsatoken": "fa18b3d4d84507dba6568678a45fcecdec03247d7b5c18e45c5f288066a52d970cf8ee0bcf7759c698a7b56b92824963c8c03acf77f0a3aa91ad4f64c3aa7b15",
             "corsabridge": "br23",
             "corsabwin":19,
             "corsabwout":20,
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
             "managementvlan":1411,
-            "managementvlanports":[5,11]
+            "managementvlanports":[1,11]
           }
         }
       ],
