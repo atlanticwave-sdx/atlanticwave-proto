@@ -1,7 +1,11 @@
 #/bin/bash
 
-#OPTS="dit"
-OPTS="it"
+if [ "$#" -eq 2 ]; then
+  OPTS="dit"
+else
+  OPTS="it"
+fi
+
 NAME="sdxrencitestbed"
 
 # SDX Controller

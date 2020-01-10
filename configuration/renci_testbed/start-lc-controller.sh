@@ -1,10 +1,19 @@
 #/bin/bash
 
-#OPTS="dit"
-OPTS="it"
+if [ "$#" -le 1 ]; then
+  echo "Usage: $0 <SITE>" >&2
+  exit 1
+fi
 
 SITE="$1"
 export SITE
+
+if [ "$#" -eq 2 ]; then
+  OPTS="dit"
+else
+  OPTS="it"
+fi
+
 
 SDXIPVAL="10.14.11.254"
 export SDXIPVAL

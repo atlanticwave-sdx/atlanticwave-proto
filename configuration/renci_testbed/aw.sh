@@ -125,7 +125,7 @@ run_docker_container(){
 
    # Run Docker Container ( renci | duke | unc | ncsu )
    cd ${WORK_DIR}
-   ./start-${TYPE}-controller.sh ${SITE}
+   ./start-${TYPE}-controller.sh ${SITE} ${MODE}
 }
 
 
@@ -141,6 +141,9 @@ while getopts "R:B:cbrsH" opt; do
             ;;
         B)
             AW_BRANCH=${OPTARG}
+            ;;
+        d)
+            MODE="detached"
             ;;
         c)
             title "Cleanup Files"
