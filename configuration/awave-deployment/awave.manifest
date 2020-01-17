@@ -1,0 +1,148 @@
+{
+  "endpoints": {
+    "gt-app-149-224": {
+      "type":"host",
+      "friendlyname":"gt-app-149-224",
+      "location":"0,0",
+      "available_vlans":"1416,3922"},
+    "mia-app-186-106": {
+      "type":"host",
+      "friendlyname":"mia-app-186-106",
+      "location":"0,0",
+      "available_vlans":""}
+   },
+   "localcontrollers": {
+     "gt-ctlr-149-223": {
+       "shortname":"gt-ctlr-149-223",
+       "credentials":"pwd",
+       "location":"0,0",
+       "lcip":"127.0.0.1",
+       "internalconfig": {
+         "ryucxninternalport": 55780,
+         "openflowport":6653
+       },
+       "switchinfo": [
+         {
+           "name":"soxswitch-216-3",
+           "friendlyname":"soxswitch",
+           "ip":"143.215.216.3",
+           "dpid":"0x00007a7e0683b44d",
+           "brand":"Corsa Technologies",
+           "model":"DP2400 3.0.3",
+           "portinfo": [
+             {
+               "portnumber": 1,
+               "speed": 80000000000,
+               "destination": "miaswitch-206-198"
+             },
+             {
+               "portnumber": 4,
+               "speed": 80000000000,
+               "destination": "gt-app-149-224"
+             }
+             ],
+           "internalconfig": {
+             "corsaurl":"",
+             "corsatoken": "",
+             "corsabridge":"br10",
+             "corsabwin":11,
+             "corsabwout":12,
+             "corsaratelimiterbridge":"",
+             "corsaratelimiterports":[21,22],
+             "managementvlan":4080,
+             "managementvlanports":[],
+             "untaggedmanagementvlanports":[1,3]
+           }
+         }
+       ],
+       "operatorinfo": {
+         "organization":"Georgia Tech/RNOC",
+         "administrator":"Sean Donovan",
+         "contact":"sdonovan@gatech.edu"
+       }
+     },
+     "mia-ctlr-186-106": {
+       "shortname":"mia-ctlr-186-106",
+       "credentials":"pwd",
+       "location":"0,0",
+       "lcip":"127.0.0.1",
+       "internalconfig": {
+         "ryucxninternalport": 55780,
+         "openflowport":6633
+       },
+       "switchinfo": [
+         {
+           "name":"miaswitch-206-198",
+           "friendlyname":"miaswitch",
+           "ip":"67.17.206.198",
+           "dpid":"0x00003a43cf114340",
+           "brand":"Corsa Technologies",
+           "model":"DP2400 3.x.x",
+           "portinfo": [
+             {
+               "portnumber": 2,
+               "speed": 80000000000,
+               "destination": "mia-app-186-106"
+             },
+             {
+               "portnumber": 3,
+               "speed": 80000000000,
+               "destination": "soxswitch-216-3"
+             }
+             ],
+           "internalconfig": {
+             "corsaurl":"",
+             "corsatoken": "",
+             "corsabridge":"br10",
+             "corsabwin":11,
+             "corsabwout":12,
+             "corsaratelimiterbridge":"",
+             "corsaratelimiterports":[21,22],
+             "managementvlan":4080,
+             "managementvlanports":[],
+             "untaggedmanagementvlanports":[1,2]
+           }
+         }
+       ],
+       "operatorinfo": {
+         "organization":"Florida International University",
+         "administrator":"Jeronimo Bezzara",
+         "contact":"jbezzara@fiu.edu"
+       }
+     }
+   },
+   "participants": {
+     "sdonovan": {
+      "credentials": "1234",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "sdonovan@gatech.edu",
+      "type": "administrator",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    },
+    "jchung": {
+      "credentials": "4321",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "jchung@gatech.edu",
+      "type": "user",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    }
+  }
+}
+         
+           
+           
+           
+           
+       
+      
+   

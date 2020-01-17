@@ -23,8 +23,12 @@ class Connection(object):
         it'll be a socket, but in the future, this can be changed to be a TLS 
         socket, for instance. '''
 
-    def __init__(self, address, port, sock):
+    def __init__(self, address, port, sock, loggerid=None):
         # Setup logging
+        self.loggerid = None
+        if loggerid != None:
+            self.loggerid = loggerid + str(self.__class__.__name__)
+            self._setup_loggers(self.loggerid)
 
         # Validate incoming variables
         # Skipping address and port for now.
@@ -63,6 +67,36 @@ class Connection(object):
         retval += "  sock:        %s\n" % self.sock
         return retval
 
+    def _setup_loggers(self, loggerid, logfilename=None, debuglogfilename=None):
+        ''' Internal function for setting up the logger formats. '''
+        # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
+        # Modified based on https://stackoverflow.com/questions/7173033/
+        self.logger = logging.getLogger(loggerid)
+        self.dlogger = logging.getLogger("debug." + loggerid)
+        if logfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.DEBUG)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(logfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.logger.setLevel(logging.DEBUG)
+            self.logger.addHandler(console)
+            self.logger.addHandler(logfile)
+
+        if debuglogfilename != None:
+            formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
+            console = logging.StreamHandler()
+            console.setLevel(logging.DEBUG)
+            console.setFormatter(formatter)
+            logfile = logging.FileHandler(debuglogfilename)
+            logfile.setLevel(logging.DEBUG)
+            logfile.setFormatter(formatter)
+            self.dlogger.setLevel(logging.DEBUG)
+            self.dlogger.addHandler(console)
+            self.dlogger.addHandler(logfile)
+            
     def get_address(self):
         return self.address
     def get_port(self):

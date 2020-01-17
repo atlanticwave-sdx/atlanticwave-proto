@@ -1,0 +1,122 @@
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3610:label+3610>
+        a       <http://schemas.ogf.org/nml/2013/03/base#Label> , owl:Thing , rdfs:Resource ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3610> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610:existsDuring> ;
+        <http://schemas.ogf.org/nml/2013/03/base#labeltype>
+                <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+        <http://schemas.ogf.org/nml/2013/03/base#value>
+                "3610" .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610>
+        a       rdfs:Resource , owl:Thing , <http://schemas.ogf.org/mrs/2013/12/topology#SwitchingSubnet> ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE> ;
+        <http://schemas.ogf.org/nml/2013/03/base#encoding>
+                <http://schemas.ogf.org/nml/2012/10/ethernet> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610:existsDuring> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3610> , <urn:ogf:network:atlanticwave-sdx.net:2018::chic-cr5:3_2_1:+:vlanport+3610> ;
+        <http://schemas.ogf.org/nml/2013/03/base#labelSwapping>
+                true ;
+        <http://schemas.ogf.org/nml/2013/03/base#labelType>
+                <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+>
+        <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3610> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+>
+        <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3610> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3610:service+bw>
+        a       <http://schemas.ogf.org/mrs/2013/12/topology#BandwidthService> , owl:Thing , rdfs:Resource ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#availableCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#reservableCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#type>
+                "guaranteedCapped" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#unit>
+                "bps" ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3610> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610:existsDuring> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE>
+        <http://schemas.ogf.org/mrs/2013/12/topology#providesSubnet>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610> .
+
+owl:Nothing  rdfs:subClassOf  <http://schemas.ogf.org/mrs/2013/12/topology#BandwidthService> , <http://schemas.ogf.org/nml/2013/03/base#BidirectionalPort> , <http://schemas.ogf.org/nml/2013/03/base#Label> , <http://schemas.ogf.org/mrs/2013/12/topology#SwitchingSubnet> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3610>
+        a       rdfs:Resource , owl:Thing , <http://schemas.ogf.org/nml/2013/03/base#BidirectionalPort> ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610> , <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+> ;
+        <http://schemas.ogf.org/nml/2013/03/base#encoding>
+                <http://schemas.ogf.org/nml/2012/10/ethernet> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610:existsDuring> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasLabel>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3610:label+3610> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasService>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3610:service+bw> ;
+        <http://schemas.ogf.org/nml/2013/03/base#name>
+                "CTGJ:abb25a7e-9530-4e1e-981f-c74f17361c21:ad6d9b50-8beb-48aa-8523-9303c075e942" .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610:existsDuring>
+        a       owl:Thing , rdfs:Resource , <http://schemas.ogf.org/nml/2013/03/base#Lifetime> ;
+        <http://schemas.ogf.org/nml/2013/03/base#end>
+                "2018-11-07T01:04:20.000000-0000" ;
+        <http://schemas.ogf.org/nml/2013/03/base#start>
+                "2018-10-30T01:09:20.000000-0000" .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3610>
+        a       <http://schemas.ogf.org/nml/2013/03/base#BidirectionalPort> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610> , <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+> ;
+        <http://schemas.ogf.org/nml/2013/03/base#encoding>
+                <http://schemas.ogf.org/nml/2012/10/ethernet> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610:existsDuring> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasLabel>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3610:label+3610> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasService>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3610:service+bw> ;
+        <http://schemas.ogf.org/nml/2013/03/base#name>
+                "CTGJ:abb25a7e-9530-4e1e-981f-c74f17361c21:ad6d9b50-8beb-48aa-8523-9303c075e942" .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3610:service+bw>
+        a       <http://schemas.ogf.org/mrs/2013/12/topology#BandwidthService> , owl:Thing , rdfs:Resource ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#availableCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#reservableCapacity>
+                "1000000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#type>
+                "guaranteedCapped" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#unit>
+                "bps" ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::atldtn-br1:+:vlanport+3610> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610:existsDuring> .
+
+<urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3610:label+3610>
+        a       <http://schemas.ogf.org/nml/2013/03/base#Label> , owl:Thing , rdfs:Resource ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::miadtn-br2:+:vlanport+3610> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net:2018::ServiceDomain:EVTS.A-GOLE:conn+ad6d9b50-8beb-48aa-8523-9303c075e942:resource+links-connection_1:vlan+3610:existsDuring> ;
+        <http://schemas.ogf.org/nml/2013/03/base#labeltype>
+                <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+        <http://schemas.ogf.org/nml/2013/03/base#value>
+                "3610" .

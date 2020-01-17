@@ -24,9 +24,11 @@ ALL_TABLES_EXCEPT_LAST = [L2TUNNELTABLE,
                           LEARNINGTABLE]
 
 
+MAX_PORTS              = 16
 
 # Which tables to use for specific activities
 PRIORITY_DEFAULT                       = 0
+PRIORITY_DEFAULT_PLUS_ONE              = 0
 
 #L2TUNNELTABLE - Table 0
 PRIORITY_DEFAULT_L2TABLE               = 0

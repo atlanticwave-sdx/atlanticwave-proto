@@ -25,6 +25,14 @@ class LCAction(object):
     def __repr__(self):
         return self.__str__()
 
+    def get(self):
+        return None
+
+    def __eq__(self, other):
+        return (type(other) == type(self) and
+                other.get() == self.get())
+            
+
 
 class Forward(LCAction):
     ''' This forwards packets to a particular location. '''

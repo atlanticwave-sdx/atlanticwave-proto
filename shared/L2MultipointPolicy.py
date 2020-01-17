@@ -7,6 +7,8 @@ from shared.constants import *
 from shared.L2MultipointEndpointLCRule import L2MultipointEndpointLCRule
 from shared.L2MultipointFloodLCRule import L2MultipointFloodLCRule
 from shared.L2MultipointLearnedDestinationLCRule import L2MultipointLearnedDestinationLCRule
+from shared.PathResource import VLANTreeResource, BandwidthTreeResource, \
+    VLANPortResource, BandwidthPortResource
 import networkx as nx
 
 class L2MultipointPolicy(UserPolicy):
@@ -43,6 +45,9 @@ class L2MultipointPolicy(UserPolicy):
         # Derived values
         self.intermediate_vlan = None
         self.tree = None
+
+        # For get_endpoints()
+        self.external_endpoints = []
         
         super(L2MultipointPolicy, self).__init__(username,
                                                  json_rule)
@@ -54,6 +59,19 @@ class L2MultipointPolicy(UserPolicy):
         return "%s(%s,%s,%s)" % (self.get_policy_name(), self.start_time,
                                  self.stop_time, self.endpoints)
 
+
+    def __eq__(self, other):
+        if(type(self) != type(other) or
+           self.start_time != other.start_time or
+           self.bandwidth != other.bandwidth):
+            return False
+
+        # Endpoints are next
+        local_eps = self.endpoints[:]
+        other_eps = other.endpoints[:]
+
+        return (local_eps.sort() == other_eps.sort())
+                
     @classmethod
     def check_syntax(cls, json_rule):
         try:
@@ -95,6 +113,8 @@ class L2MultipointPolicy(UserPolicy):
             
     def breakdown_rule(self, tm, ai):
         self.breakdown = []
+        self.resources = []
+        self.external_endpoints = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
 
@@ -109,9 +129,13 @@ class L2MultipointPolicy(UserPolicy):
         self.intermediate_vlan = tm.find_vlan_on_tree(self.tree)
         if self.intermediate_vlan == None:
             raise UserPolicyError("There are no available VLANs on tree %s for rule %s" % (self.tree, self))
-        tm.reserve_vlan_on_tree(self.tree, self.intermediate_vlan)
-        tm.reserve_bw_on_tree(self.tree, self.bandwidth)
+        ###tm.reserve_vlan_on_tree(self.tree, self.intermediate_vlan)
+        ###tm.reserve_bw_on_tree(self.tree, self.bandwidth)
 
+        self.resources.append(VLANTreeResource(self.tree,
+                                               self.intermediate_vlan))
+        self.resources.append(BandwidthTreeResource(self.tree,
+                                                    self.bandwidth))
         
         #nodes = self.tree.nodes(data=True)
         #edges = self.tree.edges(data=True)
@@ -147,6 +171,14 @@ class L2MultipointPolicy(UserPolicy):
             bandwidth = self.bandwidth
             flooding_ports = []
             endpoint_ports_and_vlans = []
+
+            self.resources.append(VLANPortResource(node, port, vlan))
+            self.resources.append(BandwidthPortResource(node, port, bandwidth))
+
+            # Figure out neighbor of endpoints (if they exist)
+            neighbor = tm.get_switch_port_neighbor(node, port)
+            if neighbor != None:
+                self.external_endpoints.append((node, neighbor, vlan))
 
             # for endpoint ports, add to endpoint_ports_and_vlans and
             # covered_endpoints
@@ -250,10 +282,12 @@ class L2MultipointPolicy(UserPolicy):
         ''' This is called before a rule is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
-        # Release VLAN and BW in use
-        tm.unreserve_vlan_on_tree(self.tree, self.intermediate_vlan)
-        tm.unreserve_bw_on_tree(self.tree, self.bandwidth)
+        #### Release VLAN and BW in use
+        ###tm.unreserve_vlan_on_tree(self.tree, self.intermediate_vlan)
+        ###tm.unreserve_bw_on_tree(self.tree, self.bandwidth)
 
+        pass
+    
     def switch_change_callback(self, tm, ai, data):
         ''' This is for a learned destination on a L2MultipointPolicy. 
             The LocalController sent up a message that there was a new 
@@ -326,5 +360,8 @@ class L2MultipointPolicy(UserPolicy):
         return breakdowns
             
                 
-        
-
+    def get_endpoints(self):
+        return self.external_endpoints
+    
+    def get_bandwidth(self):
+        return self.bandwidth

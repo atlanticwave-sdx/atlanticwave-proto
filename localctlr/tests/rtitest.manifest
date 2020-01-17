@@ -1,0 +1,35 @@
+{
+  "localcontrollers": {
+    "atl": {
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633
+      },
+      "switchinfo": [{
+        "name":"br1",
+	"friendlyname":"br1",
+	"ip":"127.0.0.1",
+	"dpid":"1",
+        "brand":"Open vSwitch",
+	"model": "2.3.0",
+	"portinfo": [
+	  {
+            "portnumber": 1,
+            "speed": 800000000,
+	    "destination": "INPORT"
+	  }
+	],
+	"internalconfig": {
+          "corsaurl": "",
+          "corsatoken": "",
+          "corsabridge": "",
+          "corsabwin":0,
+          "corsabwout":0,
+          "corsaratelimiterbridge":"br0",
+          "corsaratelimiterports":[0,0]
+        }
+      }]
+    }
+  }
+}

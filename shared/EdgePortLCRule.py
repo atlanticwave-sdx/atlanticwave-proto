@@ -1,4 +1,4 @@
-# Copyright 2017 - Sean Donovan
+# copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
@@ -31,6 +31,12 @@ class EdgePortLCRule(LCRule):
         retstr = ("EdgePortLCRule: switch %s, %s:%s" %
                   (self.switch_id, self.cookie, self.edgeport))
         return retstr
+    
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.get_edgeport() == other.get_edgeport() and
+                self.get_switch_id() == other.get_switch_id() and
+                self.get_cookie() == other.get_cookie())
 
     def get_edgeport(self):
         return self.edgeport

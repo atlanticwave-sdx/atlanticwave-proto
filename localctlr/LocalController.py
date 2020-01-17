@@ -59,12 +59,7 @@ class LocalController(AtlanticWaveModule):
         self._initial_rules_dict = {}
         
         # Setup switch
-        self.switch_connection = RyuControllerInterface(self.name,
-                                    self.manifest, self.lcip,
-                                    self.ryu_cxn_port, self.openflow_port,
-                                    self.switch_message_cb,
-                                    self.loggerid)
-        self.logger.info("RyuControllerInterface setup finish.")
+        self._setup_switch()
 
         # Setup connection manager
         self.cxn_q = Queue()
@@ -87,6 +82,15 @@ class LocalController(AtlanticWaveModule):
         if runloop:
             self.start_main_loop()
             self.logger.info("Main Loop started.")
+
+    def _setup_switch(self):
+        self.switch_connection = RyuControllerInterface(self.name,
+                                    self.manifest, self.lcip,
+                                    self.ryu_cxn_port, self.openflow_port,
+                                    self.switch_message_cb,
+                                    self.loggerid)
+        self.logger.info("RyuControllerInterface setup finish.")
+
 
     def start_main_loop(self):
         self.main_loop_thread = threading.Thread(target=self._main_loop)
@@ -116,6 +120,7 @@ class LocalController(AtlanticWaveModule):
                         if cxn in rlist:
                             # Already there. Weird, but OK
                             pass
+                        self.logger.debug("Adding Cxn to rlist: %s" % cxn)
                         rlist.append(cxn)
                         wlist = []
                         xlist = rlist
@@ -156,7 +161,7 @@ class LocalController(AtlanticWaveModule):
                                                             xlist,
                                                             timeout)
             except Exception as e:
-                self.logger.error("Error in select - %s" % (e))
+                self.logger.error("LocalController: Error in select - %s" % (e))
                 
 
             # Loop through readable
@@ -166,6 +171,7 @@ class LocalController(AtlanticWaveModule):
                     msg = entry.recv_protocol()
                 except SDXMessageConnectionFailure as e:
                     # Connection needs to be disconnected.
+                    self.logger.warning("CXN Failure: %s %s" % (entry, e))
                     self.cxn_q.put((DEL_CXN, entry))
                     entry.close()
                     continue
@@ -220,14 +226,14 @@ class LocalController(AtlanticWaveModule):
                       type(msg) == SDXMessageRemoveRuleFailure and
                       type(msg) == SDXMessageUnknownSource and
                       type(msg) == SDXMessageSwitchChangeCallback):
-                    raise TypeError("msg type %s - not valid: %s" % (type(msg),
-                                                                     msg))
+                    self.logger.warning("msg type %s - not valid: %s" % 
+                                        (type(msg), msg))
                 
                 # All other types are something that shouldn't be seen, likely
                 # because they're from the a Message that's not currently valid
                 else:
-                    raise TypeError("msg type %s - not valid: %s" % (type(msg),
-                                                                     msg))
+                    self.logger.warning("msg type %s - not valid: %s" % 
+                                        (type(msg), msg))
 
 
             # Loop through writable
@@ -501,8 +507,7 @@ class LocalController(AtlanticWaveModule):
             self.start_cxn_thread = None
             raise     
         
-        # Upon successful return of connection, add NEW_CXN to cxn_q
-        self.cxn_q.put((NEW_CXN, self.sdx_connection))
+        self.logger.warning("Connection fully established to SDX")
 
         # Finish up thread
         self.start_cxn_thread = None
@@ -603,6 +608,16 @@ class LocalController(AtlanticWaveModule):
             # Create an SDXMessageSwitchChangeCallback and send it.
             msg = SDXMessageSwitchChangeCallback(opaque)
             self.sdx_connection.send_protocol(msg)
+
+        elif cmd == SM_INTER_RYU_FAILURE:
+            # This one's different. This is a failure we have to handle.
+            # - Kill the RyuControllerInterface (RCI)
+            # - Restart RCI
+            self.logger.error("Received SM_INTER_RYU_FAILURE(%s), killing RCI" %
+                              opaque)
+            self.switch_connection = None
+            self._setup_switch()
+            
 
         #FIXME: Else?
 

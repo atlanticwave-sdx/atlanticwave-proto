@@ -1,0 +1,191 @@
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://schemas.ogf.org/nml/2013/03/base#value>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/nml/2013/03/base#value> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/nml/2013/03/base#value> .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#SwitchingSubnet>
+        a                    rdfs:Class , rdfs:Resource , owl:Class , owl:Thing ;
+        rdfs:subClassOf      rdfs:Resource , <http://schemas.ogf.org/mrs/2013/12/topology#SwitchingSubnet> , owl:Thing ;
+        owl:equivalentClass  <http://schemas.ogf.org/mrs/2013/12/topology#SwitchingSubnet> .
+
+<urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903:lifetime>
+        a       <http://schemas.ogf.org/nml/2013/03/base#Lifetime> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/nml/2013/03/base#end>
+                "2020-04-19T12:00:00.000+0000"^^xsd:string ;
+        <http://schemas.ogf.org/nml/2013/03/base#start>
+                "2019-04-19T12:00:00.000+0000"^^xsd:string .
+
+<urn:ogf:network:atlanticwave-sdx.net::l2switching>
+        <http://schemas.ogf.org/mrs/2013/12/topology#providesSubnet>
+                <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903> .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#priority>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/mrs/2013/12/topology#priority> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/mrs/2013/12/topology#priority> .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#providesSubnet>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/mrs/2013/12/topology#providesSubnet> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/mrs/2013/12/topology#providesSubnet> .
+
+<http://schemas.ogf.org/nml/2013/03/base#Label>
+        a                    rdfs:Class , rdfs:Resource , owl:Class , owl:Thing ;
+        rdfs:subClassOf      rdfs:Resource , <http://schemas.ogf.org/nml/2013/03/base#Label> , owl:Thing ;
+        owl:equivalentClass  <http://schemas.ogf.org/nml/2013/03/base#Label> .
+
+rdfs:Resource  owl:equivalentClass  owl:Thing .
+
+<http://schemas.ogf.org/nml/2013/03/base#Lifetime>
+        a                    rdfs:Class , rdfs:Resource , owl:Class , owl:Thing ;
+        rdfs:subClassOf      rdfs:Resource , <http://schemas.ogf.org/nml/2013/03/base#Lifetime> , owl:Thing ;
+        owl:equivalentClass  <http://schemas.ogf.org/nml/2013/03/base#Lifetime> .
+
+<http://schemas.ogf.org/nml/2013/03/base#end>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/nml/2013/03/base#end> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/nml/2013/03/base#end> .
+
+<urn:ogf:network:atlanticwave-sdx.net::br3dtn1-br3:vlanport+903>
+        a       <http://schemas.ogf.org/nml/2013/03/base#BidirectionalPort> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#tag>
+                "l2path+urn:ogf:network:service+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links:connection_1" ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903:lifetime> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasLabel>
+                <urn:ogf:network:atlanticwave-sdx.net::br3dtn1-br3:vlanport+903:label+903> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasService>
+                <urn:ogf:network:atlanticwave-sdx.net::br3dtn1-br3:vlanport+903:service+bw> .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#granularity>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/mrs/2013/12/topology#granularity> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/mrs/2013/12/topology#granularity> .
+
+<urn:ogf:network:atlanticwave-sdx.net::br1dtn2-br1:vlanport+903>
+        a       <http://schemas.ogf.org/nml/2013/03/base#BidirectionalPort> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#tag>
+                "l2path+urn:ogf:network:service+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links:connection_1" ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903:lifetime> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasLabel>
+                <urn:ogf:network:atlanticwave-sdx.net::br1dtn2-br1:vlanport+903:label+903> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasService>
+                <urn:ogf:network:atlanticwave-sdx.net::br1dtn2-br1:vlanport+903:service+bw> .
+
+<urn:ogf:network:atlanticwave-sdx.net::br3dtn1-br3:vlanport+903:service+bw>
+        a       owl:Thing , <http://schemas.ogf.org/mrs/2013/12/topology#BandwidthService> , rdfs:Resource ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#availableCapacity>
+                "345000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#granularity>
+                "1000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#maximumCapacity>
+                "345000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#priority>
+                "0" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#reservableCapacity>
+                "345000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#type>
+                "guaranteedCapped" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#unit>
+                "bps" ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903:lifetime> .
+
+<http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/nml/2013/03/base#existsDuring> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/nml/2013/03/base#existsDuring> .
+
+<http://schemas.ogf.org/nml/2013/03/base#hasLabel>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/nml/2013/03/base#hasLabel> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/nml/2013/03/base#hasLabel> .
+
+owl:Thing  rdfs:subClassOf   rdfs:Resource ;
+        owl:equivalentClass  rdfs:Resource .
+
+<urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903>
+        a       owl:Thing , rdfs:Resource , <http://schemas.ogf.org/mrs/2013/12/topology#SwitchingSubnet> ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#tag>
+                "l2path+urn:ogf:network:service+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links:connection_1" ;
+        <http://schemas.ogf.org/nml/2013/03/base#belongsTo>
+                <urn:ogf:network:atlanticwave-sdx.net::l2switching> ;
+        <http://schemas.ogf.org/nml/2013/03/base#encoding>
+                <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903:lifetime> ;
+        <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
+                <urn:ogf:network:atlanticwave-sdx.net::br3dtn1-br3:vlanport+903> , <urn:ogf:network:atlanticwave-sdx.net::br1dtn2-br1:vlanport+903> ;
+        <http://schemas.ogf.org/nml/2013/03/base#labelSwapping>
+                "true" .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#tag>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/mrs/2013/12/topology#tag> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/mrs/2013/12/topology#tag> .
+
+<urn:ogf:network:atlanticwave-sdx.net::br3dtn1-br3>
+        <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
+                <urn:ogf:network:atlanticwave-sdx.net::br3dtn1-br3:vlanport+903> .
+
+<urn:ogf:network:atlanticwave-sdx.net::br1dtn2-br1:vlanport+903:service+bw>
+        a       rdfs:Resource , <http://schemas.ogf.org/mrs/2013/12/topology#BandwidthService> , owl:Thing ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#availableCapacity>
+                "345000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#granularity>
+                "1000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#maximumCapacity>
+                "345000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#priority>
+                "0" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#reservableCapacity>
+                "345000000"^^xsd:long ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#type>
+                "guaranteedCapped" ;
+        <http://schemas.ogf.org/mrs/2013/12/topology#unit>
+                "bps" ;
+        <http://schemas.ogf.org/nml/2013/03/base#existsDuring>
+                <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+ae5180fb-ad43-4d03-8c3f-f632ab0d048e:resource+links-connection_1:vlan+903:lifetime> .
+
+<urn:ogf:network:atlanticwave-sdx.net::br1dtn2-br1>
+        <http://schemas.ogf.org/nml/2013/03/base#hasBidirectionalPort>
+                <urn:ogf:network:atlanticwave-sdx.net::br1dtn2-br1:vlanport+903> .
+
+<urn:ogf:network:atlanticwave-sdx.net::br1dtn2-br1:vlanport+903:label+903>
+        a       <http://schemas.ogf.org/nml/2013/03/base#Label> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/nml/2013/03/base#labeltype>
+                <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+        <http://schemas.ogf.org/nml/2013/03/base#value>
+                "903" .
+
+<http://schemas.ogf.org/nml/2013/03/base#start>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/nml/2013/03/base#start> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/nml/2013/03/base#start> .
+
+<http://schemas.ogf.org/mrs/2013/12/topology#type>
+        a                       owl:Thing , rdfs:Resource , rdf:Property ;
+        rdfs:subPropertyOf      <http://schemas.ogf.org/mrs/2013/12/topology#type> ;
+        owl:equivalentProperty  <http://schemas.ogf.org/mrs/2013/12/topology#type> .
+
+owl:Nothing  rdfs:subClassOf  <http://schemas.ogf.org/nml/2013/03/base#Lifetime> , owl:NamedIndividual , <http://schemas.ogf.org/nml/2013/03/base#Topology> , <http://schemas.ogf.org/nml/2013/03/base#LabelGroup> , <http://schemas.ogf.org/nsi/2013/12/services/definition#ServiceDefinition> , <http://schemas.ogf.org/mrs/2013/12/topology#BandwidthService> , <http://schemas.ogf.org/nml/2013/03/base#BidirectionalPort> , <http://schemas.ogf.org/nml/2013/03/base#SwitchingService> , <http://schemas.ogf.org/nml/2013/03/base#Label> , <http://schemas.ogf.org/mrs/2013/12/topology#SwitchingSubnet> .
+
+<urn:ogf:network:atlanticwave-sdx.net::br3dtn1-br3:vlanport+903:label+903>
+        a       <http://schemas.ogf.org/nml/2013/03/base#Label> , rdfs:Resource , owl:Thing ;
+        <http://schemas.ogf.org/nml/2013/03/base#labeltype>
+                <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+        <http://schemas.ogf.org/nml/2013/03/base#value>
+                "903" .
+
+
+

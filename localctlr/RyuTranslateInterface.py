@@ -154,6 +154,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         logfilename = 'localcontroller-%s.log' % CONF['atlanticwave']['lcname']
         debuglogfilename = 'debug'+logfilename
         self._setup_loggers(loggerid, logfilename, debuglogfilename)
+        self.logger.warning("Starting up RyuTranslateInterface")
 
         # Configuration file + parsing
         self.name = CONF['atlanticwave']['lcname']
@@ -169,6 +170,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         
         # Establish connection to RyuControllerInterface
         self.inter_cm = InterRyuControllerConnectionManager()
+        self.logger.info("RyuTranslateInterface: Opening outbound connection to RyuConnectionInterface on %s:%s" % (self.lcip, self.ryu_cxn_port))
         self.inter_cm_cxn = self.inter_cm.open_outbound_connection(self.lcip,
                                                             self.ryu_cxn_port)
 
@@ -242,12 +244,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # <lcname>-config - Columns are 'key' and 'value'
         config_table_name = self.name + "-config"
         rule_table_name = self.name + "-rule"
-        try:
+        if config_table_name in self.db:
             self.logger.info("Trying to load %s from DB" % config_table_name)
             self.config_table = self.db.load_table(config_table_name)
             self.logger.info("Trying to load %s from DB" % rule_table_name)
             self.rule_table = self.db.load_table(rule_table_name)
-        except:
+        else:
             # If load_table() fails, that's fine! It means that the table
             # doesn't yet exist. So, create it.
             self.logger.info("Failed to load %s from DB, creating new table" %
@@ -424,7 +426,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if config_count == 0:
             # Nothing configured, get configs from config file
             for entry in lcdata['switchinfo']:
-                dpid = str(entry['dpid'])
+                dpid = str(int(entry['dpid'],0)) # This is to normalize the DPID.
                 ic = entry['internalconfig']
                 ic['name'] = entry['name']
                 self._add_switch_internal_config_to_db(dpid, ic)
@@ -457,17 +459,20 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 self.logger.warning("switch_id %s does not match known switches: %s" %
                                      (switch_id, self.datapaths.keys()))
                                      
-                # FIXME - Need to update this for sending errors back
-                continue
+                    # FIXME - Need to update this for sending errors back
+                    continue
                 
-            datapath = self.datapaths[switch_id]
+                datapath = self.datapaths[switch_id]
             
-            if event_type == ICX_ADD:
-                self.install_rule(datapath, event)
-            elif event_type == ICX_REMOVE:
-                self.remove_rule(datapath, event)
+                if event_type == ICX_ADD:
+                    self.install_rule(datapath, event)
+                elif event_type == ICX_REMOVE:
+                    self.remove_rule(datapath, event)
                 
-
+            except Exception as e:
+                self.logger.error("main_loop: Caught %s" % e)
+                self.logger.error("main_loop: Exiting!")
+                exit()
             # FIXME - There may need to be more options here. This is just a start.
 
     # Handles switch connect event
@@ -530,6 +535,18 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # For last table
         #   - Create a default drop rule (if necessary needed). Priority 0
+        for i in range(MAX_PORTS):
+            matches = [IN_PORT(i)]
+            actions = [Drop()]
+            priorty = PRIORITY_DEFAULT_PLUS_ONE
+            table = LASTTABLE
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            results += self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+        # Catch-all for those not in the same port
         matches = []
         actions = [Drop()]
         priorty = PRIORITY_DEFAULT
@@ -608,8 +625,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Create Outbound Rule
         # There are two options here: Corsa or Non-Corsa. Non-Corsa is for
         # regular OpenFlow switches (such as OVS) and is more straight forward.
+        # NOTE: if bandwidth isn't being reserved, use non-Corsa path.
 
-        if internal_config['corsaurl'] == "":
+        if (internal_config['corsaurl'] == "" or
+            vlanrule.get_bandwidth() == 0):
             # Make the equivalent MatchActionLCRule, translate it, and use these
             # as the results. Easier translation!
             switch_id = 0  # This is unimportant:
@@ -1160,17 +1179,21 @@ class RyuTranslateInterface(app_manager.RyuApp):
             if vlan_port in mgmt_ports:
                 matches = [VLAN_VID(mgmt_vlan), IN_PORT(vlan_port)]
                 actions = []
-            else:
+            elif len(mgmt_ports) > 0:
                 matches = [IN_PORT(vlan_port)]
                 actions = [PushVLAN(),
                            SetField(VLAN_VID(mgmt_vlan))]
+            else:
+                # Special case where there is no MGMTVLAN, just Forwarding
+                matches = [IN_PORT(vlan_port)]
+                actions = []
 
             # Tagged ports - Forward with already setup VLAN
             for out_port in mgmt_ports:
                 if out_port != vlan_port:
                     actions.append(Forward(out_port))
             # Untagged ports - clear the VLAN first, then forward
-            if len(untagged_mgmt_ports) > 0:
+            if len(untagged_mgmt_ports) > 0 and len(mgmt_ports) > 0:
                 actions.append(PopVLAN())
             for out_port in untagged_mgmt_ports:
                 if out_port != vlan_port:
@@ -1453,6 +1476,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             translate_table = SDXEGRESSRULETABLE
             flood_table = FORWARDINGTABLE
             learning_table = LEARNINGTABLE
+            switch_table = endpoint_table    # Used in some logs down below.
             self.logger.error("L2MultipointEndpo: %d,%d:%d:%s" % (
                 endpoint_table, flood_table,
                 of_cookie,

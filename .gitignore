@@ -71,3 +71,6 @@ target/
 
 # For Vagrant
 .vagrant/
+
+# For Databases
+*.db

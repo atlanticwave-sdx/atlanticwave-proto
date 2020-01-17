@@ -85,9 +85,9 @@ class ManagementVLANLCRule(LCRule):
         self.untagged_mgmt_vlan_ports = untagged_mgmt_vlan_ports
 
     def __str__(self):
-        retstr = ("ManagementVLANLCRule: switch %s: %s, (%s), (%s)" %
-                  (self.switch_id, self.mgmt_vlan, self.mgmt_vlan_ports,
-                   self.untagged_mgmt_vlan_ports))
+        retstr = ("ManagementVLANLCRule: switch %s, %s: %s, (%s), (%s)" %
+                  (self.switch_id, self.cookie, self.mgmt_vlan,
+                   self.mgmt_vlan_ports, self.untagged_mgmt_vlan_ports))
         return retstr
 
     def get_mgmt_vlan(self):

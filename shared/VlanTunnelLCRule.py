@@ -68,6 +68,19 @@ class VlanTunnelLCRule(LCRule):
                    self.bidirectional, self.bandwidth))
         return retstr
 
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.get_switch_id() == other.get_switch_id() and
+                self.get_cookie() == other.get_cookie() and
+                self.get_inport() == other.get_inport() and
+                self.get_outport() == other.get_outport() and
+                self.get_vlan_in() == other.get_vlan_in() and
+                self.get_vlan_out() == other.get_vlan_out() and
+                self.get_bidirectional() == other.get_bidirectional() and
+                self.get_bandwidth() == other.get_bandwidth())                
+                
+        
+
     def get_inport(self):
         return self.inport
 

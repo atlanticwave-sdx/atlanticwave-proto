@@ -1,0 +1,530 @@
+{
+  "endpoints": {
+    "sw1h": {
+      "type":"host",
+      "friendlyname":"Switch 1 Host",
+      "location":"33.772080,-84.392869"},
+    "sw2h": {
+      "type":"host",
+      "friendlyname":"Switch 2 Host",
+      "location":"33.772080,-84.392869"},
+    "sw3h": {
+      "type":"host",
+      "friendlyname":"Switch 3 Host",
+      "location":"33.772080,-84.392869"},
+    "sw4h": {
+      "type":"host",
+      "friendlyname":"Switch 4 Host",
+      "location":"33.772080,-84.392869"},
+    "sw5h": {
+      "type":"host",
+      "friendlyname":"Switch 5 Host",
+      "location":"33.772080,-84.392869"},
+    "sw6h": {
+      "type":"host",
+      "friendlyname":"Switch 6 Host",
+      "location":"33.772080,-84.392869"},
+    "sw7h": {
+      "type":"host",
+      "friendlyname":"Switch 7 Host",
+      "location":"33.772080,-84.392869"},
+    "sw8h": {
+      "type":"host",
+      "friendlyname":"Switch 8 Host",
+      "location":"33.772080,-84.392869"}
+  },
+  "localcontrollers": {
+    "sw1":{
+      "shortname": "sw1",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
+      },
+      "switchinfo": [
+        {
+          "name": "sw1",
+	  "friendlyname":"switch1",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "sw1h"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "sw2"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "sw2":{
+      "shortname": "sw2",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
+      },
+      "switchinfo": [
+        {
+          "name": "sw2",
+	  "friendlyname":"switch2",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "sw2h"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "sw1"
+            },
+            {
+              "portnumber": 3,
+              "speed": 80000000000,
+              "destination": "sw3"
+            },
+            {
+              "portnumber": 4,
+              "speed": 80000000000,
+              "destination": "sw5"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "sw3":{
+      "shortname": "sw3",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
+      },
+      "switchinfo": [
+        {
+          "name": "sw3",
+	  "friendlyname":"switch3",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "sw3h"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "sw2"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "sw4":{
+      "shortname": "sw4",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
+      },
+      "switchinfo": [
+        {
+          "name": "sw4",
+	  "friendlyname":"switch4",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "sw4h"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "sw5"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "sw5":{
+      "shortname": "sw5",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
+      },
+      "switchinfo": [
+        {
+          "name": "sw5",
+	  "friendlyname":"switch5",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "sw5h"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "sw2"
+            },
+	    {
+	      "portnumber": 3,
+	      "speed": 80000000000,
+	      "destination": "sw4"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 80000000000,
+	      "destination": "sw7"
+	    }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "sw6":{
+      "shortname": "sw6",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
+      },
+      "switchinfo": [
+        {
+          "name": "sw6",
+	  "friendlyname":"switch6",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "sw6h"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "sw7"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "sw7":{
+      "shortname": "sw7",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
+      },
+      "switchinfo": [
+        {
+          "name": "sw7",
+	  "friendlyname":"switch7",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "sw7h"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "sw6"
+            },
+	    {
+	      "portnumber": 3,
+	      "speed": 80000000000,
+	      "destination": "sw5"
+	    },
+	    {
+	      "portnumber": 4,
+	      "speed": 80000000000,
+	      "destination": "sw8"
+	    }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    },
+    "sw8":{
+      "shortname": "sw8",
+      "credentials": "atlpw",
+      "location": "33.772000,-84.390000",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55767,
+	"openflowport": 6633,
+        "corsaurl": "",
+        "corsatoken": "",
+	"corsabridge": "",
+        "corsabwin":0,
+        "corsabwout":0,
+        "corsaratelimiterbridge":"br0",
+        "corsaratelimiterports":[0,0]	
+      },
+      "switchinfo": [
+        {
+          "name": "sw8",
+	  "friendlyname":"switch8",
+          "ip": "127.0.0.1",
+          "dpid":"1",
+          "internalconfig": {"thing":"whatever"},
+          "brand": "Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "sw8h"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "sw7"
+            }
+          ],
+          "rulesaccepted": [
+            "tbd"
+          ],
+          "rulesnotaccepted": [
+            "tbd"
+          ],
+          "reservationsallowed": {
+            "maxtime": "7 days",
+            "maxbandwidth": "200 Mbps",
+            "maxports": "3"
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "Georgia Tech/RNOC",
+        "administrator": "Sean Donovan",
+        "contact": "sdonovan@gatech.edu"
+      }
+    }
+
+  },
+  "participants": {
+    "sdonovan": {
+      "credentials": "1234",
+      "organization": "Georgia Tech/RNOC",
+      "contact": "sdonovan@gatech.edu",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    }
+  }
+}

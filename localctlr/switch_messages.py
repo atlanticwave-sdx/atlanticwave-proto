@@ -11,3 +11,7 @@ SM_UNKNOWN_SOURCE = "UNKNOWN_SOURCE"
 
 # Receives a dictionary {'cookie':cookie, 'data':opaque data for handler}
 SM_L2MULTIPOINT_UNKNOWN_SOURCE = "L2MULTIPOINT_UNKNOWN_SOURCE"
+
+# Receives nothing - it's a status message.
+SM_INTER_RYU_FAILURE = "INTER_RYU_FAILURE"
+

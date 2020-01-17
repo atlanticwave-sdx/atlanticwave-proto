@@ -38,7 +38,7 @@ class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
     def __init__(self, loggeridprefix):
         loggerid = loggeridprefix + '.sdxctlrcxnmgr'
         super(SDXControllerConnectionManager, self).__init__(
-            loggerid, SDXControllerConnection)
+            loggerid, SDXControllerConnection, loggerid)
         # associations are for easy lookup of connections based on the name of
         # the Local Controller.
         
@@ -143,6 +143,7 @@ class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
 
     def add_new_cxn_to_queue(self, cxn):
         ''' Used by Connections to add themselves to the queue. '''
+        self.logger.debug("ADDING NEW CXN %s" % cxn)
         self.cxn_q.put((NEW_CXN, cxn))
     
     def add_del_cxn_to_queue(self, cxn):
@@ -154,7 +155,13 @@ class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
             that adds some callbacks to SDXControllerConnectionManagerConnection
             to kick things to the connection queue. '''
         client_ip, client_port = address
-        client_connection = self.connection_cls(client_ip, client_port, sock)
+        client_connection = None
+        if (self.loggerid_for_cxns != None):
+            client_connection = self.connection_cls(
+                client_ip, client_port, sock, self.loggerid_for_cxns)
+        else:
+            client_connection = self.connection_cls(
+                client_ip, client_port, sock)
         client_connection.set_delete_callback(self.add_del_cxn_to_queue)
         client_connection.set_new_callback(self.add_new_cxn_to_queue)
         self.listening_callback(client_connection)
