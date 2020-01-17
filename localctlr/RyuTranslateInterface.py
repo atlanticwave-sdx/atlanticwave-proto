@@ -43,6 +43,8 @@ LOCALHOST = "127.0.0.1"
 
 CONF = cfg.CONF
 
+L2MULTIPOINTCORSABWDISABLED = True
+
 class TranslatedRuleContainer(object):
     ''' Parent class for holding both LC and Corsa rules '''
     pass
@@ -450,13 +452,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         while True:
 
-            try:
-                # FIXME - This is static: only installing rules right now.
-                event_type, event_data = self.inter_cm_cxn.recv_cmd()
-                (switch_id, event) = event_data
-                if switch_id not in self.datapaths.keys():
-                    self.logging.warning("switch_id %s does not match known switches: %s" %
-                                         (switch_id, self.datapaths.keys()))
+            # FIXME - This is static: only installing rules right now.
+            event_type, event_data = self.inter_cm_cxn.recv_cmd()
+            (switch_id, event) = event_data
+            if switch_id not in self.datapaths.keys():
+                self.logger.warning("switch_id %s does not match known switches: %s" %
+                                     (switch_id, self.datapaths.keys()))
                                      
                     # FIXME - Need to update this for sending errors back
                     continue
@@ -851,10 +852,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         intermediate_vlan = mperule.get_intermediate_vlan()
 
         # Non-Corsa first
-        # NOTE: if bandwidth isn't being reserved, use non-Corsa path.
-
         if (internal_config['corsaurl'] == "" or
-            vlanrule.get_bandwidth() == 0):
+	            L2MULTIPOINTCORSABWDISABLED):	
             # Endpoint ports
             # - Translate VLANs on ingress on endpoint_table
             # - Install learning rules on intermediate VLAN on ingress on
@@ -1523,7 +1522,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if switch_rules == None or switch_table == None:
             self.logger.error(
                 "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
-                 (sdx_rule, switch_rules, switch_table))
+                 sdx_rule, switch_rules, switch_table)
             #FIXME: This shouldn't happen...
             pass
         

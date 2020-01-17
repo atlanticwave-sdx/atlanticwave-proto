@@ -134,6 +134,7 @@ class SDXPolicy(UserPolicy):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
+
             print "%s: Exception %s at %s:%d" % (cls.get_policy_name(),
                                                  str(e), filename,lineno)
             raise
