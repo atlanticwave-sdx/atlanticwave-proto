@@ -96,7 +96,6 @@ cleanup_docker(){
     TYPE=$1
     for i in `docker ps -a -q`; do echo "--- Container: $i" ; docker stop $i; docker rm -v $i; done
     for i in `docker images | grep none | awk '{print $3}'`; do docker rmi $i ; done
-    docker rmi ${TYPE}_container
 }
 
 
