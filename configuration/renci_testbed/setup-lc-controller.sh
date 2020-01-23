@@ -36,7 +36,7 @@ cp configuration/renci_testbed/renci_ben.manifest docker/lc_container/
 sudo service docker restart
 
 cd docker/lc_container
-sed -r -i "s/master-sdx/${AW_BRANCH}/g" Dockerfile
+sed -r -i "s/master/${AW_BRANCH}/g" Dockerfile
 sudo docker build -t lc_container .
 rm -f renci_ben.manifest 
 

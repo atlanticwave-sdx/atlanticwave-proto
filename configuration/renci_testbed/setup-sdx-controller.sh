@@ -34,7 +34,7 @@ cp configuration/renci_testbed/renci_ben.manifest docker/sdx_container/
 sudo systemctl restart docker
 
 cd docker/sdx_container
-sed -r -i "s/master-sdx/${AW_BRANCH}/g" Dockerfile
+sed -r -i "s/master/${AW_BRANCH}/g" Dockerfile
 sudo docker build -t sdx_container .
 rm -f renci_ben.manifest 
 
