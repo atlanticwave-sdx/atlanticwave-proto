@@ -469,10 +469,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
             elif event_type == ICX_REMOVE:
                 self.remove_rule(datapath, event)
                 
-            except Exception as e:
-                self.logger.error("main_loop: Caught %s" % e)
-                self.logger.error("main_loop: Exiting!")
-                exit()
+            ###except Exception as e:
+            ###    self.logger.error("main_loop: Caught %s" % e)
+            ###    self.logger.error("main_loop: Exiting!")
+            ###    exit()
             # FIXME - There may need to be more options here. This is just a start.
 
     # Handles switch connect event
