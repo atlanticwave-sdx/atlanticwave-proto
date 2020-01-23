@@ -522,6 +522,18 @@ class RyuTranslateInterface(app_manager.RyuApp):
         
         of_cookie = self._get_new_OF_cookie(-1) #FIXME: magic number
         results = []
+
+        # In-band Communication
+        # If the management VLAN needs to be setup, set it up.
+        internal_config = self._get_switch_internal_config(datapath.id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+        if 'managementvlan' in internal_config.keys():
+            managementvlan = internal_config['managementvlan']
+        if 'managementvlanports' in internal_config.keys():
+            managementvlanports = internal_config['managementvlanports']
+
         for table in ALL_TABLES_EXCEPT_LAST:
             matches = [] # FIXME: what's the equivalent of match(*)?
             actions = [Continue()]
@@ -535,7 +547,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # For last table
         #   - Create a default drop rule (if necessary needed). Priority 0
-        for i in range(MAX_PORTS):
+        ###for i in range(MAX_PORTS):
+        for i in (managementvlanports):
             matches = [IN_PORT(i)]
             actions = [Drop()]
             priorty = PRIORITY_DEFAULT_PLUS_ONE
@@ -558,12 +571,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                      marule,
                                                      priority)
         
-        # In-band Communication
-        # If the management VLAN needs to be setup, set it up.
-        internal_config = self._get_switch_internal_config(datapath.id)
-        if internal_config == None:
-            raise ValueError("DPID %s does not have internal_config" %
-                             datapath.id)
+
         if 'managementvlan' in internal_config.keys():
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
