@@ -16,8 +16,10 @@ done
 
 
 # yum work
-sudo yum -y update
-sudo yum -y install git docker.io
+if [[ $EUID -eq 0 ]]; then
+  sudo yum -y update
+  sudo yum -y install git docker-ce
+fi
 
 #sudo groupadd docker #Already added
 #sudo usermod -aG docker $USER
@@ -32,12 +34,14 @@ cd atlanticwave-proto
 git checkout ${AW_BRANCH}
 cp configuration/renci_testbed/renci_ben.manifest docker/lc_container/
 
-#sudo systemctl restart docker
-sudo service docker restart
+if [[ $EUID -eq 0 ]]; then
+  #sudo systemctl restart docker
+  sudo service docker restart
+fi
 
 cd docker/lc_container
 sed -r -i "s/master/${AW_BRANCH}/g" Dockerfile
-sudo docker build -t lc_container .
+docker build -t lc_container .
 rm -f renci_ben.manifest 
 
 # Copy over run scripts
