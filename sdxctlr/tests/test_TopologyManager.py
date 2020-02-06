@@ -11,9 +11,9 @@ import networkx as nx
 
 from sdxctlr.TopologyManager import *
 
-CONFIG_FILE = 'sdxctlr/tests/test_manifests/topo.manifest'
-STEINER_NO_LOOP_CONFIG_FILE = 'sdxctlr/tests/test_manifests/steiner-noloop.manifest'
-STEINER_LOOP_CONFIG_FILE = 'sdxctlr/tests/test_manifests/steiner-loop.manifest'
+CONFIG_FILE = 'tests/test_manifests/topo.manifest'
+STEINER_NO_LOOP_CONFIG_FILE = 'tests/test_manifests/steiner-noloop.manifest'
+STEINER_LOOP_CONFIG_FILE = 'tests/test_manifests/steiner-loop.manifest'
 
 class SingletonTest(unittest.TestCase):
     def test_singleton(self):
