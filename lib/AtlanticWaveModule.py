@@ -52,6 +52,7 @@ class AtlanticWaveModule(object):
         ''' Internal function for setting up the logger formats. '''
         # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
         # Modified based on https://stackoverflow.com/questions/7173033/
+        logging.basicConfig()
         self.logger = logging.getLogger(loggerid)
         self.dlogger = logging.getLogger("debug." + loggerid)
         if logfilename != None:

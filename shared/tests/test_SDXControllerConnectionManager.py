@@ -71,7 +71,7 @@ class OpenListeningPortTest(unittest.TestCase):
                                     socket.SOCK_STREAM)
         client_sock.connect((self.ip, self.port))
         self.clientcxn = SDXControllerConnection(self.ip, self.port,
-                                                 client_sock)
+                                                 client_sock,dummy_log)
         self.clientcxn.set_new_callback(new_callback)
         self.clientcxn.set_delete_callback(del_callback)
 
@@ -122,7 +122,7 @@ class OpenSendPortTest(unittest.TestCase):
         self.receiving_socket.listen(1)
 
         sock, client_address = self.receiving_socket.accept()
-        self.servercxn = SDXControllerConnection(self.ip, self.port, sock)
+        self.servercxn = SDXControllerConnection(self.ip, self.port, sock,dummy_log)
         self.servercxn.set_new_callback(new_callback)
         self.servercxn.set_delete_callback(del_callback)
         self.servercxn.transition_to_main_phase_SDX(set_name_1,
