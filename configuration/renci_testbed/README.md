@@ -204,8 +204,10 @@ Default Branch: master-rci
 
 /root/aw.sh -B renci-corsa-ben -b
 
-# Run docker containers
-/root/aw.sh -r 
+# Run docker containers (in detached mode)
+/root/aw.sh -m detached -r 
 
+# Run docker containers (interactive)
+/root/aw.sh -r 
 ```
 

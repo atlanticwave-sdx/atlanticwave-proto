@@ -96,7 +96,6 @@ cleanup_docker(){
     TYPE=$1
     for i in `docker ps -a -q`; do echo "--- Container: $i" ; docker stop $i; docker rm -v $i; done
     for i in `docker images | grep none | awk '{print $3}'`; do docker rmi $i ; done
-    docker rmi ${TYPE}_container
 }
 
 
@@ -118,6 +117,21 @@ build_docker_image(){
 }
 
 
+build_docker_image_local(){
+   REPO=$1
+   BR=$2
+   TMP_DIR=$3
+   WORK_DIR=$4
+   TYPE=$5
+   
+   cd $TMP_DIR
+   cp ${TMP_DIR}/atlanticwave-proto/configuration/renci_testbed/setup-${TYPE}-controller.sh ${WORK_DIR}
+   chmod +x ${WORK_DIR}/setup-${TYPE}-controller.sh 
+   cd ${WORK_DIR}
+   ./setup-${TYPE}-controller.sh -R ${AW_REPO} -B ${AW_BRANCH}
+
+}
+
 run_docker_container(){
    SITE=$1
    WORK_DIR=$2
@@ -135,7 +149,7 @@ stop_docker_container(){
 }
 
 
-while getopts "R:B:m:cbrsH" opt; do
+while getopts "R:B:m:cbprsH" opt; do
     case $opt in
         R)
             AW_REPO=${OPTARG}
@@ -160,6 +174,12 @@ while getopts "R:B:m:cbrsH" opt; do
             cleanup_docker ${TYPE}
             title "Build Docker Image"
             build_docker_image $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE}
+            ;;
+        p)
+            title "Cleanup Docker Containers and Images"
+            cleanup_docker ${TYPE}
+            title "Build Docker Image"
+            build_docker_image_local $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE}
             ;;
         r)
             title "Run Docker Container for ${TYPE} - MODE: $MODE"
