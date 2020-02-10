@@ -461,20 +461,20 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                      (switch_id, self.datapaths.keys()))
                                      
                     # FIXME - Need to update this for sending errors back
-                continue
+                    continue
+
+                datapath = self.datapaths[switch_id]
                 
-            datapath = self.datapaths[switch_id]
-            
-            if event_type == ICX_ADD:
-                self.install_rule(datapath, event)
-            elif event_type == ICX_REMOVE:
-                self.remove_rule(datapath, event)
-                
-            ###except Exception as e:
-            ###    self.logger.error("main_loop: Caught %s" % e)
-            ###    self.logger.error("main_loop: Exiting!")
-            ###    exit()
-            # FIXME - There may need to be more options here. This is just a start.
+                if event_type == ICX_ADD:
+                    self.install_rule(datapath, event)
+                elif event_type == ICX_REMOVE:
+                    self.remove_rule(datapath, event)
+
+                ###except Exception as e:
+                ###    self.logger.error("main_loop: Caught %s" % e)
+                ###    self.logger.error("main_loop: Exiting!")
+                ###    exit()
+                # FIXME - There may need to be more options here. This is just a start.
 
     # Handles switch connect event
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
