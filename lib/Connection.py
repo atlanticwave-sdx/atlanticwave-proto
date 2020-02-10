@@ -71,6 +71,7 @@ class Connection(object):
         ''' Internal function for setting up the logger formats. '''
         # reused from https://github.com/sdonovan1985/netassay-ryu/blob/master/base/mcm.py
         # Modified based on https://stackoverflow.com/questions/7173033/
+        logging.basicConfig()
         self.logger = logging.getLogger(loggerid)
         self.dlogger = logging.getLogger("debug." + loggerid)
         if logfilename != None:
@@ -175,7 +176,7 @@ class Connection(object):
         ''' This starts a separate thread for receiving data. It will call back
             the callback set in register_receive_callback(). '''
         if self.recv_cb == None:
-            raise ConnectionError("recv_cb not filled in")
+            raise ConnectionValueError("recv_cb not filled in")
         self.recv_thread = threading.Thread(target=self._receive_thread)
         self.recv_thread.daemon = True
         self.recv_thread.start()
@@ -186,7 +187,7 @@ class Connection(object):
             while True:
                 data = self.recv()
                 self.recv_cb(data)
-        except Error as e:
+        except Exception as e:
             # Likely connection going down.
             pass
         

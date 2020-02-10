@@ -39,7 +39,7 @@ class LocalControllerTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Taken and modified from  RyuControllerInterfaceTest.py
-
+        logging.basicConfig()
         cls.logger = logging.getLogger(cls.__name__)
         formatter = logging.Formatter('%(asctime)s %(name)-12s: %(thread)s %(levelname)-8s %(message)s')
         console = logging.StreamHandler()

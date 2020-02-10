@@ -8,6 +8,7 @@ import dataset
 import cPickle as pickle
 import requests
 import json
+import traceback
 from time import sleep
 
 # Generic AtlanticWave/SDX imports
@@ -226,7 +227,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
     def dlogger_tb(self):
         ''' Print out the current traceback. '''
-        tbs = format_stack()
+        tbs = traceback.format_stack()
         all_tb = "Traceback: id: %s\n" % str(hex(id(self)))
         for line in tbs:
             all_tb = all_tb + line
@@ -451,12 +452,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         
 
         while True:
-
-            # FIXME - This is static: only installing rules right now.
-            event_type, event_data = self.inter_cm_cxn.recv_cmd()
-            (switch_id, event) = event_data
-            if switch_id not in self.datapaths.keys():
-                self.logger.warning("switch_id %s does not match known switches: %s" %
+            try:
+                # FIXME - This is static: only installing rules right now.
+                event_type, event_data = self.inter_cm_cxn.recv_cmd()
+                (switch_id, event) = event_data
+                if switch_id not in self.datapaths.keys():
+                    self.logger.warning("switch_id %s does not match known switches: %s" %
                                      (switch_id, self.datapaths.keys()))
                                      
                     # FIXME - Need to update this for sending errors back

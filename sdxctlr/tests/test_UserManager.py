@@ -12,7 +12,7 @@ import mock
 from sdxctlr.UserManager import *
 
 db = ":memory:"
-CONFIG_FILE = 'test_manifests/participants.manifest'
+CONFIG_FILE = 'tests/test_manifests/participants.manifest'
 class SingletonTest(unittest.TestCase):
     @mock.patch('sdxctlr.UserManager.AuthorizationInspector',
                 autospec=True)
