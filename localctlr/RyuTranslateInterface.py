@@ -463,12 +463,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     # FIXME - Need to update this for sending errors back
                     continue
                 
-                    datapath = self.datapaths[switch_id]
+                datapath = self.datapaths[switch_id]
             
-                    if event_type == ICX_ADD:
-                        self.install_rule(datapath, event)
-                    elif event_type == ICX_REMOVE:
-                        self.remove_rule(datapath, event)
+                if event_type == ICX_ADD:
+                    self.install_rule(datapath, event)
+                elif event_type == ICX_REMOVE:
+                    self.remove_rule(datapath, event)
                 
             except Exception as e:
                 self.logger.error("main_loop: Caught %s" % e)
