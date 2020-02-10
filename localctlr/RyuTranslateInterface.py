@@ -8,7 +8,6 @@ import dataset
 import cPickle as pickle
 import requests
 import json
-import traceback
 from time import sleep
 
 # Generic AtlanticWave/SDX imports
@@ -41,18 +40,20 @@ from shared.ManagementVLANLCRule import *
 
 LOCALHOST = "127.0.0.1"
 
-
 CONF = cfg.CONF
 
 L2MULTIPOINTCORSABWDISABLED = True
+
 
 class TranslatedRuleContainer(object):
     ''' Parent class for holding both LC and Corsa rules '''
     pass
 
+
 class TranslatedLCRuleContainer(TranslatedRuleContainer):
     ''' Used by RyuTranslateInterface to track translations of LCRules. Contains
         Ryu-friendly objects. Not for use outside RyuTranslateInterface. '''
+
     def __init__(self, cookie, table, priority, match, instructions,
                  buffer_id=None, idle_timeout=0, hard_timeout=0):
         self.cookie = cookie
@@ -67,10 +68,11 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
     def __str__(self):
         return "%s:%s:%s\n%s\n%s\n%s:%s:%s" % (self.cookie, self.table,
                                                self.priority, self.match,
-                                               self.instructions, 
+                                               self.instructions,
                                                self.buffer_id,
                                                self.idle_timeout,
                                                self.hard_timeout)
+
     def __repr__(self):
         return "%s:%s:%s" % (self.cookie, self.match, self.instructions)
 
@@ -79,29 +81,30 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
 
     def get_table(self):
         return self.table
-    
+
     def get_priority(self):
         return self.priority
-    
+
     def get_match(self):
         return self.match
-    
+
     def get_instructions(self):
         return self.instructions
-    
+
     def get_buffer_id(self):
         return self.buffer_id
-    
+
     def get_idle_timeout(self):
         return self.idle_timeout
-    
+
     def get_hard_timeout(self):
         return self.hard_timeout
 
-    
+
 class TranslatedCorsaRuleContainer(TranslatedRuleContainer):
     ''' Used by RyuTranslateInterface to track translations of Corsa Rules.
         Contains what is needed to make a REST request. '''
+
     def __init__(self, function, url, json, token, list_of_valid_responses):
         self.function = function
         self.url = url
@@ -116,7 +119,7 @@ class TranslatedCorsaRuleContainer(TranslatedRuleContainer):
     def get_function(self):
         # Function should be "patch", "post", or "get"
         return self.function
-    
+
     def get_url(self):
         return self.url
 
@@ -128,12 +131,14 @@ class TranslatedCorsaRuleContainer(TranslatedRuleContainer):
 
     def get_valid_responses(self):
         return self.valid_responses
-    
+
+
 class GotoTable(LCAction):
-    ''' This performs a goto table instruction in OpenFlow. 
-        This is not part of shared/LCAction.py because we don't want the 
+    ''' This performs a goto table instruction in OpenFlow.
+        This is not part of shared/LCAction.py because we don't want the
         SDXController-level rules to use it, thus it's here. It's very similar
         to all the other LCActions. '''
+
     def __init__(self, table):
         self.table = table
         super(GotoTable, self).__init__("GotoTable")
@@ -145,6 +150,7 @@ class GotoTable(LCAction):
     def get(self):
         return self.table
 
+
 class RyuTranslateInterface(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
@@ -153,7 +159,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         loggerid = 'localcontroller.ryutranslateinterface'
         logfilename = 'localcontroller-%s.log' % CONF['atlanticwave']['lcname']
-        debuglogfilename = 'debug'+logfilename
+        debuglogfilename = 'debug' + logfilename
         self._setup_loggers(loggerid, logfilename, debuglogfilename)
         self.logger.warning("Starting up RyuTranslateInterface")
 
@@ -168,12 +174,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # from the stored DB (if there is anything), and from the options passed
         # in during startup (including the manifest file)
         self._setup()
-        
+
         # Establish connection to RyuControllerInterface
         self.inter_cm = InterRyuControllerConnectionManager()
-        self.logger.info("RyuTranslateInterface: Opening outbound connection to RyuConnectionInterface on %s:%s" % (self.lcip, self.ryu_cxn_port))
+        self.logger.info("RyuTranslateInterface: Opening outbound connection to RyuConnectionInterface on %s:%s" % (
+        self.lcip, self.ryu_cxn_port))
         self.inter_cm_cxn = self.inter_cm.open_outbound_connection(self.lcip,
-                                                            self.ryu_cxn_port)
+                                                                   self.ryu_cxn_port)
 
         self.datapaths = {}
         self.current_of_cookie = 0
@@ -188,11 +195,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # PacketIn callback structure setup
         self.packet_in_cbs = {}
 
-
         # TODO: Reestablish connection? Do I have to do anything?
         self.logger.warning("%s initialized: %s" % (self.__class__.__name__,
                                                     hex(id(self))))
-
 
     # The two _setup_loggers function is from lib/AtlanticWaveModule.py.
     # This cannot inherit from AtlanticWaveModule or any of it's children, so we
@@ -227,21 +232,21 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
     def dlogger_tb(self):
         ''' Print out the current traceback. '''
-        tbs = traceback.format_stack()
+        tbs = format_stack()
         all_tb = "Traceback: id: %s\n" % str(hex(id(self)))
         for line in tbs:
             all_tb = all_tb + line
         self.dlogger.warning(all_tb)
-        
+
     def _initialize_db(self, db_filename):
         # Details on the setup:
         # https://dataset.readthedocs.io/en/latest/api.html
         # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
         self.logger.critical("Connection to DB: %s" % db_filename)
-        self.db = dataset.connect('sqlite:///' + db_filename, 
+        self.db = dataset.connect('sqlite:///' + db_filename,
                                   engine_kwargs={'connect_args':
-                                                 {'check_same_thread':False}})
-        #Try loading the tables, if they don't exist, create them.
+                                                     {'check_same_thread': False}})
+        # Try loading the tables, if they don't exist, create them.
         # <lcname>-config - Columns are 'key' and 'value'
         config_table_name = self.name + "-config"
         rule_table_name = self.name + "-rule"
@@ -257,7 +262,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                              config_table_name)
             self.config_table = self.db[config_table_name]
             self.rule_table = self.db[rule_table_name]
-            
+
     def _add_switch_internal_config_to_db(self, dpid, internal_config):
         # Pushes a switch internal_config into the db.
         # key: "<dpid>"
@@ -266,11 +271,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
         value = pickle.dumps(internal_config)
         if self._get_switch_internal_config(dpid) == None:
             self.logger.info("Adding new internal_config for DPID %s" % dpid)
-            self.config_table.insert({'key':key, 'value':value})
+            self.config_table.insert({'key': key, 'value': value})
         else:
             # Already exists, must update
             self.logger.info("updating internal_config for DPID %s" % dpid)
-            self.config_table.update({'key':key, 'value':value},
+            self.config_table.update({'key': key, 'value': value},
                                      ['key'])
 
     def _add_config_filename_to_db(self, manifest_filename):
@@ -282,14 +287,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if self._get_manifest_filename_in_db() == None:
             self.logger.info("Adding new manifest filename %s" %
                              manifest_filename)
-            self.config_table.insert({'key':key, 'value':value})
+            self.config_table.insert({'key': key, 'value': value})
         else:
             # Already exists, must update.
             self.logger.info("Updating manifest filename %s" %
                              manifest_filename)
-            self.config_table.update({'key':key, 'value':value},
+            self.config_table.update({'key': key, 'value': value},
                                      ['key'])
-            
+
     def _add_lcip_to_db(self, lcip):
         # Pushes LC IP info into the DB.
         # key: "lcip"
@@ -299,12 +304,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if self._get_lcip_in_db() == None:
             self.logger.info("Adding new lcip %s" %
                              lcip)
-            self.config_table.insert({'key':key, 'value':value})
+            self.config_table.insert({'key': key, 'value': value})
         else:
             # Already exists, must update.
             self.logger.info("Updating lcip %s" %
                              lcip)
-            self.config_table.update({'key':key, 'value':value},
+            self.config_table.update({'key': key, 'value': value},
                                      ['key'])
 
     def _add_ryu_cxn_port_to_db(self, ryucxnport):
@@ -316,14 +321,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if self._get_lcip_in_db() == None:
             self.logger.info("Adding new ryucxnport %s" %
                              ryucxnport)
-            self.config_table.insert({'key':key, 'value':value})
+            self.config_table.insert({'key': key, 'value': value})
         else:
             # Already exists, must update.
             self.logger.info("Updating ryucxnport %s" %
                              ryucxnport)
-            self.config_table.update({'key':key, 'value':value},
+            self.config_table.update({'key': key, 'value': value},
                                      ['key'])
-            
+
     def _get_switch_internal_config(self, dpid):
         ''' Gets switch internal config information based on datapath passed in
             Pulls information from the DB.
@@ -341,8 +346,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         count = 0
         for entry in d:
             if (entry['key'] == 'lcip' or
-                entry['key'] == 'manifest_filename' or
-                entry['key'] == 'ryucxnport'):
+                    entry['key'] == 'manifest_filename' or
+                    entry['key'] == 'ryucxnport'):
                 continue
             count += 1
         return count
@@ -355,7 +360,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
             return None
         val = d['value']
         return pickle.loads(str(val))
-
 
     def _get_lcip_in_db(self):
         # Returns the lcip if it exists or None if it does not.
@@ -375,7 +379,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
         val = d['value']
         return pickle.loads(str(val))
 
-
     def _setup(self):
         dbname = self.db_name
 
@@ -388,7 +391,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         elif (self.conf_file != self._get_config_filename_in_db() and
               None != self._get_config_filename_in_db()):
             # Make sure it matches!
-            #FIXME: Should we force everything to be imported if different.
+            # FIXME: Should we force everything to be imported if different.
             raise Exception("Stored and passed in manifest filenames don't match up %s:%s" %
                             (str(self.conf_file),
                              str(self._get_config_filename_in_db())))
@@ -400,7 +403,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 data = json.load(data_file)
             lcdata = data['localcontrollers'][self.name]
         except Exception as e:
-            self.logger.warning("exception when opening config file: %s"  %
+            self.logger.warning("exception when opening config file: %s" %
                                 str(e))
 
         # Check if things are stored in the db. If they are, use them.
@@ -410,7 +413,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         config = self._get_lcip_in_db()
         if config != None:
             self.lcip = config
-        else: 
+        else:
             self.lcip = lcdata['lcip']
             self._add_lcip_to_db(self.lcip)
 
@@ -419,24 +422,23 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if config != None:
             self.ryu_cxn_port = config
         else:
-            self.ryu_cxn_port=lcdata['internalconfig']['ryucxninternalport']
+            self.ryu_cxn_port = lcdata['internalconfig']['ryucxninternalport']
             self._add_ryu_cxn_port_to_db(self.ryu_cxn_port)
-            
+
         # OpenFlow/Switch configuration data
         config_count = self._get_switch_internal_config_count()
         if config_count == 0:
             # Nothing configured, get configs from config file
             for entry in lcdata['switchinfo']:
-                dpid = str(int(entry['dpid'],0)) # This is to normalize the DPID.
+                dpid = str(int(entry['dpid'], 0))  # This is to normalize the DPID.
                 ic = entry['internalconfig']
                 ic['name'] = entry['name']
                 self._add_switch_internal_config_to_db(dpid, ic)
 
-
     def main_loop(self):
         ''' This is the main loop that reads and works with the data coming from
-            the Inter-Ryu Connection. It loops through, looking for new events. 
-            If there is one to be processed, process it. 
+            the Inter-Ryu Connection. It loops through, looking for new events.
+            If there is one to be processed, process it.
         '''
 
         # First, wait till we have at least one datapath.
@@ -449,32 +451,31 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # we have at least one switch.
         self.inter_cm_cxn.send_cmd(ICX_DATAPATHS,
                                    str(self.datapaths))
-        
 
         while True:
-            try:
-                # FIXME - This is static: only installing rules right now.
-                event_type, event_data = self.inter_cm_cxn.recv_cmd()
-                (switch_id, event) = event_data
-                if switch_id not in self.datapaths.keys():
-                    self.logger.warning("switch_id %s does not match known switches: %s" %
-                                     (switch_id, self.datapaths.keys()))
-                                     
-                    # FIXME - Need to update this for sending errors back
-                    continue
 
-                datapath = self.datapaths[switch_id]
-                
-                if event_type == ICX_ADD:
-                    self.install_rule(datapath, event)
-                elif event_type == ICX_REMOVE:
-                    self.remove_rule(datapath, event)
+            # FIXME - This is static: only installing rules right now.
+            event_type, event_data = self.inter_cm_cxn.recv_cmd()
+            (switch_id, event) = event_data
+            if switch_id not in self.datapaths.keys():
+                self.logger.warning("switch_id %s does not match known switches: %s" %
+                                    (switch_id, self.datapaths.keys()))
 
-                ###except Exception as e:
-                ###    self.logger.error("main_loop: Caught %s" % e)
-                ###    self.logger.error("main_loop: Exiting!")
-                ###    exit()
-                # FIXME - There may need to be more options here. This is just a start.
+                # FIXME - Need to update this for sending errors back
+                continue
+
+            datapath = self.datapaths[switch_id]
+
+            if event_type == ICX_ADD:
+                self.install_rule(datapath, event)
+            elif event_type == ICX_REMOVE:
+                self.remove_rule(datapath, event)
+
+            ###except Exception as e:
+            ###    self.logger.error("main_loop: Caught %s" % e)
+            ###    self.logger.error("main_loop: Exiting!")
+            ###    exit()
+            # FIXME - There may need to be more options here. This is just a start.
 
     # Handles switch connect event
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -506,7 +507,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
             self.logger.error('Packet-in with cookie 0x%02x has no callback.',
                               cookie)
 
-
     def _new_switch_bootstrapping(self, ev):
         ''' This bootstraps new switches when they come online. '''
         # Null out all tables
@@ -516,15 +516,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Learning table edge ports are handled by rules coming from the
         # SDX controller at startup.
         switch_id = 0  # This is unimportant:
-                       # it's never used in the translation
+        # it's never used in the translation
         datapath = ev.msg.datapath
 
         self.remove_all_flows(datapath)
-        
-        of_cookie = self._get_new_OF_cookie(-1) #FIXME: magic number
+
+        of_cookie = self._get_new_OF_cookie(-1)  # FIXME: magic number
         results = []
 
-        # In-band Communication 
+        # In-band Communication
         # Extract management VLAN and ports from the manifest
         internal_config = self._get_switch_internal_config(datapath.id)
         if internal_config == None:
@@ -535,9 +535,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if 'managementvlanports' in internal_config.keys():
             managementvlanports = internal_config['managementvlanports']
 
-
         for table in ALL_TABLES_EXCEPT_LAST:
-            matches = [] # FIXME: what's the equivalent of match(*)?
+            matches = []  # FIXME: what's the equivalent of match(*)?
             actions = [Continue()]
             priority = PRIORITY_DEFAULT
             marule = MatchActionLCRule(switch_id, matches, actions)
@@ -571,7 +570,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                      of_cookie,
                                                      marule,
                                                      priority)
-        
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
@@ -580,8 +578,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
             managementvlanports = internal_config['managementvlanports']
             untaggedmanagementvlanports = []
             if 'untaggedmanagementvlanports' in internal_config.keys():
-                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']  
-            
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
+
             table = L2TUNNELTABLE
             mvrule = ManagementVLANLCRule(switch_id,
                                           managementvlan,
@@ -595,14 +593,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Install default rules
         for rule in results:
             self.add_flow(datapath, rule)
-            
-    
+
     def _translate_MatchActionLCRule(self, datapath, table,
                                      of_cookie, marule, priority=100):
         ''' This translates MatchActionLCRules. There is only one rule generated
-            by any given MatchActionLCRule. 
+            by any given MatchActionLCRule.
             Returns a list of TranslatedLCRuleContainers
-        ''' 
+        '''
         results = []
 
         # Translate all the pieces
@@ -620,9 +617,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         return results
 
-    
     def _translate_VlanLCRule(self, datapath, table, of_cookie, vlanrule):
-        ''' This translates VlanLCRules. This can generate one or two rules, 
+        ''' This translates VlanLCRules. This can generate one or two rules,
             depending on if this is a bidirectional tunnel (the norm) or not.
             Returns a list of TranslatedLCRuleContainers
         '''
@@ -632,18 +628,17 @@ class RyuTranslateInterface(app_manager.RyuApp):
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
 
-
         # Create Outbound Rule
         # There are two options here: Corsa or Non-Corsa. Non-Corsa is for
         # regular OpenFlow switches (such as OVS) and is more straight forward.
         # NOTE: if bandwidth isn't being reserved, use non-Corsa path.
 
         if (internal_config['corsaurl'] == "" or
-            vlanrule.get_bandwidth() == 0):
+                vlanrule.get_bandwidth() == 0):
             # Make the equivalent MatchActionLCRule, translate it, and use these
             # as the results. Easier translation!
             switch_id = 0  # This is unimportant:
-                           # it's never used in the translation
+            # it's never used in the translation
             matches = [IN_PORT(vlanrule.get_inport()),
                        VLAN_VID(vlanrule.get_vlan_in())]
             actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
@@ -671,7 +666,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # 4 OpenFlow rules needed:
             #   - Inbound port  on VLAN in  to BW-in-port    on VLAN out
             #   - BW-out-port   on VLAN out to Outbound port on VLAN out
-            #   - BW-in-port    on VLAN out to Inbound port  on VLAN in 
+            #   - BW-in-port    on VLAN out to Inbound port  on VLAN in
             #   - Outbound port on VLAN out to BW-out-port   on VLAN out
 
             # 1 Bandwidth Reservation REST rule needed
@@ -679,7 +674,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # OpenFlow rules are *very* similar to the non-Corsa case
             switch_id = 0  # This is unimportant:
-                           # it's never used in the translation
+            # it's never used in the translation
             matches = [IN_PORT(vlanrule.get_inport()),
                        VLAN_VID(vlanrule.get_vlan_in())]
             actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
@@ -711,7 +706,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              table,
                                                              of_cookie,
                                                              marule)
-                
+
                 matches = [IN_PORT(vlanrule.get_outport()),
                            VLAN_VID(vlanrule.get_vlan_out())]
                 actions = [SetField(VLAN_VID(vlanrule.get_vlan_out())),
@@ -722,65 +717,66 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              of_cookie,
                                                              marule)
 
-
             # Bandwidth REST rules rely on the REST API. If it changes, then
             # this may need to be modified.
             bridge = internal_config['corsaratelimitbridge']
             vlan = vlanrule.get_vlan_out()
             bandwidth = vlanrule.get_bandwidth()
 
-            #Find out the request_url
+            # Find out the request_url
             tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                           bridge + "/tunnels?list=true")
-            print "Requesting tunnels from %s" % tunnel_url
+            print
+            "Requesting tunnels from %s" % tunnel_url
             rest_return = requests.get(tunnel_url,
                                        headers={'Authorization':
-                                                internal_config['corsatoken']},
-                                       verify=False) #FIXME: HARDCODED
+                                                    internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
 
-            print "Looking for %s on ports %s" % (vlan,
-                                      internal_config['corsaratelimitports'])
-                
+            print
+            "Looking for %s on ports %s" % (vlan,
+                                            internal_config['corsaratelimitports'])
+
             for entry in rest_return.json()['list']:
                 if (entry['vlan-id'] == vlan and
-                    int(entry['port']) in internal_config['corsaratelimitports']):
-
+                        int(entry['port']) in internal_config['corsaratelimitports']):
                     request_url = entry['links']['self']['href']
                     # This implements Red/Green, per Corsa's spec. Anything over
                     # the CIR value (and not part of a CBS burst) will be marked
                     # red and dropped.
-                    jsonval = [{'op':'replace',
-                                'path':'/meter/cir',
-                                'value':bandwidth},
-                               {'op':'replace',
-                                'path':'/meter/cbs',
-                                'value':bandwidth},
-                               {'op':'replace',
-                                'path':'/meter/eir',
-                                'value':0},
-                               {'op':'replace',
-                                'path':'/meter/ebs',
-                                'value':0}]
+                    jsonval = [{'op': 'replace',
+                                'path': '/meter/cir',
+                                'value': bandwidth},
+                               {'op': 'replace',
+                                'path': '/meter/cbs',
+                                'value': bandwidth},
+                               {'op': 'replace',
+                                'path': '/meter/eir',
+                                'value': 0},
+                               {'op': 'replace',
+                                'path': '/meter/ebs',
+                                'value': 0}]
                     valid_responses = [204]
 
-                    print "Patching %s:%s" % (request_url, json)
+                    print
+                    "Patching %s:%s" % (request_url, json)
                     results.append(TranslatedCorsaRuleContainer("patch",
-                                                request_url,
-                                                jsonval,
-                                                internal_config['corsatoken'],
-                                                valid_responses))
-        
+                                                                request_url,
+                                                                jsonval,
+                                                                internal_config['corsatoken'],
+                                                                valid_responses))
+
         # Return results to be used.
         return results
 
     def _translate_LearnedDestinationLCRule(self, datapath, switch_table,
                                             of_cookie, ldrule):
-        ''' This translates LearnedDestinationLCRules. This will generate a 
+        ''' This translates LearnedDestinationLCRules. This will generate a
             single rule.
             Returns a list of TranslatedRuleContainers
         '''
         results = []
-        switch_id = 0 # This is unimportant: it's never used in the translation
+        switch_id = 0  # This is unimportant: it's never used in the translation
         matches = [ETH_DST(ldrule.get_dst_address())]
         actions = [Forward(ldrule.get_outport())]
         priority = PRIORITY_GENERIC_LEARNED
@@ -799,7 +795,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             Returns a list of TranslatedRuleContainers
         '''
         results = []
-        switch_id = 0 # This is unimportant: it's never used in the translation
+        switch_id = 0  # This is unimportant: it's never used in the translation
         matches = [IN_PORT(eprule.get_edgeport())]
         actions = [Continue(), Forward(OFPP_CONTROLLER)]
         priority = PRIORITY_GENERIC_LEARNING
@@ -810,17 +806,17 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                      marule,
                                                      priority)
         return results
-    
+
     def _translate_L2MultipointFloodLCRule(self, datapath, switch_table,
                                            of_cookie, mpfrule):
-        ''' This translates L2MultipointFloodLCRules. L2MultipointFloodLCRules 
-            are for ports that are on the interior of a Steiner tree that 
-            connects L2Multipoint LANs. Endpoint switches use 
+        ''' This translates L2MultipointFloodLCRules. L2MultipointFloodLCRules
+            are for ports that are on the interior of a Steiner tree that
+            connects L2Multipoint LANs. Endpoint switches use
             L2MultipointEndpointLCRules instead.
             Returns a list of TranslatedRuleContainers
         '''
         results = []
-        switch_id = 0 # This is unimportant: it's never used in the translation
+        switch_id = 0  # This is unimportant: it's never used in the translation
 
         vlan = mpfrule.get_intermediate_vlan()
         for port in mpfrule.get_flooding_ports():
@@ -830,7 +826,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 if outport != port:
                     actions.append(Forward(outport))
             priority = PRIORITY_L2M_FLOOD_FORWARDING
-            marule = MatchActionLCRule(switch_id, matches, actions) 
+            marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
                                                          switch_table,
                                                          of_cookie,
@@ -844,12 +840,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                               flood_table,
                                               learning_table,
                                               of_cookie, mperule):
-        ''' This translates L2MultipointEndpointLCRules. 
+        ''' This translates L2MultipointEndpointLCRules.
             L2MultipointEndpointLCRules are uses for endpoints on a Steiner tree
-            connecting L2Multipoint LANs. These handle bandwidth management, 
-            VLAN rewriting for edge ports, flooding on the switch that has the 
+            connecting L2Multipoint LANs. These handle bandwidth management,
+            VLAN rewriting for edge ports, flooding on the switch that has the
             endpoint, and learning rule installation.
-            Interior switches on the Steiner tree are handled by the 
+            Interior switches on the Steiner tree are handled by the
             L2MultipointFloodLCRule instead, and are much simpler.
             Returns a list of TranslatedRuleContainers
         '''
@@ -859,12 +855,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
 
-        switch_id = 0 # This is unimportant: it's never used in the translation
+        switch_id = 0  # This is unimportant: it's never used in the translation
         intermediate_vlan = mperule.get_intermediate_vlan()
 
         # Non-Corsa first
         if (internal_config['corsaurl'] == "" or
-	            L2MULTIPOINTCORSABWDISABLED):	
+                L2MULTIPOINTCORSABWDISABLED):
             # Endpoint ports
             # - Translate VLANs on ingress on endpoint_table
             # - Install learning rules on intermediate VLAN on ingress on
@@ -890,14 +886,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
-
             # Endpoint and Flooding ports.
             # - Install flooding rules on flood table
             flooding_ports = mperule.get_flooding_ports()
-            endpoint_ports = [port for (port,vlan) in
+            endpoint_ports = [port for (port, vlan) in
                               mperule.get_endpoint_ports_and_vlans()]
             ports = flooding_ports + endpoint_ports
-            
+
             for port in ports:
                 matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
                 actions = []
@@ -916,8 +911,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
-                matches = [IN_PORT(port), 
-                           VLAN_VID(intermediate_vlan), 
+                matches = [IN_PORT(port),
+                           VLAN_VID(intermediate_vlan),
                            ETH_DST('ff:ff:ff:ff:ff:ff')]
                 # Same actions as above, no need to rebuild
                 priority = PRIORITY_L2M_BROADCAST_FORWARDING
@@ -951,7 +946,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              of_cookie,
                                                              marule,
                                                              priority)
-                
+
                 # - Translate rule
                 #  - translate_table
                 #  - match metadata(MD_L2M_TRANSLATE), vlan(endpoint)
@@ -969,7 +964,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              of_cookie,
                                                              marule,
                                                              priority)
-                                
+
                 # - Learning rule
                 #  - learning_table
                 #   - match metadata(endpoint), vlan(intermediate)
@@ -1014,45 +1009,45 @@ class RyuTranslateInterface(app_manager.RyuApp):
                           bridge + "/tunnels?list=true")
             rest_return = requests.get(tunnel_url,
                                        headers={'Authorization':
-                                                internal_config['corsatoken']},
-                                       verify=False) #FIXME: HARDCODED
+                                                    internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
 
             # - Corsa BW Management rule
             for entry in rest_return.json()['list']:
                 if (entry['vlan-id'] == vlan and
-                    int(entry['port']) in internal_config['corsaratelimitports']):
-
+                        int(entry['port']) in internal_config['corsaratelimitports']):
                     request_url = entry['links']['self']['href']
-                    jsonval = [{'op':'replace',
-                                'path':'/meter/cir',
-                                'value':bandwidth},
-                               {'op':'replace',
-                                'path':'/meter/cbs',
-                                'value':bandwidth},
-                               {'op':'replace',
-                                'path':'/meter/eir',
-                                'value':0},
-                               {'op':'replace',
-                                'path':'/meter/ebs',
-                                'value':0}]
-                              #[{'op':'replace',
-                              #  'path':'/meter/cir',
-                              #  'value':bandwidth},
-                              # {'op':'replace',
-                              #  'path':'/meter/eir',
-                              #  'value':bandwidth}]
+                    jsonval = [{'op': 'replace',
+                                'path': '/meter/cir',
+                                'value': bandwidth},
+                               {'op': 'replace',
+                                'path': '/meter/cbs',
+                                'value': bandwidth},
+                               {'op': 'replace',
+                                'path': '/meter/eir',
+                                'value': 0},
+                               {'op': 'replace',
+                                'path': '/meter/ebs',
+                                'value': 0}]
+                    # [{'op':'replace',
+                    #  'path':'/meter/cir',
+                    #  'value':bandwidth},
+                    # {'op':'replace',
+                    #  'path':'/meter/eir',
+                    #  'value':bandwidth}]
                     valid_responses = [204]
 
-                    print "Patching %s:%s" % (request_url, json)
+                    print
+                    "Patching %s:%s" % (request_url, json)
                     results.append(TranslatedCorsaRuleContainer("patch",
-                                                request_url,
-                                                jsonval,
-                                                internal_config['corsatoken'],
-                                                valid_responses))
+                                                                request_url,
+                                                                jsonval,
+                                                                internal_config['corsatoken'],
+                                                                valid_responses))
 
             # All ports
             flooding_ports = mperule.get_flooding_ports()
-            endpoint_ports = [port for (port,vlan) in
+            endpoint_ports = [port for (port, vlan) in
                               mperule.get_endpoint_ports_and_vlans()]
             ports = flooding_ports + endpoint_ports
             # - Flooding rules for endpoints
@@ -1089,12 +1084,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
                 if port in endpoint_ports:
-                    matches = [METADATA(port, MD_L2M_MASK), 
-                               VLAN_VID(intermediate_vlan), 
+                    matches = [METADATA(port, MD_L2M_MASK),
+                               VLAN_VID(intermediate_vlan),
                                ETH_DST('ff:ff:ff:ff:ff:ff')]
                 elif port in flooding_ports:
-                    matches = [IN_PORT(port), 
-                               VLAN_VID(intermediate_vlan), 
+                    matches = [IN_PORT(port),
+                               VLAN_VID(intermediate_vlan),
                                ETH_DST('ff:ff:ff:ff:ff:ff')]
                 # Same actions as above, no need to rebuild
                 priority = PRIORITY_L2M_BROADCAST_FORWARDING
@@ -1104,22 +1099,21 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              of_cookie,
                                                              marule,
                                                              priority)
-            
+
         return results
 
-    
     def _translate_L2MultipointLearnedDestinationLCRule(self, datapath,
                                                         switch_table, of_cookie,
                                                         ldrule):
-        ''' This translates L2MultipointLearnedDestinationLCRules. This will 
-            generate one rule. 
+        ''' This translates L2MultipointLearnedDestinationLCRules. This will
+            generate one rule.
             For non-endpoints, this will forward along the intermediate VLAN
             that's being used for the L2MultipointPolicy.
-            For endpoints, this will translate VLAN to the destination VLAN, 
+            For endpoints, this will translate VLAN to the destination VLAN,
             then forward.
         '''
         results = []
-        switch_id = 0 # This is unimportant: it's never used in the translation
+        switch_id = 0  # This is unimportant: it's never used in the translation
         matches = [VLAN_VID(ldrule.get_intermediate_vlan)(),
                    ETH_DST(ldrule.get_dst_address())]
         actions = None
@@ -1138,20 +1132,19 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                      priority)
         return results
 
-
     def _translate_FloodTreeLCRule(self, datapath, switch_table,
                                    of_cookie, ftrule):
         ''' This translate FloodTreeLCRules. FloodTreeLCRules are for ports on a
-            broadcast flood tree, so len(ports) number of rules need to be 
+            broadcast flood tree, so len(ports) number of rules need to be
             installed for each FloodTreeLCRule.
             Returns a list of TranslatedRUleContainers
         '''
         results = []
-        switch_id = 0 # This is unimportant: it's never used in the translation
+        switch_id = 0  # This is unimportant: it's never used in the translation
         priority = PRIORITY_FLOOD_FORWARDING
-        
+
         ports = ftrule.get_ports()
-        
+
         for port in ports:
             matches = [IN_PORT(port), ETH_DST('ff:ff:ff:ff:ff:ff')]
             actions = []
@@ -1169,23 +1162,22 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          priority)
         return results
 
-    
     def _translate_ManagementVLANLCRule(self, datapath, switch_table, of_cookie,
                                         mvrule):
-        ''' This translates ManagementVLANLCRUles. This will generate one rule. 
+        ''' This translates ManagementVLANLCRUles. This will generate one rule.
             For non-endpoints, this will forward along the intermediate VLAN
             that's being used for the L2MultipointPolicy.
-            For endpoints, this will translate VLAN to the destination VLAN, 
+            For endpoints, this will translate VLAN to the destination VLAN,
             then forward.
         '''
         results = []
-        switch_id = 0 # This is unimportant: it's never used in the translation
+        switch_id = 0  # This is unimportant: it's never used in the translation
         priority = PRIORITY_MGMT_VLAN
 
         mgmt_vlan = mvrule.get_mgmt_vlan()
         mgmt_ports = mvrule.get_mgmt_vlan_ports()
         untagged_mgmt_ports = mvrule.get_untagged_mgmt_vlan_ports()
-        
+
         for vlan_port in (mgmt_ports + untagged_mgmt_ports):
             if vlan_port in mgmt_ports:
                 matches = [VLAN_VID(mgmt_vlan), IN_PORT(vlan_port)]
@@ -1209,7 +1201,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             for out_port in untagged_mgmt_ports:
                 if out_port != vlan_port:
                     actions.append(Forward(out_port))
-                    
+
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
                                                          switch_table,
@@ -1218,8 +1210,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          priority)
 
         return results
-                                       
-        
+
     def _translate_LCMatch(self, datapath, matches, table):
         args = {}
         for m in matches:
@@ -1230,10 +1221,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 if prereq.get_name() in args.keys():
                     pass
                 args[prereq.get_name()] = prereq.get()
-                #FIXME: If there's a prereq in conflict (i.e., user specified
+                # FIXME: If there's a prereq in conflict (i.e., user specified
                 # somethign in the same field, there's a problem) raise an
                 # error.
-                
+
         return datapath.ofproto_parser.OFPMatch(**args)
 
     def _translate_LCAction(self, datapath, actions, table):
@@ -1244,7 +1235,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         ofproto = datapath.ofproto
         instructions = []
         aa_results = []
-        
+
         for action in actions:
             # The first fiew action types are pretty easy: they all end up in
             # an OFPIT_APPLY_ACTIONS instruction.
@@ -1278,11 +1269,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
             if isinstance(action, Drop):
                 # This is an error!
                 if len(actions) > 1:
-                    #FIXME: raise an error
+                    # FIXME: raise an error
                     pass
                 # To drop, need to clear actions associated with the match.
                 instructions.append(parser.OFPInstructionActions(
-                                         ofproto.OFPIT_CLEAR_ACTIONS, []))
+                    ofproto.OFPIT_CLEAR_ACTIONS, []))
 
             # Continue and GotoTable are a bit different, as they both reference
             # other tables using the OFPIT_GOTO_TABLE instruction.
@@ -1296,53 +1287,52 @@ class RyuTranslateInterface(app_manager.RyuApp):
             elif isinstance(action, WriteMetadata):
                 (value, mask) = action.get()
                 instructions.append(parser.OFPInstructionWriteMetadata(value,
-                                                                     mask))
+                                                                       mask))
 
         # Are there any values in aa_results? If so, put them in APPLY_ACTIONS
         # This is for the case where a bunch of simple rules (Forward, SetField,
         # PushVLAN, PopVLAN) are the only rules that exist, and they haven't yet
-        # been put into an instruction. 
-        if len(aa_results) > 0: 
+        # been put into an instruction.
+        if len(aa_results) > 0:
             instructions.append(parser.OFPInstructionActions(
-                ofproto.OFPIT_APPLY_ACTIONS, aa_results))           
-        # Return all the instructions added up
+                ofproto.OFPIT_APPLY_ACTIONS, aa_results))
+            # Return all the instructions added up
         return instructions
-
 
     def corsa_rest_cmd(self, rc):
         ''' Handles sending of REST commands to Corsa Switches. '''
-        verify = False #FIXME: Hardcoded
+        verify = False  # FIXME: Hardcoded
         if rc.get_function() == "get":
             response = requests.get(rc.get_url(),
                                     json=rc.get_json(),
-                                    headers={'Authorization':rc.get_token()},
+                                    headers={'Authorization': rc.get_token()},
                                     verify=verify)
         elif rc.get_function() == "post":
             response = requests.post(rc.get_url(),
-                                      json=rc.get_json(),
-                                      headers={'Authorization':rc.get_token()},
-                                      verify=verify)
+                                     json=rc.get_json(),
+                                     headers={'Authorization': rc.get_token()},
+                                     verify=verify)
         elif rc.get_function() == "patch":
             response = requests.patch(rc.get_url(),
                                       json=rc.get_json(),
-                                      headers={'Authorization':rc.get_token()},
+                                      headers={'Authorization': rc.get_token()},
                                       verify=verify)
         else:
             raise ValueError("Function not valid: %s:%s" %
-                        (rc.get_function(),
-                         rc.get_json()))
+                             (rc.get_function(),
+                              rc.get_json()))
 
         if response.status_code not in rc.get_valid_responses():
             raise Exception("REST command failed %s:%s\n    %s\n    %s" %
-                        (rc.get_function(),
-                         rc.get_json(),
-                         response.status_code,
-                         response.json()))
+                            (rc.get_function(),
+                             rc.get_json(),
+                             response.status_code,
+                             response.json()))
 
     def add_flow(self, datapath, rc):
-        ''' Ease-of-use wrapper for adding flows. ''' 
+        ''' Ease-of-use wrapper for adding flows. '''
         parser = datapath.ofproto_parser
-    
+
         self.logger.debug("add_flow for %d:%d:%d:%s:%s" % (
             rc.get_cookie(),
             rc.get_table(),
@@ -1358,7 +1348,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                     priority=rc.get_priority(),
                                     match=rc.get_match(),
                                     instructions=rc.get_instructions(),
-                                    idle_timeout=rc.get_idle_timeout(), 
+                                    idle_timeout=rc.get_idle_timeout(),
                                     hard_timeout=rc.get_hard_timeout())
         else:
             mod = parser.OFPFlowMod(datapath=datapath,
@@ -1368,31 +1358,31 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                     priority=rc.get_priority(),
                                     match=rc.get_match(),
                                     instructions=rc.get_instructions(),
-                                    idle_timeout=rc.get_idle_timeout(), 
+                                    idle_timeout=rc.get_idle_timeout(),
                                     hard_timeout=rc.get_hard_timeout())
 
         datapath.send_msg(mod)
 
     def remove_flow(self, datapath, rc):
-        #BASE ON: https://github.com/sdonovan1985/netassay-ryu/blob/672a31228ab08abe55c19e75afa52490e76cbf77/base/mcm.py#L283
+        # BASE ON: https://github.com/sdonovan1985/netassay-ryu/blob/672a31228ab08abe55c19e75afa52490e76cbf77/base/mcm.py#L283
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         command = ofproto.OFPFC_DELETE
         out_group = ofproto.OFPG_ANY
         out_port = ofproto.OFPP_ANY
-        
+
         cookie = rc.get_cookie()
         table = rc.get_table()
         match = rc.get_match()
 
-        mod = parser.OFPFlowMod(datapath=datapath, cookie=cookie, 
+        mod = parser.OFPFlowMod(datapath=datapath, cookie=cookie,
                                 table_id=table, command=command,
                                 out_group=out_group, out_port=out_port,
                                 match=match)
         datapath.send_msg(mod)
 
     def remove_all_flows(self, datapath):
-        #BASED ON: https://github.com/FlowForwarding/LINC-Switch/blob/master/scripts/ryu/remove_flows_v1_3.py
+        # BASED ON: https://github.com/FlowForwarding/LINC-Switch/blob/master/scripts/ryu/remove_flows_v1_3.py
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         command = ofproto.OFPFC_DELETE
@@ -1404,7 +1394,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 command=command, out_group=out_group,
                                 out_port=out_port)
         datapath.send_msg(mod)
-        
 
     def install_rule(self, datapath, sdx_rule):
         ''' The main loop calls this to handle adding a new rule.
@@ -1412,13 +1401,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
             OpenFlow rules that the switch can actually work with. '''
 
         # FIXME: this is where translation from LC/SDX interface to the near OF
-        #interface should happen
-        
+        # interface should happen
+
         # Verify input
         if not isinstance(sdx_rule, LCRule):
             raise TypeError("lcrule %s is not of type LCRule: %s" %
                             (sdx_rule, type(sdx_rule)))
-
 
         # Get a cookie based on the SDX Controller cookie
         of_cookie = self._get_new_OF_cookie(sdx_rule.get_cookie())
@@ -1446,9 +1434,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              switch_table,
                                                              of_cookie,
                                                              sdx_rule)
-            
+
         elif isinstance(sdx_rule, VlanTunnelLCRule):
-            # VLAN rules happen before anything else. 
+            # VLAN rules happen before anything else.
             switch_table = L2TUNNELTABLE
             switch_rules = self._translate_VlanLCRule(datapath,
                                                       switch_table,
@@ -1471,7 +1459,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                           sdx_rule)
             self._register_packet_in_cb(of_cookie, self.unknown_source_cb)
         elif isinstance(sdx_rule, L2MultipointFloodLCRule):
-            # Installs 
+            # Installs
             switch_table = FORWARDINGTABLE
             self.logger.error("L2MultipointFlood: %d:%d:%s" % (switch_table,
                                                                of_cookie,
@@ -1487,56 +1475,54 @@ class RyuTranslateInterface(app_manager.RyuApp):
             translate_table = SDXEGRESSRULETABLE
             flood_table = FORWARDINGTABLE
             learning_table = LEARNINGTABLE
-            switch_table = endpoint_table    # Used in some logs down below.
+            switch_table = endpoint_table  # Used in some logs down below.
             self.logger.error("L2MultipointEndpo: %d,%d:%d:%s" % (
                 endpoint_table, flood_table,
                 of_cookie,
                 sdx_rule))
             switch_rules = self._translate_L2MultipointEndpointLCRule(datapath,
-                                                                endpoint_table,
-                                                                translate_table,
-                                                                flood_table,
-                                                                learning_table,
-                                                                of_cookie,
-                                                                sdx_rule)
+                                                                      endpoint_table,
+                                                                      translate_table,
+                                                                      flood_table,
+                                                                      learning_table,
+                                                                      of_cookie,
+                                                                      sdx_rule)
             self._register_packet_in_cb(of_cookie,
                                         self.l2multipoint_unknown_source_cb)
             # This is to keep some logs down below happy. L2MultipointEndpoints
             # are weird, and the loggingisn't well suited.
             switch_table = endpoint_table
-            
+
         elif isinstance(sdx_rule, L2MultipointLearnedDestinationLCRule):
             # Learning switch forwarding rules happen as a fallback at the end
             switch_table = FORWARDINGTABLE
             switch_rules = self._translate_L2MultipointLearnedDestinationLCRule(
-                                     datapath,
-                                     switch_table,
-                                     of_cookie,
-                                     sdx_rule)
-            
+                datapath,
+                switch_table,
+                of_cookie,
+                sdx_rule)
+
         elif isinstance(sdx_rule, FloodTreeLCRule):
             switch_table = FORWARDINGTABLE
             switch_rules = self._translate_FloodTreeLCRule(datapath,
                                                            switch_table,
                                                            of_cookie,
                                                            sdx_rule)
-            
+
         elif isinstance(sdx_rule, ManagementVLANLCRule):
             switch_table = L2TUNNELTABLE
             switch_rules = self._translate_ManagementVLANLCRule(datapath,
                                                                 switch_table,
                                                                 of_cookie,
                                                                 sdx_rule)
-        
-            
 
         if switch_rules == None or switch_table == None:
             self.logger.error(
                 "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
-                 sdx_rule, switch_rules, switch_table)
-            #FIXME: This shouldn't happen...
+                sdx_rule, switch_rules, switch_table)
+            # FIXME: This shouldn't happen...
             pass
-        
+
         # Save off instructions to local database.
         self.logger.debug("Inserting into switch table %d switch rules %s" %
                           (switch_table, switch_rules))
@@ -1553,7 +1539,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 self.logger.debug("  %s - CORSA_REST_CMD" % rule)
                 self.corsa_rest_cmd(rule)
 
-
     def remove_rule(self, datapath, sdx_cookie):
         ''' The main loop calls this to handle removing an existing rule.
             This function removes the existing OpenFlow rules associated with
@@ -1566,14 +1551,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Get the Rules based on the it.
         (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie)
 
-        if (swcookie == None and 
-            sdxrule == None and 
-            swrules == None and
-            table == None):
-            self.logger.error("No rule to remove for sdx_cookie %s" % 
+        if (swcookie == None and
+                sdxrule == None and
+                swrules == None and
+                table == None):
+            self.logger.error("No rule to remove for sdx_cookie %s" %
                               sdx_cookie)
             return
-
 
         try:
             # Remove flows
@@ -1584,7 +1568,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     # Currently, don't have to do anything here.
                     pass
         except Exception as e:
-            self.logger.error("Error in remove_rule %s:%s" % (sdx_cookie, 
+            self.logger.error("Error in remove_rule %s:%s" % (sdx_cookie,
                                                               of_cookie))
             self.logger.error("  swcookie: %s" % swcookie)
             self.logger.error("  sdxrule: %s" % sdxrule)
@@ -1594,7 +1578,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Remove rule infomation from database
         self._remove_rule_in_db(sdx_cookie)
-                
 
     def _install_rule_in_db(self, sdxcookie, switchcookie,
                             sdxrule, switchrules, switchtable):
@@ -1609,22 +1592,22 @@ class RyuTranslateInterface(app_manager.RyuApp):
         #   switchtable - The table that the rules are going to be installed.
         #      A single LCRule should only affect one table at a time.
 
-        #FIXME: Checking to make sure it's not already there?
-        self.rule_table.insert({'sdxcookie':sdxcookie,
-                                'switchcookie':switchcookie,
-                                'sdxrule':pickle.dumps(sdxrule),
-                                'switchrules':pickle.dumps(switchrules),
-                                'switchtable':switchtable})
+        # FIXME: Checking to make sure it's not already there?
+        self.rule_table.insert({'sdxcookie': sdxcookie,
+                                'switchcookie': switchcookie,
+                                'sdxrule': pickle.dumps(sdxrule),
+                                'switchrules': pickle.dumps(switchrules),
+                                'switchtable': switchtable})
 
     def _remove_rule_in_db(self, sdx_cookie):
         ''' This removes a rule from the DB. This makes life a lot easier and
             provides a central point to handle DB interactions. '''
-        #FIXME: Make sure it does exist.
+        # FIXME: Make sure it does exist.
         self.rule_table.delete(sdxcookie=sdx_cookie)
 
     def _get_rule_in_db(self, sdx_cookie):
-        ''' This returns a rule from the DB. This makes life a lot easier and 
-            provides a central point to handle DB interactions. 
+        ''' This returns a rule from the DB. This makes life a lot easier and
+            provides a central point to handle DB interactions.
             Returns a tuple:
             (switchcookie, sdxrule, switchrules, switchtable) '''
         result = self.rule_table.find_one(sdxcookie=sdx_cookie)
@@ -1634,20 +1617,18 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 pickle.loads(str(result['sdxrule'])),
                 pickle.loads(str(result['switchrules'])),
                 result['switchtable'])
-        
-        
 
     def _get_new_OF_cookie(self, sdx_cookie):
-        ''' Creates a new cookie that can be used by OpenFlow switches. 
+        ''' Creates a new cookie that can be used by OpenFlow switches.
             Populates a local database with information so that cookie can be
             looked up for rule removal. '''
         if self.rule_table.find_one(sdxcookie=sdx_cookie) != None:
             # FIXME: This shouldn't happen...
             pass
-        
+
         of_cookie = self.current_of_cookie
         self.current_of_cookie += 1
-        
+
         return of_cookie
 
     def _find_OF_cookie(self, sdx_cookie):
@@ -1667,7 +1648,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         return result['sdxcookie']
 
     def _register_packet_in_cb(self, cookie_id, function):
-        ''' Used for registeringcookies for packet_in callbacks. Function is 
+        ''' Used for registeringcookies for packet_in callbacks. Function is
             called with the packet_in event. '''
         self.logger.debug("Registering cookie 0x%02x to function %s for packet_in handling" % (cookie_id, function))
         self.packet_in_cbs[cookie_id] = function
@@ -1677,17 +1658,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.logger.debug("Deregistering cookie 0x%02x" % cookie_id)
         del self.packet_in_cbs[cookie_id]
 
-        
     def unknown_source_cb(self, ev):
         ''' Handles new unknown source callbacks. This does two things upon
             receipt of a packet:
-              - Sends info to  RyuControllerInterface to eventually send to SDX 
+              - Sends info to  RyuControllerInterface to eventually send to SDX
                 controller with sdx_cm.send_new_host_port_mapping()
               - Creates new rule to skip forwarding that source address to ctlr
         '''
         # Send info to SDX Controller
         switch_id = 0  # This is unimportant:
-                       # it's never used in the translation
+        # it's never used in the translation
 
         datapath = ev.msg.datapath
         switch_name = self._get_switch_internal_config(datapath.id)['name']
@@ -1697,15 +1677,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
         src_address = eth.src
 
         self.inter_cm_cxn.send_cmd(ICX_UNKNOWN_SOURCE,
-                                   {"switch":switch_name,
-                                    "port":port,
-                                    "src":src_address})
+                                   {"switch": switch_name,
+                                    "port": port,
+                                    "src": src_address})
 
         # New forwarding rule to skip over that again
         matches = [IN_PORT(port), ETH_SRC(src_address)]
         actions = [Continue()]
         table = LEARNINGTABLE
-        of_cookie = ev.msg.cookie    # Keep the same cookie as the original rule
+        of_cookie = ev.msg.cookie  # Keep the same cookie as the original rule
         priority = PRIORITY_GENERIC_LEARNED
         marule = MatchActionLCRule(switch_id, matches, actions)
         results = self._translate_MatchActionLCRule(datapath,
@@ -1715,14 +1695,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                     priority)
         for rule in results:
             self.add_flow(datapath, rule)
-            
+
     def l2multipoint_unknown_source_cb(self, ev):
         ''' Handles new unknown source callbacks on L2MultipointPolicy edge
-            ports. This is very similar to unknown_source_cb(). 
+            ports. This is very similar to unknown_source_cb().
         '''
         # Send info to SDX Controller
         switch_id = 0  # This is unimportant:
-                       # it's never used in the translation
+        # it's never used in the translation
 
         datapath = ev.msg.datapath
         switch_name = self._get_switch_internal_config(datapath.id)['name']
@@ -1732,13 +1712,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         src_address = eth.src
         of_cookie = ev.msg.cookie
         sdx_cookie = self._find_sdx_cookie(of_cookie)
-        
-        self.inter_cm_cxn.send_cmd(ICX_L2MULTIPOINT_UNKNOWN_SOURCE,
-                                   {"cookie":sdx_cookie,
-                                    "data": {"dstswitch":switch_name,
-                                             "dstport":port,
-                                             "dstaddress":src_address}})
 
+        self.inter_cm_cxn.send_cmd(ICX_L2MULTIPOINT_UNKNOWN_SOURCE,
+                                   {"cookie": sdx_cookie,
+                                    "data": {"dstswitch": switch_name,
+                                             "dstport": port,
+                                             "dstaddress": src_address}})
 
         # New forwarding rule to skip over that address in the future.
         matches = [IN_PORT(port), ETH_SRC(src_address)]
