@@ -128,7 +128,9 @@ class L2MultipointPolicy(UserPolicy):
         self.tree = tm.find_valid_steiner_tree(nodes, self.bandwidth)
         self.intermediate_vlan = tm.find_vlan_on_tree(self.tree)
         if self.intermediate_vlan == None:
-            raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.tree, self))
+            raise UserPolicyError("There are no available VLANs on tree %s for rule %s" % (self.tree, self))
+        ###tm.reserve_vlan_on_tree(self.tree, self.intermediate_vlan)
+        ###tm.reserve_bw_on_tree(self.tree, self.bandwidth)
 
         self.resources.append(VLANTreeResource(self.tree,
                                                self.intermediate_vlan))
@@ -280,6 +282,10 @@ class L2MultipointPolicy(UserPolicy):
         ''' This is called before a rule is removed from the database. For 
             instance, if certain resources need to be released, this can do it.
             May not need to be implemented. '''
+        #### Release VLAN and BW in use
+        ###tm.unreserve_vlan_on_tree(self.tree, self.intermediate_vlan)
+        ###tm.unreserve_bw_on_tree(self.tree, self.bandwidth)
+
         pass
     
     def switch_change_callback(self, tm, ai, data):

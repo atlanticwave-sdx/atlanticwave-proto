@@ -11,7 +11,7 @@ Mako==1.0.5
 MarkupSafe==0.23
 netaddr==0.7.18
 networkx==1.11
-normality==0.3.0
+normality==0.3.9
 python-dateutil==2.5.3
 python-editor==1.0.1
 PyYAML==3.12
@@ -22,6 +22,7 @@ dataset==0.8.0
 ryu==4.11
 docker==3.4.1
 docker-pycreds==0.3.0
+tinyrpc==0.9.4
 isodate==0.6.0
 rdflib==4.2.2
 aniso8601==3.0.2

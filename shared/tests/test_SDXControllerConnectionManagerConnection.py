@@ -182,7 +182,7 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
         sock, client_address = self.ReceivingSocket.accept()
 
         self.ServerCxn = SDXControllerConnection(self.ip, self.port,
-                                                        sock)
+                                                        sock, __name__)
         sleep(.5) # Waiting for connection.
         self.ServerCxn.set_new_callback(new_callback)
         self.ServerCxn.set_delete_callback(del_callback)
@@ -196,7 +196,7 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
                                           socket.SOCK_STREAM)
         self.ClientSocket.connect((self.ip, self.port))
         self.ClientCxn = SDXControllerConnection(self.ip, self.port,
-                                                        self.ClientSocket)
+                                                        self.ClientSocket, __name__)
         self.ClientCxn.set_new_callback(new_callback)
         self.ClientCxn.set_delete_callback(del_callback)
         self.ClientCxn.transition_to_main_phase_LC('TESTING', "asdfjkl;",
@@ -239,7 +239,7 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
         sock, client_address = self.ReceivingSocket.accept()
 
         self.ServerCxn = SDXControllerConnection(self.ip, self.port,
-                                                        sock)
+                                                        sock, __name__)
         self.ServerCxn.set_new_callback(new_callback)
         self.ServerCxn.set_delete_callback(del_callback)
         self.ServerCxn.transition_to_main_phase_SDX(set_name_1,
@@ -252,7 +252,7 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
                                           socket.SOCK_STREAM)
         self.ClientSocket.connect((self.ip, self.port))
         self.ClientCxn = SDXControllerConnection(self.ip, self.port,
-                                                        self.ClientSocket)
+                                                        self.ClientSocket, __name__)
         self.ClientCxn.set_new_callback(new_callback)
         self.ClientCxn.set_delete_callback(del_callback)
         self.ClientCxn.transition_to_main_phase_LC('TESTING', "asdfjkl;",
@@ -285,7 +285,7 @@ class SDXConnectionHeartbeatTest(unittest.TestCase):
                                           socket.SOCK_STREAM)
         self.ClientSocket.connect((self.ip, self.port))
         self.ClientCxn = SDXControllerConnection(self.ip, self.port,
-                                                 self.ClientSocket)
+                                                 self.ClientSocket, __name__)
         self.ClientCxn.set_new_callback(new_callback)
         self.ClientCxn.set_delete_callback(del_callback)
         self.ClientCxn.transition_to_main_phase_LC('TESTING', "qwerJ:LK",
@@ -304,7 +304,7 @@ class SDXConnectionHeartbeatTest(unittest.TestCase):
         sock, client_address = self.ReceivingSocket.accept()
 
         self.ServerCxn = SDXControllerConnection(self.ip, self.port,
-                                                        sock)
+                                                        sock, __name__)
         sleep(.5) # Wait for connection.
         self.ServerCxn.set_new_callback(new_callback)
         self.ServerCxn.set_delete_callback(del_callback)

@@ -15,7 +15,7 @@ from shared.UserPolicy import *
 from sdxctlr.TopologyManager import TopologyManager
 
 
-TOPO_CONFIG_FILE = 'test_manifests/topo.manifest'
+TOPO_CONFIG_FILE = 'tests/test_manifests/topo.manifest'
 db = ':memory:'
 dbcxn = dataset.connect("sqlite:///"+db,
                         engine_kwargs={'connect_args':
