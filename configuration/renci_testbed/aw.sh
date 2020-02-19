@@ -38,8 +38,8 @@ esac
 #SITE=$(hostnamectl --transient | cut -d- -f3 | cut -d. -f1) # renci | duke | unc | ncsu
 #TYPE=$(hostnamectl --transient | cut -d- -f2 ) # sdx | lc 
 
-AW_REPO="https://github.com/RENCI-NRIG/atlanticwave-proto.git"
-AW_BRANCH="master-rci"
+AW_REPO="https://github.com/atlanticwave-sdx/atlanticwave-proto.git"
+AW_BRANCH="master"
 
 
 clean_up (){
