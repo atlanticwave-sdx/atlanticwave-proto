@@ -1,7 +1,7 @@
 #!/bin/bash
 
 AW_REPO="https://github.com/atlanticwave-sdx/atlanticwave-proto.git"
-AW_BRANCH="master-rci"
+AW_BRANCH="master"
 
 while getopts "R:B:" opt; do
     case $opt in
