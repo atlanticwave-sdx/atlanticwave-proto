@@ -1,6 +1,6 @@
 #!/bin/bash
 
-AW_REPO="https://github.com/RENCI-NRIG/atlanticwave-proto.git"
+AW_REPO="https://github.com/atlanticwave-sdx/atlanticwave-proto.git"
 AW_BRANCH="master-rci"
 
 while getopts "R:B:" opt; do
