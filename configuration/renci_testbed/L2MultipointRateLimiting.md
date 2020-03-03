@@ -4,6 +4,7 @@
 
 ![alt text](figures/AW-SDX-Corsa-Tunnel-Layout-with-L2MP-Ratelimiting.png)
 
+Direct Link: https://www.draw.io/#G1C7yn7oQ9FrGdVVxNnJtcGu9MOPG7U2xL
 
 ## Create L2Multipoint Rate Limiting VFC
 

@@ -8,7 +8,7 @@
 
 ![alt text](figures/AW-SDX-Node-Layout.png)
 
-Direct Link: https://drive.google.com/file/d/1BHdOv4X62mmVrFEbLGE5By1Nt3GNLBEo/view?usp=sharing
+Direct Link: https://www.draw.io/#G1C7yn7oQ9FrGdVVxNnJtcGu9MOPG7U2xL
 
 ```
 # Out-of-band management
@@ -47,10 +47,6 @@ Direct Link: https://drive.google.com/file/d/1BHdOv4X62mmVrFEbLGE5By1Nt3GNLBEo/v
 
 ```
 
-
-
-
-
 ## Corsa Switches
 
 Ports are set to `passthrough` mode. (ctag mode strips off the VLAN tag that prevent flows with `dl_vlan` match field being pushed properly. This can be a pure openflow behavior that needs to be elaborated.)
@@ -59,7 +55,6 @@ Openflow control connection is established through default namespace (and associ
 
 ![alt text](figures/AW-SDX-Corsa-Tunnel-Layout.png)
 
-Direct Link: https://drive.google.com/file/d/1BHdOv4X62mmVrFEbLGE5By1Nt3GNLBEo/view?usp=sharing
 
 
 ### Set port tunnel-modes
