@@ -94,6 +94,7 @@ cleanup_files(){
 
 cleanup_docker(){
     TYPE=$1
+    # Attempts to stop running containers and remove incomplete/failed images 
     for i in `docker ps -a -q`; do echo "--- Container: $i" ; docker stop $i; docker rm -v $i; done
     for i in `docker images | grep none | awk '{print $3}'`; do docker rmi $i ; done
 }

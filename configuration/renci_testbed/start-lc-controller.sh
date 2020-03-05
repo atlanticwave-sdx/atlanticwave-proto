@@ -6,7 +6,7 @@ export SITE
 MODE="$2"
 echo "--- MODE: $MODE"
 
-if [-z "$3" ]; then
+if [ -z "$3" ]; then
   DOCKER_IMAGE_NAME="lc_container"
 else
   DOCKER_IMAGE_NAME=$3
@@ -45,9 +45,6 @@ case ${SITE} in
               ;;
 esac
 
-
-# Local Controller
-cd atlanticwave-proto/localctlr/
 
 LC_CONTAINER=$(docker ps -a -f name=${LC_SITE} -q)
 

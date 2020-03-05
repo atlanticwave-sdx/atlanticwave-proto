@@ -3,7 +3,7 @@
 MODE="$2"
 echo "--- MODE: $MODE"
 
-if [-z "$3" ]; then
+if [ -z "$3" ]; then
   DOCKER_IMAGE_NAME="sdx_container"
 else
   DOCKER_IMAGE_NAME=$3
@@ -16,9 +16,6 @@ else
 fi
 
 NAME="sdxrencitestbed"
-
-# SDX Controller
-cd atlanticwave-proto/sdxctlr/
 
 SDX_CONTAINER=$(docker ps -a -f name=${NAME} -q)
 
