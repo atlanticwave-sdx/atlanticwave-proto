@@ -105,6 +105,7 @@ build_docker_image(){
    TMP_DIR=$3
    WORK_DIR=$4
    TYPE=$5
+   CONTAINER_NAME=$6
    
    cd $TMP_DIR
    title "Clone Branch ${AW_BRANCH}"
@@ -112,7 +113,7 @@ build_docker_image(){
    cp ${TMP_DIR}/atlanticwave-proto/configuration/renci_testbed/setup-${TYPE}-controller.sh ${WORK_DIR}
    chmod +x ${WORK_DIR}/setup-${TYPE}-controller.sh 
    cd ${WORK_DIR}
-   ./setup-${TYPE}-controller.sh -R ${AW_REPO} -B ${AW_BRANCH}
+   ./setup-${TYPE}-controller.sh -R ${AW_REPO} -B ${AW_BRANCH} -N ${CONTAINER_NAME}
 
 }
 
@@ -149,7 +150,7 @@ stop_docker_container(){
 }
 
 
-while getopts "R:B:m:cbprsH" opt; do
+while getopts "R:B:m:n:cbprsH" opt; do
     case $opt in
         R)
             AW_REPO=${OPTARG}
@@ -159,6 +160,9 @@ while getopts "R:B:m:cbprsH" opt; do
             ;;
         m)
             MODE=${OPTARG}
+            ;;
+        n)
+            CONTAINER_NAME=${OPTARG}
             ;;
         c)
             title "Cleanup Files"
@@ -173,7 +177,7 @@ while getopts "R:B:m:cbprsH" opt; do
             title "Cleanup Docker Containers and Images"
             cleanup_docker ${TYPE}
             title "Build Docker Image"
-            build_docker_image $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE}
+            build_docker_image $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE} ${CONTAINER_NAME}
             ;;
         p)
             title "Cleanup Docker Containers and Images"
