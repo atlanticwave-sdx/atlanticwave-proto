@@ -2,7 +2,7 @@
 
 AW_REPO="https://github.com/atlanticwave-sdx/atlanticwave-proto.git"
 AW_BRANCH="master"
-CONTAINER_NAME="lc_container"
+DOCKER_IMAGE_NAME="lc_container"
 
 while getopts "R:B:N:" opt; do
     case $opt in
@@ -13,7 +13,7 @@ while getopts "R:B:N:" opt; do
             AW_BRANCH=${OPTARG}
             ;;
         N)
-            CONTAINER_NAME=${OPTARG}
+            DOCKER_IMAGE_NAME=${OPTARG}
             ;;
     esac
 done
@@ -45,7 +45,7 @@ fi
 
 cd docker/lc_container
 sed -r -i "s/master/${AW_BRANCH}/g" Dockerfile
-docker build -t ${CONTAINER_NAME} .
+docker build -t ${DOCKER_IMAGE_NAME} .
 rm -f renci_ben.manifest 
 
 # Copy over run scripts
