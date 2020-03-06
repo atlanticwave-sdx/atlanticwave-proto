@@ -926,8 +926,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Corsa Case
         else:
             # Endpoint rules
-            print
-            "--- MCEVIK: Corsa Case" 
+
+            self.logger.debug("--- MCEVIK: Corsa Case L2MULTIPOINTCORSABWDISABLED %s " % (L2MULTIPOINTCORSABWDISABLED))
 
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
 
@@ -944,10 +944,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
 		    valid_responses = [201]
 
 		    l2mp_bw_in_port = VLAN_VID(vlan)
-		    l2mp_bw_out_port = str(int(str(vlan))+10000)
+		    l2mp_bw_out_port = int(int(str(vlan))+10000)
 
-		    print 
-		    "--- MCEVIK: l2mp_bw_in_port %s l2mp_bw_out_port %s" % (l2mp_bw_in_port, l2mp_bw_out_port)
+		    self.logger.debug("--- MCEVIK: l2mp_bw_in_port %s l2mp_bw_out_port %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
 
 
 		    # Create tunnels and ofports on corsabridge
@@ -960,8 +959,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 				'port': internal_config['corsabwoutl2mp'],
 				'vlan-id': VLAN_VID(vlan),
 				'shaped-rate': bandwidth}
-		    print
-		    "--- MCEVIK: Patching %s:%s" % (request_url, json)
+		    self.logger.debug("--- MCEVIK: Patching %s:%s" % (request_url, json))
 		    results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
@@ -974,8 +972,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 				'shaped-rate': bandwidth}
 		    valid_responses = [201]
 
-		    print
-		    "--- MCEVIK: Patching %s:%s" % (request_url, json)
+		    self.logger.debug("--- MCEVIK: Patching %s:%s" % (request_url, json))
 		    results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
@@ -993,8 +990,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 				'port': internal_config['corsaratelimitportsl2mp'][0],
 				'vlan-id': VLAN_VID(vlan),
 				'shaped-rate': bandwidth}
-		    print
-		    "--- MCEVIK: Patching %s:%s" % (request_url, json)
+		    self.logger.debug("--- MCEVIK: Patching %s:%s" % (request_url, json))
 		    results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
@@ -1007,8 +1003,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 				'shaped-rate': bandwidth}
 		    valid_responses = [201]
 
-		    print
-		    "--- MCEVIK: Patching %s:%s" % (request_url, json)
+		    self.logger.debug("--- MCEVIK: Patching %s:%s" % (request_url, json))
 		    results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
