@@ -958,7 +958,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 		    jsonval = {'ofport': l2mp_bw_out_port,
 				'port': internal_config['corsabwoutl2mp'],
-				'vlan-id': VLAN_VID(vlan),
+				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
 		    self.logger.debug("--- MCEVIK: Tunnel attach %s:%s" % (request_url, jsonval))
 		    results.append(TranslatedCorsaRuleContainer("post",
@@ -969,7 +969,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 		    jsonval = {'ofport': l2mp_bw_in_port,
 				'port': internal_config['corsabwinl2mp'],
-				'vlan-id': VLAN_VID(vlan),
+				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
 
 		    self.logger.debug("--- MCEVIK: Tunnel attach %s:%s" % (request_url, jsonval))
@@ -988,7 +988,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 		    jsonval = {'ofport': l2mp_bw_in_port,
 				'port': internal_config['corsaratelimitportsl2mp'][0],
-				'vlan-id': VLAN_VID(vlan),
+				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
 		    self.logger.debug("--- MCEVIK: Tunnel attach %s:%s" % (request_url, jsonval))
 		    results.append(TranslatedCorsaRuleContainer("post",
@@ -999,10 +999,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 		    jsonval = {'ofport': l2mp_bw_out_port,
 				'port': internal_config['corsaratelimitportsl2mp'][1],
-				'vlan-id': VLAN_VID(vlan),
+				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
 
-		    self.logger.debug("--- MCEVIK: Patching %s:%s" % (request_url, json))
+		    self.logger.debug("--- MCEVIK: Tunnel attach %s:%s" % (request_url, jsonval))
 		    results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
