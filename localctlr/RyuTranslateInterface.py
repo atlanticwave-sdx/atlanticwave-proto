@@ -926,6 +926,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Corsa Case
         else:
             # Endpoint rules
+            print
+            "--- MCEVIK: Corsa Case" 
+
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
 
 		    bridge = internal_config['corsabridge']
@@ -1019,6 +1022,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             #   learning table
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
                 matches = [IN_PORT(port), VLAN_VID(vlan)]
+                actions = []
                 actions.append(Forward(l2mp_bw_in_port))
                 priority = PRIORITY_L2MULTIPOINT
                 marule = MatchActionLCRule(switch_id, matches, actions)
