@@ -1085,8 +1085,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
 
-            
+
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
+                self.logger.debug("--- MCEVIK: mperule.get_endpoint_ports_and_vlans %s" % (mperule.get_endpoint_ports_and_vlans()))
                 matches = [IN_PORT(l2mp_bw_in_port), VLAN_VID(vlan)]
                 actions = []
                 actions.append(Forward(port))
@@ -1126,7 +1127,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             #matches = [IN_PORT(l2mp_bw_out_port),
             #           VLAN_VID(intermediate_vlan),
             #           ETH_DST('ff:ff:ff:ff:ff:ff')]
-            #    # Same actions as above, no need to rebuild
+            ## Same actions as above, no need to rebuild
             #priority = PRIORITY_L2M_BROADCAST_FORWARDING
             #marule = MatchActionLCRule(switch_id, matches, actions)
             #results += self._translate_MatchActionLCRule(datapath,
