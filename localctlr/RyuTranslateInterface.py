@@ -1111,7 +1111,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
 
-            matches = [IN_PORT(l2mp_bw_out_port), int(intermediate_vlan)]
+            matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
             actions = []
             port = int(intermediate_vlan)
             actions.append(Forward(port))
@@ -1124,8 +1124,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          priority)
 
             matches = [IN_PORT(l2mp_bw_out_port),
-                           int(intermediate_vlan),
-                           ETH_DST('ff:ff:ff:ff:ff:ff')]
+                       VLAN_VID(intermediate_vlan),
+                       ETH_DST('ff:ff:ff:ff:ff:ff')]
                 # Same actions as above, no need to rebuild
             priority = PRIORITY_L2M_BROADCAST_FORWARDING
             marule = MatchActionLCRule(switch_id, matches, actions)
