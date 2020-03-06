@@ -933,7 +933,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 		    bridge = internal_config['corsabridge']
 		    bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
-		    vlan = intermediate_vlan
+		    # vlan = intermediate_vlan
 		    bandwidth = mperule.get_bandwidth()
 
 		    port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
@@ -946,7 +946,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 		    l2mp_bw_in_port = VLAN_VID(vlan)
 		    l2mp_bw_out_port = int(int(str(vlan))+10000)
 
-		    self.logger.debug("--- MCEVIK: l2mp_bw_in_port %s l2mp_bw_out_port %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
+		    self.logger.debug("--- MCEVIK: l2mp_bw_in_port: %s -  l2mp_bw_out_port: %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
 
 
 		    # Create tunnels and ofports on corsabridge
@@ -959,7 +959,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 				'port': internal_config['corsabwoutl2mp'],
 				'vlan-id': VLAN_VID(vlan),
 				'shaped-rate': bandwidth}
-		    self.logger.debug("--- MCEVIK: Patching %s:%s" % (request_url, json))
+		    self.logger.debug("--- MCEVIK: Tunnel attach %s:%s" % (request_url, jsonval))
 		    results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
@@ -970,9 +970,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 				'port': internal_config['corsabwinl2mp'],
 				'vlan-id': VLAN_VID(vlan),
 				'shaped-rate': bandwidth}
-		    valid_responses = [201]
 
-		    self.logger.debug("--- MCEVIK: Patching %s:%s" % (request_url, json))
+		    self.logger.debug("--- MCEVIK: Tunnel attach %s:%s" % (request_url, jsonval))
 		    results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
@@ -990,7 +989,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 				'port': internal_config['corsaratelimitportsl2mp'][0],
 				'vlan-id': VLAN_VID(vlan),
 				'shaped-rate': bandwidth}
-		    self.logger.debug("--- MCEVIK: Patching %s:%s" % (request_url, json))
+		    self.logger.debug("--- MCEVIK: Tunnel attach %s:%s" % (request_url, jsonval))
 		    results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
@@ -1001,7 +1000,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
 				'port': internal_config['corsaratelimitportsl2mp'][1],
 				'vlan-id': VLAN_VID(vlan),
 				'shaped-rate': bandwidth}
-		    valid_responses = [201]
 
 		    self.logger.debug("--- MCEVIK: Patching %s:%s" % (request_url, json))
 		    results.append(TranslatedCorsaRuleContainer("post",
