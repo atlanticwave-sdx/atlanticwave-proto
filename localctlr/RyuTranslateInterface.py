@@ -1092,7 +1092,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 
 
-            self.logger.debug("--- MCEVIK: mperule.get_get_flooding_ports       : %s" % (mperule.get_get_flooding_ports()))
+            self.logger.debug("--- MCEVIK: mperule.get_flooding_ports           : %s" % (mperule.get_flooding_ports()))
             self.logger.debug("--- MCEVIK: mperule.get_endpoint_ports_and_vlans : %s" % (mperule.get_endpoint_ports_and_vlans()))
 
             # Endpoint ports
