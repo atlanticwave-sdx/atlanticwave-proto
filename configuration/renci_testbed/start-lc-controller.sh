@@ -6,12 +6,6 @@ export SITE
 MODE="$2"
 echo "--- MODE: $MODE"
 
-if [ -z "$3" ]; then
-  DOCKER_IMAGE_NAME="lc_container"
-else
-  DOCKER_IMAGE_NAME=$3
-fi
-
 if [ "$MODE" == "detached" ]; then
   OPTS="dit"
 else
@@ -46,6 +40,9 @@ case ${SITE} in
 esac
 
 
+# Local Controller
+cd atlanticwave-proto/localctlr/
+
 LC_CONTAINER=$(docker ps -a -f name=${LC_SITE} -q)
 
 if [[ -n "${LC_CONTAINER}" ]]; then
@@ -53,5 +50,7 @@ if [[ -n "${LC_CONTAINER}" ]]; then
 fi
 
 
-docker run --rm --network host -e MANIFEST="/renci_ben.manifest" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} ${DOCKER_IMAGE_NAME}
+docker run --rm --network host -e MANIFEST="/renci_ben.manifest" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} lc_container
 
+echo "The IP of the VM is:"
+ifconfig | awk '/inet addr/{print substr($2,6)}' | awk '/192.168/{print}'
