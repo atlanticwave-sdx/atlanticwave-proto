@@ -42,7 +42,7 @@ LOCALHOST = "127.0.0.1"
 
 CONF = cfg.CONF
 
-L2MULTIPOINTCORSABWDISABLED = True
+L2MULTIPOINTCORSABWDISABLED = False
 
 
 class TranslatedRuleContainer(object):
@@ -934,18 +934,18 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #   - Push new VLAN tag
                 #   - Set new VLAN tag to intermediate
                 #   - Forward to bw-in port
-                matches = [IN_PORT(port), VLAN_VID(vlan)]
-                actions = [SetField(VLAN_VID(port)),
-                           PushVLAN(),
-                           SetField(VLAN_VID(intermediate_vlan)),
-                           Forward(internal_config['corsabwin'])]
-                priority = PRIORITY_L2MULTIPOINT
-                marule = MatchActionLCRule(switch_id, matches, actions)
-                results += self._translate_MatchActionLCRule(datapath,
-                                                             endpoint_table,
-                                                             of_cookie,
-                                                             marule,
-                                                             priority)
+                ###matches = [IN_PORT(port), VLAN_VID(vlan)]
+                ###actions = [SetField(VLAN_VID(port)),
+                ###           PushVLAN(),
+                ###           SetField(VLAN_VID(intermediate_vlan)),
+                ###           Forward(internal_config['corsabwin'])]
+                ###priority = PRIORITY_L2MULTIPOINT
+                ###marule = MatchActionLCRule(switch_id, matches, actions)
+                ###results += self._translate_MatchActionLCRule(datapath,
+                ###                                             endpoint_table,
+                ###                                             of_cookie,
+                ###                                             marule,
+                ###                                             priority)
 
                 # - Translate rule
                 #  - translate_table
@@ -953,33 +953,33 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 #    See "Rule Needed Once", below, as to why this happens
                 #   - set metadata(endpoint)
                 #   - set VLAN tag to intermediate
-                matches = [METADATA(MD_L2M_TRANSLATE, MD_L2M_MASK),
-                           VLAN_VID(port)]
-                actions = [WriteMetadata(port, MD_L2M_MASK),
-                           SetField(VLAN_VID(intermediate_vlan))]
-                priority = PRIORITY_L2MULTIPOINT_TRANSLATE
-                marule = MatchActionLCRule(switch_id, matches, actions)
-                results += self._translate_MatchActionLCRule(datapath,
-                                                             translate_table,
-                                                             of_cookie,
-                                                             marule,
-                                                             priority)
+                ###matches = [METADATA(MD_L2M_TRANSLATE, MD_L2M_MASK),
+                ###           VLAN_VID(port)]
+                ###actions = [WriteMetadata(port, MD_L2M_MASK),
+                ###           SetField(VLAN_VID(intermediate_vlan))]
+                ###priority = PRIORITY_L2MULTIPOINT_TRANSLATE
+                ###marule = MatchActionLCRule(switch_id, matches, actions)
+                ###results += self._translate_MatchActionLCRule(datapath,
+                ###                                             translate_table,
+                ###                                             of_cookie,
+                ###                                             marule,
+                ###                                             priority)
 
                 # - Learning rule
                 #  - learning_table
                 #   - match metadata(endpoint), vlan(intermediate)
                 #    - continue
                 #    - Forward to controller
-                matches = [METADATA(port, MD_L2M_MASK),
-                           VLAN_VID(intermediate_vlan)]
-                actions = [Continue(), Forward(OFPP_CONTROLLER)]
-                priority = PRIORITY_L2MULTIPOINT_LEARNING
-                marule = MatchActionLCRule(switch_id, matches, actions)
-                results += self._translate_MatchActionLCRule(datapath,
-                                                             learning_table,
-                                                             of_cookie,
-                                                             marule,
-                                                             priority)
+                ###matches = [METADATA(port, MD_L2M_MASK),
+                ###           VLAN_VID(intermediate_vlan)]
+                ###actions = [Continue(), Forward(OFPP_CONTROLLER)]
+                ###priority = PRIORITY_L2MULTIPOINT_LEARNING
+                ###marule = MatchActionLCRule(switch_id, matches, actions)
+                ###results += self._translate_MatchActionLCRule(datapath,
+                ###                                             learning_table,
+                ###                                             of_cookie,
+                ###                                             marule,
+                ###                                             priority)
 
             # Rule Needed Once
             # - Ingress rule from bw-out port (bw has been managed)
@@ -988,62 +988,144 @@ class RyuTranslateInterface(app_manager.RyuApp):
             #   - pop outer VLAN
             #   - set metadata(MD_L2M_TRANSLATE)
             #   - goto translate_table
-            matches = [IN_PORT(internal_config['corsabwout']),
-                       VLAN_VID(intermediate_vlan)]
-            actions = [PopVLAN(),
-                       WriteMetadata(MD_L2M_TRANSLATE, MD_L2M_MASK),
-                       GotoTable(translate_table)]
-            priority = PRIORITY_L2MULTIPOINT
-            marule = MatchActionLCRule(switch_id, matches, actions)
-            results += self._translate_MatchActionLCRule(datapath,
-                                                         endpoint_table,
-                                                         of_cookie,
-                                                         marule,
-                                                         priority)
+            ###matches = [IN_PORT(internal_config['corsabwout']),
+            ###           VLAN_VID(intermediate_vlan)]
+            ###actions = [PopVLAN(),
+            ###           WriteMetadata(MD_L2M_TRANSLATE, MD_L2M_MASK),
+            ###           GotoTable(translate_table)]
+            ###priority = PRIORITY_L2MULTIPOINT
+            ###marule = MatchActionLCRule(switch_id, matches, actions)
+            ###results += self._translate_MatchActionLCRule(datapath,
+            ###                                             endpoint_table,
+            ###                                             of_cookie,
+            ###                                             marule,
+            ###                                             priority)
 
-            bridge = internal_config['corsaratelimitbridge']
+            bridge = internal_config['corsabridge']
+            bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
             vlan = intermediate_vlan
             bandwidth = mperule.get_bandwidth()
 
-            tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                          bridge + "/tunnels?list=true")
-            rest_return = requests.get(tunnel_url,
-                                       headers={'Authorization':
-                                                    internal_config['corsatoken']},
-                                       verify=False)  # FIXME: HARDCODED
+            port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                               bridge + "/tunnels")
+
+            port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                                              bridge_ratelimit_l2mp + "/tunnels")
+            valid_responses = [201]
+
+            l2mp_bw_in_port = VLAN_VID(vlan)
+            l2mp_bw_out_port = str(int(str(vlan))+10000)
+
+            print 
+            "--- MCEVIK: l2mp_bw_in_port %s l2mp_bw_out_port %s" % (l2mp_bw_in_port, l2mp_bw_out_port)
+
+
+            # Create tunnels and ofports on corsabridge
+            # 1422  --> 5
+            # 10001 --> 6
+
+            request_url = port_url_bridge
+
+            jsonval = {'ofport': l2mp_bw_out_port,
+                        'port': internal_config['corsabwoutl2mp'],
+                        'vlan-id': VLAN_VID(vlan),
+                        'shaped-rate': bandwidth}
+            print
+            "--- MCEVIK: Patching %s:%s" % (request_url, json)
+            results.append(TranslatedCorsaRuleContainer("post",
+                                                         request_url,
+                                                         jsonval,
+                                                         internal_config['corsatoken'],
+                                                         valid_responses))
+
+            jsonval = {'ofport': l2mp_bw_in_port,
+                        'port': internal_config['corsabwinl2mp'],
+                        'vlan-id': VLAN_VID(vlan),
+                        'shaped-rate': bandwidth}
+            valid_responses = [201]
+
+            print
+            "--- MCEVIK: Patching %s:%s" % (request_url, json)
+            results.append(TranslatedCorsaRuleContainer("post",
+                                                         request_url,
+                                                         jsonval,
+                                                         internal_config['corsatoken'],
+                                                         valid_responses))
+
+
+            # Create tunnels and ofports on corsaratelimitbridgel2mp (br19)
+            # 1422  --> 7
+            # 10001 --> 8
+ 
+            request_url = port_url_bridge_ratelimit_l2mp
+
+            jsonval = {'ofport': l2mp_bw_in_port,
+                        'port': internal_config['corsaratelimitportsl2mp'][0],
+                        'vlan-id': VLAN_VID(vlan),
+                        'shaped-rate': bandwidth}
+            print
+            "--- MCEVIK: Patching %s:%s" % (request_url, json)
+            results.append(TranslatedCorsaRuleContainer("post",
+                                                         request_url,
+                                                         jsonval,
+                                                         internal_config['corsatoken'],
+                                                         valid_responses))
+
+            jsonval = {'ofport': l2mp_bw_out_port,
+                        'port': internal_config['corsaratelimitportsl2mp'][1],
+                        'vlan-id': VLAN_VID(vlan),
+                        'shaped-rate': bandwidth}
+            valid_responses = [201]
+
+            print
+            "--- MCEVIK: Patching %s:%s" % (request_url, json)
+            results.append(TranslatedCorsaRuleContainer("post",
+                                                         request_url,
+                                                         jsonval,
+                                                         internal_config['corsatoken'],
+                                                         valid_responses))
+
+
+
+            ###tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
+            ###              bridge + "/tunnels?list=true")
+            ###rest_return = requests.get(tunnel_url,
+            ###                           headers={'Authorization':
+            ###                                        internal_config['corsatoken']},
+            ###                           verify=False)  # FIXME: HARDCODED
 
             # - Corsa BW Management rule
-            for entry in rest_return.json()['list']:
-                if (entry['vlan-id'] == vlan and
-                        int(entry['port']) in internal_config['corsaratelimitports']):
-                    request_url = entry['links']['self']['href']
-                    jsonval = [{'op': 'replace',
-                                'path': '/meter/cir',
-                                'value': bandwidth},
-                               {'op': 'replace',
-                                'path': '/meter/cbs',
-                                'value': bandwidth},
-                               {'op': 'replace',
-                                'path': '/meter/eir',
-                                'value': 0},
-                               {'op': 'replace',
-                                'path': '/meter/ebs',
-                                'value': 0}]
+            ###for entry in rest_return.json()['list']:
+            ###    if (entry['vlan-id'] == vlan and
+            ###            int(entry['port']) in internal_config['corsaratelimitports']):
+            ###        request_url = entry['links']['self']['href']
+            ###        jsonval = [{'op': 'replace',
+            ###                    'path': '/meter/cir',
+            ###                    'value': bandwidth},
+            ###                   {'op': 'replace',
+            ###                    'path': '/meter/cbs',
+            ###                    'value': bandwidth},
+            ###                   {'op': 'replace',
+            ###                    'path': '/meter/eir',
+            ###                    'value': 0},
+            ###                   {'op': 'replace',
+            ###                    'path': '/meter/ebs',
+            ###                    'value': 0}]
                     # [{'op':'replace',
                     #  'path':'/meter/cir',
                     #  'value':bandwidth},
                     # {'op':'replace',
                     #  'path':'/meter/eir',
                     #  'value':bandwidth}]
-                    valid_responses = [204]
+            ###        valid_responses = [204]
 
-                    print
-                    "Patching %s:%s" % (request_url, json)
-                    results.append(TranslatedCorsaRuleContainer("patch",
-                                                                request_url,
-                                                                jsonval,
-                                                                internal_config['corsatoken'],
-                                                                valid_responses))
+            ###        print
+            ###        "Patching %s:%s" % (request_url, json)
+            ###        results.append(TranslatedCorsaRuleContainer("patch",
+            ###                                                    request_url,
+            ###                                                    jsonval,
+            ###                                                    internal_config['corsatoken'],
+            ###                                                    valid_responses))
 
             # All ports
             flooding_ports = mperule.get_flooding_ports()
