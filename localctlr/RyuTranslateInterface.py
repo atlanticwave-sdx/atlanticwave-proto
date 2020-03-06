@@ -1110,6 +1110,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
+            t_flooding_ports = mperule.get_flooding_ports()
+            t_endpoint_ports = mperule.get_endpoint_ports_and_vlans()
+            self.logger.debug("--- MCEVIK: mperule.get_get_flooding_ports       : %s" % (mperule.get_get_flooding_ports()))
+            self.logger.debug("--- MCEVIK: mperule.get_endpoint_ports_and_vlans : %s" % (mperule.get_endpoint_ports_and_vlans()))
+
             if type(mperule.get_endpoint_ports_and_vlans()) == list:
                 matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
                 actions = []
