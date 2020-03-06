@@ -943,8 +943,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 						      bridge_ratelimit_l2mp + "/tunnels")
 		    valid_responses = [201]
 
-		    l2mp_bw_in_port = VLAN_VID(vlan)
-		    l2mp_bw_out_port = int(int(str(vlan))+10000)
+		    l2mp_bw_in_port = VLAN_VID(vlan)[0]
+		    l2mp_bw_out_port = int(int(str(VLAN_VID(vlan)[1]))+10000)
 
 		    self.logger.debug("--- MCEVIK: l2mp_bw_in_port: %s -  l2mp_bw_out_port: %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
 
