@@ -935,7 +935,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 		    bridge = internal_config['corsabridge']
 		    bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
-		    # vlan = intermediate_vlan
 		    bandwidth = mperule.get_bandwidth()
 
 		    port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
@@ -945,8 +944,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
 						      bridge_ratelimit_l2mp + "/tunnels")
 		    valid_responses = [201]
 
-		    l2mp_bw_in_port = VLAN_VID(vlan)
-		    l2mp_bw_out_port = int(int(str(VLAN_VID(vlan)))+10000)
+		    l2mp_bw_in_port = VLAN_VID(vlanrule.get_vlan_in())
+		    l2mp_bw_out_port = int(int(str(VLAN_VID(VLAN_VID(vlanrule.get_vlan_out()))))+10000)
 
 		    self.logger.debug("--- MCEVIK: l2mp_bw_in_port: %s -  l2mp_bw_out_port: %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
 
