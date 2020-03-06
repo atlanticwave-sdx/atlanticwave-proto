@@ -928,89 +928,89 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Endpoint rules
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
 
-            bridge = internal_config['corsabridge']
-            bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
-            vlan = intermediate_vlan
-            bandwidth = mperule.get_bandwidth()
+		    bridge = internal_config['corsabridge']
+		    bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
+		    vlan = intermediate_vlan
+		    bandwidth = mperule.get_bandwidth()
 
-            port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                               bridge + "/tunnels")
+		    port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
+				       bridge + "/tunnels")
 
-            port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                                              bridge_ratelimit_l2mp + "/tunnels")
-            valid_responses = [201]
+		    port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
+						      bridge_ratelimit_l2mp + "/tunnels")
+		    valid_responses = [201]
 
-            l2mp_bw_in_port = VLAN_VID(vlan)
-            l2mp_bw_out_port = str(int(str(vlan))+10000)
+		    l2mp_bw_in_port = VLAN_VID(vlan)
+		    l2mp_bw_out_port = str(int(str(vlan))+10000)
 
-            print 
-            "--- MCEVIK: l2mp_bw_in_port %s l2mp_bw_out_port %s" % (l2mp_bw_in_port, l2mp_bw_out_port)
-
-
-            # Create tunnels and ofports on corsabridge
-            # 1422  --> 5
-            # 10001 --> 6
-
-            request_url = port_url_bridge
-
-            jsonval = {'ofport': l2mp_bw_out_port,
-                        'port': internal_config['corsabwoutl2mp'],
-                        'vlan-id': VLAN_VID(vlan),
-                        'shaped-rate': bandwidth}
-            print
-            "--- MCEVIK: Patching %s:%s" % (request_url, json)
-            results.append(TranslatedCorsaRuleContainer("post",
-                                                         request_url,
-                                                         jsonval,
-                                                         internal_config['corsatoken'],
-                                                         valid_responses))
-
-            jsonval = {'ofport': l2mp_bw_in_port,
-                        'port': internal_config['corsabwinl2mp'],
-                        'vlan-id': VLAN_VID(vlan),
-                        'shaped-rate': bandwidth}
-            valid_responses = [201]
-
-            print
-            "--- MCEVIK: Patching %s:%s" % (request_url, json)
-            results.append(TranslatedCorsaRuleContainer("post",
-                                                         request_url,
-                                                         jsonval,
-                                                         internal_config['corsatoken'],
-                                                         valid_responses))
+		    print 
+		    "--- MCEVIK: l2mp_bw_in_port %s l2mp_bw_out_port %s" % (l2mp_bw_in_port, l2mp_bw_out_port)
 
 
-            # Create tunnels and ofports on corsaratelimitbridgel2mp (br19)
-            # 1422  --> 7
-            # 10001 --> 8
- 
-            request_url = port_url_bridge_ratelimit_l2mp
+		    # Create tunnels and ofports on corsabridge
+		    # 1422  --> 5
+		    # 10001 --> 6
 
-            jsonval = {'ofport': l2mp_bw_in_port,
-                        'port': internal_config['corsaratelimitportsl2mp'][0],
-                        'vlan-id': VLAN_VID(vlan),
-                        'shaped-rate': bandwidth}
-            print
-            "--- MCEVIK: Patching %s:%s" % (request_url, json)
-            results.append(TranslatedCorsaRuleContainer("post",
-                                                         request_url,
-                                                         jsonval,
-                                                         internal_config['corsatoken'],
-                                                         valid_responses))
+		    request_url = port_url_bridge
 
-            jsonval = {'ofport': l2mp_bw_out_port,
-                        'port': internal_config['corsaratelimitportsl2mp'][1],
-                        'vlan-id': VLAN_VID(vlan),
-                        'shaped-rate': bandwidth}
-            valid_responses = [201]
+		    jsonval = {'ofport': l2mp_bw_out_port,
+				'port': internal_config['corsabwoutl2mp'],
+				'vlan-id': VLAN_VID(vlan),
+				'shaped-rate': bandwidth}
+		    print
+		    "--- MCEVIK: Patching %s:%s" % (request_url, json)
+		    results.append(TranslatedCorsaRuleContainer("post",
+								 request_url,
+								 jsonval,
+								 internal_config['corsatoken'],
+								 valid_responses))
 
-            print
-            "--- MCEVIK: Patching %s:%s" % (request_url, json)
-            results.append(TranslatedCorsaRuleContainer("post",
-                                                         request_url,
-                                                         jsonval,
-                                                         internal_config['corsatoken'],
-                                                         valid_responses))
+		    jsonval = {'ofport': l2mp_bw_in_port,
+				'port': internal_config['corsabwinl2mp'],
+				'vlan-id': VLAN_VID(vlan),
+				'shaped-rate': bandwidth}
+		    valid_responses = [201]
+
+		    print
+		    "--- MCEVIK: Patching %s:%s" % (request_url, json)
+		    results.append(TranslatedCorsaRuleContainer("post",
+								 request_url,
+								 jsonval,
+								 internal_config['corsatoken'],
+								 valid_responses))
+
+
+		    # Create tunnels and ofports on corsaratelimitbridgel2mp (br19)
+		    # 1422  --> 7
+		    # 10001 --> 8
+	 
+		    request_url = port_url_bridge_ratelimit_l2mp
+
+		    jsonval = {'ofport': l2mp_bw_in_port,
+				'port': internal_config['corsaratelimitportsl2mp'][0],
+				'vlan-id': VLAN_VID(vlan),
+				'shaped-rate': bandwidth}
+		    print
+		    "--- MCEVIK: Patching %s:%s" % (request_url, json)
+		    results.append(TranslatedCorsaRuleContainer("post",
+								 request_url,
+								 jsonval,
+								 internal_config['corsatoken'],
+								 valid_responses))
+
+		    jsonval = {'ofport': l2mp_bw_out_port,
+				'port': internal_config['corsaratelimitportsl2mp'][1],
+				'vlan-id': VLAN_VID(vlan),
+				'shaped-rate': bandwidth}
+		    valid_responses = [201]
+
+		    print
+		    "--- MCEVIK: Patching %s:%s" % (request_url, json)
+		    results.append(TranslatedCorsaRuleContainer("post",
+								 request_url,
+								 jsonval,
+								 internal_config['corsatoken'],
+								 valid_responses))
 
 
             # Endpoint ports
