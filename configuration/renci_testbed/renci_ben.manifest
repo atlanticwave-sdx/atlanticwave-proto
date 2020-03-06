@@ -109,6 +109,10 @@
             "corsabwout": 20,
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [21,22],
+            "corsabwinl2mp": 5,
+            "corsabwoutl2mp": 6,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,2,11,23,30]
           }
@@ -140,6 +144,10 @@
             "corsabwout": 26,
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [27,28],
+            "corsabwinl2mp": 3,
+            "corsabwoutl2mp": 4,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [13,14],
             "managementvlan":1411,
             "managementvlanports":[23]
           }
@@ -198,6 +206,10 @@
             "corsabwout":20,
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
+            "corsabwinl2mp": 5,
+            "corsabwoutl2mp": 6,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,2,11]
           }
@@ -251,6 +263,10 @@
             "corsabwout":20,
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
+            "corsabwinl2mp": 5,
+            "corsabwoutl2mp": 6,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,11]
           }
@@ -304,6 +320,10 @@
             "corsabwout":20,
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
+            "corsabwinl2mp": 5,
+            "corsabwoutl2mp": 6,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,11]
           }

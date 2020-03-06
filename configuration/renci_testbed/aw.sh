@@ -94,6 +94,7 @@ cleanup_files(){
 
 cleanup_docker(){
     TYPE=$1
+    # Attempts to stop running containers and remove incomplete/failed images 
     for i in `docker ps -a -q`; do echo "--- Container: $i" ; docker stop $i; docker rm -v $i; done
     for i in `docker images | grep none | awk '{print $3}'`; do docker rmi $i ; done
 }
@@ -105,6 +106,7 @@ build_docker_image(){
    TMP_DIR=$3
    WORK_DIR=$4
    TYPE=$5
+   DOCKER_IMAGE_NAME=$6
    
    cd $TMP_DIR
    title "Clone Branch ${AW_BRANCH}"
@@ -112,7 +114,7 @@ build_docker_image(){
    cp ${TMP_DIR}/atlanticwave-proto/configuration/renci_testbed/setup-${TYPE}-controller.sh ${WORK_DIR}
    chmod +x ${WORK_DIR}/setup-${TYPE}-controller.sh 
    cd ${WORK_DIR}
-   ./setup-${TYPE}-controller.sh -R ${AW_REPO} -B ${AW_BRANCH}
+   ./setup-${TYPE}-controller.sh -R ${AW_REPO} -B ${AW_BRANCH} -N ${DOCKER_IMAGE_NAME}
 
 }
 
@@ -137,10 +139,11 @@ run_docker_container(){
    WORK_DIR=$2
    TYPE=$3
    MODE=$4
+   DOCKER_IMAGE_NAME=$5
 
    # Run Docker Container ( renci | duke | unc | ncsu )
    cd ${WORK_DIR}
-   ./start-${TYPE}-controller.sh ${SITE} ${MODE}
+   ./start-${TYPE}-controller.sh ${SITE} ${MODE} ${DOCKER_IMAGE_NAME}
 }
 
 
@@ -149,8 +152,14 @@ stop_docker_container(){
 }
 
 
-while getopts "R:B:m:cbprsH" opt; do
+while getopts "A:a:R:B:m:n:cbprsH" opt; do
     case $opt in
+        A)
+            WORK_DIR=${OPTARG}
+            ;;
+        a)
+            TMP_DIR=${OPTARG}
+            ;;
         R)
             AW_REPO=${OPTARG}
             ;;
@@ -159,6 +168,9 @@ while getopts "R:B:m:cbprsH" opt; do
             ;;
         m)
             MODE=${OPTARG}
+            ;;
+        n)
+            DOCKER_IMAGE_NAME=${OPTARG}
             ;;
         c)
             title "Cleanup Files"
@@ -173,7 +185,7 @@ while getopts "R:B:m:cbprsH" opt; do
             title "Cleanup Docker Containers and Images"
             cleanup_docker ${TYPE}
             title "Build Docker Image"
-            build_docker_image $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE}
+            build_docker_image $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE} ${DOCKER_IMAGE_NAME}
             ;;
         p)
             title "Cleanup Docker Containers and Images"
@@ -182,8 +194,8 @@ while getopts "R:B:m:cbprsH" opt; do
             build_docker_image_local $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE}
             ;;
         r)
-            title "Run Docker Container for ${TYPE} - MODE: $MODE"
-            run_docker_container $SITE $WORK_DIR $TYPE $MODE
+            title "Run Docker Container for ${TYPE} - MODE: $MODE - CONTAINER: ${DOCKER_IMAGE_NAME}"
+            run_docker_container $SITE $WORK_DIR $TYPE $MODE ${DOCKER_IMAGE_NAME}
             ;;
         s)
             title "Stop Docker Containers"
