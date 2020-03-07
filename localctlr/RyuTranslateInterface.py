@@ -1010,6 +1010,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
 								 valid_responses))
 
 
+
+            self.logger.debug("--- MCEVIK: mperule.get_flooding_ports           : %s" % (mperule.get_flooding_ports()))
+            self.logger.debug("--- MCEVIK: mperule.get_endpoint_ports_and_vlans : %s" % (mperule.get_endpoint_ports_and_vlans()))
+
             # Endpoint ports
             # - Translate VLANs on ingress on endpoint_table
             # - Install learning rules on intermediate VLAN on ingress on
@@ -1066,11 +1070,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
             flooding_ports = mperule.get_flooding_ports()
             endpoint_ports = [port for (port, vlan) in
                               mperule.get_endpoint_ports_and_vlans()]
-            #ports = flooding_ports + endpoint_ports
-            ports = flooding_ports
+
 
             # Flooding ports
-            for port in ports:
+            for port in flooding_ports:
 		self.logger.debug("--- -1- MCEVIK: port: %s " % (port))
                 matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
                 actions = []
@@ -1104,10 +1107,35 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
 
+                #
+                # 
+		l2mp_bw_out_port = int(intermediate_vlan) + 10000
+
+                matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
+                actions = []
+                port = int(intermediate_vlan)
+                actions.append(Forward(port))
+                priority = PRIORITY_L2M_FLOOD_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+
+                matches = [IN_PORT(l2mp_bw_out_port),
+                           VLAN_VID(intermediate_vlan),
+                           ETH_DST('ff:ff:ff:ff:ff:ff')]
+                # Same actions as above, no need to rebuild
+                priority = PRIORITY_L2M_BROADCAST_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
 
 
-            self.logger.debug("--- MCEVIK: mperule.get_flooding_ports           : %s" % (mperule.get_flooding_ports()))
-            self.logger.debug("--- MCEVIK: mperule.get_endpoint_ports_and_vlans : %s" % (mperule.get_endpoint_ports_and_vlans()))
 
             # Endpoint ports
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
@@ -1138,64 +1166,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              of_cookie,
                                                              marule,
                                                              priority)
-
-
-                matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
-                actions = []
-                port = int(intermediate_vlan)
-                actions.append(Forward(port))
-                priority = PRIORITY_L2M_FLOOD_FORWARDING
-                marule = MatchActionLCRule(switch_id, matches, actions)
-                results += self._translate_MatchActionLCRule(datapath,
-                                                             flood_table,
-                                                             of_cookie,
-                                                             marule,
-                                                             priority)
-
-                matches = [IN_PORT(l2mp_bw_out_port),
-                           VLAN_VID(intermediate_vlan),
-                           ETH_DST('ff:ff:ff:ff:ff:ff')]
-                # Same actions as above, no need to rebuild
-                priority = PRIORITY_L2M_BROADCAST_FORWARDING
-                marule = MatchActionLCRule(switch_id, matches, actions)
-                results += self._translate_MatchActionLCRule(datapath,
-                                                             flood_table,
-                                                             of_cookie,
-                                                             marule,
-                                                             priority)
-
-
-
-
-            #t_flooding_ports = mperule.get_flooding_ports()
-            #t_endpoint_ports = mperule.get_endpoint_ports_and_vlans()
-            #self.logger.debug("--- MCEVIK: mperule.get_get_flooding_ports       : %s" % (mperule.get_get_flooding_ports()))
-            #self.logger.debug("--- MCEVIK: mperule.get_endpoint_ports_and_vlans : %s" % (mperule.get_endpoint_ports_and_vlans()))
-
-            #if type(mperule.get_endpoint_ports_and_vlans()) == list:
-            #    matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
-            #    actions = []
-            #    port = int(intermediate_vlan)
-            #    actions.append(Forward(port))
-            #    priority = PRIORITY_L2M_FLOOD_FORWARDING
-            #    marule = MatchActionLCRule(switch_id, matches, actions)
-            #    results += self._translate_MatchActionLCRule(datapath,
-            #                                                 flood_table,
-            #                                                 of_cookie,
-            #                                                 marule,
-            #                                                 priority)
-
-            #    matches = [IN_PORT(l2mp_bw_out_port),
-            #               VLAN_VID(intermediate_vlan),
-            #               ETH_DST('ff:ff:ff:ff:ff:ff')]
-            #    # Same actions as above, no need to rebuild
-            #    priority = PRIORITY_L2M_BROADCAST_FORWARDING
-            #    marule = MatchActionLCRule(switch_id, matches, actions)
-            #    results += self._translate_MatchActionLCRule(datapath,
-            #                                                 flood_table,
-            #                                                 of_cookie,
-            #                                                 marule,
-            #                                                 priority)
                
         return results
 
