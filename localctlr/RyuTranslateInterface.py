@@ -1106,14 +1106,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
-
+                #
                 #
                 # 
 		l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
                 matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
                 actions = []
-                port = int(intermediate_vlan)
                 actions.append(Forward(port))
                 priority = PRIORITY_L2M_FLOOD_FORWARDING
                 marule = MatchActionLCRule(switch_id, matches, actions)
