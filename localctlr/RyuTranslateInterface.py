@@ -1014,8 +1014,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # - Translate VLANs on ingress on endpoint_table
             # - Install learning rules on intermediate VLAN on ingress on
             #   learning table
+
+            self.logger.debug("+++ MCEVIK: ENDPOINT TABLE and LEARNING TABLE")
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
 		self.logger.debug("--- --- MCEVIK: port: %s - vlan: %s" % (port, vlan))
+
+		l2mp_bw_in_port = vlan
+		l2mp_bw_out_port = int(intermediate_vlan) + 10000
+
                 matches = [IN_PORT(port), VLAN_VID(vlan)]
                 actions = []
                 actions.append(Forward(l2mp_bw_in_port))
@@ -1027,7 +1033,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
-		self.logger.debug("--- --- MCEVIK: type(results): %s " % (type(results)))
 		self.logger.debug("--- --- MCEVIK:     (results): %s " % (results))
 
                 matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(vlan)]
@@ -1040,6 +1045,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
+		self.logger.debug("--- --- MCEVIK:     (results): %s " % (results))
+
                 matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
                 actions = [Continue(), Forward(OFPP_CONTROLLER)]
                 priority = PRIORITY_L2MULTIPOINT_LEARNING
@@ -1050,6 +1057,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
+		self.logger.debug("--- --- MCEVIK:     (results): %s " % (results))
+
+
+            self.logger.debug("+++ MCEVIK: FLOOD TABLE")
             # Endpoint and Flooding ports.
             # - Install flooding rules on flood table
             flooding_ports = mperule.get_flooding_ports()
@@ -1060,12 +1071,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # Flooding ports
             for port in ports:
+		self.logger.debug("--- -1- MCEVIK: port: %s " % (port))
                 matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
                 actions = []
                 for outport in flooding_ports:
+		    self.logger.debug("--- -2- MCEVIK: outport: %s " % (outport))
                     if outport != port:
                         actions.append(Forward(outport))
                 for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
+		    self.logger.debug("--- -3- MCEVIK: outport: %s " % (outport))
                     if outport != port:
                         actions.append(SetField(VLAN_VID(vlan)))
                         actions.append(Forward(l2mp_bw_out_port))
@@ -1097,6 +1111,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # Endpoint ports
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
+		self.logger.debug("--- -4- MCEVIK: port: %s " % (port))
+
+		l2mp_bw_in_port = vlan
+		l2mp_bw_out_port = int(intermediate_vlan) + 10000
+
                 matches = [IN_PORT(l2mp_bw_in_port), VLAN_VID(vlan)]
                 actions = []
                 actions.append(Forward(port))
