@@ -552,6 +552,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # If port has backup port, use first one as default port
             #if isinstance(i, (list)):
             #    i = i[0]
+            self.logger.debug("Using default management ports.")
             matches = [IN_PORT(i)]
             actions = [Drop()]
             priority = PRIORITY_DEFAULT_PLUS_ONE
@@ -599,6 +600,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
     def _backup_port_recover(self, ev):
         '''Remove existing port and use backup port'''
+        self.logger.debug("Check if backup port is available")
         rule_results = []
         switch_id = 0
         datapath = ev.msg.datapath
@@ -634,6 +636,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          of_cookie,
                                                          marule,
                                                          priority)
+
+        # Remove default rules
+        self.logger.debug("Removing default management VLAN port")
         for rule in rule_results:
             self.remove_flow(datapath, rule)
 
@@ -653,7 +658,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          marule,
                                                          priority)
 
-        # Install default rules
+        # Install backup rules
+        self.logger.debug("Adding new management VLAN port")
         for rule in rule_results:
             self.add_flow(datapath, rule)
 
