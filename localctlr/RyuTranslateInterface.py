@@ -550,8 +550,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         #   - Create a default drop rule (if necessary needed). Priority 0
         for i in (managementvlanports):
             # If port has backup port, use first one as default port
-            if isinstance(i, (list)):
-                i = i[0]
+            #if isinstance(i, (list)):
+            #    i = i[0]
             matches = [IN_PORT(i)]
             actions = [Drop()]
             priority = PRIORITY_DEFAULT_PLUS_ONE
@@ -610,10 +610,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
 
-        if 'managementvlanports' in internal_config.keys():
-            managementvlanports = internal_config['managementvlanports']
+        #if 'managementvlanports' in internal_config.keys():
+        #    managementvlanports = internal_config['managementvlanports']
+
+        if 'managementvlanbackupports' in internal_config.keys():
+            managementvlanbackupports = internal_config['managementvlanbackupports']
+        else:
+            self.logger.debug("No backup port provided")
+            return
         
-        for i in (managementvlanports):
+        for i in (managementvlanbackupports):
             # If port has backup port, use first one as default port
             if isinstance(i, (list)):
                 if len(i) > 1:
@@ -631,7 +637,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         for rule in rule_results:
             self.remove_flow(datapath, rule)
 
-        for i in (managementvlanports):
+        for i in (managementvlanbackupports):
             # If port has backup port, use first one as default port
             if isinstance(i, (list)):
                 if len(i) > 1:
