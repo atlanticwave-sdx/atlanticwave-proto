@@ -486,6 +486,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Call bootstrapping for switch functions
         self._new_switch_bootstrapping(ev)
 
+    # Handles port status change event
+    @set_ev_cls(ofp_event.EventOFPPortStatus, CONFIG_DISPATCHER)
+    def port_status_handler(self, ev):
+        self.logger.warning("Port status changed: connection from: " + str(ev.msg.datapath.id) + " for " + str(self))
+        self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
+
+        # Call backup port recovery for switch functions
+        self._backup_port_recover(ev)
+
     # From the Ryu mailing list: https://sourceforge.net/p/ryu/mailman/message/33584125/
     @set_ev_cls(ofp_event.EventOFPErrorMsg,
                 [CONFIG_DISPATCHER, MAIN_DISPATCHER])
@@ -637,6 +646,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          marule,
                                                          priority)
 
+        rule_results = []
         # Remove default rules
         self.logger.debug("Removing default management VLAN port")
         for rule in rule_results:
