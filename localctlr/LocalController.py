@@ -550,10 +550,8 @@ class LocalController(AtlanticWaveModule):
         self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
                                                              switch_id, 
                                                              rules))
-        #rulelist = pickle.dumps(rules)
-        #self.logger.debug("--- MCEVIK  remove_rule_sdxmsg - rulelist:  %s" % (rulelist))
-        self.logger.debug("--- MCEVIK  remove_rule_sdxmsg - rules['intermediate_vlan']:  %s" % (rules['intermediate_vlan']))
-        self.logger.debug("--- MCEVIK  remove_rule_sdxmsg - rules['endpoint_ports_and_vlans']:  %s" % (rules['endpoint_ports_and_vlans']))
+        self.logger.debug("--- MCEVIK  remove_rule_sdxmsg - rules['endpoint_ports_and_vlans']:  %s" % (rules.get_endpoint_ports_and_vlans()))
+        self.logger.debug("--- MCEVIK  remove_rule_sdxmsg - rules['intermediate_vlan']:  %s" % (rules.get_intermediate_vlan()))
 
         if rules == []:
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
