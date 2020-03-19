@@ -547,10 +547,11 @@ class LocalController(AtlanticWaveModule):
         cookie = msg.get_data()['cookie']
         rules = self.rm.get_rules(cookie, switch_id)
 
+        self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - rules: %s" % (rules.__dict__)) 
+
         self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
                                                              switch_id, 
                                                              rules))
-        self.logger.debug("--- MCEVIK  remove_rule_sdxmsg - type rules:  %s" % (type(rules)))
 
         if rules == []:
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
