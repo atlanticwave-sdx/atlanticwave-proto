@@ -550,8 +550,8 @@ class LocalController(AtlanticWaveModule):
         self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
                                                              switch_id, 
                                                              rules))
-        self.logger.debug("--- MCEVIK type(rule):  %s" % (type(rules))) 
-        self.logger.debug("--- MCEVIK     (rule):  %s" % (rules))
+        rulelist = [pickle.loads(str(x['rule'])) for x in rules] 
+        self.logger.debug("--- MCEVIK  remove_rule_sdxmsg - rulelist:  %s" % (rulelist))
 
         if rules == []:
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
