@@ -550,7 +550,7 @@ class LocalController(AtlanticWaveModule):
         self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
                                                              switch_id, 
                                                              rules))
-        rulelist = [pickle.loads(str(x['rule'])) for x in rules] 
+        rulelist = pickle.dumps(rules)
         self.logger.debug("--- MCEVIK  remove_rule_sdxmsg - rulelist:  %s" % (rulelist))
 
         if rules == []:
