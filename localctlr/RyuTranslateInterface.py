@@ -486,6 +486,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Call bootstrapping for switch functions
         self._new_switch_bootstrapping(ev)
 
+    # Handles port status change event
+    @set_ev_cls(ofp_event.EventOFPPortStatus, CONFIG_DISPATCHER)
+    def port_status_handler(self, ev):
+        self.logger.warning("Port status changed: connection from: " + str(ev.msg.datapath.id) + " for " + str(self))
+        self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
+
+        # Call backup port recovery for switch functions
+        self._backup_port_recover(ev)
+
     # From the Ryu mailing list: https://sourceforge.net/p/ryu/mailman/message/33584125/
     @set_ev_cls(ofp_event.EventOFPErrorMsg,
                 [CONFIG_DISPATCHER, MAIN_DISPATCHER])
@@ -549,9 +558,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # For last table
         #   - Create a default drop rule (if necessary needed). Priority 0
         for i in (managementvlanports):
+            # If port has backup port, use first one as default port
+            #if isinstance(i, (list)):
+            #    i = i[0]
+            self.logger.debug("Using default management ports.")
             matches = [IN_PORT(i)]
             actions = [Drop()]
-            priorty = PRIORITY_DEFAULT_PLUS_ONE
+            priority = PRIORITY_DEFAULT_PLUS_ONE
             table = LASTTABLE
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
@@ -562,7 +575,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Catch-all for those not in the same port
         matches = []
         actions = [Drop()]
-        priorty = PRIORITY_DEFAULT
+        priority = PRIORITY_DEFAULT
         table = LASTTABLE
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
@@ -592,6 +605,72 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Install default rules
         for rule in results:
+            self.add_flow(datapath, rule)
+
+    def _backup_port_recover(self, ev):
+        '''Remove existing port and use backup port'''
+        self.logger.debug("Check if backup port is available")
+        rule_results = []
+        switch_id = 0
+        datapath = ev.msg.datapath
+        of_cookie = self._get_new_OF_cookie(-1)
+        # Extract management VLAN and ports from the manifest
+        internal_config = self._get_switch_internal_config(datapath.id)
+
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+
+        #if 'managementvlanports' in internal_config.keys():
+        #    managementvlanports = internal_config['managementvlanports']
+
+        if 'managementvlanbackupports' in internal_config.keys():
+            managementvlanbackupports = internal_config['managementvlanbackupports']
+        else:
+            self.logger.debug("No backup port provided")
+            return
+        
+        for i in (managementvlanbackupports):
+            # If port has backup port, use first one as default port
+            if isinstance(i, (list)):
+                if len(i) > 1:
+                    i = i[0]
+            matches = [IN_PORT(i)]
+            actions = [Drop()]
+            priority = PRIORITY_DEFAULT_PLUS_ONE
+            table = LASTTABLE
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            rule_results += self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+
+        rule_results = []
+        # Remove default rules
+        self.logger.debug("Removing default management VLAN port")
+        for rule in rule_results:
+            self.remove_flow(datapath, rule)
+
+        for i in (managementvlanbackupports):
+            # If port has backup port, use first one as default port
+            if isinstance(i, (list)):
+                if len(i) > 1:
+                    i = i[1]
+            matches = [IN_PORT(i)]
+            actions = [Drop()]
+            priority = PRIORITY_DEFAULT_PLUS_ONE
+            table = LASTTABLE
+            marule = MatchActionLCRule(switch_id, matches, actions)
+            rule_results += self._translate_MatchActionLCRule(datapath,
+                                                         table,
+                                                         of_cookie,
+                                                         marule,
+                                                         priority)
+
+        # Install backup rules
+        self.logger.debug("Adding new management VLAN port")
+        for rule in rule_results:
             self.add_flow(datapath, rule)
 
     def _translate_MatchActionLCRule(self, datapath, table,
