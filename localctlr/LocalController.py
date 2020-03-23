@@ -105,6 +105,8 @@ class LocalController(AtlanticWaveModule):
         wlist = []
         xlist = rlist
         timeout = 1.0
+        num_of_retry = 0
+        all_rules = []
 
         self.logger.debug("Inside Main Loop, SDX connection: %s" % (self.sdx_connection))
 
@@ -248,9 +250,15 @@ class LocalController(AtlanticWaveModule):
                 self.sdx_connection.close()
                 self.sdx_connection = None
                 self.cxn_q.put((DEL_CXN, cxn))
+                if num_of_retry <= 5:
+                    # Restart new connection
+                    self.start_sdx_controller_connection()
+                    sleep(5)
                 
-                # Restart new connection
-                self.start_sdx_controller_connection()
+                self.all_rules = self.rm.list_all_rules
+                num_of_retry = 0
+                
+    
 
     def _add_switch_config_to_db(self, switch_name, switch_config):
         # Pushes a switch info dictionary from manifest.
