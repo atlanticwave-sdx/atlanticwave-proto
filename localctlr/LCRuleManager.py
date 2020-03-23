@@ -125,9 +125,9 @@ class LCRuleManager(AtlanticWaveManager):
                    x['status']) for x in results]
         return retval
 
-    def list_all_rules(self, switch_id, full_tuple=False):
+    def list_all_rules(self, full_tuple=False):
         rules = self.rule_table.find()
-        self.logger.debug("Retrieving all rules.")
+        self.logger.debug("---------------cw:Retrieving all rules--------------.")
         if full_tuple:
             retval = [(x['cookie'],
                        x['switch_id'],

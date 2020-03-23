@@ -209,6 +209,7 @@ class LocalController(AtlanticWaveModule):
                     self.logger.debug("Received a INSTL message from %s" %
                                       hex(id(entry)))
                     self.install_rule_sdxmsg(msg)
+                    self.remove_all_rules_sdxmsg()
 
                 # If RemoveRule
                 elif type(msg) == SDXMessageRemoveRule:
@@ -539,12 +540,33 @@ class LocalController(AtlanticWaveModule):
 
         self.rm.add_rule(cookie, switch_id, rule, RULE_STATUS_INSTALLING)
         self.switch_connection.send_command(switch_id, rule)
-
-        
+        self.rm.list_all_rules(True)
+        self.logger.debug("----------self.rm.list_all_rules complete---------------") 
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been installed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
         self.rm.set_status(cookie, switch_id, RULE_STATUS_ACTIVE)
+
+    def remove_all_rules_sdxmsg(self):
+        '''CW: this part is not working yet'''
+        ''' Removes all rules based on cookie sent from the SDX Controller. '''
+        rules = self.rm.list_all_rules()
+
+        if rules == []:
+            self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
+            return
+        for rule in rules:
+            print rule
+            cookie = rule.get_data()['rule'].get_cookie()
+            switch_id = rule.get_data()['rule'].get_switch_id()
+            self.rm.set_status(cookie, switch_id, RULE_STATUS_DELETING)
+            self.switch_connection.remove_rule(switch_id, cookie)
+
+            #FIXME: This should be moved to somewhere where we have positively
+            #confirmed a rule has been removed. Right now, there is no such
+            #location as the LC/RyuTranslateInteface protocol is primitive.
+            self.rm.set_status(cookie, switch_id, RULE_STATUS_REMOVED)
+            self.rm.rm_rule(cookie, switch_id)
 
     def remove_rule_sdxmsg(self, msg):
         ''' Removes rules based on cookie sent from the SDX Controller. If we do

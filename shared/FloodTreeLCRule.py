@@ -43,3 +43,9 @@ class FloodTreeLCRule(LCRule):
 
     def get_ports(self):
         return self.ports
+    
+    def get_switch_id(self):
+        return self.switch_id
+
+    def get_cookie(self):
+        return self.cookie
