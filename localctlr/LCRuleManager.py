@@ -124,7 +124,18 @@ class LCRuleManager(AtlanticWaveManager):
                    pickle.loads(str(x['rule'])),
                    x['status']) for x in results]
         return retval
-        
+
+    def list_all_rules(self, switch_id, full_tuple=False):
+        rules = self.rule_table.find()
+        self.logger.debug("Retrieving all rules.")
+        if full_tuple:
+            retval = [(x['cookie'],
+                       x['switch_id'],
+                       pickle.loads(str(x['rule'])),
+                       x['status']) for x in rules]
+            return retval
+        retval = [pickle.loads(str(x['rule'])) for x in rules]
+        return retval
 
     def get_rules(self, cookie, switch_id, full_tuple=False):
         ''' Returns a list of all rules matching cookie and switch_id. 
