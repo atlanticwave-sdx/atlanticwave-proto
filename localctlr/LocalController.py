@@ -356,6 +356,17 @@ class LocalController(AtlanticWaveModule):
         val = d['value']
         return pickle.loads(str(val))
 
+    def _get_switch_internal_config(self, switch_id):
+        ''' Gets switch internal config information based on datapath passed in
+            Pulls information from the DB.
+        '''
+        key = str(switch_id)
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
     def _get_ryu_config_in_db(self):
         # Returns the ryu configuration dictionary if it exists or None if it
         # does not.
@@ -386,10 +397,50 @@ class LocalController(AtlanticWaveModule):
         val = d['value']
         return pickle.loads(str(val))
 
+    def _get_switch_internal_config_count(self):
+        # Returns a count of internal configs.
+        d = self.config_table.find()
+        count = 0
+        for entry in d:
+            print "---------CW--ENTRY:-------------"
+            print entry
+            if (entry['key'] == 'lcip' or
+                    entry['key'] == 'manifest_filename' or
+                    entry['key'] == 'ryucxnport'):
+                continue
+            count += 1
+        return count
+
+    def _add_switch_internal_config_to_db(self, dpid, internal_config):
+        # Pushes a switch internal_config into the db.
+        # key: "<dpid>"
+        # value: <internal_config>
+        key = dpid
+        value = pickle.dumps(internal_config)
+        if self._get_switch_internal_config(dpid) == None:
+            self.logger.info("Adding new internal_config for DPID %s" % dpid)
+            self.config_table.insert({'key': key, 'value': value})
+        else:
+            # Already exists, must update
+            self.logger.info("updating internal_config for DPID %s" % dpid)
+            self.config_table.update({'key': key, 'value': value},
+                                     ['key'])
+
     def _get_manifest_filename_in_db(self):
         # Returns the manifest filename if it exists or None if it does not.
         key = 'manifest_filename'
         d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+    def _get_config_filename_in_db(self):
+        # Returns the manifest filename if it exists or None if it does not.
+        key = 'manifest_filename'
+        d = self.config_table.find_one(key=key)
+        print "------------_get_config_filename_in_db-----------"
+        print d
         if d == None:
             return None
         val = d['value']
@@ -414,7 +465,29 @@ class LocalController(AtlanticWaveModule):
             raise Exception("Stored and passed in manifest filenames don't match up %s:%s" %
                             (str(self.manifest),
                              str(self._get_manifest_filename_in_db())))
-        
+       
+        self.conf_file = None 
+        # If the conf_name is None, try to get the name from the DB.
+        if self.conf_file == None:
+            self.conf_file = self._get_config_filename_in_db()
+        elif (self.conf_file != self._get_config_filename_in_db() and
+              None != self._get_config_filename_in_db()):
+            # Make sure it matches!
+            # FIXME: Should we force everything to be imported if different.
+            raise Exception("Stored and passed in manifest filenames don't match up %s:%s" %
+                            (str(self.conf_file),
+                             str(self._get_config_filename_in_db())))
+
+        # Get config file, if it exists
+        try:
+            self.logger.info("Opening config file %s" % self.conf_file)
+            with open(self.conf_file) as data_file:
+                data = json.load(data_file)
+            lcdata = data['localcontrollers'][self.name]
+        except Exception as e:
+            self.logger.warning("exception when opening config file: %s" %
+                                str(e))
+
         # Get Manifest, if it exists
         try:
             self.logger.info("Opening manifest file %s" % self.manifest)
@@ -465,8 +538,27 @@ class LocalController(AtlanticWaveModule):
             self.sdxip = options.host
             self.sdxport = options.sdxport
             self._add_SDX_config_to_db({'sdxip':self.sdxip,
-                                        'sdxport':self.sdxport})        
-
+                                        'sdxport':self.sdxport})   
+        # OpenFlow/Switch configuration data
+        config_count = self._get_switch_internal_config_count()
+        print "------config_count------"
+        print config_count
+        if config_count == 0:
+            # Nothing configured, get configs from config file
+            for entry in lcdata['switchinfo']:
+                dpid = str(int(entry['dpid'], 0))  # This is to normalize the DPID.
+                ic = entry['internalconfig']
+                ic['name'] = entry['name']
+                self._add_switch_internal_config_to_db(dpid, ic)
+  
+        internal_config = self._get_switch_internal_config(204) 
+        if internal_config == None:
+            print "internal_config == None"
+        #if 'managementvlan' in internal_config.keys():
+        #    managementvlan = internal_config['managementvlan']
+        #if 'managementvlanports' in internal_config.keys():
+        #    managementvlanports = internal_config['managementvlanports']
+        #print managementvlan
             
     def start_sdx_controller_connection(self):
         # Kick off thread to start connection.
@@ -546,6 +638,9 @@ class LocalController(AtlanticWaveModule):
         #confirmed a rule has been installed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
         self.rm.set_status(cookie, switch_id, RULE_STATUS_ACTIVE)
+        config = self._get_switch_internal_config(switch_id)
+        self.logger.debug("---------CW: _get_switch_internal_config----------------")
+        print config
 
     def remove_all_rules_sdxmsg(self):
         '''CW: this part is not working yet'''
@@ -556,9 +651,12 @@ class LocalController(AtlanticWaveModule):
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
             return
         for rule in rules:
-            print rule
-            cookie = rule.get_data()['rule'].get_cookie()
-            switch_id = rule.get_data()['rule'].get_switch_id()
+            self.logger.debug("Removing rule:")
+            self.logger.debug(rule)
+            self.logger.debug("Type of rule:")
+            self.logger.debug(type(rule))
+            cookie = rule.get_cookie()
+            switch_id = rule.get_switch_id()
             self.rm.set_status(cookie, switch_id, RULE_STATUS_DELETING)
             self.switch_connection.remove_rule(switch_id, cookie)
 

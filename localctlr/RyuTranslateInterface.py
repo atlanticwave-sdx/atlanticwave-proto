@@ -356,6 +356,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Returns the manifest filename if it exists or None if it does not.
         key = 'manifest_filename'
         d = self.config_table.find_one(key=key)
+        print "cw-RyuTranslate-_get_config_filename_in_db"
+        print d
         if d == None:
             return None
         val = d['value']
