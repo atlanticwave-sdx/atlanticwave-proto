@@ -8,6 +8,7 @@ import sys
 import json
 import signal
 import os
+import re
 import atexit
 import traceback
 import cPickle as pickle
@@ -347,6 +348,17 @@ class LocalController(AtlanticWaveModule):
         val = d['value']
         return pickle.loads(str(val))
 
+    def _get_switch_internal_config(self, dpid):
+        ''' Gets switch internal config information based on datapath passed in
+            Pulls information from the DB.
+        '''
+        key = str(dpid)
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
     def _get_ryu_config_in_db(self):
         # Returns the ryu configuration dictionary if it exists or None if it
         # does not.
@@ -547,7 +559,71 @@ class LocalController(AtlanticWaveModule):
         cookie = msg.get_data()['cookie']
         rules = self.rm.get_rules(cookie, switch_id)
 
-        self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - rules: %s" % (rules.__dict__)) 
+        internal_config = self._get_switch_internal_config(switch_id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             switch_id)
+
+        for i in range(len(rules)):
+            r = rules[i]
+            self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - rules %s" % (r))
+            rule_type = str(r).split(':')[0]
+            rule_text = str(r).split(':')[1:]
+
+            if rule_type == 'L2MultipointEndpointLCRule' :
+                endpoint_ports_and_vlan = re.findall(r'\(.*?\)',str(rule_text))[1]
+                vlan = re.sub('[\[\]()]', '', endpoint_ports_and_vlan).split(',')[-1:][0]
+                intermediate_vlan = str(rule_text).split(',')[-2]
+
+                l2mp_bw_in_port = int(vlan)
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
+
+                self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - l2mp_bw_in_port %s" % (l2mp_bw_in_port))
+                self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - l2mp_bw_out_port %s" % (l2mp_bw_out_port))
+
+                bridge = internal_config['corsabridge']
+                bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
+
+                valid_responses = [204]
+
+
+                port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                                    bridge + "/tunnels/" + str(l2mp_bw_in_port))
+                request_url = port_url_bridge
+                results.append(TranslatedCorsaRuleContainer("delete",
+                                                                request_url,
+                                                                jsonval,
+                                                                internal_config['corsatoken'],
+                                                                valid_responses))
+
+                port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                                    bridge + "/tunnels/" + str(l2mp_bw_out_port))
+                request_url = port_url_bridge
+                results.append(TranslatedCorsaRuleContainer("delete",
+                                                                request_url,
+                                                                jsonval,
+                                                                internal_config['corsatoken'],
+                                                                valid_responses))
+
+
+                port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                                                  bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_in_port))
+                request_url = port_url_bridge_ratelimit_l2mp
+                results.append(TranslatedCorsaRuleContainer("delete",
+                                                                request_url,
+                                                                jsonval,
+                                                                internal_config['corsatoken'],
+                                                                valid_responses))
+
+                port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                                                  bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_out_port))
+                request_url = port_url_bridge_ratelimit_l2mp
+                results.append(TranslatedCorsaRuleContainer("delete",
+                                                                request_url,
+                                                                jsonval,
+                                                                internal_config['corsatoken'],
+                                                                valid_responses))
+
 
         self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
                                                              switch_id, 
