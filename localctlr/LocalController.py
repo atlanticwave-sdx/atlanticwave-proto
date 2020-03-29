@@ -21,6 +21,7 @@ from LCRuleManager import *
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
 from switch_messages import *
+from shared.ManagementLCRecoverRule import *
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
@@ -165,7 +166,8 @@ class LocalController(AtlanticWaveModule):
             except Exception as e:
                 self.logger.error("LocalController: Error in select - %s" % (e))
                 
-
+            lc_recover = ManagementLCRecoverRule(0, 204)
+            self.install_rule_sdxmsg(lc_recover)
             # Loop through readable
             for entry in readable:
                 # Get Message
@@ -209,7 +211,7 @@ class LocalController(AtlanticWaveModule):
                     self.logger.debug("Received a INSTL message from %s" %
                                       hex(id(entry)))
                     self.install_rule_sdxmsg(msg)
-                    self.remove_all_rules_sdxmsg()
+                    #self.remove_all_rules_sdxmsg()
 
                 # If RemoveRule
                 elif type(msg) == SDXMessageRemoveRule:
@@ -622,9 +624,15 @@ class LocalController(AtlanticWaveModule):
     # Is this necessary?
 
     def install_rule_sdxmsg(self, msg):
-        switch_id = msg.get_data()['switch_id']
-        rule = msg.get_data()['rule']
-        cookie = rule.get_cookie()
+        if type(msg) == ManagementLCRecoverRule:
+            switch_id = msg.get_switch_id()
+            rule = msg
+            cookie = msg.get_cookie()
+            self.logger.debug("Got ManagementLCRecoverRule-------CW-------")
+        else:
+            switch_id = msg.get_data()['switch_id']
+            rule = msg.get_data()['rule']
+            cookie = rule.get_cookie()
 
         self.logger.debug("install_rule_sdxmsg: %d:%s:%s" % (cookie, 
                                                              switch_id, 
@@ -638,9 +646,6 @@ class LocalController(AtlanticWaveModule):
         #confirmed a rule has been installed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
         self.rm.set_status(cookie, switch_id, RULE_STATUS_ACTIVE)
-        config = self._get_switch_internal_config(switch_id)
-        self.logger.debug("---------CW: _get_switch_internal_config----------------")
-        print config
 
     def remove_all_rules_sdxmsg(self):
         '''CW: this part is not working yet'''
