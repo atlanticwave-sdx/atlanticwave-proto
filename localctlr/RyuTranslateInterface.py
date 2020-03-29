@@ -1776,11 +1776,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         elif isinstance(sdx_rule, ManagementLCRecoverRule):
             self._backup_port_recover(datapath, of_cookie, sdx_rule)
+            return
 
         if switch_rules == None or switch_table == None:
-            self.logger.error(
-                "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
-                sdx_rule, switch_rules, switch_table)
+            if not isinstance(sdx_rule, ManagementLCRecoverRule):
+                self.logger.error(
+                    "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
+                    sdx_rule, switch_rules, switch_table)
             # FIXME: This shouldn't happen...
             pass
 

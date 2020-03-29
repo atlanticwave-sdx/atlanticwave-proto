@@ -152,6 +152,8 @@ class LocalController(AtlanticWaveModule):
             if (self.sdx_connection == None and
                 self.start_cxn_thread == None):
                 self.logger.info("Restarting SDX Connection")
+                lc_recover = ManagementLCRecoverRule(0, 204)
+                self.install_rule_sdxmsg(lc_recover)
                 self.start_sdx_controller_connection() #Restart!
 
             if len(rlist) == 0:
@@ -166,8 +168,8 @@ class LocalController(AtlanticWaveModule):
             except Exception as e:
                 self.logger.error("LocalController: Error in select - %s" % (e))
                 
-            lc_recover = ManagementLCRecoverRule(0, 204)
-            self.install_rule_sdxmsg(lc_recover)
+            #lc_recover = ManagementLCRecoverRule(0, 204)
+            #self.install_rule_sdxmsg(lc_recover)
             # Loop through readable
             for entry in readable:
                 # Get Message
@@ -253,13 +255,14 @@ class LocalController(AtlanticWaveModule):
                 self.sdx_connection.close()
                 self.sdx_connection = None
                 self.cxn_q.put((DEL_CXN, cxn))
-                if num_of_retry <= 5:
+                #if num_of_retry <= 5:
                     # Restart new connection
-                    self.start_sdx_controller_connection()
-                    sleep(5)
-                
-                self.all_rules = self.rm.list_all_rules
-                num_of_retry = 0
+                #    self.start_sdx_controller_connection()
+                #    sleep(5)
+                lc_recover = ManagementLCRecoverRule(0, 204) 
+                self.install_rule_sdxmsg(recover)
+                self.start_sdx_controller_connection()
+                #num_of_retry = 0
                 
     
 
@@ -640,8 +643,8 @@ class LocalController(AtlanticWaveModule):
 
         self.rm.add_rule(cookie, switch_id, rule, RULE_STATUS_INSTALLING)
         self.switch_connection.send_command(switch_id, rule)
-        self.rm.list_all_rules(True)
-        self.logger.debug("----------self.rm.list_all_rules complete---------------") 
+        #self.rm.list_all_rules(True)
+        #self.logger.debug("----------self.rm.list_all_rules complete---------------") 
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been installed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
