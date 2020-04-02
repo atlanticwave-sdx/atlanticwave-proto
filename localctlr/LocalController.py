@@ -642,6 +642,8 @@ class LocalController(AtlanticWaveModule):
             L2Multipoint connections ratelimiting
         '''
 
+        results = []
+
         internal_config = self._get_switch_internal_config(switch_id)
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
