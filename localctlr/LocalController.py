@@ -366,18 +366,6 @@ class LocalController(AtlanticWaveModule):
         val = d['value']
         return pickle.loads(str(val))
 
-#    def _get_switch_internal_config_count(self):
-#        # Returns a count of internal configs.
-#        d = self.config_table.find()
-#        count = 0
-#        for entry in d:
-#            if (entry['key'] == 'lcip' or
-#                    entry['key'] == 'manifest_filename' or
-#                    entry['key'] == 'ryucxnport'):
-#                continue
-#            count += 1
-#        return count
-
     def _get_switch_internal_config(self, dpid):
         ''' Gets switch internal config information based on datapath passed in
             Pulls information from the DB.
@@ -501,28 +489,12 @@ class LocalController(AtlanticWaveModule):
                                         'sdxport':self.sdxport})        
 
 
-
-
-
-
-
         # OpenFlow/Switch configuration data
-        #config_count = self._get_switch_internal_config_count()
-        #if config_count == 0:
-            # Nothing configured, get configs from config file
         for entry in lcdata['switchinfo']:
             dpid = str(int(entry['dpid'], 0))  # This is to normalize the DPID.
             ic = entry['internalconfig']
             ic['name'] = entry['name']
             self._add_switch_internal_config_to_db(dpid, ic)
-
-
-
-
-
-
-
-
 
 
     def start_sdx_controller_connection(self):
@@ -613,10 +585,17 @@ class LocalController(AtlanticWaveModule):
         cookie = msg.get_data()['cookie']
         rules = self.rm.get_rules(cookie, switch_id)
 
-        self.logger.debug("remove tunnels for L2Multipoint rate limiting:  %d:%s:%s" % (cookie, 
-                                                                                        switch_id, 
-                                                                                        rules))
-        self.remove_l2mp_ratelimiting_tunnel(switch_id, cookie, rules)
+
+        for i in range(len(rules)):
+            r = rules[i]
+            rule_type = str(r).split(':')[0]
+            rule_text = str(r).split(':')[1:]
+
+            if rule_type == 'L2MultipointEndpointLCRule' :
+                self.logger.debug("remove tunnels for L2Multipoint rate limiting:  %d:%s:%s" % (cookie, 
+                                                                                                switch_id, 
+                                                                                                str(rules)))
+                self.remove_l2mp_ratelimiting_tunnel(switch_id, cookie, rules)
 
 
         self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
