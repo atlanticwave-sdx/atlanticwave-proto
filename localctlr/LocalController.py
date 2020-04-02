@@ -589,12 +589,10 @@ class LocalController(AtlanticWaveModule):
         for i in range(len(rules)):
             r = rules[i]
             rule_type = str(r).split(':')[0]
-            rule_text = str(r).split(':')[1:]
+            self.logger.debug("--- MCEVIK i: %d - rule_type:  %s" % (i, rule_type)) 
 
             if rule_type == 'L2MultipointEndpointLCRule' :
-                self.logger.debug("remove tunnels for L2Multipoint rate limiting:  %d:%s:%s" % (cookie, 
-                                                                                                switch_id, 
-                                                                                                str(rules)))
+                self.logger.debug("remove tunnels for L2Multipoint rate limiting:  %d:%s:%s" % (cookie, switch_id, r)) 
                 self.remove_l2mp_ratelimiting_tunnel(switch_id, cookie, rules)
 
 
@@ -682,50 +680,6 @@ class LocalController(AtlanticWaveModule):
                 rest_return = requests.delete(tunnel_url,
                                        headers={'Authorization': internal_config['corsatoken']},
                                        verify=False)  # FIXME: HARDCODED
-
-
-
-
-                #valid_responses = [204]
-                #jsonval = []
-
-                #port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                #                    bridge + "/tunnels/" + str(l2mp_bw_in_port))
-                #request_url = port_url_bridge
-                #results.append(TranslatedCorsaRuleContainer("delete",
-                #                                                request_url,
-                #                                                jsonval,
-                #                                                internal_config['corsatoken'],
-                #                                                valid_responses))
-
-                #port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                #                    bridge + "/tunnels/" + str(l2mp_bw_out_port))
-                #request_url = port_url_bridge
-                #results.append(TranslatedCorsaRuleContainer("delete",
-                #                                                request_url,
-                #                                                jsonval,
-                #                                                internal_config['corsatoken'],
-                #                                                valid_responses))
-
-
-                #port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                #                                  bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_in_port))
-                #request_url = port_url_bridge_ratelimit_l2mp
-                #results.append(TranslatedCorsaRuleContainer("delete",
-                #                                                request_url,
-                #                                                jsonval,
-                #                                                internal_config['corsatoken'],
-                #                                                valid_responses))
-
-                #port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                #                                  bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_out_port))
-                #request_url = port_url_bridge_ratelimit_l2mp
-                #results.append(TranslatedCorsaRuleContainer("delete",
-                #                                                request_url,
-                #                                                jsonval,
-                #                                                internal_config['corsatoken'],
-                #                                                valid_responses))
-
 
 
     def _initial_rule_install(self, rule):
