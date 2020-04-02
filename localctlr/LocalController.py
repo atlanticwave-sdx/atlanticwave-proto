@@ -18,6 +18,7 @@ from time import sleep
 from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
 from RyuControllerInterface import *
+from RyuTranslateInterface import *
 from LCRuleManager import *
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
