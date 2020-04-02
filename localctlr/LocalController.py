@@ -8,6 +8,7 @@ import sys
 import json
 import signal
 import os
+import re
 import atexit
 import traceback
 import cPickle as pickle
@@ -17,6 +18,7 @@ from time import sleep
 from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
 from RyuControllerInterface import *
+from RyuTranslateInterface import *
 from LCRuleManager import *
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
@@ -252,6 +254,23 @@ class LocalController(AtlanticWaveModule):
                 # Restart new connection
                 self.start_sdx_controller_connection()
 
+
+    def _add_switch_internal_config_to_db(self, dpid, internal_config):
+        # Pushes a switch internal_config into the db.
+        # key: "<dpid>"
+        # value: <internal_config>
+        key = dpid
+        value = pickle.dumps(internal_config)
+        if self._get_switch_internal_config(dpid) == None:
+            self.logger.info("Adding new internal_config for DPID %s" % dpid)
+            self.config_table.insert({'key': key, 'value': value})
+        else:
+            # Already exists, must update
+            self.logger.info("updating internal_config for DPID %s" % dpid)
+            self.config_table.update({'key': key, 'value': value},
+                                     ['key'])
+
+
     def _add_switch_config_to_db(self, switch_name, switch_config):
         # Pushes a switch info dictionary from manifest.
         # key: "<switch_name>_switchinfo"
@@ -341,6 +360,17 @@ class LocalController(AtlanticWaveModule):
         # Returns a switch configuration dictionary if one exists or None if one
         # does not.
         key = switch_name + "_switchinfo"
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+    def _get_switch_internal_config(self, dpid):
+        ''' Gets switch internal config information based on datapath passed in
+            Pulls information from the DB.
+        '''
+        key = str(dpid)
         d = self.config_table.find_one(key=key)
         if d == None:
             return None
@@ -458,7 +488,15 @@ class LocalController(AtlanticWaveModule):
             self._add_SDX_config_to_db({'sdxip':self.sdxip,
                                         'sdxport':self.sdxport})        
 
-            
+
+        # OpenFlow/Switch configuration data
+        for entry in lcdata['switchinfo']:
+            dpid = str(int(entry['dpid'], 0))  # This is to normalize the DPID.
+            ic = entry['internalconfig']
+            ic['name'] = entry['name']
+            self._add_switch_internal_config_to_db(dpid, ic)
+
+
     def start_sdx_controller_connection(self):
         # Kick off thread to start connection.
         if self.start_cxn_thread != None:
@@ -547,6 +585,22 @@ class LocalController(AtlanticWaveModule):
         cookie = msg.get_data()['cookie']
         rules = self.rm.get_rules(cookie, switch_id)
 
+
+        self.logger.debug("--- MCEVIK - switch_id:  %d" % (switch_id)) 
+
+        for i in range(len(rules)):
+            r = rules[i]
+            rule_type = str(r).split(':')[0]
+            rule_text = str(r).split(':')[1:]
+            rule_switch = rule_text[0].split(',')[0].split(' ')[2]
+            self.logger.debug("--- MCEVIK i: %d - rule_type:  %s" % (i, rule_type)) 
+            self.logger.debug("--- MCEVIK i: %d - rule_switch:  %s" % (i, rule_switch)) 
+
+            if (rule_type == 'L2MultipointEndpointLCRule') and (str(rule_switch) == str(switch_id)) :
+                self.logger.debug("remove tunnels for L2Multipoint rate limiting:  %d:%s:%s" % (cookie, switch_id, r)) 
+                self.remove_l2mp_ratelimiting_tunnel(switch_id, cookie, rules)
+
+
         self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
                                                              switch_id, 
                                                              rules))
@@ -563,6 +617,66 @@ class LocalController(AtlanticWaveModule):
         #location as the LC/RyuTranslateInteface protocol is primitive.
         self.rm.set_status(cookie, switch_id, RULE_STATUS_REMOVED)
         self.rm.rm_rule(cookie, switch_id)
+
+    def remove_l2mp_ratelimiting_tunnel(self, switch_id, cookie, rules):
+        ''' Removes tunnels on the Corsa switch that were created for 
+            L2Multipoint connections ratelimiting
+        '''
+
+        results = []
+
+        internal_config = self._get_switch_internal_config(switch_id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             switch_id)
+
+        for i in range(len(rules)):
+            r = rules[i]
+            self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - rules %s" % (r))
+            rule_type = str(r).split(':')[0]
+            rule_text = str(r).split(':')[1:]
+
+            if rule_type == 'L2MultipointEndpointLCRule' :
+                endpoint_ports_and_vlan = re.findall(r'\(.*?\)',str(rule_text))[1]
+                vlan = re.sub('[\[\]()]', '', endpoint_ports_and_vlan).split(',')[-1:][0]
+                intermediate_vlan = str(rule_text).split(',')[-2]
+
+                l2mp_bw_in_port = int(vlan)
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
+
+                self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - l2mp_bw_in_port %s - l2mp_bw_out_port %s" 
+                                   % (l2mp_bw_in_port, l2mp_bw_out_port))
+
+                bridge = internal_config['corsabridge']
+                bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
+
+                tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                                     bridge + "/tunnels/" + str(l2mp_bw_in_port))
+
+                rest_return = requests.delete(tunnel_url,
+                                       headers={'Authorization': internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
+
+                tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                                     bridge + "/tunnels/" + str(l2mp_bw_out_port))
+
+                rest_return = requests.delete(tunnel_url,
+                                       headers={'Authorization': internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
+
+                tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                              bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_in_port))
+
+                rest_return = requests.delete(tunnel_url,
+                                       headers={'Authorization': internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
+
+                tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                              bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_out_port))
+
+                rest_return = requests.delete(tunnel_url,
+                                       headers={'Authorization': internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
 
     def _initial_rule_install(self, rule):
         ''' This builds up a list of rules to be installed. 

@@ -145,7 +145,7 @@ run_docker_container(){
 
 
 stop_docker_container(){
-   for i in `docker ps -a -q`; do echo "--- Container: $i" ; docker stop $i; docker rm -v $i; done
+   for i in `docker ps -a -q`; do echo "--- Container: $i" ; docker stop $i; done
 }
 
 
