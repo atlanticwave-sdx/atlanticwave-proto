@@ -253,6 +253,23 @@ class LocalController(AtlanticWaveModule):
                 # Restart new connection
                 self.start_sdx_controller_connection()
 
+
+    def _add_switch_internal_config_to_db(self, dpid, internal_config):
+        # Pushes a switch internal_config into the db.
+        # key: "<dpid>"
+        # value: <internal_config>
+        key = dpid
+        value = pickle.dumps(internal_config)
+        if self._get_switch_internal_config(dpid) == None:
+            self.logger.info("Adding new internal_config for DPID %s" % dpid)
+            self.config_table.insert({'key': key, 'value': value})
+        else:
+            # Already exists, must update
+            self.logger.info("updating internal_config for DPID %s" % dpid)
+            self.config_table.update({'key': key, 'value': value},
+                                     ['key'])
+
+
     def _add_switch_config_to_db(self, switch_name, switch_config):
         # Pushes a switch info dictionary from manifest.
         # key: "<switch_name>_switchinfo"
@@ -347,6 +364,18 @@ class LocalController(AtlanticWaveModule):
             return None
         val = d['value']
         return pickle.loads(str(val))
+
+#    def _get_switch_internal_config_count(self):
+#        # Returns a count of internal configs.
+#        d = self.config_table.find()
+#        count = 0
+#        for entry in d:
+#            if (entry['key'] == 'lcip' or
+#                    entry['key'] == 'manifest_filename' or
+#                    entry['key'] == 'ryucxnport'):
+#                continue
+#            count += 1
+#        return count
 
     def _get_switch_internal_config(self, dpid):
         ''' Gets switch internal config information based on datapath passed in
@@ -470,7 +499,31 @@ class LocalController(AtlanticWaveModule):
             self._add_SDX_config_to_db({'sdxip':self.sdxip,
                                         'sdxport':self.sdxport})        
 
-            
+
+
+
+
+
+
+        # OpenFlow/Switch configuration data
+        #config_count = self._get_switch_internal_config_count()
+        #if config_count == 0:
+            # Nothing configured, get configs from config file
+        for entry in lcdata['switchinfo']:
+            dpid = str(int(entry['dpid'], 0))  # This is to normalize the DPID.
+            ic = entry['internalconfig']
+            ic['name'] = entry['name']
+            self._add_switch_internal_config_to_db(dpid, ic)
+
+
+
+
+
+
+
+
+
+
     def start_sdx_controller_connection(self):
         # Kick off thread to start connection.
         if self.start_cxn_thread != None:
@@ -559,6 +612,36 @@ class LocalController(AtlanticWaveModule):
         cookie = msg.get_data()['cookie']
         rules = self.rm.get_rules(cookie, switch_id)
 
+        self.logger.debug("remove tunnels for L2Multipoint rate limiting:  %d:%s:%s" % (cookie, 
+                                                                                        switch_id, 
+                                                                                        rules))
+        self.remove_l2mp_ratelimiting_tunnel(switch_id, cookie, rules)
+
+
+        self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
+                                                             switch_id, 
+                                                             rules))
+
+        if rules == []:
+            self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
+            return
+
+        self.rm.set_status(cookie, switch_id, RULE_STATUS_DELETING)
+        self.switch_connection.remove_rule(switch_id, cookie)
+
+        #FIXME: This should be moved to somewhere where we have positively
+        #confirmed a rule has been removed. Right now, there is no such
+        #location as the LC/RyuTranslateInteface protocol is primitive.
+        self.rm.set_status(cookie, switch_id, RULE_STATUS_REMOVED)
+        self.rm.rm_rule(cookie, switch_id)
+
+
+
+    def remove_l2mp_ratelimiting_tunnel(self, switch_id, cookie, rules):
+        ''' Removes tunnels on the Corsa switch that were created for 
+            L2Multipoint connections ratelimiting
+        '''
+
         internal_config = self._get_switch_internal_config(switch_id)
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
@@ -566,7 +649,7 @@ class LocalController(AtlanticWaveModule):
 
         for i in range(len(rules)):
             r = rules[i]
-            self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - rules %s" % (r))
+            self.logger.debug("--- MCEVIK: remove - rules %s" % (r))
             rule_type = str(r).split(':')[0]
             rule_text = str(r).split(':')[1:]
 
@@ -578,11 +661,15 @@ class LocalController(AtlanticWaveModule):
                 l2mp_bw_in_port = int(vlan)
                 l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
-                self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - l2mp_bw_in_port %s" % (l2mp_bw_in_port))
-                self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - l2mp_bw_out_port %s" % (l2mp_bw_out_port))
+                self.logger.debug("--- MCEVIK: remove - l2mp_bw_in_port %s" % (l2mp_bw_in_port))
+                self.logger.debug("--- MCEVIK: remove - l2mp_bw_out_port %s" % (l2mp_bw_out_port))
 
                 bridge = internal_config['corsabridge']
                 bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
+
+                self.logger.debug("--- MCEVIK: remove - corsabridge %s" % (bridge))
+                self.logger.debug("--- MCEVIK: remove - corsabridge_ratelimit %s" % (bridge_ratelimit_l2mp))
+                self.logger.debug("--- MCEVIK: remove - internal_config %s" % str(internal_config))
 
                 valid_responses = [204]
 
@@ -625,22 +712,6 @@ class LocalController(AtlanticWaveModule):
                                                                 valid_responses))
 
 
-        self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
-                                                             switch_id, 
-                                                             rules))
-
-        if rules == []:
-            self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
-            return
-
-        self.rm.set_status(cookie, switch_id, RULE_STATUS_DELETING)
-        self.switch_connection.remove_rule(switch_id, cookie)
-
-        #FIXME: This should be moved to somewhere where we have positively
-        #confirmed a rule has been removed. Right now, there is no such
-        #location as the LC/RyuTranslateInteface protocol is primitive.
-        self.rm.set_status(cookie, switch_id, RULE_STATUS_REMOVED)
-        self.rm.rm_rule(cookie, switch_id)
 
     def _initial_rule_install(self, rule):
         ''' This builds up a list of rules to be installed. 
