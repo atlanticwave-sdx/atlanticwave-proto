@@ -589,9 +589,12 @@ class LocalController(AtlanticWaveModule):
         for i in range(len(rules)):
             r = rules[i]
             rule_type = str(r).split(':')[0]
+            rule_text = str(r).split(':')[1:]
+            rule_switch = rule_text[0].split(',')[0].split(' ')[2]
             self.logger.debug("--- MCEVIK i: %d - rule_type:  %s" % (i, rule_type)) 
+            self.logger.debug("--- MCEVIK i: %d - rule_switch:  %s" % (i, rule_switch)) 
 
-            if rule_type == 'L2MultipointEndpointLCRule' :
+            if (rule_type == 'L2MultipointEndpointLCRule') and (rule_switch == switch_id) :
                 self.logger.debug("remove tunnels for L2Multipoint rate limiting:  %d:%s:%s" % (cookie, switch_id, r)) 
                 self.remove_l2mp_ratelimiting_tunnel(switch_id, cookie, rules)
 
