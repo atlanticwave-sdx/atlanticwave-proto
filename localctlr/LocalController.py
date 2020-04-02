@@ -586,6 +586,8 @@ class LocalController(AtlanticWaveModule):
         rules = self.rm.get_rules(cookie, switch_id)
 
 
+        self.logger.debug("--- MCEVIK - switch_id:  %d" % (switch_id)) 
+
         for i in range(len(rules)):
             r = rules[i]
             rule_type = str(r).split(':')[0]
