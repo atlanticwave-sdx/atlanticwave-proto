@@ -652,7 +652,7 @@ class LocalController(AtlanticWaveModule):
 
         for i in range(len(rules)):
             r = rules[i]
-            self.logger.debug("--- MCEVIK: remove - rules %s" % (r))
+            self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - rules %s" % (r))
             rule_type = str(r).split(':')[0]
             rule_text = str(r).split(':')[1:]
 
@@ -664,55 +664,88 @@ class LocalController(AtlanticWaveModule):
                 l2mp_bw_in_port = int(vlan)
                 l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
-                self.logger.debug("--- MCEVIK: remove - l2mp_bw_in_port %s" % (l2mp_bw_in_port))
-                self.logger.debug("--- MCEVIK: remove - l2mp_bw_out_port %s" % (l2mp_bw_out_port))
+                self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - l2mp_bw_in_port %s - l2mp_bw_out_port %s" 
+                                   % (l2mp_bw_in_port, l2mp_bw_out_port))
 
                 bridge = internal_config['corsabridge']
                 bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
 
-                self.logger.debug("--- MCEVIK: remove - corsabridge %s" % (bridge))
-                self.logger.debug("--- MCEVIK: remove - corsabridge_ratelimit %s" % (bridge_ratelimit_l2mp))
-                self.logger.debug("--- MCEVIK: remove - internal_config %s" % str(internal_config))
-
-                valid_responses = [204]
-                jsonval = []
-
-                port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                                    bridge + "/tunnels/" + str(l2mp_bw_in_port))
-                request_url = port_url_bridge
-                results.append(TranslatedCorsaRuleContainer("delete",
-                                                                request_url,
-                                                                jsonval,
-                                                                internal_config['corsatoken'],
-                                                                valid_responses))
-
-                port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                                    bridge + "/tunnels/" + str(l2mp_bw_out_port))
-                request_url = port_url_bridge
-                results.append(TranslatedCorsaRuleContainer("delete",
-                                                                request_url,
-                                                                jsonval,
-                                                                internal_config['corsatoken'],
-                                                                valid_responses))
 
 
-                port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                                                  bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_in_port))
-                request_url = port_url_bridge_ratelimit_l2mp
-                results.append(TranslatedCorsaRuleContainer("delete",
-                                                                request_url,
-                                                                jsonval,
-                                                                internal_config['corsatoken'],
-                                                                valid_responses))
 
-                port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                                                  bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_out_port))
-                request_url = port_url_bridge_ratelimit_l2mp
-                results.append(TranslatedCorsaRuleContainer("delete",
-                                                                request_url,
-                                                                jsonval,
-                                                                internal_config['corsatoken'],
-                                                                valid_responses))
+                tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                                     bridge + "/tunnels/" + str(l2mp_bw_in_port))
+
+                rest_return = requests.delete(tunnel_url,
+                                       headers={'Authorization': internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
+
+
+                tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                                     bridge + "/tunnels/" + str(l2mp_bw_out_port))
+
+                rest_return = requests.delete(tunnel_url,
+                                       headers={'Authorization': internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
+
+
+                tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                              bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_in_port))
+
+                rest_return = requests.delete(tunnel_url,
+                                       headers={'Authorization': internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
+
+
+                tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                              bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_out_port))
+
+                rest_return = requests.delete(tunnel_url,
+                                       headers={'Authorization': internal_config['corsatoken']},
+                                       verify=False)  # FIXME: HARDCODED
+
+
+
+
+                #valid_responses = [204]
+                #jsonval = []
+
+                #port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                #                    bridge + "/tunnels/" + str(l2mp_bw_in_port))
+                #request_url = port_url_bridge
+                #results.append(TranslatedCorsaRuleContainer("delete",
+                #                                                request_url,
+                #                                                jsonval,
+                #                                                internal_config['corsatoken'],
+                #                                                valid_responses))
+
+                #port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                #                    bridge + "/tunnels/" + str(l2mp_bw_out_port))
+                #request_url = port_url_bridge
+                #results.append(TranslatedCorsaRuleContainer("delete",
+                #                                                request_url,
+                #                                                jsonval,
+                #                                                internal_config['corsatoken'],
+                #                                                valid_responses))
+
+
+                #port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                #                                  bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_in_port))
+                #request_url = port_url_bridge_ratelimit_l2mp
+                #results.append(TranslatedCorsaRuleContainer("delete",
+                #                                                request_url,
+                #                                                jsonval,
+                #                                                internal_config['corsatoken'],
+                #                                                valid_responses))
+
+                #port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                #                                  bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_out_port))
+                #request_url = port_url_bridge_ratelimit_l2mp
+                #results.append(TranslatedCorsaRuleContainer("delete",
+                #                                                request_url,
+                #                                                jsonval,
+                #                                                internal_config['corsatoken'],
+                #                                                valid_responses))
 
 
 
