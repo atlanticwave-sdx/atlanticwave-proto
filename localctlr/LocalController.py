@@ -618,8 +618,6 @@ class LocalController(AtlanticWaveModule):
         self.rm.set_status(cookie, switch_id, RULE_STATUS_REMOVED)
         self.rm.rm_rule(cookie, switch_id)
 
-
-
     def remove_l2mp_ratelimiting_tunnel(self, switch_id, cookie, rules):
         ''' Removes tunnels on the Corsa switch that were created for 
             L2Multipoint connections ratelimiting
@@ -652,16 +650,12 @@ class LocalController(AtlanticWaveModule):
                 bridge = internal_config['corsabridge']
                 bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
 
-
-
-
                 tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                                      bridge + "/tunnels/" + str(l2mp_bw_in_port))
 
                 rest_return = requests.delete(tunnel_url,
                                        headers={'Authorization': internal_config['corsatoken']},
                                        verify=False)  # FIXME: HARDCODED
-
 
                 tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                                      bridge + "/tunnels/" + str(l2mp_bw_out_port))
@@ -670,7 +664,6 @@ class LocalController(AtlanticWaveModule):
                                        headers={'Authorization': internal_config['corsatoken']},
                                        verify=False)  # FIXME: HARDCODED
 
-
                 tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                               bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_in_port))
 
@@ -678,14 +671,12 @@ class LocalController(AtlanticWaveModule):
                                        headers={'Authorization': internal_config['corsatoken']},
                                        verify=False)  # FIXME: HARDCODED
 
-
                 tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                               bridge_ratelimit_l2mp + "/tunnels/" + str(l2mp_bw_out_port))
 
                 rest_return = requests.delete(tunnel_url,
                                        headers={'Authorization': internal_config['corsatoken']},
                                        verify=False)  # FIXME: HARDCODED
-
 
     def _initial_rule_install(self, rule):
         ''' This builds up a list of rules to be installed. 
