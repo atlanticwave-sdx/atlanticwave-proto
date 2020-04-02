@@ -675,7 +675,7 @@ class LocalController(AtlanticWaveModule):
                 self.logger.debug("--- MCEVIK: remove - internal_config %s" % str(internal_config))
 
                 valid_responses = [204]
-
+                jsonval = []
 
                 port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
                                     bridge + "/tunnels/" + str(l2mp_bw_in_port))
