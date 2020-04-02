@@ -6,9 +6,10 @@ from UserPolicy import *
 from datetime import datetime
 from shared.constants import *
 from EdgePortLCRule import *
+from ManagementSDXRecoverRule import *
 import networkx as nx
 
-class EdgePortPolicy(UserPolicy):
+class ManagementSDXRecoverPolicy(UserPolicy):
     ''' This policy is used during initialization of the LocalController to let 
         it know which ports of it are edge ports. This is necessary for proper
         learning of new paths to occur without redundant "new destination" 
@@ -29,7 +30,7 @@ class EdgePortPolicy(UserPolicy):
     def __init__(self, username, json_rule):
         self.switch = None
 
-        super(EdgePortPolicy, self).__init__(username,
+        super(ManagementSDXRecoverPolicy, self).__init__(username,
                                              json_rule)
 
         # Anything specific here?
@@ -43,7 +44,7 @@ class EdgePortPolicy(UserPolicy):
         try:
             # Make sure the times are the right format
             # https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
-
+            # 'switch' is the LocalController NAME!
             switch = json_rule[cls.get_policy_name()]['switch']
 
         except Exception as e:
@@ -68,22 +69,12 @@ class EdgePortPolicy(UserPolicy):
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
         switch_id = topology.node[self.switch]['dpid']
-        print "---------CW-------EdgePortPolicy------switch_id = topology.node[self.switch]['dpid']------------"
-        print switch_id
         shortname = topology.node[self.switch]['locationshortname']
-        print "---------CW-------EdgePortPolicy------shortname = topology.node[self.switch]['locationshortname']------------"
-        print shortname
 
         bd = UserPolicyBreakdown(shortname, [])
 
-        for neighbor in topology.neighbors(self.switch):
-            if topology.node[neighbor]['type'] == "switch":
-                continue
-            # Not a switch neighbor, so it's an edge port
-            edge_port = topology[self.switch][neighbor][self.switch]
-            
-            epr = EdgePortLCRule(switch_id, edge_port)
-            bd.add_to_list_of_rules(epr)
+        msr = ManagementSDXRecoverRule(switch_id)
+        bd.add_to_list_of_rules(msr)
         
         self.breakdown.append(bd)
         return self.breakdown
@@ -119,6 +110,7 @@ class EdgePortPolicy(UserPolicy):
         pass
 
         
+
 
 
 

@@ -63,6 +63,10 @@ class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
             for rule in bd.get_list_of_rules():
                 switch_id = rule.get_switch_id()
                 msg = SDXMessageInstallRule(rule, switch_id)
+                print "---------CW send_breakdown_rule_add---------msg------------"
+                print msg
+                print "---------CW send_breakdown_rule_add---------rule-----------"
+                print rule
                 lc_cxn.send_protocol(msg)
 
         except SDXControllerConnectionManagerNotConnectedError as e:
