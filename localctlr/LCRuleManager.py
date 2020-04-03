@@ -77,6 +77,9 @@ class LCRuleManager(AtlanticWaveManager):
                                 'status':status,
                                 'rule':textrule})
 
+        listrules = self._find_rules({})
+        self.logger.debug("%s - %s --- MCEVIK add_rule: listrules: %s" % (self.__class__.__name__, hex(id(self)), str(listrules)))
+
     def rm_rule(self, cookie, switch_id):
         # Remove LC rule identified by cookie and switch_id
         
