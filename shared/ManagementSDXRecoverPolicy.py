@@ -64,17 +64,18 @@ class ManagementSDXRecoverPolicy(UserPolicy):
             what type the neighbor is. If they are a "switch" type, then that's
             an internal port, otherwise, it's an edge port.
         '''
-
+        print "-----CW-breakdown_rule(self, tm, ai):-------"
         self.breakdown = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
         switch_id = topology.node[self.switch]['dpid']
         shortname = topology.node[self.switch]['locationshortname']
-
         bd = UserPolicyBreakdown(shortname, [])
-
         msr = ManagementSDXRecoverRule(switch_id)
         bd.add_to_list_of_rules(msr)
+
+        for i in bd.get_list_of_rules():
+            print 
         
         self.breakdown.append(bd)
         return self.breakdown
@@ -86,6 +87,11 @@ class ManagementSDXRecoverPolicy(UserPolicy):
 
     def _parse_json(self, json_rule):
         jsonstring = self.ruletype
+
+        #print "rule type:" + str(jsonstring)
+        #print "json_rule.keys():" 
+        #for i in json_rule.keys():
+        #    print i
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
         if jsonstring not in json_rule.keys():

@@ -42,7 +42,8 @@ class ManagementSDXRecoverRule(LCRule):
                 ports - List of ports that are part of the spanning tree needed
                   for broadcast flooding.
         '''
-        super(ManagementSDXRecoverRule, self).__init__(self, switch_id)
+        self.switch_id = switch_id
+        super(ManagementSDXRecoverRule, self).__init__(switch_id)
 
 
     def __str__(self):
