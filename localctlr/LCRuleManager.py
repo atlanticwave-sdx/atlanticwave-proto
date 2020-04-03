@@ -137,6 +137,7 @@ class LCRuleManager(AtlanticWaveManager):
         '''
         # Get the rule specified by cookie
         rules = self.rule_table.find(cookie=cookie, switch_id=switch_id)
+        self.logger.debug("%s - %s --- MCEVIK get_rules: rules: %s" % (self.__class__.__name__, hex(id(self)), str(rules)))
 
         if full_tuple:
             retval = [(x['cookie'],
@@ -144,6 +145,8 @@ class LCRuleManager(AtlanticWaveManager):
                        pickle.loads(str(x['rule'])),
                        x['status']) for x in rules]
             return retval
+
+        self.logger.debug("%s - %s --- MCEVIK get_rules: retval: %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
 
         retval = [pickle.loads(str(x['rule'])) for x in rules]
         return retval
