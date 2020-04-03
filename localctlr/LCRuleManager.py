@@ -135,6 +135,10 @@ class LCRuleManager(AtlanticWaveManager):
             If  full_tuple==True, then a list of tuples will be returned:
                 (cookie, switch_id, rule, status)
         '''
+
+        listrules = self._find_rules({})
+        self.logger.debug("%s - %s --- MCEVIK get_rules: listrules: %s" % (self.__class__.__name__, hex(id(self)), str(listrules)))
+
         # Get the rule specified by cookie
         rules = self.rule_table.find(cookie=cookie, switch_id=switch_id)
         self.logger.debug("%s - %s --- MCEVIK get_rules: rules: %s" % (self.__class__.__name__, hex(id(self)), str(rules)))
@@ -144,11 +148,11 @@ class LCRuleManager(AtlanticWaveManager):
                        x['switch_id'],
                        pickle.loads(str(x['rule'])),
                        x['status']) for x in rules]
+            self.logger.debug("%s - %s --- MCEVIK get_rules: retval full_tuple: %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
             return retval
 
-        self.logger.debug("%s - %s --- MCEVIK get_rules: retval: %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
-
         retval = [pickle.loads(str(x['rule'])) for x in rules]
+        self.logger.debug("%s - %s --- MCEVIK get_rules: retval : %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
         return retval
 
     def add_initial_rule(self, rule, cookie, switch_id):
