@@ -609,12 +609,14 @@ class LocalController(AtlanticWaveModule):
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
             return
 
+        self.logger.error("remove_rule_sdxmsg: set_status to DELETING %s" % cookie)
         self.rm.set_status(cookie, switch_id, RULE_STATUS_DELETING)
         self.switch_connection.remove_rule(switch_id, cookie)
 
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been removed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
+        self.logger.error("remove_rule_sdxmsg: set_status to REMOVED %s" % cookie)
         self.rm.set_status(cookie, switch_id, RULE_STATUS_REMOVED)
         self.rm.rm_rule(cookie, switch_id)
 

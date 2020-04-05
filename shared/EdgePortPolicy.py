@@ -47,11 +47,11 @@ class EdgePortPolicy(UserPolicy):
             switch = json_rule[cls.get_policy_name()]['switch']
 
         except Exception as e:
-            import os
+            import os,sys
             exc_type, exc_obj, exc_tb = sys.exc_info()
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
-            print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
+            print "%s: Exception %s at %s:%d" % (cls.get_policy_name(),
                                                  str(e), filename,lineno)
             raise
             
