@@ -59,7 +59,8 @@
       "lcip": "10.14.11.1",
       "internalconfig": {
         "ryucxninternalport": 55781,
-        "openflowport": 6681
+        "openflowport": 6681,
+        "backuplcswitch": "dukes1"
       },
       "switchinfo": [
         {
@@ -158,7 +159,8 @@
       "lcip": "10.14.11.2",
       "internalconfig": {
         "ryucxninternalport": 55782,
-        "openflowport": 6682
+        "openflowport": 6682,
+        "backuplcswitch": "rencis1"
       },
       "switchinfo": [
         { 
@@ -216,7 +218,8 @@
       "lcip": "10.14.11.3",
       "internalconfig": {
         "ryucxninternalport": 55783,
-        "openflowport": 6683
+        "openflowport": 6683,
+        "backuplcswitch": "ncsus1"
       },
       "switchinfo": [
         { 
@@ -254,6 +257,7 @@
             "managementvlan":1411,
             "managementvlanports":[1,11],
             "managementvlanbackupports":[1, 2, 11]
+            "sdxmanagementvlanbackupports":[1, 2, 11]
           }
         }
       ],
@@ -270,7 +274,8 @@
       "lcip": "10.14.11.4",
       "internalconfig": {
         "ryucxninternalport": 55784,
-        "openflowport": 6684
+        "openflowport": 6684,
+        "backuplc": "uncs1"
       },
       "switchinfo": [
         { 
