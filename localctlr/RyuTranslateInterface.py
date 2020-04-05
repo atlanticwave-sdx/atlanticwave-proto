@@ -693,7 +693,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                             of_cookie,
                                                             mvrule)
 
-        print "---------CW-------REMOVING default flows"
+        self.logger.debug("---------CW-------REMOVING default flows")
         # Install default rules
         for rule in results:
             self.remove_flow(datapath, rule)
@@ -702,7 +702,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         results = []
         if 'managementvlan' in internal_config.keys():
             managementvlan = internal_config['managementvlan']
-            managementvlanports = internal_config['managementvlanbackupports']
+            managementvlanbackupports = internal_config['managementvlanbackupports']
             untaggedmanagementvlanports = []
             if 'untaggedmanagementvlanports' in internal_config.keys():
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
@@ -710,21 +710,21 @@ class RyuTranslateInterface(app_manager.RyuApp):
             table = L2TUNNELTABLE
             mvrule = ManagementVLANLCRule(switch_id,
                                           managementvlan,
-                                          managementvlanports,
+                                          managementvlanbackupports,
                                           untaggedmanagementvlanports)
             results += self._translate_ManagementVLANLCRule(datapath,
                                                             table,
                                                             of_cookie,
                                                             mvrule)
 
-        print "---------CW-------ADDING default flows"
+        self.logger.debug("---------CW-------ADDING backup management VLAN flows")
         # Install default rules
         for rule in results:
             self.add_flow(datapath, rule)
 
     def _backup_port_recover_from_sdx_msg(self, datapath, of_cookie, lc_recover_rule):
         '''Remove existing default port and use backup port'''
-        self.logger.debug("got ManagementLCRecoverRule-----CW---------")
+        self.logger.debug("got ManagementSDXRecoverRule-----CW---------")
         self.logger.debug("Checking if backup port is available")
         switch_id = 0  # This is unimportant:
         # it's never used in the translation
@@ -744,9 +744,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
             managementvlanports = internal_config['managementvlanports']
 
         if 'sdxmanagementvlanbackupports' in internal_config.keys():
-            managementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
+            sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
         else:
-            self.logger.debug("No backup port provided")
+            self.logger.debug("No SDX management VLAN backup port provided")
             #return
 
         #for table in ALL_TABLES_EXCEPT_LAST:
@@ -805,7 +805,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                             of_cookie,
                                                             mvrule)
 
-        print "---------CW-------REMOVING default flows"
+        self.logger.debug("---------CW-------REMOVING default flows")
         # Install default rules
         for rule in results:
             self.remove_flow(datapath, rule)
@@ -814,7 +814,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         results = []
         if 'managementvlan' in internal_config.keys():
             managementvlan = internal_config['managementvlan']
-            managementvlanports = internal_config['managementvlanbackupports']
+            sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
             untaggedmanagementvlanports = []
             if 'untaggedmanagementvlanports' in internal_config.keys():
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
@@ -822,14 +822,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
             table = L2TUNNELTABLE
             mvrule = ManagementVLANLCRule(switch_id,
                                           managementvlan,
-                                          managementvlanports,
+                                          sdxmanagementvlanbackupports,
                                           untaggedmanagementvlanports)
             results += self._translate_ManagementVLANLCRule(datapath,
                                                             table,
                                                             of_cookie,
                                                             mvrule)
 
-        print "---------CW-------ADDING default flows"
+        self.logger.debug("---------CW-------ADDING SDX msg backup flows")
         # Install default rules
         for rule in results:
             self.add_flow(datapath, rule)
