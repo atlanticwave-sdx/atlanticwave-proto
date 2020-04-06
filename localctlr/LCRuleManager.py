@@ -101,7 +101,9 @@ class LCRuleManager(AtlanticWaveManager):
             self.rule_table.update({'cookie':cookie,
                                     'switch_id':switch_id,
                                     'status':status},
-                                   ['cookie'])
+                                   ['cookie','switch_id'])
+        listrules = self._find_rules({})
+        self.logger.debug("%s - %s --- MCEVIK set_status: listrules: %s" % (self.__class__.__name__, hex(id(self)), str(listrules)))
 
     def _find_rules(self, filter={}):
         # If filter=={}, return all rules.
