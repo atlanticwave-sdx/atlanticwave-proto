@@ -67,9 +67,12 @@ class LCRuleManager(AtlanticWaveManager):
             for dupe in dupes:
                 (c,sid,lcr,stat) = dupe
                 if lcr == lcrule:
-                    raise LCRuleManagerValidationError(
-                        "Duplicate add_rule for %s:%s:%s" %
-                        (cookie, switch_id, str(lcrule)))
+                    if isinstance(ManagementLCRecoverRule):
+                        self.logger.debug("ManagementLCRecoverRule, ignored.")
+                    else:
+                        raise LCRuleManagerValidationError(
+                            "Duplicate add_rule for %s:%s:%s" %
+                            (cookie, switch_id, str(lcrule)))
 
         # Translate rule into a string so it can be stored
         self.rule_table.insert({'cookie':cookie,

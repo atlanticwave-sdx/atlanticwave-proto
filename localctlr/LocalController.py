@@ -683,7 +683,7 @@ class LocalController(AtlanticWaveModule):
         cookie = msg.get_data()['cookie']
         rules = self.rm.get_rules(cookie, switch_id)
 
-        self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - rules: %s" % (rules.__dict__)) 
+        #self.logger.debug("--- MCEVIK: remove_rule_sdxmsg - rules: %s" % (rules.__dict__)) 
 
         self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
                                                              switch_id, 
