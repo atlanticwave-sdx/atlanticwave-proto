@@ -521,7 +521,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         self.remove_all_flows(datapath)
 
-        of_cookie = self._get_new_OF_cookie(-1)  # FIXME: magic number
+        of_cookie = self._get_new_OF_cookie(-1,-1)  # FIXME: magic number
         results = []
 
         # In-band Communication
@@ -1472,8 +1472,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                             (sdx_rule, type(sdx_rule)))
 
         # Get a cookie based on the SDX Controller cookie
-        of_cookie = self._get_new_OF_cookie(sdx_rule.get_cookie())
-        self.logger.debug("Cookie 0x%02x used for %s" % (of_cookie, sdx_rule))
+        of_cookie = self._get_new_OF_cookie(sdx_rule.get_cookie(), datapath.id)
+        self.logger.debug("Cookie 0x%02x used in datapath %s for %s" % (of_cookie, datapath.id, sdx_rule))
 
         # Convert rule into instructions for Ryu. Switch through the different
         # types of supported LCRules for individual translation.
