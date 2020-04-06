@@ -1677,7 +1677,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         result = self.rule_table.find_one(sdxcookie=sdx_cookie, switchid=switch_id)
         if result == None:
             return (None, None, None, None)
-        return (result['switchid']
+        return (result['switchid'],
                 result['switchcookie'],
                 pickle.loads(str(result['sdxrule'])),
                 pickle.loads(str(result['switchrules'])),
