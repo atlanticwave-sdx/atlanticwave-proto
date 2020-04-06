@@ -1589,7 +1589,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Save off instructions to local database.
         self.logger.debug("Inserting into switch table %d switch rules %s" %
                           (switch_table, switch_rules))
-        self._install_rule_in_db(sdx_rule.get_cookie(), of_cookie,
+        self._install_rule_in_db(sdx_rule.get_cookie(), datapath.id, of_cookie,
                                  sdx_rule, switch_rules, switch_table)
 
         # Send instructions to the switch.
@@ -1612,7 +1612,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         of_cookie = self._find_OF_cookie(sdx_cookie)
 
         # Get the Rules based on the it.
-        (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie)
+        (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie, datapath.id)
 
         if (swcookie == None and
                 sdxrule == None and
@@ -1642,7 +1642,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Remove rule infomation from database
         self._remove_rule_in_db(sdx_cookie)
 
-    def _install_rule_in_db(self, sdxcookie, switchcookie,
+    def _install_rule_in_db(self, sdxcookie, switch_id, switchcookie,
                             sdxrule, switchrules, switchtable):
         ''' This installs a rule into the DB. This makes life a lot easier and
             provides a central point to handle DB interactions. '''
@@ -1657,36 +1657,39 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # FIXME: Checking to make sure it's not already there?
         self.rule_table.insert({'sdxcookie': sdxcookie,
+                                'switchid': switch_id,
                                 'switchcookie': switchcookie,
                                 'sdxrule': pickle.dumps(sdxrule),
                                 'switchrules': pickle.dumps(switchrules),
                                 'switchtable': switchtable})
 
-    def _remove_rule_in_db(self, sdx_cookie):
+    def _remove_rule_in_db(self, sdx_cookie, switch_id):
         ''' This removes a rule from the DB. This makes life a lot easier and
             provides a central point to handle DB interactions. '''
         # FIXME: Make sure it does exist.
-        self.rule_table.delete(sdxcookie=sdx_cookie)
+        self.rule_table.delete(sdxcookie=sdx_cookie, switchid=switch_id)
 
-    def _get_rule_in_db(self, sdx_cookie):
+    def _get_rule_in_db(self, sdx_cookie, switch_id):
         ''' This returns a rule from the DB. This makes life a lot easier and
             provides a central point to handle DB interactions.
             Returns a tuple:
             (switchcookie, sdxrule, switchrules, switchtable) '''
-        result = self.rule_table.find_one(sdxcookie=sdx_cookie)
+        result = self.rule_table.find_one(sdxcookie=sdx_cookie, switchid=switch_id)
         if result == None:
             return (None, None, None, None)
-        return (result['switchcookie'],
+        return (result['switchid']
+                result['switchcookie'],
                 pickle.loads(str(result['sdxrule'])),
                 pickle.loads(str(result['switchrules'])),
                 result['switchtable'])
 
-    def _get_new_OF_cookie(self, sdx_cookie):
+    def _get_new_OF_cookie(self, sdx_cookie, switch_id):
         ''' Creates a new cookie that can be used by OpenFlow switches.
             Populates a local database with information so that cookie can be
             looked up for rule removal. '''
-        if self.rule_table.find_one(sdxcookie=sdx_cookie) != None:
+        if self.rule_table.find_one(sdxcookie=sdx_cookie, switchid=switch_id) != None:
             # FIXME: This shouldn't happen...
+            self.logger.error("Existing sdxcookie: %s, switchid: %s",sdx_cookie,switch_id)
             pass
 
         of_cookie = self.current_of_cookie
@@ -1694,18 +1697,18 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         return of_cookie
 
-    def _find_OF_cookie(self, sdx_cookie):
+    def _find_OF_cookie(self, sdx_cookie, switch_id):
         ''' Looks up OpenFlow cookie in local database based on a provided
             sdx_cookie. '''
-        result = self.rule_table.find_one(sdxcookie=sdx_cookie)
+        result = self.rule_table.find_one(sdxcookie=sdx_cookie, switchid=switch_id)
         if result == None:
             return None
         return result['switchcookie']
 
-    def _find_sdx_cookie(self, of_cookie):
+    def _find_sdx_cookie(self, of_cookie, switch_id):
         ''' Loops up the SDX cookie in local database based on a provided
             of_cookie. '''
-        result = self.rule_table.find_one(switchcookie=of_cookie)
+        result = self.rule_table.find_one(switchcookie=of_cookie,switchid=switch_id)
         if result == None:
             return None
         return result['sdxcookie']
@@ -1774,7 +1777,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         eth = pkt.get_protocols(ethernet.ethernet)[0]
         src_address = eth.src
         of_cookie = ev.msg.cookie
-        sdx_cookie = self._find_sdx_cookie(of_cookie)
+        sdx_cookie = self._find_sdx_cookie(of_cookie, datapath.id)
 
         self.inter_cm_cxn.send_cmd(ICX_L2MULTIPOINT_UNKNOWN_SOURCE,
                                    {"cookie": sdx_cookie,
