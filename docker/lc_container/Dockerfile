@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 RUN apt update && apt install -y git python-virtualenv pypy python-pip net-tools
 
 # This really should point to a particular version
-RUN git clone -b master https://github.com/atlanticwave-sdx/atlanticwave-proto.git
+RUN git clone -b git clone -b mcevik-l2multipoint-ratelimiting https://github.com/atlanticwave-sdx/atlanticwave-proto.git https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 
 # Virtualenv setup
 RUN virtualenv -p /usr/bin/pypy /appenv
