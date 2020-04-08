@@ -1609,7 +1609,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Remove a rule.
         # Find the OF cookie based on the SDX Cookie
-        of_cookie = self._find_OF_cookie(sdx_cookie)
+        of_cookie = self._find_OF_cookie(sdx_cookie,datapath.id)
 
         # Get the Rules based on the it.
         (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie, datapath.id)
