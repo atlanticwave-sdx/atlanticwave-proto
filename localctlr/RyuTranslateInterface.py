@@ -1612,9 +1612,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         of_cookie = self._find_OF_cookie(sdx_cookie,datapath.id)
 
         # Get the Rules based on the it.
-        (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie, datapath.id)
+        (switch_id, swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie, datapath.id)
 
-        if (swcookie == None and
+        if (switch_id == None and 
+                swcookie == None and
                 sdxrule == None and
                 swrules == None and
                 table == None):
