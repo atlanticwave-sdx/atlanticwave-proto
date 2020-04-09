@@ -533,8 +533,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
             return
         if 'managementvlan' in internal_config.keys():
             managementvlan = internal_config['managementvlan']
+        else:
+            raise ValueError("DPID %s does not have managementvlan" %
+                             datapath.id)
+            return
         if 'managementvlanports' in internal_config.keys():
             managementvlanports = internal_config['managementvlanports']
+        else:
+            raise ValueError("DPID %s does not have managementvlanports" %
+                             datapath.id)
+            return
 
         for table in ALL_TABLES_EXCEPT_LAST:
             matches = []  # FIXME: what's the equivalent of match(*)?
