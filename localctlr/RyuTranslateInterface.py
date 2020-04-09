@@ -1447,6 +1447,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         table = rc.get_table()
         match = rc.get_match()
 
+        self.logger.debug("RyuTranslateInterface:remove_flow(): %d,%d:%d:%s:%s:%s:%s" % (
+                cookie,
+                datapath.id,
+                table,
+                command,out_group,out_port,match))
+        
         mod = parser.OFPFlowMod(datapath=datapath, cookie=cookie,
                                 table_id=table, command=command,
                                 out_group=out_group, out_port=out_port,
@@ -1533,7 +1539,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         elif isinstance(sdx_rule, L2MultipointFloodLCRule):
             # Installs
             switch_table = FORWARDINGTABLE
-            self.logger.error("L2MultipointFlood: %d:%d:%s" % (switch_table,
+            self.logger.debug("L2MultipointFlood: %d:%d:%s" % (switch_table,
                                                                of_cookie,
                                                                sdx_rule))
 
@@ -1548,7 +1554,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             flood_table = FORWARDINGTABLE
             learning_table = LEARNINGTABLE
             switch_table = endpoint_table  # Used in some logs down below.
-            self.logger.error("L2MultipointEndpo: %d,%d:%d:%s" % (
+            self.logger.debug("L2MultipointEndpointLCRule: %d,%d:%d:%s" % (
                 endpoint_table, flood_table,
                 of_cookie,
                 sdx_rule))
@@ -1632,13 +1638,19 @@ class RyuTranslateInterface(app_manager.RyuApp):
                               sdx_cookie)
             return
 
+        self.logger.error("RyuTranslateInterface:remove_rule(): remove a rule for sdx_cookie %s:switch_id" %
+                              (sdx_cookie, switch_id))
         try:
             # Remove flows
             for rule in swrules:
                 if type(rule) == TranslatedLCRuleContainer:
+                    self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedLCRuleContainer rule for sdx_cookie %s:switch_id" %
+                              (sdx_cookie, switch_id))
                     self.remove_flow(datapath, rule)
                 elif type(rule) == TranslatedCorsaRuleContainer:
                     # Currently, don't have to do anything here.
+                    self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedCorsaRuleContainer rule for sdx_cookie %s:switch_id" %
+                              (sdx_cookie, switch_id))
                     pass
         except Exception as e:
             self.logger.error("Error in remove_rule %s:%s" % (sdx_cookie,
