@@ -1644,12 +1644,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Remove flows
             for rule in swrules:
                 if type(rule) == TranslatedLCRuleContainer:
-                    self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedLCRuleContainer rule for sdx_cookie %s:switch_id" %
+                    self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedLCRuleContainer rule for sdx_cookie %s:%s" %
                               (sdx_cookie, switch_id))
                     self.remove_flow(datapath, rule)
                 elif type(rule) == TranslatedCorsaRuleContainer:
                     # Currently, don't have to do anything here.
-                    self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedCorsaRuleContainer rule for sdx_cookie %s:switch_id" %
+                    self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedCorsaRuleContainer rule for sdx_cookie %s:%s" %
                               (sdx_cookie, switch_id))
                     pass
         except Exception as e:
