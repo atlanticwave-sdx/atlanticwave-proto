@@ -1662,7 +1662,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             raise e
 
         # Remove rule infomation from database
-        self._remove_rule_in_db(sdx_cookie)
+        self._remove_rule_in_db(sdx_cookie, switch_id)
 
     def _install_rule_in_db(self, sdxcookie, switch_id, switchcookie,
                             sdxrule, switchrules, switchtable):
