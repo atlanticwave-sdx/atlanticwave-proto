@@ -1638,7 +1638,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                               sdx_cookie)
             return
 
-        self.logger.error("RyuTranslateInterface:remove_rule(): remove a rule for sdx_cookie %s:switch_id" %
+        self.logger.error("RyuTranslateInterface:remove_rule(): remove a rule for sdx_cookie %s:%s" %
                               (sdx_cookie, switch_id))
         try:
             # Remove flows
