@@ -653,14 +653,14 @@ class LocalController(AtlanticWaveModule):
                 if key not in internal_config.keys():
                     self.logger.debug("corsabridge is not present in the internal_config in %s" %
                               switch_id)
-                     return
+                    return
                 bridge = internal_config['corsabridge']
 
                 key='corsaratelimitbridgel2mp'
                 if key not in internal_config.keys():
                     self.logger.debug("corsabridge is not present in the internal_config in %s" %
                               switch_id)
-                     return
+                    return
                 bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
 
                 tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
