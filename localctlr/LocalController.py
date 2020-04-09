@@ -629,7 +629,7 @@ class LocalController(AtlanticWaveModule):
 
         internal_config = self._get_switch_internal_config(switch_id)
         if internal_config == None:
-            raise ValueError("DPID %s does not have internal_config" %
+            self.logger.debug("DPID %s does not have internal_config" %
                              switch_id)
             return
         for i in range(len(rules)):
@@ -649,16 +649,20 @@ class LocalController(AtlanticWaveModule):
                 self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - l2mp_bw_in_port %s - l2mp_bw_out_port %s" 
                                    % (l2mp_bw_in_port, l2mp_bw_out_port))
 
+                key='corsabridge'
+                if key not in internal_config.keys():
+                    self.logger.debug("corsabridge is not present in the internal_config in %s" %
+                              switch_id)
+                     return
                 bridge = internal_config['corsabridge']
-                if bridge == None:
-                    raise ValueError("corsabridge %s is not present in the internal_config" %
-                             switch_id)
-                    return
+
+                key='corsaratelimitbridgel2mp'
+                if key not in internal_config.keys():
+                    self.logger.debug("corsabridge is not present in the internal_config in %s" %
+                              switch_id)
+                     return
                 bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
-                if bridge_ratelimit_l2mp == None:
-                    raise ValueError("bridge_ratelimit_l2mp %s is not present in the internal_config" %
-                             switch_id)
-                    return
+
                 tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                                      bridge + "/tunnels/" + str(l2mp_bw_in_port))
 
