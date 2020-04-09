@@ -530,6 +530,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
+            return
         if 'managementvlan' in internal_config.keys():
             managementvlan = internal_config['managementvlan']
         if 'managementvlanports' in internal_config.keys():
