@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 
-RUN apt update && apt install -y git python-virtualenv pypy python-pip net-tools
+RUN apt update && apt install -y git python-virtualenv pypy python-pip net-tools vim
 
 # This really should point to a particular version
 RUN git clone -b mcevik-l2multipoint-ratelimiting https://github.com/atlanticwave-sdx/atlanticwave-proto.git

@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 
-RUN apt update && apt install -y git python-virtualenv pypy python-pip net-tools
+RUN apt update && apt install -y git python-virtualenv pypy python-pip net-tools vim
 
 # Virtualenv setup
 RUN virtualenv -p /usr/bin/pypy /appenv
