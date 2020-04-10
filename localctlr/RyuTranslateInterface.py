@@ -358,8 +358,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Returns the manifest filename if it exists or None if it does not.
         key = 'manifest_filename'
         d = self.config_table.find_one(key=key)
-        print "cw-RyuTranslate-_get_config_filename_in_db"
-        print d
         if d == None:
             return None
         val = d['value']
@@ -490,15 +488,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Call bootstrapping for switch functions
         self._new_switch_bootstrapping(ev)
 
-    # Handles port status change event
-    #@set_ev_cls(ofp_event.EventOFPPortStatus, CONFIG_DISPATCHER)
-    #def port_status_handler(self, ev):
-    #    self.logger.warning("Port status changed: connection from: " + str(ev.msg.datapath.id) + " for " + str(self))
-    #    self.datapaths[ev.msg.datapath.id] = ev.msg.datapath
-
-        # Call backup port recovery for switch functions
-    #    self._backup_port_recover(ev)
-
     # From the Ryu mailing list: https://sourceforge.net/p/ryu/mailman/message/33584125/
     @set_ev_cls(ofp_event.EventOFPErrorMsg,
                 [CONFIG_DISPATCHER, MAIN_DISPATCHER])
@@ -531,8 +520,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
         switch_id = 0  # This is unimportant:
         # it's never used in the translation
         datapath = ev.msg.datapath
-        #print "----------_new_switch_bootstrapping----------CW----------dpid:"
-        #print datapath
 
         self.remove_all_flows(datapath)
 
@@ -612,7 +599,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
     def _backup_port_recover(self, datapath, of_cookie, lc_recover_rule):
         '''Remove existing default port and use backup port'''
-        self.logger.debug("got ManagementLCRecoverRule-----CW---------")
+        self.logger.debug("got ManagementLCRecoverRule")
         self.logger.debug("Checking if backup port is available")
         switch_id = 0  # This is unimportant:
         # it's never used in the translation
@@ -635,44 +622,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             managementvlanbackupports = internal_config['managementvlanbackupports']
         else:
             self.logger.debug("No backup port provided")
-            #return
-
-        #for table in ALL_TABLES_EXCEPT_LAST:
-        #    matches = []  # FIXME: what's the equivalent of match(*)?
-        #    actions = [Continue()]
-        #    priority = PRIORITY_DEFAULT
-        #    marule = MatchActionLCRule(switch_id, matches, actions)
-        #    results += self._translate_MatchActionLCRule(datapath,
-        #                                                 table,
-        #                                                 of_cookie,
-        #                                                 marule,
-        #                                                 priority)
-
-        # For last table
-        #   - Create a default drop rule (if necessary needed). Priority 0
-        #for i in (managementvlanports):
-        #    self.logger.debug("Using default management ports.")
-        #    matches = [IN_PORT(i)]
-        #    actions = [Drop()]
-        #    priority = PRIORITY_DEFAULT_PLUS_ONE
-        #    table = LASTTABLE
-        #    marule = MatchActionLCRule(switch_id, matches, actions)
-        #    results += self._translate_MatchActionLCRule(datapath,
-        #                                                 table,
-        #                                                 of_cookie,
-        #                                                 marule,
-        #                                                 priority)
-        # Catch-all for those not in the same port
-        #matches = []
-        #actions = [Drop()]
-        #priority = PRIORITY_DEFAULT
-        #table = LASTTABLE
-        #marule = MatchActionLCRule(switch_id, matches, actions)
-        #results += self._translate_MatchActionLCRule(datapath,
-        #                                             table,
-        #                                             of_cookie,
-        #                                             marule,
-        #                                             priority)
+            return
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
@@ -693,7 +643,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                             of_cookie,
                                                             mvrule)
 
-        self.logger.debug("---------CW-------REMOVING default flows")
+        self.logger.debug("REMOVING default flows")
         # Install default rules
         for rule in results:
             self.remove_flow(datapath, rule)
@@ -717,14 +667,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                             of_cookie,
                                                             mvrule)
 
-        self.logger.debug("---------CW-------ADDING backup management VLAN flows")
+        self.logger.debug("ADDING backup management VLAN flows")
         # Install default rules
         for rule in results:
             self.add_flow(datapath, rule)
 
     def _backup_port_recover_from_sdx_msg(self, datapath, of_cookie, lc_recover_rule):
         '''Remove existing default port and use backup port'''
-        self.logger.debug("got ManagementSDXRecoverRule-----CW---------")
+        self.logger.debug("got ManagementSDXRecoverRule from SDX message")
         self.logger.debug("Checking if backup port is available")
         switch_id = 0  # This is unimportant:
         # it's never used in the translation
@@ -747,44 +697,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
         else:
             self.logger.debug("No SDX management VLAN backup port provided")
-            #return
-
-        #for table in ALL_TABLES_EXCEPT_LAST:
-        #    matches = []  # FIXME: what's the equivalent of match(*)?
-        #    actions = [Continue()]
-        #    priority = PRIORITY_DEFAULT
-        #    marule = MatchActionLCRule(switch_id, matches, actions)
-        #    results += self._translate_MatchActionLCRule(datapath,
-        #                                                 table,
-        #                                                 of_cookie,
-        #                                                 marule,
-        #                                                 priority)
-
-        # For last table
-        #   - Create a default drop rule (if necessary needed). Priority 0
-        #for i in (managementvlanports):
-        #    self.logger.debug("Using default management ports.")
-        #    matches = [IN_PORT(i)]
-        #    actions = [Drop()]
-        #    priority = PRIORITY_DEFAULT_PLUS_ONE
-        #    table = LASTTABLE
-        #    marule = MatchActionLCRule(switch_id, matches, actions)
-        #    results += self._translate_MatchActionLCRule(datapath,
-        #                                                 table,
-        #                                                 of_cookie,
-        #                                                 marule,
-        #                                                 priority)
-        # Catch-all for those not in the same port
-        #matches = []
-        #actions = [Drop()]
-        #priority = PRIORITY_DEFAULT
-        #table = LASTTABLE
-        #marule = MatchActionLCRule(switch_id, matches, actions)
-        #results += self._translate_MatchActionLCRule(datapath,
-        #                                             table,
-        #                                             of_cookie,
-        #                                             marule,
-        #                                             priority)
+            return
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
@@ -805,7 +718,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                             of_cookie,
                                                             mvrule)
 
-        self.logger.debug("---------CW-------REMOVING default flows")
+        self.logger.debug("REMOVING default flows")
         # Install default rules
         for rule in results:
             self.remove_flow(datapath, rule)
@@ -829,7 +742,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                             of_cookie,
                                                             mvrule)
 
-        self.logger.debug("---------CW-------ADDING SDX msg backup flows")
+        self.logger.debug("ADDING SDX msg backup flows")
         # Install default rules
         for rule in results:
             self.add_flow(datapath, rule)
@@ -1824,7 +1737,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
             return
 
         elif isinstance(sdx_rule, ManagementSDXRecoverRule):
-            print "Got ManagementSDXRecoverRule---------CW----------"
             self._backup_port_recover_from_sdx_msg(datapath, of_cookie, sdx_rule)
             return
 

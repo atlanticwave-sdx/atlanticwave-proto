@@ -407,8 +407,6 @@ class LocalController(AtlanticWaveModule):
         d = self.config_table.find()
         count = 0
         for entry in d:
-            print "---------CW--ENTRY:-------------"
-            print entry
             if (entry['key'] == 'lcip' or
                     entry['key'] == 'manifest_filename' or
                     entry['key'] == 'ryucxnport'):
@@ -444,8 +442,6 @@ class LocalController(AtlanticWaveModule):
         # Returns the manifest filename if it exists or None if it does not.
         key = 'manifest_filename'
         d = self.config_table.find_one(key=key)
-        print "------------_get_config_filename_in_db-----------"
-        print d
         if d == None:
             return None
         val = d['value']
@@ -546,8 +542,6 @@ class LocalController(AtlanticWaveModule):
                                         'sdxport':self.sdxport})   
         # OpenFlow/Switch configuration data
         config_count = self._get_switch_internal_config_count()
-        print "------config_count------"
-        print config_count
         if config_count == 0:
             # Nothing configured, get configs from config file
             for entry in lcdata['switchinfo']:
@@ -555,15 +549,11 @@ class LocalController(AtlanticWaveModule):
                 ic = entry['internalconfig']
                 ic['name'] = entry['name']
                 self._add_switch_internal_config_to_db(dpid, ic)
-  
+
+        # Hard coded, to be fixed
         internal_config = self._get_switch_internal_config(204) 
         if internal_config == None:
             print "internal_config == None"
-        #if 'managementvlan' in internal_config.keys():
-        #    managementvlan = internal_config['managementvlan']
-        #if 'managementvlanports' in internal_config.keys():
-        #    managementvlanports = internal_config['managementvlanports']
-        #print managementvlan
             
     def start_sdx_controller_connection(self):
         # Kick off thread to start connection.
@@ -631,7 +621,7 @@ class LocalController(AtlanticWaveModule):
             switch_id = msg.get_switch_id()
             rule = msg
             cookie = msg.get_cookie()
-            self.logger.debug("Got ManagementLCRecoverRule-------CW-------")
+            self.logger.debug("Got ManagementLCRecoverRule, to be installed")
         else:
             switch_id = msg.get_data()['switch_id']
             rule = msg.get_data()['rule']
@@ -651,7 +641,6 @@ class LocalController(AtlanticWaveModule):
         self.rm.set_status(cookie, switch_id, RULE_STATUS_ACTIVE)
 
     def remove_all_rules_sdxmsg(self):
-        '''CW: this part is not working yet'''
         ''' Removes all rules based on cookie sent from the SDX Controller. '''
         rules = self.rm.list_all_rules()
 

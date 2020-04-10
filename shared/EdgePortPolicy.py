@@ -68,11 +68,7 @@ class EdgePortPolicy(UserPolicy):
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
         switch_id = topology.node[self.switch]['dpid']
-        print "---------CW-------EdgePortPolicy------switch_id = topology.node[self.switch]['dpid']------------"
-        print switch_id
         shortname = topology.node[self.switch]['locationshortname']
-        print "---------CW-------EdgePortPolicy------shortname = topology.node[self.switch]['locationshortname']------------"
-        print shortname
 
         bd = UserPolicyBreakdown(shortname, [])
 

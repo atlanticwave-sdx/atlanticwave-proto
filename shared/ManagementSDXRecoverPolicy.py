@@ -10,22 +10,14 @@ from ManagementSDXRecoverRule import *
 import networkx as nx
 
 class ManagementSDXRecoverPolicy(UserPolicy):
-    ''' This policy is used during initialization of the LocalController to let 
-        it know which ports of it are edge ports. This is necessary for proper
-        learning of new paths to occur without redundant "new destination" 
-        messages coming in from switch-to-switch ports. 
-
-        It requires the following information at intialization:
+    ''' This policy is used by SDX to try covering connection once LocalController
+        connection is lost (heart beat is missing).
+        It requires the following information:
           - Switch
-
         Example Json:
         {"EdgePort":{
             "switch":"mia-switch"}}
-    
-        The vast majority of the work is handled by the breakdown_rule() function
-        which uses the topology to determine which ports are actually the edge 
-        ports.    
-    ''' 
+    '''
 
     def __init__(self, username, json_rule):
         self.switch = None
@@ -64,7 +56,7 @@ class ManagementSDXRecoverPolicy(UserPolicy):
             what type the neighbor is. If they are a "switch" type, then that's
             an internal port, otherwise, it's an edge port.
         '''
-        print "-----CW-breakdown_rule(self, tm, ai):-------"
+        
         self.breakdown = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
@@ -73,9 +65,6 @@ class ManagementSDXRecoverPolicy(UserPolicy):
         bd = UserPolicyBreakdown(shortname, [])
         msr = ManagementSDXRecoverRule(switch_id)
         bd.add_to_list_of_rules(msr)
-
-        for i in bd.get_list_of_rules():
-            print 
         
         self.breakdown.append(bd)
         return self.breakdown
@@ -88,10 +77,6 @@ class ManagementSDXRecoverPolicy(UserPolicy):
     def _parse_json(self, json_rule):
         jsonstring = self.ruletype
 
-        #print "rule type:" + str(jsonstring)
-        #print "json_rule.keys():" 
-        #for i in json_rule.keys():
-        #    print i
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
         if jsonstring not in json_rule.keys():
