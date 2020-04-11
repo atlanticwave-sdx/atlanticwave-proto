@@ -4,15 +4,12 @@
 from LCRule import *
 
 class ManagementLCRecoverRule(LCRule):
-    ''' This structure is used to pass the ports that belong to a spanning tree
-        to the Local Controller for handling broadcast flooding without cycles.
-        Created by FloodTreePolicy. '''
+    ''' This structure is used to pass the Management VLAN recover rule to 
+        RyuTranslateInterface. This rule is created just for trigger recovery. '''
 
     def __init__(self, cookie, switch_id):
         ''' Field descritpions:
                 switch_id - Which switch is involved
-                ports - List of ports that are part of the spanning tree needed
-                  for broadcast flooding.
         '''
         super(ManagementLCRecoverRule, self).__init__(self, switch_id)
         self.cookie = cookie

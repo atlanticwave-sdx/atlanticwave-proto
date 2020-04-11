@@ -256,6 +256,7 @@ class LocalController(AtlanticWaveModule):
                 self.sdx_connection = None
                 self.cxn_q.put((DEL_CXN, cxn))
 
+                # Restart new connection
                 self.start_sdx_controller_connection()                
     
 

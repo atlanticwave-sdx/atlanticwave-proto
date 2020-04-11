@@ -48,15 +48,7 @@ class ManagementSDXRecoverPolicy(UserPolicy):
                                                  str(e), filename,lineno)
             raise
             
-    def breakdown_rule(self, tm, ai):
-        ''' There are two stages to breaking down these rules:
-              - determine edge ports for the local switch
-              - create EdgePortLCRules for each edge port
-            To determine which ports are edge port, we look at each port and see
-            what type the neighbor is. If they are a "switch" type, then that's
-            an internal port, otherwise, it's an edge port.
-        '''
-        
+    def breakdown_rule(self, tm, ai):        
         self.breakdown = []
         topology = tm.get_topology()
         authorization_func = ai.is_authorized
