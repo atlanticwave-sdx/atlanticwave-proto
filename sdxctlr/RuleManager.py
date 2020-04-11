@@ -558,12 +558,8 @@ class RuleManager(AtlanticWaveManager):
         try:
             for bd in breakdown:
                 self.logger.debug("Sending install breakdown: %s" % bd)
-                print "before bd.get_list_of_rules()"
                 for rule in bd.get_list_of_rules():
-                    print "rule:"
-                    print rule
                     self.logger.debug("    %s" % str(rule))
-                print "after bd.get_list_of_rules()"
                 self.send_user_add_rule(bd)
         except Exception as e: raise
 
