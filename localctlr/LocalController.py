@@ -168,8 +168,6 @@ class LocalController(AtlanticWaveModule):
             except Exception as e:
                 self.logger.error("LocalController: Error in select - %s" % (e))
                 
-            #lc_recover = ManagementLCRecoverRule(0, 204)
-            #self.install_rule_sdxmsg(lc_recover)
             # Loop through readable
             for entry in readable:
                 # Get Message
@@ -259,8 +257,6 @@ class LocalController(AtlanticWaveModule):
                     # Restart new connection
                 #    self.start_sdx_controller_connection()
                 #    sleep(5)
-                lc_recover = ManagementLCRecoverRule(0, 204) 
-                self.install_rule_sdxmsg(recover)
                 self.start_sdx_controller_connection()
                 #num_of_retry = 0
                 
@@ -551,9 +547,9 @@ class LocalController(AtlanticWaveModule):
                 self._add_switch_internal_config_to_db(dpid, ic)
 
         # Hard coded, to be fixed
-        internal_config = self._get_switch_internal_config(204) 
-        if internal_config == None:
-            print "internal_config == None"
+        #internal_config = self._get_switch_internal_config(204) 
+        #if internal_config == None:
+        #    print "internal_config == None"
             
     def start_sdx_controller_connection(self):
         # Kick off thread to start connection.
