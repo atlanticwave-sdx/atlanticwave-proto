@@ -214,7 +214,6 @@ class LocalController(AtlanticWaveModule):
                     self.logger.debug("Received a INSTL message from %s" %
                                       hex(id(entry)))
                     self.install_rule_sdxmsg(msg)
-                    #self.remove_all_rules_sdxmsg()
 
                 # If RemoveRule
                 elif type(msg) == SDXMessageRemoveRule:
@@ -256,13 +255,8 @@ class LocalController(AtlanticWaveModule):
                 self.sdx_connection.close()
                 self.sdx_connection = None
                 self.cxn_q.put((DEL_CXN, cxn))
-                #if num_of_retry <= 5:
-                    # Restart new connection
-                #    self.start_sdx_controller_connection()
-                #    sleep(5)
-                self.start_sdx_controller_connection()
-                #num_of_retry = 0
-                
+
+                self.start_sdx_controller_connection()                
     
 
     def _add_switch_config_to_db(self, switch_name, switch_config):
@@ -551,11 +545,6 @@ class LocalController(AtlanticWaveModule):
                 ic = entry['internalconfig']
                 ic['name'] = entry['name']
                 self._add_switch_internal_config_to_db(dpid, ic)
-
-        # Hard coded, to be fixed
-        #internal_config = self._get_switch_internal_config(204) 
-        #if internal_config == None:
-        #    print "internal_config == None"
             
     def start_sdx_controller_connection(self):
         # Kick off thread to start connection.
@@ -635,8 +624,6 @@ class LocalController(AtlanticWaveModule):
 
         self.rm.add_rule(cookie, switch_id, rule, RULE_STATUS_INSTALLING)
         self.switch_connection.send_command(switch_id, rule)
-        #self.rm.list_all_rules(True)
-        #self.logger.debug("----------self.rm.list_all_rules complete---------------") 
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been installed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
