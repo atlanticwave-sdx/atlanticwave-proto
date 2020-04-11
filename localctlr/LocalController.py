@@ -152,14 +152,17 @@ class LocalController(AtlanticWaveModule):
             if (self.sdx_connection == None and
                 self.start_cxn_thread == None):
                 self.logger.info("Restarting SDX Connection")
-                lc_recover = ManagementLCRecoverRule(0, 204)
-                self.install_rule_sdxmsg(lc_recover)
+                for entry in self.lcconfigdata['switchinfo']:
+                    dpid = int(entry['dpid'], 0)
+                    lc_recover = ManagementLCRecoverRule(0, dpid)
+                    self.install_rule_sdxmsg(lc_recover)
+                    self.logger.debug("ManagementLCRecoverRule sent. About to restart SDX connection.")
                 self.start_sdx_controller_connection() #Restart!
 
             if len(rlist) == 0:
                 sleep(timeout/2)
                 continue
-            
+
             try:
                 readable, writable, exceptional = cxnselect(rlist,
                                                             wlist,
@@ -475,6 +478,7 @@ class LocalController(AtlanticWaveModule):
                             (str(self.conf_file),
                              str(self._get_config_filename_in_db())))
 
+        self.lcconfigdata = None
         # Get config file, if it exists
         try:
             self.logger.info("Opening config file %s" % self.conf_file)
@@ -491,6 +495,8 @@ class LocalController(AtlanticWaveModule):
             with open(self.manifest) as data_file:
                 data = json.load(data_file)
             lcdata = data['localcontrollers'][self.name]
+            # Save lcdata for future use
+            self.lcconfigdata = lcdata
             self.logger.info("Successfully opened manifest file %s" %
                              self.manifest)
         except Exception as e:
