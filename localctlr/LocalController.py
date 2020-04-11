@@ -631,7 +631,7 @@ class LocalController(AtlanticWaveModule):
         self.rm.set_status(cookie, switch_id, RULE_STATUS_ACTIVE)
 
     def remove_all_rules_sdxmsg(self):
-        ''' Removes all rules based on cookie sent from the SDX Controller. '''
+        ''' Removes all data plane rules. '''
         rules = self.rm.list_all_rules()
 
         if rules == []:
