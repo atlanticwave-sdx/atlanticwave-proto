@@ -67,9 +67,12 @@ class LCRuleManager(AtlanticWaveManager):
             for dupe in dupes:
                 (c,sid,lcr,stat) = dupe
                 if lcr == lcrule:
-                    raise LCRuleManagerValidationError(
-                        "Duplicate add_rule for %s:%s:%s" %
-                        (cookie, switch_id, str(lcrule)))
+                    if isinstance(ManagementLCRecoverRule):
+                        self.logger.debug("ManagementLCRecoverRule, ignored.")
+                    else:
+                        raise LCRuleManagerValidationError(
+                            "Duplicate add_rule for %s:%s:%s" %
+                            (cookie, switch_id, str(lcrule)))
 
         # Translate rule into a string so it can be stored
         self.rule_table.insert({'cookie':cookie,
@@ -129,7 +132,18 @@ class LCRuleManager(AtlanticWaveManager):
                    pickle.loads(str(x['rule'])),
                    x['status']) for x in results]
         return retval
-        
+
+    def list_all_rules(self, full_tuple=False):
+        rules = self.rule_table.find()
+        self.logger.debug("Retrieving all rules.")
+        if full_tuple:
+            retval = [(x['cookie'],
+                       x['switch_id'],
+                       pickle.loads(str(x['rule'])),
+                       x['status']) for x in rules]
+            return retval
+        retval = [pickle.loads(str(x['rule'])) for x in rules]
+        return retval
 
     def get_rules(self, cookie, switch_id, full_tuple=False):
         ''' Returns a list of all rules matching cookie and switch_id. 

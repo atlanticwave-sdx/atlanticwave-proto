@@ -23,6 +23,7 @@ from LCRuleManager import *
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
 from switch_messages import *
+from shared.ManagementLCRecoverRule import *
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_RYU_CXN_PORT = 55767
@@ -107,6 +108,8 @@ class LocalController(AtlanticWaveModule):
         wlist = []
         xlist = rlist
         timeout = 1.0
+        num_of_retry = 0
+        all_rules = []
 
         self.logger.debug("Inside Main Loop, SDX connection: %s" % (self.sdx_connection))
 
@@ -151,12 +154,17 @@ class LocalController(AtlanticWaveModule):
             if (self.sdx_connection == None and
                 self.start_cxn_thread == None):
                 self.logger.info("Restarting SDX Connection")
+                for entry in self.lcconfigdata['switchinfo']:
+                    dpid = int(entry['dpid'], 0)
+                    lc_recover = ManagementLCRecoverRule(0, dpid)
+                    self.install_rule_sdxmsg(lc_recover)
+                    self.logger.debug("ManagementLCRecoverRule sent. About to restart SDX connection.")
                 self.start_sdx_controller_connection() #Restart!
 
             if len(rlist) == 0:
                 sleep(timeout/2)
                 continue
-            
+
             try:
                 readable, writable, exceptional = cxnselect(rlist,
                                                             wlist,
@@ -165,7 +173,6 @@ class LocalController(AtlanticWaveModule):
             except Exception as e:
                 self.logger.error("LocalController: Error in select - %s" % (e))
                 
-
             # Loop through readable
             for entry in readable:
                 # Get Message
@@ -250,9 +257,10 @@ class LocalController(AtlanticWaveModule):
                 self.sdx_connection.close()
                 self.sdx_connection = None
                 self.cxn_q.put((DEL_CXN, cxn))
-                
+
                 # Restart new connection
-                self.start_sdx_controller_connection()
+                self.start_sdx_controller_connection()                
+    
 
 
     def _add_switch_internal_config_to_db(self, dpid, internal_config):
@@ -371,6 +379,7 @@ class LocalController(AtlanticWaveModule):
             Pulls information from the DB.
         '''
         key = str(dpid)
+
         d = self.config_table.find_one(key=key)
         if d == None:
             return None
@@ -407,7 +416,43 @@ class LocalController(AtlanticWaveModule):
         val = d['value']
         return pickle.loads(str(val))
 
+    def _get_switch_internal_config_count(self):
+        # Returns a count of internal configs.
+        d = self.config_table.find()
+        count = 0
+        for entry in d:
+            if (entry['key'] == 'lcip' or
+                    entry['key'] == 'manifest_filename' or
+                    entry['key'] == 'ryucxnport'):
+                continue
+            count += 1
+        return count
+
+    def _add_switch_internal_config_to_db(self, dpid, internal_config):
+        # Pushes a switch internal_config into the db.
+        # key: "<dpid>"
+        # value: <internal_config>
+        key = dpid
+        value = pickle.dumps(internal_config)
+        if self._get_switch_internal_config(dpid) == None:
+            self.logger.info("Adding new internal_config for DPID %s" % dpid)
+            self.config_table.insert({'key': key, 'value': value})
+        else:
+            # Already exists, must update
+            self.logger.info("updating internal_config for DPID %s" % dpid)
+            self.config_table.update({'key': key, 'value': value},
+                                     ['key'])
+
     def _get_manifest_filename_in_db(self):
+        # Returns the manifest filename if it exists or None if it does not.
+        key = 'manifest_filename'
+        d = self.config_table.find_one(key=key)
+        if d == None:
+            return None
+        val = d['value']
+        return pickle.loads(str(val))
+
+    def _get_config_filename_in_db(self):
         # Returns the manifest filename if it exists or None if it does not.
         key = 'manifest_filename'
         d = self.config_table.find_one(key=key)
@@ -435,13 +480,38 @@ class LocalController(AtlanticWaveModule):
             raise Exception("Stored and passed in manifest filenames don't match up %s:%s" %
                             (str(self.manifest),
                              str(self._get_manifest_filename_in_db())))
-        
+       
+        self.conf_file = None 
+        # If the conf_name is None, try to get the name from the DB.
+        if self.conf_file == None:
+            self.conf_file = self._get_config_filename_in_db()
+        elif (self.conf_file != self._get_config_filename_in_db() and
+              None != self._get_config_filename_in_db()):
+            # Make sure it matches!
+            # FIXME: Should we force everything to be imported if different.
+            raise Exception("Stored and passed in manifest filenames don't match up %s:%s" %
+                            (str(self.conf_file),
+                             str(self._get_config_filename_in_db())))
+
+        self.lcconfigdata = None
+        # Get config file, if it exists
+        try:
+            self.logger.info("Opening config file %s" % self.conf_file)
+            with open(self.conf_file) as data_file:
+                data = json.load(data_file)
+            lcdata = data['localcontrollers'][self.name]
+        except Exception as e:
+            self.logger.warning("exception when opening config file: %s" %
+                                str(e))
+
         # Get Manifest, if it exists
         try:
             self.logger.info("Opening manifest file %s" % self.manifest)
             with open(self.manifest) as data_file:
                 data = json.load(data_file)
             lcdata = data['localcontrollers'][self.name]
+            # Save lcdata for future use
+            self.lcconfigdata = lcdata
             self.logger.info("Successfully opened manifest file %s" %
                              self.manifest)
         except Exception as e:
@@ -495,7 +565,6 @@ class LocalController(AtlanticWaveModule):
             ic = entry['internalconfig']
             ic['name'] = entry['name']
             self._add_switch_internal_config_to_db(dpid, ic)
-
 
     def start_sdx_controller_connection(self):
         # Kick off thread to start connection.
@@ -559,9 +628,15 @@ class LocalController(AtlanticWaveModule):
     # Is this necessary?
 
     def install_rule_sdxmsg(self, msg):
-        switch_id = msg.get_data()['switch_id']
-        rule = msg.get_data()['rule']
-        cookie = rule.get_cookie()
+        if type(msg) == ManagementLCRecoverRule:
+            switch_id = msg.get_switch_id()
+            rule = msg
+            cookie = msg.get_cookie()
+            self.logger.debug("Got ManagementLCRecoverRule, to be installed")
+        else:
+            switch_id = msg.get_data()['switch_id']
+            rule = msg.get_data()['rule']
+            cookie = rule.get_cookie()
 
         self.logger.debug("install_rule_sdxmsg: %d:%s:%s" % (cookie, 
                                                              switch_id, 
@@ -569,12 +644,33 @@ class LocalController(AtlanticWaveModule):
 
         self.rm.add_rule(cookie, switch_id, rule, RULE_STATUS_INSTALLING)
         self.switch_connection.send_command(switch_id, rule)
-
-        
         #FIXME: This should be moved to somewhere where we have positively
         #confirmed a rule has been installed. Right now, there is no such
         #location as the LC/RyuTranslateInteface protocol is primitive.
         self.rm.set_status(cookie, switch_id, RULE_STATUS_ACTIVE)
+
+    def remove_all_rules_sdxmsg(self):
+        ''' Removes all data plane rules. '''
+        rules = self.rm.list_all_rules()
+
+        if rules == []:
+            self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s" % cookie)
+            return
+        for rule in rules:
+            self.logger.debug("Removing rule:")
+            self.logger.debug(rule)
+            self.logger.debug("Type of rule:")
+            self.logger.debug(type(rule))
+            cookie = rule.get_cookie()
+            switch_id = rule.get_switch_id()
+            self.rm.set_status(cookie, switch_id, RULE_STATUS_DELETING)
+            self.switch_connection.remove_rule(switch_id, cookie)
+
+            #FIXME: This should be moved to somewhere where we have positively
+            #confirmed a rule has been removed. Right now, there is no such
+            #location as the LC/RyuTranslateInteface protocol is primitive.
+            self.rm.set_status(cookie, switch_id, RULE_STATUS_REMOVED)
+            self.rm.rm_rule(cookie, switch_id)
 
     def remove_rule_sdxmsg(self, msg):
         ''' Removes rules based on cookie sent from the SDX Controller. If we do
@@ -599,7 +695,6 @@ class LocalController(AtlanticWaveModule):
             if (rule_type == 'L2MultipointEndpointLCRule') and (str(rule_switch) == str(switch_id)) :
                 self.logger.debug("remove tunnels for L2Multipoint rate limiting:  %d:%s:%s" % (cookie, switch_id, r)) 
                 self.remove_l2mp_ratelimiting_tunnel(switch_id, cookie, rules)
-
 
         self.logger.debug("remove_rule_sdxmsg:  %d:%s:%s" % (cookie, 
                                                              switch_id, 

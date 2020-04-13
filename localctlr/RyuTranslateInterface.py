@@ -37,6 +37,8 @@ from shared.L2MultipointFloodLCRule import *
 from shared.L2MultipointLearnedDestinationLCRule import *
 from shared.FloodTreeLCRule import *
 from shared.ManagementVLANLCRule import *
+from shared.ManagementLCRecoverRule import *
+from shared.ManagementSDXRecoverRule import *
 
 LOCALHOST = "127.0.0.1"
 
@@ -558,9 +560,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # For last table
         #   - Create a default drop rule (if necessary needed). Priority 0
         for i in (managementvlanports):
+            self.logger.debug("Using default management ports.")
             matches = [IN_PORT(i)]
             actions = [Drop()]
-            priorty = PRIORITY_DEFAULT_PLUS_ONE
+            priority = PRIORITY_DEFAULT_PLUS_ONE
             table = LASTTABLE
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
@@ -571,7 +574,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Catch-all for those not in the same port
         matches = []
         actions = [Drop()]
-        priorty = PRIORITY_DEFAULT
+        priority = PRIORITY_DEFAULT
         table = LASTTABLE
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
@@ -599,6 +602,156 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                             of_cookie,
                                                             mvrule)
 
+        # Install default rules
+        for rule in results:
+            self.add_flow(datapath, rule)
+
+    def _backup_port_recover(self, datapath, of_cookie, lc_recover_rule):
+        '''Remove existing default port and use backup port'''
+        self.logger.debug("got ManagementLCRecoverRule")
+        self.logger.debug("Checking if backup port is available")
+        switch_id = 0  # This is unimportant:
+        # it's never used in the translation
+
+        of_cookie = self._get_new_OF_cookie(-1, -1)  # FIXME: magic number
+        results = []
+
+        # In-band Communication
+        # Extract management VLAN and ports from the manifest
+        internal_config = self._get_switch_internal_config(datapath.id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+        if 'managementvlan' in internal_config.keys():
+            managementvlan = internal_config['managementvlan']
+        if 'managementvlanports' in internal_config.keys():
+            managementvlanports = internal_config['managementvlanports']
+
+        if 'managementvlanbackupports' in internal_config.keys():
+            managementvlanbackupports = internal_config['managementvlanbackupports']
+        else:
+            self.logger.debug("No backup port provided")
+            return
+
+        # In-band Communication
+        # If the management VLAN needs to be setup, set it up.
+        if 'managementvlan' in internal_config.keys():
+            managementvlan = internal_config['managementvlan']
+            managementvlanports = internal_config['managementvlanports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in internal_config.keys():
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
+
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          managementvlanports,
+                                          untaggedmanagementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
+        self.logger.debug("REMOVING default flows")
+        # Install default rules
+        for rule in results:
+            self.remove_flow(datapath, rule)
+
+        # Add backup management vlan ports
+        results = []
+        if 'managementvlan' in internal_config.keys():
+            managementvlan = internal_config['managementvlan']
+            managementvlanbackupports = internal_config['managementvlanbackupports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in internal_config.keys():
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
+
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          managementvlanbackupports,
+                                          untaggedmanagementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
+        self.logger.debug("ADDING backup management VLAN flows")
+        # Install default rules
+        for rule in results:
+            self.add_flow(datapath, rule)
+
+    def _backup_port_recover_from_sdx_msg(self, datapath, of_cookie, lc_recover_rule):
+        '''Remove existing default port and use backup port'''
+        self.logger.debug("got ManagementSDXRecoverRule from SDX message")
+        self.logger.debug("Checking if backup port is available")
+        switch_id = 0  # This is unimportant:
+        # it's never used in the translation
+
+        of_cookie = self._get_new_OF_cookie(-1, -1)  # FIXME: magic number
+        results = []
+
+        # In-band Communication
+        # Extract management VLAN and ports from the manifest
+        internal_config = self._get_switch_internal_config(datapath.id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+        if 'managementvlan' in internal_config.keys():
+            managementvlan = internal_config['managementvlan']
+        if 'managementvlanports' in internal_config.keys():
+            managementvlanports = internal_config['managementvlanports']
+
+        if 'sdxmanagementvlanbackupports' in internal_config.keys():
+            sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
+        else:
+            self.logger.debug("No SDX management VLAN backup port provided")
+            return
+
+        # In-band Communication
+        # If the management VLAN needs to be setup, set it up.
+        if 'managementvlan' in internal_config.keys():
+            managementvlan = internal_config['managementvlan']
+            managementvlanports = internal_config['managementvlanports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in internal_config.keys():
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
+
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          managementvlanports,
+                                          untaggedmanagementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
+        self.logger.debug("REMOVING default flows")
+        # Install default rules
+        for rule in results:
+            self.remove_flow(datapath, rule)
+
+        # Add backup management vlan ports
+        results = []
+        if 'managementvlan' in internal_config.keys():
+            managementvlan = internal_config['managementvlan']
+            sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in internal_config.keys():
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
+
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          sdxmanagementvlanbackupports,
+                                          untaggedmanagementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
+        self.logger.debug("ADDING SDX msg backup flows")
         # Install default rules
         for rule in results:
             self.add_flow(datapath, rule)
@@ -1594,10 +1747,19 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                                 of_cookie,
                                                                 sdx_rule)
 
+        elif isinstance(sdx_rule, ManagementLCRecoverRule):
+            self._backup_port_recover(datapath, of_cookie, sdx_rule)
+            return
+
+        elif isinstance(sdx_rule, ManagementSDXRecoverRule):
+            self._backup_port_recover_from_sdx_msg(datapath, of_cookie, sdx_rule)
+            return
+
         if switch_rules == None or switch_table == None:
-            self.logger.error(
-                "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
-                sdx_rule, switch_rules, switch_table)
+            if not isinstance(sdx_rule, ManagementLCRecoverRule):
+                self.logger.error(
+                    "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
+                    sdx_rule, switch_rules, switch_table)
             # FIXME: This shouldn't happen...
             pass
 
