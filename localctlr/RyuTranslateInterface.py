@@ -613,7 +613,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         switch_id = 0  # This is unimportant:
         # it's never used in the translation
 
-        of_cookie = self._get_new_OF_cookie(-1)  # FIXME: magic number
+        of_cookie = self._get_new_OF_cookie(-1, -1)  # FIXME: magic number
         results = []
 
         # In-band Communication
@@ -688,7 +688,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         switch_id = 0  # This is unimportant:
         # it's never used in the translation
 
-        of_cookie = self._get_new_OF_cookie(-1)  # FIXME: magic number
+        of_cookie = self._get_new_OF_cookie(-1, -1)  # FIXME: magic number
         results = []
 
         # In-band Communication
