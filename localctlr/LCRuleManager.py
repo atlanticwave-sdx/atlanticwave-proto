@@ -80,6 +80,9 @@ class LCRuleManager(AtlanticWaveManager):
                                 'status':status,
                                 'rule':textrule})
 
+        listrules = self._find_rules({})
+        self.logger.debug("%s - %s --- MCEVIK add_rule: listrules: %s" % (self.__class__.__name__, hex(id(self)), str(listrules)))
+
     def rm_rule(self, cookie, switch_id):
         # Remove LC rule identified by cookie and switch_id
         
@@ -101,7 +104,9 @@ class LCRuleManager(AtlanticWaveManager):
             self.rule_table.update({'cookie':cookie,
                                     'switch_id':switch_id,
                                     'status':status},
-                                   ['cookie'])
+                                   ['cookie','switch_id'])
+        listrules = self._find_rules({})
+        self.logger.debug("%s - %s --- MCEVIK set_status: listrules: %s" % (self.__class__.__name__, hex(id(self)), str(listrules)))
 
     def _find_rules(self, filter={}):
         # If filter=={}, return all rules.
@@ -146,17 +151,24 @@ class LCRuleManager(AtlanticWaveManager):
             If  full_tuple==True, then a list of tuples will be returned:
                 (cookie, switch_id, rule, status)
         '''
+
+        listrules = self._find_rules({})
+        self.logger.debug("%s - %s --- MCEVIK get_rules: listrules: %s" % (self.__class__.__name__, hex(id(self)), str(listrules)))
+
         # Get the rule specified by cookie
         rules = self.rule_table.find(cookie=cookie, switch_id=switch_id)
+        self.logger.debug("%s - %s --- MCEVIK get_rules: rules: %s" % (self.__class__.__name__, hex(id(self)), str(rules)))
 
         if full_tuple:
             retval = [(x['cookie'],
                        x['switch_id'],
                        pickle.loads(str(x['rule'])),
                        x['status']) for x in rules]
+            self.logger.debug("%s - %s --- MCEVIK get_rules: retval full_tuple: %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
             return retval
 
         retval = [pickle.loads(str(x['rule'])) for x in rules]
+        self.logger.debug("%s - %s --- MCEVIK get_rules: retval : %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
         return retval
 
     def add_initial_rule(self, rule, cookie, switch_id):

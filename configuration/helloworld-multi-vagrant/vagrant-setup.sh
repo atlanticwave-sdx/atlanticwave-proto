@@ -9,7 +9,7 @@ sudo usermod -aG docker $USER
 
 
 # git work
-git clone https://github.com/atlanticwave-sdx/atlanticwave-proto.git
+git clone -b mcevik-l2multipoint-ratelimiting https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 
 # Docker work: build SDX Controller and Local Controller containers
 cd ~/atlanticwave-proto/
