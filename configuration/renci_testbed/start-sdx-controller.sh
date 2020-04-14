@@ -1,7 +1,9 @@
 #/bin/bash
 
 MODE="$2"
+MANIFEST="$3"
 echo "--- MODE: $MODE"
+echo "--- MANIFEST: $MANIFEST"
 
 if [ "$MODE" == "detached" ]; then
   OPTS="dit"
@@ -24,4 +26,4 @@ fi
 docker volume rm atlanticwave-proto
 docker volume create atlanticwave-proto
 
-docker run --rm --network host -v atlanticwave-proto:/atlanticwave-proto -e MANIFEST="/renci_ben.manifest" -e IPADDR="0.0.0.0" -e PORT="5000" -e LCPORT="5555" -p 5000:5000 -p 5555:5555 -${OPTS} --name=${NAME} sdx_container
+docker run --rm --network host -v atlanticwave-proto:/atlanticwave-proto -e MANIFEST="/${MANIFEST}" -e IPADDR="0.0.0.0" -e PORT="5000" -e LCPORT="5555" -p 5000:5000 -p 5555:5555 -${OPTS} --name=${NAME} sdx_container

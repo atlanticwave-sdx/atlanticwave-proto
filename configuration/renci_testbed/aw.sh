@@ -4,7 +4,7 @@ TEMP_FILE=/tmp/trap.txt
 CONFIG_DIR="/var/tmp"
 TMP_DIR="/var/tmp"
 WORK_DIR="/root"
-
+MANIFEST="renci_ben.manifest"
 
 DELAY=3 
 DATE=$(date +%Y%m%d-%H%M%S)
@@ -137,10 +137,11 @@ run_docker_container(){
    WORK_DIR=$2
    TYPE=$3
    MODE=$4
+   MANIFEST=$5
 
    # Run Docker Container ( renci | duke | unc | ncsu )
    cd ${WORK_DIR}
-   ./start-${TYPE}-controller.sh ${SITE} ${MODE}
+   ./start-${TYPE}-controller.sh ${SITE} ${MODE} ${MANIFEST}
 }
 
 
@@ -149,7 +150,7 @@ stop_docker_container(){
 }
 
 
-while getopts "R:B:m:cbprsH" opt; do
+while getopts "R:B:m:M:cbprsH" opt; do
     case $opt in
         R)
             AW_REPO=${OPTARG}
@@ -159,6 +160,9 @@ while getopts "R:B:m:cbprsH" opt; do
             ;;
         m)
             MODE=${OPTARG}
+            ;;
+        M)
+            MANIFEST=${OPTARG}
             ;;
         c)
             title "Cleanup Files"
@@ -183,7 +187,7 @@ while getopts "R:B:m:cbprsH" opt; do
             ;;
         r)
             title "Run Docker Container for ${TYPE} - MODE: $MODE"
-            run_docker_container $SITE $WORK_DIR $TYPE $MODE
+            run_docker_container $SITE $WORK_DIR $TYPE $MODE $MANIFEST
             ;;
         s)
             title "Stop Docker Containers"
