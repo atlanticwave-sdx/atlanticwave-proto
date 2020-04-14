@@ -150,7 +150,7 @@ stop_docker_container(){
 }
 
 
-while getopts "R:B:m:M:cbprsH" opt; do
+while getopts "R:B:m:n:cbprsH" opt; do
     case $opt in
         R)
             AW_REPO=${OPTARG}
@@ -161,7 +161,7 @@ while getopts "R:B:m:M:cbprsH" opt; do
         m)
             MODE=${OPTARG}
             ;;
-        M)
+        n)
             MANIFEST=${OPTARG}
             ;;
         c)
