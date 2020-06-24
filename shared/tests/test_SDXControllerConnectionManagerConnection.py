@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -20,26 +21,26 @@ class dummy_rule(object):
                  
 
 def get_initial_rules_5(dummy):
-    print "### Getting rules for %s" % dummy
+    print("### Getting rules for %s" % dummy)
     return [dummy_rule('rule1', 1),
             dummy_rule('rule2', 2),
             dummy_rule('rule3', 3),
             dummy_rule('rule4', 4),
             dummy_rule('rule5', 5)]
 def get_initial_rules_0(dummy):
-    print "### Getting rules for %s" % dummy
+    print("### Getting rules for %s" % dummy)
     return []
 def set_name_1(dummy):
-    print "### Setting name to %s" % dummy
+    print("### Setting name to %s" % dummy)
 
 def new_callback(dummy):
-    print "New Callback %s" % dummy
+    print("New Callback %s" % dummy)
     
 def del_callback(dummy):
-    print "Del Callback %s" % dummy
+    print("Del Callback %s" % dummy)
     
 def install_rule(rule):
-    print "--- install_rule(%s)" %rule
+    print("--- install_rule(%s)" %rule)
 
 class SDXMessageInitTest(unittest.TestCase):
     def test_SDXMessage_init(self):
@@ -191,7 +192,7 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
         
 
     def test_connection_establishment(self):
-        print "Beginning connection"
+        print("Beginning connection")
         self.ClientSocket = socket.socket(socket.AF_INET,
                                           socket.SOCK_STREAM)
         self.ClientSocket.connect((self.ip, self.port))
@@ -201,9 +202,9 @@ class SDXConnectionEstablishmentTest(unittest.TestCase):
         self.ClientCxn.set_delete_callback(del_callback)
         self.ClientCxn.transition_to_main_phase_LC('TESTING', "asdfjkl;",
                                                     install_rule)
-        print "pre close"
+        print("pre close")
         self.ClientSocket.close()
-        print "close"
+        print("close")
                                                     
 
 class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
@@ -247,7 +248,7 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
         
 
     def test_connection_establishment_empty(self):
-        print "Beginning connection"
+        print("Beginning connection")
         self.ClientSocket = socket.socket(socket.AF_INET,
                                           socket.SOCK_STREAM)
         self.ClientSocket.connect((self.ip, self.port))
@@ -257,9 +258,9 @@ class SDXConnectionEstablishmentEmptyTest(unittest.TestCase):
         self.ClientCxn.set_delete_callback(del_callback)
         self.ClientCxn.transition_to_main_phase_LC('TESTING', "asdfjkl;",
                                                     install_rule)
-        print "pre close"
+        print("pre close")
         self.ClientSocket.close()
-        print "close"
+        print("close")
 
 
 class SDXConnectionHeartbeatTest(unittest.TestCase):

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -48,12 +49,12 @@ class UserPolicyStandin(UserPolicy):
     
     def breakdown_rule(self, topology, authorization_func):
         # Verify that topology is a nx.Graph, and authorization_func is ???
-        print "breakdown_rule called: %s:%s" % (authorization_func, topology)
+        print("breakdown_rule called: %s:%s" % (authorization_func, topology))
         if not isinstance(topology, TopologyManager):
-            print "- Raising Exception"
+            print("- Raising Exception")
             raise Exception("Topology is not nx.Graph")
         if self.valid == True:
-            print "- Success"
+            print("- Success")
             return [UserPolicyBreakdown("1.2.3.4",
                                         [RuleStandin("rule1"),
                                          RuleStandin("rule2")])]

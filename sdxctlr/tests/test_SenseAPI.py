@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -25,11 +26,11 @@ BASIC_MANIFEST_FILE = "tests/senseapi_files/twoswitch-onelc-noncorsa.manifest"
 
 def add_rule(param):
     # For Rule Manager
-    print "Add Rule %s" % param
+    print("Add Rule %s" % param)
 
 def rm_rule(param):
     # For Rule Manager
-    print "Rm  Rule %s" % param
+    print("Rm  Rule %s" % param)
     
 
 class SingletonTest(unittest.TestCase):

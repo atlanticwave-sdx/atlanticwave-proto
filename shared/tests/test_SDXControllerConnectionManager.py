@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -13,27 +14,27 @@ from shared.SDXControllerConnectionManagerConnection import *
 dummy_log = "Testing"
 
 def get_initial_rules_5(dummy):
-    print "### Getting rules for %s" % dummy
+    print("### Getting rules for %s" % dummy)
     return ['rule1',
             'rule2',
             'rule3',
             'rule4',
             'rule5']
 def get_initial_rules_0(dummy):
-    print "### Getting rules for %s" % dummy
+    print("### Getting rules for %s" % dummy)
     return []
 
 def set_name_1(dummy):
-    print "### Setting name to %s" % dummy
+    print("### Setting name to %s" % dummy)
 
 def new_callback(dummy):
-    print "New Callback %s" % dummy
+    print("New Callback %s" % dummy)
     
 def del_callback(dummy):
-    print "Del Callback %s" % dummy
+    print("Del Callback %s" % dummy)
     
 def install_rule(rule):
-    print "--- install_rule(%s)" %rule
+    print("--- install_rule(%s)" %rule)
 
 class InitTest(unittest.TestCase):
     def test_singleton(self):

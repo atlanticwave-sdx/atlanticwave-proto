@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from LCRule import *
-from LCFields import *
-from LCAction import *
+from .LCRule import *
+from .LCFields import *
+from .LCAction import *
 
 class MatchActionLCRule(LCRule):
     ''' This structure is used to pass Rules that create match-action rules on

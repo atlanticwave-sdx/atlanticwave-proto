@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 from lib.AtlanticWaveInspector import AtlanticWaveInspector
-from AuthorizationInspector import AuthorizationInspector 
-from TopologyManager import TopologyManager
+from .AuthorizationInspector import AuthorizationInspector 
+from .TopologyManager import TopologyManager
 
 class ValidityInspectorError(Exception):
     ''' Parent class, can be used as a catch-all for the other errors '''

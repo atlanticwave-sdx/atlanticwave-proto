@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -117,7 +118,7 @@ class RemoteControllerHarness(object):
         xlist = rlist
         timeout = 1.0
 
-        print "Starting Client Thread: %s" % self.client
+        print("Starting Client Thread: %s" % self.client)
         while(True):
             print ("RCHarness: Beginning of main loop")
             try:
@@ -149,14 +150,14 @@ class RemoteControllerHarness(object):
     def send_new_command(self, cmd):
         switch_id = 1
         msg = SDXMessageInstallRule(cmd, switch_id)
-        print "about to send: %s" % msg
+        print("about to send: %s" % msg)
         self.client.send_protocol(msg)
         #self.client.send_cmd(SDX_NEW_RULE, cmd)
 
     def send_rm_command(self, rule):
         switch_id = 1
         msg = SDXMessageRemoveRule(rule.get_cookie(), switch_id)
-        print "about to send: %s" % msg
+        print("about to send: %s" % msg)
         self.client.send_protocol(msg)
         #self.client.send_cmd(SDX_RM_RULE, cmd)
 

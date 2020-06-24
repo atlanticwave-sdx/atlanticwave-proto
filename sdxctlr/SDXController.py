@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -11,17 +13,17 @@ from lib.Connection import select as cxnselect
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
 from shared.UserPolicy import UserPolicyBreakdown
-from AuthenticationInspector import *
-from AuthorizationInspector import *
-from BreakdownEngine import *
-from LocalControllerManager import *
-from RestAPI import *
-from RuleManager import *
-from RuleRegistry import *
-from TopologyManager import *
-from ValidityInspector import *
-from UserManager import *
-from SenseAPI import *
+from .AuthenticationInspector import *
+from .AuthorizationInspector import *
+from .BreakdownEngine import *
+from .LocalControllerManager import *
+from .RestAPI import *
+from .RuleManager import *
+from .RuleRegistry import *
+from .TopologyManager import *
+from .ValidityInspector import *
+from .UserManager import *
+from .SenseAPI import *
 
 # Known UserPolicies
 #FIXME: from shared.JsonUploadPolicy import *
@@ -413,7 +415,7 @@ if __name__ == '__main__':
                         help="Port number for LCs to connect to")
 
     options = parser.parse_args()
-    print options
+    print(options)
  
     if not options.manifest:
         parser.print_help()

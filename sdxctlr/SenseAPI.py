@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -9,12 +11,12 @@ from lib.AtlanticWaveManager import AtlanticWaveManager
 from shared.L2MultipointPolicy import L2MultipointPolicy
 from shared.L2TunnelPolicy import L2TunnelPolicy
 
-from AuthenticationInspector import AuthenticationInspector
-from AuthorizationInspector import AuthorizationInspector
-from RuleManager import RuleManager, RuleManagerError
-from TopologyManager import TopologyManager, TOPO_EDGE_TYPE
-from UserManager import UserManager
-from RuleRegistry import RuleRegistry
+from .AuthenticationInspector import AuthenticationInspector
+from .AuthorizationInspector import AuthorizationInspector
+from .RuleManager import RuleManager, RuleManagerError
+from .TopologyManager import TopologyManager, TOPO_EDGE_TYPE
+from .UserManager import UserManager
+from .RuleRegistry import RuleRegistry
 
 from threading import Lock
 import cPickle as pickle
@@ -216,20 +218,20 @@ class SenseAPI(AtlanticWaveManager):
 
 
     def __DEBUG_print_lots_of_details(self):
-        print "\n\n\n\n"
+        print("\n\n\n\n")
         self.__print_all_deltas()
-        print "current_topo:"
+        print("current_topo:")
         self.__print_topology_details(self.current_topo)
-        print "Neighbors of Miadtn: %s" % self.current_topo['miadtn']
-        print "Neighbors of br1   : %s" % self.current_topo['br1']
-        print "Neighbors of br2   : %s" % self.current_topo['br2']
-        print "br1 neighbor list  : %s" % self.current_topo['br1'].keys()
-        print "br2 neighbor list  : %s" % self.current_topo['br2'].keys()
+        print("Neighbors of Miadtn: %s" % self.current_topo['miadtn'])
+        print("Neighbors of br1   : %s" % self.current_topo['br1'])
+        print("Neighbors of br2   : %s" % self.current_topo['br2'])
+        print("br1 neighbor list  : %s" % self.current_topo['br1'].keys())
+        print("br2 neighbor list  : %s" % self.current_topo['br2'].keys())
         for n in self.current_topo['br1'].keys():
-            print "br1-%s:  %s" % (n, self.current_topo['br1'][n]['br1'])
+            print("br1-%s:  %s" % (n, self.current_topo['br1'][n]['br1']))
         for n in self.current_topo['br2'].keys():
-            print "br2-%s:  %s" % (n, self.current_topo['br2'][n]['br2'])
-        print "\n\n"
+            print("br2-%s:  %s" % (n, self.current_topo['br2'][n]['br2']))
+        print("\n\n")
 
         #model, newbool = self.get_latest_model()
         #print "get_latest_model %s, %s" % (newbool, model['model'])
@@ -237,10 +239,10 @@ class SenseAPI(AtlanticWaveManager):
         #model, newbool = self.get_latest_model()
         #print "get_latest_model %s, %s" % (newbool, model['model'])
         
-        print "\n\n"
-        print "simplified_topo:\n"
+        print("\n\n")
+        print("simplified_topo:\n")
         self.__print_topology_details(self.simplified_topo)
-        print "\n\n\n\n"
+        print("\n\n\n\n")
         #self._INTERNAL_TESTING_DELETE_FINAL_CHECKIN()
 
     def api_process(self):
@@ -259,22 +261,22 @@ class SenseAPI(AtlanticWaveManager):
     def __print_all_deltas(self, all_details=True):
         deltas = self.get_all_deltas()
 
-        print "\n\n&&&&& DELTAS &&&&&"
+        print("\n\n&&&&& DELTAS &&&&&")
         for d in deltas:
             if all_details:
-                print d
+                print(d)
             else:
-                print "%s" % d['id']
-        print "&&&&&        &&&&&\n\n"
+                print("%s" % d['id'])
+        print("&&&&&        &&&&&\n\n")
 
     def __print_all_rule_hashes(self):
         hashes = self.hash_table.find()
 
-        print "\n\n&&&&& RULE_HASHES &&&&&"
+        print("\n\n&&&&& RULE_HASHES &&&&&")
         for h in hashes:
-            print "%s - %s %s" % (h['hash'], h['delta_id'],
-                                  pickle.loads(str(h['policy'])))
-        print "&&&&&        &&&&&\n\n"
+            print("%s - %s %s" % (h['hash'], h['delta_id'],
+                                  pickle.loads(str(h['policy']))))
+        print("&&&&&        &&&&&\n\n")
 
         
 
@@ -283,12 +285,12 @@ class SenseAPI(AtlanticWaveManager):
         print("\n\nNODES WITH DETAILS\n" +
               json.dumps(self.current_topo.nodes(data=True),
                                     indent=4, sort_keys=True))
-        print "\n\nEDGES\n" + str(self.current_topo.edges()) + "\n\n\n"
+        print("\n\nEDGES\n" + str(self.current_topo.edges()) + "\n\n\n")
         for node in nodes:
-            print "  %s : %s" % (node, self.current_topo[node])
+            print("  %s : %s" % (node, self.current_topo[node]))
         for node in nodes:
-            print "\n%s:%s " % (node, json.dumps(self.current_topo[node],
-                                                    indent=4, sort_keys=True))
+            print("\n%s:%s " % (node, json.dumps(self.current_topo[node],
+                                                    indent=4, sort_keys=True)))
         self.generate_simplified_topology()
         for node in self.simplified_topo.nodes():
             if self.simplified_topo.node[node]['type'] != 'central':
@@ -347,18 +349,18 @@ class SenseAPI(AtlanticWaveManager):
         #       the that delta:
         # ------ If RuleManager policy exists, delete it
         # ------ Delete rule_hash
-        print "\n\n\n\n\n"
+        print("\n\n\n\n\n")
         self.__print_all_deltas(False)
         self.__print_all_rule_hashes()
         
         for delta in all_deltas:
-            print "    _sanitize_db() - Looking at delta %s" % delta['delta_id']
+            print("    _sanitize_db() - Looking at delta %s" % delta['delta_id'])
             matches = list(self.hash_table.find(delta_id=delta['delta_id']))
-            print "    _sanitize_db() - matches on delta %s" % len(matches)
+            print("    _sanitize_db() - matches on delta %s" % len(matches))
             for m in matches:
-                print "      %s" % m
+                print("      %s" % m)
             if matches == []:
-                print "    _sanitize_db() - Attempting to remove - NO HASH - %s" % delta['delta_id']
+                print("    _sanitize_db() - Attempting to remove - NO HASH - %s" % delta['delta_id'])
                 self.delta_table.delete(**delta)
                 continue
             problem = False
@@ -366,16 +368,16 @@ class SenseAPI(AtlanticWaveManager):
                 all_hashes.remove(match)
                 if RuleManager().get_rule_details(match['hash']) == None:
                    problem = True
-                   print "    _sanitize_db() - Problem: match %s  isn't in RuleManager" % match['hash']
+                   print("    _sanitize_db() - Problem: match %s  isn't in RuleManager" % match['hash'])
                    break
                     
             if problem:
-                print "    _sanitize_db() - Attempting to remove - NO RM - %s" % delta['delta_id']
+                print("    _sanitize_db() - Attempting to remove - NO RM - %s" % delta['delta_id'])
                 self.delta_table.delete(**delta)
                 for match in matches:
-                    print "    _sanitize_db() - Removing hash - NO RM - %s" % match['hash']
+                    print("    _sanitize_db() - Removing hash - NO RM - %s" % match['hash'])
                     if RuleManager().get_rule_details(match['hash']) != None:
-                        print "     _sanitize_db() - Removing rule - NO RM - %s" % match['hash']
+                        print("     _sanitize_db() - Removing rule - NO RM - %s" % match['hash'])
                         RuleManager().remove_rule(match['hash'], self.userid)
                     self.hash_table.delete(**match)
                 
@@ -388,23 +390,23 @@ class SenseAPI(AtlanticWaveManager):
         # -- delete rule_hash from hash_table.
 
         for rule_hash in all_hashes:
-            print "    _sanitize_db() - Removing hash - NO DELTA - %s" % rule_hash['hash']
+            print("    _sanitize_db() - Removing hash - NO DELTA - %s" % rule_hash['hash'])
             if RuleManager().get_rule_details(rule_hash['hash']) != None:
-                print "    _sanitize_db() - Removing rule - NO DELTA - %s" % rule_hash['hash']
+                print("    _sanitize_db() - Removing rule - NO DELTA - %s" % rule_hash['hash'])
                 RuleManager().remove_rule(rule_hash['hash'], self.userid)
             self.hash_table.delete(**rule_hash)
 
         self.__print_all_deltas(False)
         self.__print_all_rule_hashes()
-        print "\n\n\n\n\n"
+        print("\n\n\n\n\n")
         
     def rule_add_callback(self, rule):
         ''' Handles rules being added. '''
-        print "rule_add_callback - %s" % rule
+        print("rule_add_callback - %s" % rule)
 
     def rule_rm_callback(self, rule):
         ''' Handles rules being removed. '''
-        print "rule_rm_callback - %s" % rule
+        print("rule_rm_callback - %s" % rule)
 
     def topo_change_callback(self):
         ''' Handles topology changes. 
@@ -440,8 +442,8 @@ class SenseAPI(AtlanticWaveManager):
         end_node = self.simplified_topo.node[node]['end_node']
         # Swapped around, because the end_node is always the switch, and the
         # switch's data structure is the keeper of the vlans_in_use on the port
-        print "self.current_topo[%s][%s]:%s" % (end_node, start_node,
-                                    self.current_topo[end_node][start_node])
+        print("self.current_topo[%s][%s]:%s" % (end_node, start_node,
+                                    self.current_topo[end_node][start_node]))
         vlans_in_use = self.current_topo[end_node][start_node]['vlans_in_use']
 
         self.dlogger.debug("get_vlans_in_use_on_egress_port: %s" %
@@ -543,7 +545,7 @@ class SenseAPI(AtlanticWaveManager):
             # - Loop through endpoints
             endpoints = []
             for (e, f, v) in potential_endpoints:
-                print "   endpoint: %s, %s, %d" % (e, f, v)
+                print("   endpoint: %s, %s, %d" % (e, f, v))
                 # -- check if rule ends on an exterior port
                 if (("%s-%s" % (e,f)) in exterior_nodes):
                     # -- if it does, save off name
@@ -697,7 +699,7 @@ class SenseAPI(AtlanticWaveManager):
                 for e,f in s['endpoints']:
                     if e == ep:
                         bidiports += ", <%s:vlanport+%d>" % (epname, f)
-                        print "%s:vlanport+%d" % (epname, f)
+                        print("%s:vlanport+%d" % (epname, f))
             if bidiports != "":
                 # trim off the leading ", "
                 bidiports = bidiports[2:] 
@@ -1420,7 +1422,7 @@ services[uuid][svc]))
         ''' Helper function, finds the rule hash based on a policy that was in
             an addition in the past. '''
 
-        print "\n\nPOLICY: %s" % policy
+        print("\n\nPOLICY: %s" % policy)
 
         for raw_hash in self.hash_table.find():
             if pickle.loads(str(raw_hash['policy'])) == policy:
@@ -1450,10 +1452,10 @@ services[uuid][svc]))
                        'delta_id':delta_id}
         #self.dlogger.debug("Inserting hash_policy %s" % hash_policy)
         self.hash_table.insert(hash_policy)
-        print "\n\nWHOLE HASH TABLE:" 
+        print("\n\nWHOLE HASH TABLE:") 
         for entry in self.hash_table.find():
-            print entry
-        print "\n\n\n"
+            print(entry)
+        print("\n\n\n")
         
     
     def get_all_deltas(self):

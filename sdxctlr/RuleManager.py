@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -8,10 +10,10 @@ from threading import Timer, Lock, Thread
 from datetime import datetime, timedelta
 
 from lib.AtlanticWaveManager import AtlanticWaveManager
-from AuthorizationInspector import AuthorizationInspector
-from BreakdownEngine import BreakdownEngine
-from ValidityInspector import ValidityInspector
-from TopologyManager import TopologyManager
+from .AuthorizationInspector import AuthorizationInspector
+from .BreakdownEngine import BreakdownEngine
+from .ValidityInspector import ValidityInspector
+from .TopologyManager import TopologyManager
 
 from shared.constants import *
 
@@ -103,9 +105,9 @@ class RuleManager(AtlanticWaveManager):
             # No big deal, there may not have been any.
             pass
 
-        print "Rules present at initialization:"
+        print("Rules present at initialization:")
         for rule in self.rule_table:
-            print "   - %s" % rule
+            print("   - %s" % rule)
         # Used for filtering of rule_table
         self._valid_table_columns = ['hash', 'ruletype', 'user',
                                      'state', 'starttime', 'stoptime']
@@ -122,7 +124,7 @@ class RuleManager(AtlanticWaveManager):
         else:
             self.rule_number = rulenum['value']
 
-        print "Rule number = %d" % self.rule_number
+        print("Rule number = %d" % self.rule_number)
 
         last_modified = self.config_table.find_one(key='last_modified')
         if last_modified == None:

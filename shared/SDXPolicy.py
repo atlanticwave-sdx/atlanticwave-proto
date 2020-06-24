@@ -1,8 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from UserPolicy import *
+from .UserPolicy import *
 from datetime import datetime
 from shared.constants import rfc3339format
 from shared.SDXMatches import *
@@ -135,8 +137,8 @@ class SDXPolicy(UserPolicy):
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
 
-            print "%s: Exception %s at %s:%d" % (cls.get_policy_name(),
-                                                 str(e), filename,lineno)
+            print("%s: Exception %s at %s:%d" % (cls.get_policy_name(),
+                                                 str(e), filename,lineno))
             raise
 
     def check_validity(self, tm, ai):

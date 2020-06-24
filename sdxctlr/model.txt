@@ -1,0 +1,127 @@
+@prefix sd: <http://schemas.ogf.org/nsi/2013/12/services/definition#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix nml: <http://schemas.ogf.org/nml/2013/03/base#> .
+@prefix mrs: <http://schemas.ogf.org/mrs/2013/12/topology#> .
+
+
+<urn:ogf:network:atlanticwave-sdx.net::l2switching>
+                 a nml:SwitchingService ;
+                 sd:hasServiceDefinition <urn:ogf:network:atlanticwave-sdx.net::ServiceDefinition:l2mp> ;
+                 nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;
+                 nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+                 mrs:providesSubnet <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+20:resource+links-connection_1:vlan+200> ;
+                 nml:hasBidirectionalPort <urn:ogf:network:atlanticwave-sdx.net::atldtn-br1>, <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2>, <urn:ogf:network:atlanticwave-sdx.net::miadtn2-br2> ;
+                 nml:labelSwapping true .
+
+<urn:ogf:network:atlanticwave-sdx.net::ServiceDefinition:l2mp>
+                 a sd:ServiceDefinition ;
+                 sd:serviceType "http://services.ogf.org/nsi/2018/06/descriptions/l2-mp-es" .
+
+<urn:ogf:network:atlanticwave-sdx.net>
+                a nml:Topology, owl:NamedIndividual ;
+                nml:hasBidirectionalPort <urn:ogf:network:atlanticwave-sdx.net::atldtn-br1>, <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2>, <urn:ogf:network:atlanticwave-sdx.net::miadtn2-br2> ;
+                nml:hasService <urn:ogf:network:atlanticwave-sdx.net::l2switching> ;
+                nml:name "AtlanticWave/SDX" .
+
+<urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlanport+200:label+200>
+        a nml:Label ;
+        nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlanport+200> ;
+        nml:existsDuring <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+20:resource+links-connection_1:vlan+200:existsDuring> ;
+        nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+        nml:value "200" .
+
+<urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlanport+200:service+bw>
+        a mrs:BandwidthService ;
+        mrs:reservableCapacity "100000"^^xsd:long ;
+        mrs:type "guaranteedCapped" ;
+        mrs:unit "bps" ;
+        nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlanport+200> ;
+        nml:existsDuring <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+20:resource+links-connection_1:vlan+200:existsDuring> .
+
+<urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+20:resource+links-connection_1:vlan+200:existsDuring>
+        a nml:Lifetime ;
+        nml:end "2985-04-12T12:23:56.000000-0000" ;
+        nml:start "1985-04-12T12:23:56.000000-0000" .
+
+<urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlanport+200>
+        a nml:BidirectionalPort, mrs:SwitchingSubnet ;
+        nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+20:resource+links-connection_1:vlan+200>,<urn:ogf:network:atlanticwave-sdx.net:miadtn-br2> ;
+        nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;
+        nml:existsDuring <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+20:resource+links-connection_1:vlan+200:existsDuring> ;
+        nml:hasLabel <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlanport+200:label+200> ;
+        nml:hasService <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlanport+200:service+bw> ;
+        nml:name "UNKNOWN" .
+
+<urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+20:resource+links-connection_1:vlan+200>
+        a mrs:SwitchingSubnet ;
+        nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net> ;
+        nml:encoding <http://schemas.ogf.org/nml/2012/10/ethernet> ;
+        nml:existsDuring <urn:ogf:network:atlanticwave-sdx.net::l2switching:conn+20:resource+links-connection_1:vlan+200:existsDuring> ;
+        nml:hasBidirectionalPort <urn:ogf:network:atlanticwave-sdx.net:miadtn-br2:vlanport+200> ;
+        nml:labelSwapping true ;
+        nml:labelType <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> .
+
+<urn:ogf:network:atlanticwave-sdx.net::atldtn-br1:vlan_range>
+                a nml:LabelGroup, owl:NamedIndividual ;
+                nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+                nml:values "0-4095" .
+
+<urn:ogf:network:atlanticwave-sdx.net::atldtn-br1:BandwidthService>
+                a mrs:BandwidthService ;
+                mrs:availableCapacity "8000000000"^^xsd:long ;
+                mrs:reservableCapacity "8000000000"^^xsd:long ;
+                mrs:maximumCapacity "8000000000"^^xsd:long ;
+                mrs:unit "bps" ;
+                nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net::atldtn-br1> .
+
+<urn:ogf:network:atlanticwave-sdx.net::atldtn-br1>
+                a nml:BidirectionalPort ;
+                nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net::l2switching>, <urn:ogf:network:atlanticwave-sdx.net> ;
+                nml:hasLabelGroup <urn:ogf:network:atlanticwave-sdx.net::atldtn-br1:vlan_range> ;
+                nml:hasService <urn:ogf:network:atlanticwave-sdx.net::atldtn-br1:BandwidthService> ;
+                nml:name "atldtn-br1" .
+
+<urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlan_range>
+                a nml:LabelGroup, owl:NamedIndividual ;
+                nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+                nml:values "0-199,201-4095" .
+
+<urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:BandwidthService>
+                a mrs:BandwidthService ;
+                mrs:availableCapacity "7999900000"^^xsd:long ;
+                mrs:reservableCapacity "7999900000"^^xsd:long ;
+                mrs:maximumCapacity "8000000000"^^xsd:long ;
+                mrs:unit "bps" ;
+                nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2> .
+
+<urn:ogf:network:atlanticwave-sdx.net::miadtn-br2>
+                a nml:BidirectionalPort ;
+                nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net::l2switching>, <urn:ogf:network:atlanticwave-sdx.net> ;
+                nml:hasLabelGroup <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlan_range> ;
+                nml:hasService <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:BandwidthService> ;
+                nml:hasBidirectionalPort <urn:ogf:network:atlanticwave-sdx.net::miadtn-br2:vlanport+200> ;
+                nml:name "miadtn-br2" .
+
+<urn:ogf:network:atlanticwave-sdx.net::miadtn2-br2:vlan_range>
+                a nml:LabelGroup, owl:NamedIndividual ;
+                nml:labeltype <http://schemas.ogf.org/nml/2012/10/ethernet#vlan> ;
+                nml:values "1-1000,2000-2100" .
+
+<urn:ogf:network:atlanticwave-sdx.net::miadtn2-br2:BandwidthService>
+                a mrs:BandwidthService ;
+                mrs:availableCapacity "8000000000"^^xsd:long ;
+                mrs:reservableCapacity "8000000000"^^xsd:long ;
+                mrs:maximumCapacity "8000000000"^^xsd:long ;
+                mrs:unit "bps" ;
+                nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net::miadtn2-br2> .
+
+<urn:ogf:network:atlanticwave-sdx.net::miadtn2-br2>
+                a nml:BidirectionalPort ;
+                nml:belongsTo <urn:ogf:network:atlanticwave-sdx.net::l2switching>, <urn:ogf:network:atlanticwave-sdx.net> ;
+                nml:hasLabelGroup <urn:ogf:network:atlanticwave-sdx.net::miadtn2-br2:vlan_range> ;
+                nml:hasService <urn:ogf:network:atlanticwave-sdx.net::miadtn2-br2:BandwidthService> ;
+                nml:name "miadtn2-br2" .
+

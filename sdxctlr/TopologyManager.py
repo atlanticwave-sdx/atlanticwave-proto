@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -365,7 +366,7 @@ class TopologyManager(AtlanticWaveManager):
         with self.topolock:
             # Make sure the path is clear -> very similar to find_vlan_on_path
             for node in nodes:
-                print "\nself.topo.node[%s]: %s\n" % (node, self.topo.node[node])
+                print("\nself.topo.node[%s]: %s\n" % (node, self.topo.node[node]))
                 if vlan in self.topo.node[node]['vlans_in_use']:
                     raise TopologyManagerError("VLAN %d is already reserved on node %s" % (vlan, node))
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from mininet.topo import Topo
 from mininet.net import Containernet
 from mininet.link import TCLink
@@ -160,20 +161,20 @@ def MultiSite(dir):
                                  ip='172.17.0.4', port=6681)
 
     net.build()
-    print "net.build"
+    print("net.build")
     s1switch.start([lc1ctlr])
     s2switch.start([lc2ctlr])
     #net.start()
-    print "net.start"
+    print("net.start")
     CLI(net)
-    print "CLI(net)"
+    print("CLI(net)")
     net.stop()
-    print "net.stop"
+    print("net.stop")
 
 
 if __name__ == '__main__': 
-    print "USAGE: python twonode-mn-topo.py </absolute/path/to/local/AWave/directory>"
-    print "    Path is optional"
+    print("USAGE: python twonode-mn-topo.py </absolute/path/to/local/AWave/directory>")
+    print("    Path is optional")
     dir = "/home/ubuntu/dev"
     if len(sys.argv) > 1:
         dir = sys.argv[1]               

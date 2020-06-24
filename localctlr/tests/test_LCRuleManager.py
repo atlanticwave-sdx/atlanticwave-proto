@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -27,7 +28,7 @@ class InitTest(unittest.TestCase):
         firstManager = LCRuleManager()
         secondManager = LCRuleManager()
 
-        print ">>>>>>>>>>>> %s" % (firstManager is secondManager)
+        print(">>>>>>>>>>>> %s" % (firstManager is secondManager))
         self.failUnless(firstManager is secondManager)
 
     def test_init_fields(self):
@@ -119,11 +120,11 @@ class GetRuleTest(unittest.TestCase):
         status2 = RULE_STATUS_INSTALLING
         m.add_rule(cookie2, switch_id2, rule2, status2)
         getrules = m.get_rules(cookie1, switch_id1)
-        print ">>>>>>>>>", getrules
+        print(">>>>>>>>>", getrules)
         
         self.failUnlessEqual(rule1, getrules[0])
         getrules = m.get_rules(cookie2, switch_id2)
-        print ">>>>>>>>>", getrules
+        print(">>>>>>>>>", getrules)
         self.failUnlessEqual(rule2, getrules[0])
 
     def test_get_unknown_rule(self):
@@ -195,7 +196,7 @@ class FindRuleTest(unittest.TestCase):
         m.add_rule(cookie2, switch_id2, rule2, status2)
 
         rules = m._find_rules()
-        print ">>>> rules: %s" % rules
+        print(">>>> rules: %s" % rules)
         self.failUnlessEqual(len(rules), 2)
 
     def test_find_filtered_cookie_rules(self):
@@ -273,7 +274,7 @@ class ChangeStatusTest(unittest.TestCase):
         rules = m.get_rules(cookie1, switch_id1, True)
         self.failIfEqual(rules, [])
         for rule in rules:
-            print "$$$$$$ %s" % str(rule)
+            print("$$$$$$ %s" % str(rule))
             (pre_cookie, pre_switch_id, pre_rule, pre_status) = rule
             self.failUnlessEqual(pre_status, status1)
 
@@ -413,13 +414,13 @@ class InitialRulesTest(unittest.TestCase):
 
         (del_list, add_list) = m.initial_rules_complete()
         m.clear_initial_rules()
-        print "  ^^^^ add_list: %s" % add_list
-        print "  ^^^^ del_list: %s" % del_list
+        print("  ^^^^ add_list: %s" % add_list)
+        print("  ^^^^ del_list: %s" % del_list)
 
         #for (r, c, sw) in add_list:
         for rule in add_list:
             (r,c,sw) = rule
-            print " ^^^^ ASDF       %s:%s:%s" % (r, c, sw)
+            print(" ^^^^ ASDF       %s:%s:%s" % (r, c, sw))
             s = RULE_STATUS_INSTALLING
             m.add_rule(c, sw, r, s)
         for (r, c, sw) in del_list:
@@ -446,7 +447,7 @@ class InitialRulesTest(unittest.TestCase):
 
         rules = m.get_rules(cookie1, switch_id1, True)
         self.failIfEqual(rules, [])
-        print "    ^&^&^&^&^ %s" % rules
+        print("    ^&^&^&^&^ %s" % rules)
         for rule in rules:
             (c,sw,r,s) = rule
             self.failUnlessEqual(rule1, r)
@@ -461,7 +462,7 @@ class InitialRulesTest(unittest.TestCase):
         self.failIfEqual(rules, [])
         for rule in rules:
             (c,sw,r,s) = rule
-            print "  $$$$ RULE: %s:%s:%s" % (c, sw, r)
+            print("  $$$$ RULE: %s:%s:%s" % (c, sw, r))
         for rule in rules:
             (c,sw,r,s) = rule
             self.failUnlessEqual(rule1, r)
@@ -469,7 +470,7 @@ class InitialRulesTest(unittest.TestCase):
         self.failIfEqual(rules, [])
         for rule in rules:
             (c,sw,r,s) = rule
-            print "  $$$$ RULE: %s:%s:%s" % (c, sw, r)
+            print("  $$$$ RULE: %s:%s:%s" % (c, sw, r))
         for rule in rules:
             (c,sw,r,s) = rule
             self.failUnlessEqual(rule2, r)
@@ -550,7 +551,7 @@ class InitialRulesTest(unittest.TestCase):
             m.rm_rule(c, sw)
 
         rules = m._find_rules()
-        print "((((((((RULES %s" %rules
+        print("((((((((RULES %s" %rules)
         self.failUnlessEqual(1, len(rules))
         rules = m.get_rules(cookie1, switch_id1)
         self.failUnlessEqual([], rules)

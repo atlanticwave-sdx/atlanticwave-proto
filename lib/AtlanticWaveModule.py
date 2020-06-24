@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -6,7 +8,7 @@
 # project. It contains Singleton functionality (since all modules are
 # singletons) and logging/debugging facilities that are commonly used.
 
-from Singleton import Singleton
+from .Singleton import Singleton
 import logging
 import dataset
 import os
@@ -115,10 +117,10 @@ class AtlanticWaveModule(object):
                 t = self.db.load_table(table)
                 if print_table_on_load:
                     entries = t.find()
-                    print "\n\n&&&&& ENTRIES in %s &&&&&" % name
+                    print("\n\n&&&&& ENTRIES in %s &&&&&" % name)
                     for e in entries:
-                        print "\n%s" % str(e)
-                    print "&&&&& END ENTRIES &&&&&\n\n"
+                        print("\n%s" % str(e))
+                    print("&&&&& END ENTRIES &&&&&\n\n")
                     
                 setattr(self, name, t)
                 

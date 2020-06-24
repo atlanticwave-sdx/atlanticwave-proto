@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from LCFields import *
+from .LCFields import *
 
 
 class SDXMatchTypeError(TypeError):

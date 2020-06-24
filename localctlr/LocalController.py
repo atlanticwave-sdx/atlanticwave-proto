@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyrightg 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -17,12 +19,12 @@ from time import sleep
 
 from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
-from RyuControllerInterface import *
-from RyuTranslateInterface import *
-from LCRuleManager import *
+from .RyuControllerInterface import *
+from .RyuTranslateInterface import *
+from .LCRuleManager import *
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
-from switch_messages import *
+from .switch_messages import *
 from shared.ManagementLCRecoverRule import *
 
 LOCALHOST = "127.0.0.1"
@@ -149,7 +151,7 @@ class LocalController(AtlanticWaveModule):
                 pass
  
             if self.sdx_connection == None:
-                print "SDX_CXN = None, start_cxn_thread = %s" % str(self.start_cxn_thread)
+                print("SDX_CXN = None, start_cxn_thread = %s" % str(self.start_cxn_thread))
             # Restart SDX Connection if it's failed.
             if (self.sdx_connection == None and
                 self.start_cxn_thread == None):
@@ -847,14 +849,14 @@ class LocalController(AtlanticWaveModule):
         return self.switch_connection.get_ryu_process()
 
     def receive_exit(self):
-        print "EXIT RECEIVED"
-        print "\n\n%d\n\n" % self.get_ryu_process().pid
+        print("EXIT RECEIVED")
+        print("\n\n%d\n\n" % self.get_ryu_process().pid)
         os.killpg(self.get_ryu_process().pid, signal.SIGKILL)
 
 # Cleanup related functions
 def receive_signal(signum, stack):
-    print "Caught signal %d" % signum
-    print "stack: \n" + "".join(traceback.format_stack(stack))
+    print("Caught signal %d" % signum)
+    print("stack: \n" + "".join(traceback.format_stack(stack)))
     exit()        
 
 
@@ -878,7 +880,7 @@ if __name__ == '__main__':
                         help="Port number of SDX Controller")
 
     options = parser.parse_args()
-    print options
+    print(options)
 
     config_info_present = options.manifest or options.database
     if not config_info_present or not options.name:

@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 from lib.AtlanticWaveModule import AtlanticWaveModule
-from AuthorizationInspector import AuthorizationInspector
-from TopologyManager import TopologyManager
+from .AuthorizationInspector import AuthorizationInspector
+from .TopologyManager import TopologyManager
 
 
 class BreakdownEngine(AtlanticWaveModule):

@@ -3,6 +3,7 @@
 
 import cPickle as pickle
 from lib.AtlanticWaveManager import AtlanticWaveManager
+from shared.ManagementLCRecoverRule import *
 
 # List of rule statuses
 RULE_STATUS_ACTIVE       = 1
@@ -67,7 +68,7 @@ class LCRuleManager(AtlanticWaveManager):
             for dupe in dupes:
                 (c,sid,lcr,stat) = dupe
                 if lcr == lcrule:
-                    if isinstance(ManagementLCRecoverRule):
+                    if isinstance(lcrule,ManagementLCRecoverRule):
                         self.logger.debug("ManagementLCRecoverRule, ignored.")
                     else:
                         raise LCRuleManagerValidationError(

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -7,7 +8,7 @@
 # database. Each Manager provides the appropriate functions to access the
 # particular type of data that the given manager cares about.
 
-from AtlanticWaveModule import AtlanticWaveModule
+from .AtlanticWaveModule import AtlanticWaveModule
 
 class AtlanticWaveManager(AtlanticWaveModule):
     def __init__(self, loggerid, db_filename=":memory:"):

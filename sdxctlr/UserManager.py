@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright 2017 - Sean Donovan, John Skandalakis
 # AtlanticWave/SDX Project
 
@@ -7,8 +9,8 @@ import cPickle as pickle
 import json
 
 from lib.AtlanticWaveManager import AtlanticWaveManager
-from AuthorizationInspector import AuthorizationInspector
-from AuthenticationInspector import AuthenticationInspector
+from .AuthorizationInspector import AuthorizationInspector
+from .AuthenticationInspector import AuthenticationInspector
 
 
 class UserManager(AtlanticWaveManager):
@@ -109,8 +111,8 @@ class UserManager(AtlanticWaveManager):
 
 
     def _send_to_AA(self, user):
-        print "Sending %s:%s to AuthenticationInspector" % (user['username'],
-                                                            user['credentials'])
+        print("Sending %s:%s to AuthenticationInspector" % (user['username'],
+                                                            user['credentials']))
         AuthenticationInspector().add_user(user['username'],
                                            user['credentials'])
         AuthorizationInspector().set_user_authorization(

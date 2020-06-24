@@ -1,9 +1,11 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from UserPolicy import *
-from L2TunnelPolicy import *
+from .UserPolicy import *
+from .L2TunnelPolicy import *
 from datetime import datetime
 import networkx as nx
 from shared.PathResource import VLANPathResource, BandwidthPathResource
@@ -69,13 +71,13 @@ class EndpointConnectionPolicy(UserPolicy):
         super(EndpointConnectionPolicy, self).__init__(username,
                                                        json_rule)
 
-        print "Passed: %s:%s:%s:%s:%s:%s:%s" % (self.deadline,
+        print("Passed: %s:%s:%s:%s:%s:%s:%s" % (self.deadline,
                                                 self.src,
                                                 self.dst,
                                                 self.data,
                                                 self.bandwidth,
                                                 self.intermediate_vlan,
-                                                self.fullpath)
+                                                self.fullpath))
         # Second
         pass
 
@@ -102,8 +104,8 @@ class EndpointConnectionPolicy(UserPolicy):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
-            print "%s: Exception %s at %s:%d" % (cls.get_policy_name(),
-                                                 str(e), filename,lineno)
+            print("%s: Exception %s at %s:%d" % (cls.get_policy_name(),
+                                                 str(e), filename,lineno))
             raise
 
     def breakdown_rule(self, tm, ai):

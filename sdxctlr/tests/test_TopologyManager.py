@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -127,9 +128,9 @@ class VLANTopoTest(unittest.TestCase):
         self.assertEqual(vlan, 1)
         
         # Add VLAN 1 to one of the points on the path
-        print "\n%s" % man.topo.edge['br3']['br4']
+        print("\n%s" % man.topo.edge['br3']['br4'])
         man.topo.edge["br3"]["br4"]['vlans_in_use'].append(1)
-        print man.topo.edge['br3']['br4']
+        print(man.topo.edge['br3']['br4'])
         
         # Should return 2
         vlan = man.find_vlan_on_path(path)

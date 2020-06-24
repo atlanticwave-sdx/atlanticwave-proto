@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 import json
 from lib.AtlanticWaveManager import AtlanticWaveManager
-from AuthenticationInspector import AuthenticationInspector
+from .AuthenticationInspector import AuthenticationInspector
 #from TopologyManager import TopologyManager
 
 #FIXME: This shouldn't be hard coded.

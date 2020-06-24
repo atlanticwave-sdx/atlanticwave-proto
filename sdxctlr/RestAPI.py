@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 
 # Edited by John Skandalakis
 # AtlanticWave/SDX Project
@@ -11,12 +13,12 @@ from shared.L2TunnelPolicy import L2TunnelPolicy
 from shared.EndpointConnectionPolicy import EndpointConnectionPolicy
 from shared.SDXControllerConnectionManager import *
 
-from AuthenticationInspector import AuthenticationInspector
-from AuthorizationInspector import AuthorizationInspector
-from RuleManager import RuleManager
-from TopologyManager import TopologyManager
-from UserManager import UserManager
-from RuleRegistry import RuleRegistry, RuleRegistryTypeError
+from .AuthenticationInspector import AuthenticationInspector
+from .AuthorizationInspector import AuthorizationInspector
+from .RuleManager import RuleManager
+from .TopologyManager import TopologyManager
+from .UserManager import UserManager
+from .RuleRegistry import RuleRegistry, RuleRegistryTypeError
 
 #API Stuff
 import flask
@@ -350,7 +352,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_LOCALCONTROLLERLCINT, methods=['GET'])
     def v1localcontrollersspecificinternalconfig(lcname):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)            
 
@@ -408,7 +410,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_LOCALCONTROLLERLCSW, methods=['GET'])
     def v1localcontrollersspecificswitches(lcname):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)            
                     
@@ -506,7 +508,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_LOCALCONTROLLERLCSWSPEC, methods=['GET'])
     def v1localcontrollersspecificswitchesspecific(lcname, switchname):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)            
                             
@@ -601,7 +603,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_LOCALCONTROLLERLCSWSPECPORT, methods=['GET'])
     def v1localcontrollersspecificswitchesspecificports(lcname, switchname):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)            
                     
@@ -683,7 +685,7 @@ class RestAPI(AtlanticWaveModule):
                                                                 switchname,
                                                                 portnumber):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)            
                     
@@ -766,7 +768,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_USERS, methods=['GET'])
     def v1users():
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)            
            
@@ -843,7 +845,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_USERSSPEC, methods=['GET'])
     def v1usersspec(username):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)            
 
@@ -914,7 +916,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_USERSSPECPERMISSIONS, methods=['GET'])
     def v1usersspecperms(username):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         
@@ -975,7 +977,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_USERSSPECPOLICIES, methods=['GET'])
     def v1usersspecpolicies(username):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         
@@ -1048,7 +1050,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_POLICIES, methods=['GET'])
     def v1policies():
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)           
         base_url = request.base_url
@@ -1123,7 +1125,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_POLICIESSPEC, methods=['GET'])
     def v1policiesspec(policynumber):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         
@@ -1179,7 +1181,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_POLICIESSPEC, methods=['DELETE'])
     def v1policiesspecDEL(policynumber):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         
@@ -1305,7 +1307,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_POLICIESTYPESPEC, methods=['GET'])
     def v1policiestypespec(policytype):
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)            
 
@@ -1371,14 +1373,14 @@ class RestAPI(AtlanticWaveModule):
         RestAPI().logger.info("POST new policy type %s" % policytype)
 
         if not flask_login.current_user.is_authenticated:
-            print "Not Authenticated!"
+            print("Not Authenticated!")
             return make_response(jsonify({'error': 'User Not Authenticated'}),
                                  403)
         '''
         Helper function that's used to preprocess incoming data from form
         '''        
         def _parse_post_data(data_json):
-            print data_json
+            print(data_json)
             if "L2Multipoint" in data_json.keys():
                 # This parses out the individual "multipointelements" and
                 # reinserts them into the data_json object
@@ -1491,7 +1493,7 @@ class RestAPI(AtlanticWaveModule):
             RestAPI().dlogger.warning("Exception caught on %s" % policytype)
             RestAPI().exception_tb(e)
 
-            print "\n\nerrorstr %s\ntojsonify %s" % (errorstr, {"Error":str(e)})
+            print("\n\nerrorstr %s\ntojsonify %s" % (errorstr, {"Error":str(e)}))
             if request_wants_json(request):
                 RestAPI().logger.error("POST %s ERROR: %s" % (policyname, e,))
                 return make_response(jsonify({"Error":str(e)}), 400)
@@ -1507,7 +1509,7 @@ class RestAPI(AtlanticWaveModule):
         if flask_login.current_user.get_id() == None:
             return app.send_static_file('overhaul/login.html')
         else:
-            print "%s already logged in" % flask_login.current_user.get_id() 
+            print("%s already logged in" % flask_login.current_user.get_id()) 
             return flask.redirect(EP_LOGOUT)
         
     @staticmethod
@@ -1541,7 +1543,7 @@ class RestAPI(AtlanticWaveModule):
         if flask_login.current_user.get_id() == None:
             return flask.redirect(EP_LOGIN)
         else:
-            print "%s viewing logout page" % flask_login.current_user.get_id()
+            print("%s viewing logout page" % flask_login.current_user.get_id())
             return flask.render_template('logout.html')
         
     @staticmethod
@@ -1819,7 +1821,7 @@ class RestAPI(AtlanticWaveModule):
             policy = EndpointConnectionPolicy(theID, data)
             rule_hash = RuleManager().add_rule(policy)
 
-        print rule_hash
+        print(rule_hash)
         return flask.redirect('/rule/hash/' + str(rule_hash))
 
     @staticmethod
@@ -1925,10 +1927,10 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
             if request.method == 'GET':
                 try:
                     detail=RuleManager().get_rule_details(rule_hash)
-                    print detail
+                    print(detail)
                     return  flask.render_template('details.html', detail=detail)
                 except Exception as e:
-                    print e
+                    print(e)
                     return "Invalid rule hash"
 
             # Deletes Rules : POST because HTML does not support DELETE Requests

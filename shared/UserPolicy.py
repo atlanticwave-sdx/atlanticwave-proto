@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -64,7 +65,7 @@ class UserPolicy(object):
                 data = f.readlines()
                 return "".join(data)
         except IOError as e:
-            print "Example HTML file %s does not exist." % filename
+            print("Example HTML file %s does not exist." % filename)
                     
         # If not:
         return "<html><h1>Not User Accessible</h1></html>"

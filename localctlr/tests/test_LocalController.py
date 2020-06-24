@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -9,7 +10,7 @@ import mock
 import subprocess
 import os
 from localctlr.LocalController import *
-from RemoteControllerHarness import RemoteControllerHarness
+from .RemoteControllerHarness import RemoteControllerHarness
 from time import sleep
 
 FNULL = open(os.devnull, 'w')
@@ -119,7 +120,7 @@ class LocalControllerTest(unittest.TestCase):
             if test6 != None:
                 argcount += 1
 
-            raise(TypeError("call_test_rule_installation() takes at least 4 arguments (%d given)" % argcount))
+            raise TypeError
 
         sleep(1)
         #self.logger.debug("test_rule_installation_" + str(num))

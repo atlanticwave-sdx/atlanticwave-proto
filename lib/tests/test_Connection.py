@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -39,8 +40,8 @@ class InitTest(unittest.TestCase):
         self.failUnlessEqual(cxn.get_address(), "127.0.0.1")
         self.failUnlessEqual(cxn.get_port(), 5555)
         self.failUnlessEqual(cxn.get_socket(), sock)
-        print cxn.__repr__()
-        print cxn
+        print(cxn.__repr__())
+        print(cxn)
                              
 
 
@@ -79,7 +80,7 @@ class SendTest(unittest.TestCase):
             while True:
                 total_len = 0
                 total_data = []
-                size = sys.maxint
+                size = sys.maxsize
                 size_data = ''
                 sock_data = ''
                 recv_size = 8192

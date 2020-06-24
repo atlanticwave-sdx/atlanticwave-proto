@@ -1,10 +1,12 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 from lib.Singleton import Singleton
 from lib.Connection import Connection
-from AtlanticWaveModule import *
+from .AtlanticWaveModule import *
 
 import socket
 from socket import error as socket_error
@@ -140,12 +142,12 @@ class AtlanticWaveConnectionManager(AtlanticWaveModule):
                 if serr.errno != errno.ECONNREFUSED:
                     # Not the error we are looking for, re-raise
                     raise serr
-                print "Caught ECONNREFUSED, trying again after sleeping %s seconds." % timeout
+                print("Caught ECONNREFUSED, trying again after sleeping %s seconds." % timeout)
                 sock.close()
                 sleep(timeout)
                 continue
 
-            print "Connection established! %s:%s %s" % (ip, port, sock)
+            print("Connection established! %s:%s %s" % (ip, port, sock))
             if self.loggerid_for_cxns != None:
                 return self.connection_cls(ip, port, sock, self.loggerid_for_cxns)
             #else

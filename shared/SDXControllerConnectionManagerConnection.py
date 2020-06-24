@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -561,11 +562,11 @@ class SDXControllerConnection(Connection):
 
             # Check/update msg_num and msg_ack
             if msg_ack > self.msg_num:
-                print "msg_ack from peer went backwards! %d:%d" % (msg_ack,
-                                                                   self.msg_num)
+                print("msg_ack from peer went backwards! %d:%d" % (msg_ack,
+                                                                   self.msg_num))
             if msg_num < self.msg_ack:
-                print "msg_num from peer went backwards! %d:%d" % (msg_num,
-                                                                   self.msg_ack)
+                print("msg_num from peer went backwards! %d:%d" % (msg_num,
+                                                                   self.msg_ack))
             self.msg_ack = msg_num
 
             # Make the correct SDXMessage out of it.
@@ -596,7 +597,7 @@ class SDXControllerConnection(Connection):
             return msg
         
         except socket.error as e:
-            print "SOCKET ERROR BLOCK %s ON CXN %s" % (e.errno, self)
+            print("SOCKET ERROR BLOCK %s ON CXN %s" % (e.errno, self))
             if (e.errno == 104 or  # Connection reset by peer 
                 e.errno == 9 or    # Bad File Descriptor
                 e.errno == 32):    # Broken Pipe
@@ -607,11 +608,11 @@ class SDXControllerConnection(Connection):
             elif (e.errno == 11):  # Resource temporarily unavailable
                 # Not great, but happens. 
                 sleep(.001)
-                print "errno 11!"
+                print("errno 11!")
             else:
                 raise
         except AttributeError as e:
-            print "ATTRIBUTE ERROR %s ON CXN %s" % (e, self)
+            print("ATTRIBUTE ERROR %s ON CXN %s" % (e, self))
             self.close()
             self._del_callback(self)
             raise SDXMessageConnectionFailure("Connection == None - %s"
@@ -869,8 +870,8 @@ class SDXControllerConnection(Connection):
 
     def _heartbeat_request_handler(self, hbreq):
         ''' Handles incoming HeartbeatRequests. '''
-        print "%s hb_request_handler: %s" % (threading.current_thread().ident,
-                                             hbreq)
+        print("%s hb_request_handler: %s" % (threading.current_thread().ident,
+                                             hbreq))
         resp = SDXMessageHeartbeatResponse()
         self.send_protocol(resp)
         self._heartbeat_response_sent += 1
@@ -885,7 +886,7 @@ def _SDX_heartbeat_thread(inst):
         # Check to see if there's an outstanding HB - there shouldn't be
         try:
             if inst.outstanding_hb == True:
-                print "SDX Closing: Missing a heartbeat on %s" % hex(id(inst))
+                print("SDX Closing: Missing a heartbeat on %s" % hex(id(inst)))
                 raise SDXMessageConnectionFailure("SDX Missing heartbeat on %s" % 
                                                   hex(id(inst)))
             # Send a heartbeat request over
@@ -899,7 +900,7 @@ def _SDX_heartbeat_thread(inst):
             sleep(inst.heartbeat_sleep_time)
         except:
             # Need to signal that the cxn is closed.
-            print "SDX Heartbeat Closing due to error on %s" % hex(id(inst))
+            print("SDX Heartbeat Closing due to error on %s" % hex(id(inst)))
             inst.close()
             inst._del_callback(inst)
             return
@@ -913,7 +914,7 @@ def _LC_heartbeat_thread(inst):
         # Check to see if there's an outstanding HB - there shouldn't be
         try:
             if inst.outstanding_hb == True:
-                print "LC Closing: Missing a heartbeat on %s" % hex(id(inst))
+                print("LC Closing: Missing a heartbeat on %s" % hex(id(inst)))
                 raise SDXMessageConnectionFailure("LC Missing heartbeat on %s" % 
                                                   hex(id(inst)))
             # Send a heartbeat request over
@@ -927,7 +928,7 @@ def _LC_heartbeat_thread(inst):
             sleep(inst.heartbeat_sleep_time)
         except:
             # Need to signal that the cxn is closed.
-            print "LC Heartbeat Closing due to error on %s" % hex(id(inst))
+            print("LC Heartbeat Closing due to error on %s" % hex(id(inst)))
             inst.close()
             inst._del_callback(inst)
             return

@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 # copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from LCRule import *
+from .LCRule import *
 
 VLAN_MIN = 0
 VLAN_MAX = 4095

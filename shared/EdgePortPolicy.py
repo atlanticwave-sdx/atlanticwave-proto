@@ -1,11 +1,13 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from UserPolicy import *
+from .UserPolicy import *
 from datetime import datetime
 from shared.constants import *
-from EdgePortLCRule import *
+from .EdgePortLCRule import *
 import networkx as nx
 
 class EdgePortPolicy(UserPolicy):
@@ -51,8 +53,8 @@ class EdgePortPolicy(UserPolicy):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
-            print "%s: Exception %s at %s:%d" % (cls.get_policy_name(),
-                                                 str(e), filename,lineno)
+            print("%s: Exception %s at %s:%d" % (cls.get_policy_name(),
+                                                 str(e), filename,lineno))
             raise
             
     def breakdown_rule(self, tm, ai):

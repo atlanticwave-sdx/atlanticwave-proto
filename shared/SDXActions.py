@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from LCFields import *
-from LCAction import *
+from .LCFields import *
+from .LCAction import *
 
 class SDXActionTypeError(TypeError):
     pass

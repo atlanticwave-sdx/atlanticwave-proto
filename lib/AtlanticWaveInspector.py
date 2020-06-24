@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -8,7 +9,7 @@
 # AtlanticWaveManager modules that provides database services for validating
 # against.
 
-from AtlanticWaveModule import AtlanticWaveModule
+from .AtlanticWaveModule import AtlanticWaveModule
 
 class AtlanticWaveInspector(AtlanticWaveModule):
     def __init__(self, loggerid):

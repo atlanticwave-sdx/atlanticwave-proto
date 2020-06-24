@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2019 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -61,8 +62,8 @@ def create_tunnel(srcswitch, dstswitch, srcport, dstport,
     #starttime = datetime.now()
     #endtime = starttime + time
     # Hardwiring these, so that this will always be installable
-    starttime = datetime.datetime(1999, 01, 01)
-    endtime =  datetime.datetime(2030, 01, 01)
+    starttime = datetime.datetime(1999, 0o1, 0o1)
+    endtime =  datetime.datetime(2030, 0o1, 0o1)
 
     # Issue POST command
     endpoint = "http://%s:%s/api/v1/policies/type/l2tunnel" % (sdx_ip, sdx_port)
