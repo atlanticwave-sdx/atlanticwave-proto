@@ -33,12 +33,14 @@ Note: Santiago/Chile is shown tentatively. Actual connection path may be differe
 128.61.149.224 awsdx-app sdx.atlanticwave-sdx.net
 
 # Local Controllers 
-128.61.149.223  awsdx-ctrl lc-atl.atlanticwave-sdx.net
-190.103.186.106 miami-vm   lc-mia.atlanticwave-sdx.net
+128.61.149.223  awsdx-ctrl  lc-atl.atlanticwave-sdx.net
+190.103.186.106 miami-vm    lc-mia.atlanticwave-sdx.net
+190.103.186.107 santiago-vm lc-chl.atlanticwave-sdx.net
 
 # Corsa Switches
-143.215.216.3 sox-corsa   corsa-atl.atlanticwave-sdx.net
-67.17.206.198 miami-corsa corsa-mia.atlanticwave-sdx.net
+143.215.216.3 sox-corsa      corsa-atl.atlanticwave-sdx.net
+67.17.206.198 miami-corsa    corsa-mia.atlanticwave-sdx.net
+67.17.206.199 santiago-corsa corsa-chl.atlanticwave-sdx.net
 
 ```
 
