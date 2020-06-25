@@ -91,6 +91,23 @@ Openflow control connection is established through default namespace (and associ
 # sox-corsa
 #
 
+# Primary forwarding ports
+configure port 1 tunnel-mode passthrough 
+
+
+# Rate-limiting ports 
+configure port 29 tunnel-mode passthrough 
+configure port 30 tunnel-mode passthrough
+configure port 31 tunnel-mode ctag
+configure port 32 tunnel-mode ctag
+
+
+# Multipoint Rate-limiting ports
+configure port 25 tunnel-mode ctag
+configure port 26 tunnel-mode ctag
+configure port 27 tunnel-mode ctag
+configure port 28 tunnel-mode ctag
+
 ```
 
 ```
@@ -127,6 +144,22 @@ amlight-corsa# configure port 16 tunnel-mode ctag
 #
 # sox-corsa
 #
+
+# Create Primary VFC
+
+configure bridge add br21 openflow resources 10
+configure bridge br21 dpid 0xC9
+configure bridge br21 tunnel attach ofport 1 port 1
+configure bridge br21 tunnel attach ofport 29 port 29
+configure bridge br21 tunnel attach ofport 30 port 30
+configure bridge br21 controller add CONTbr21 128.61.149.223 6681
+
+# Create Multipoint Rate-limiting VFC
+
+configure bridge add br19 openflow resources 10
+configure bridge br19 controller add CONTbr19 172.17.1.1 6653 
+
+# Create L2Tunnel Rate-limiting VFC
 
 
 ```
