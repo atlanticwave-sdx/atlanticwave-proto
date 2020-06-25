@@ -45,7 +45,7 @@
       "internalconfig": {
         "ryucxninternalport": 55781,
         "openflowport": 6681,
-	"backuplcswitch": "atls1"
+	"backuplcswitch": "mias1"
       },
       "switchinfo": [
         {
@@ -59,48 +59,38 @@
             {
       	      "portnumber": 1,
               "speed": 80000000000,
-              "destination": "uncs1"
+              "destination": "mias1"
 	    },
-            {
-              "portnumber": 2,
-              "speed": 80000000000,
-              "destination": "dukes1"
-            },
             { 
-              "portnumber": 23,
+              "portnumber": 1,
               "speed": 80000000000,
-              "destination": "rencis2"
+              "destination": "sdx"
             },
             {
-      	      "portnumber": 11,
+      	      "portnumber": 1,
 	       "speed": 80000000000,
 	       "destination": "atlctlr"
 	    },
             {
-      	      "portnumber": 12,
+      	      "portnumber": 1,
 	       "speed": 80000000000,
 	       "destination": "atldtn"
-	    },
-            {
-      	      "portnumber": 30,
-	       "speed": 80000000000,
-	       "destination": "sdx"
 	    }
 	  ],
           "internalconfig": {
-            "corsaurl": "https://corsa-2.renci.ben/",
-            "corsatoken": "ddc60638fa7a7aa3fb5ca10de8f4e5e8bf82cd289187f933cfc7d7a01e7f7f3839ecac1145bc9908abfd03aa493e4acda448522b304a6ce779f82ce9f1528356",
+            "corsaurl": "https://corsa-atl.atlanticwave-sdx.net/",
+            "corsatoken": "220ad8798dd5f5089e045533f4f9641ff72cabdf58e825a6332d88d5edce8dafd66de91775e65e514b31167bd5442ac3fc202f5a465d45e64f08b6c7c6d2ae72",
             "corsabridge": "br21",
-            "corsabwin": 19,
-            "corsabwout": 20,
+            "corsabwin": 29,
+            "corsabwout": 30,
             "corsaratelimitbridge": "br20",
-            "corsaratelimitports": [21,22],
-            "corsabwinl2mp": 5,
-            "corsabwoutl2mp": 6,
+            "corsaratelimitports": [31,32],
+            "corsabwinl2mp": 25,
+            "corsabwoutl2mp": 26,
             "corsaratelimitbridgel2mp": "br19",
-            "corsaratelimitportsl2mp": [7,8],
-            "managementvlan":1411,
-            "managementvlanports":[1,2,11,23,30]
+            "corsaratelimitportsl2mp": [27,28],
+            "managementvlan":3621,
+            "managementvlanports":[1]
           }
         }
       ],
@@ -112,54 +102,54 @@
     },
     "miactlr":{
       "shortname": "miactlr",
-      "credentials": "ncsupwd",
+      "credentials": "miapwd",
       "location": "25.755595, -80.373499",
-      "lcip": "10.14.11.4",
+      "lcip": "10.14.11.2",
       "internalconfig": {
-        "ryucxninternalport": 55784,
-        "openflowport": 6684,
-        "backuplc": "uncs1"
+        "ryucxninternalport": 55782,
+        "openflowport": 6682,
+        "backuplc": "atls1"
       },
       "switchinfo": [
         {
-          "name":"ncsus1",
-          "friendlyname":"NCSU Corsa DP2100",
-          "ip": "10.0.204.1",
-          "dpid":"204",
+          "name":"mias1",
+          "friendlyname":"Miami-Amlight Corsa DP2100",
+          "ip": "10.0.202.1",
+          "dpid":"202",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
             {
-              "portnumber": 1,
+              "portnumber": 2,
               "speed": 80000000000,
-              "destination": "dukes1"
+              "destination": "atls1"
             },
             {
-              "portnumber": 11,
+              "portnumber": 1,
                "speed": 80000000000,
                "destination": "miactlr"
             },
             {
-              "portnumber": 12,
+              "portnumber": 4,
                "speed": 80000000000,
                "destination": "miadtn"
             }
           ],
           "internalconfig": {
-            "corsaurl": "https://corsa-1.ncsu.ben/",
-            "corsatoken": "9b95dda0314beb7acf620084dff53e5df7eaf80f9ee453cfb3550f33aecd356561fcf22568ac8365f2892725f129147ceb5718cb711c3a93b136030348dd9eeb",
-            "corsabridge": "br24",
-            "corsabwin":19,
-            "corsabwout":20,
+            "corsaurl": "https://corsa-mia.atlanticwave-sdx.net/",
+            "corsatoken": "66c3f32902dbd56035ecd39fe49c319d06f7fcc5095716bd08a84ccd037fe07633d05a3469e9fed470705289086c159680e95af144b9209d983cff210917916b",
+            "corsabridge": "br22",
+            "corsabwin":23,
+            "corsabwout":24,
             "corsaratelimitbridge":"br20",
-            "corsaratelimitports":[21,22],
-            "corsabwinl2mp": 5,
-            "corsabwoutl2mp": 6,
+            "corsaratelimitports":[25,26],
+            "corsabwinl2mp": 13,
+            "corsabwoutl2mp": 14,
             "corsaratelimitbridgel2mp": "br19",
-            "corsaratelimitportsl2mp": [7,8],
-            "managementvlan":1411,
-            "managementvlanports":[1,11],
-            "managementvlanbackupports":[2, 11]
+            "corsaratelimitportsl2mp": [15,16],
+            "managementvlan":1805,
+            "managementvlanports":[1,2],
+            "managementvlanbackupports":[1, 2]
           }
         }
       ],
@@ -173,41 +163,41 @@
       "shortname": "chlctlr",
       "credentials": "chlpwd",
       "location": "25.755595, -80.373499",
-      "lcip": "10.14.11.4",
+      "lcip": "10.14.11.3",
       "internalconfig": {
-        "ryucxninternalport": 55784,
-        "openflowport": 6684,
-	"backuplc": "uncs1"
+        "ryucxninternalport": 55783,
+        "openflowport": 6683,
+	"backuplc": "mias1"
       },
       "switchinfo": [
         { 
-          "name":"ncsus1",
-          "friendlyname":"NCSU Corsa DP2100",
-          "ip": "10.0.204.1",
-          "dpid":"204",
+          "name":"chls1",
+          "friendlyname":"Santiago Corsa DP2100",
+          "ip": "10.0.203.1",
+          "dpid":"203",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
             { 
               "portnumber": 1,
               "speed": 80000000000,
-              "destination": "dukes1"
+              "destination": "chls1"
             },
             { 
               "portnumber": 11,
                "speed": 80000000000,
-               "destination": "miactlr"
+               "destination": "chlctlr"
             },
             { 
               "portnumber": 12,
                "speed": 80000000000,
-               "destination": "ncsudtn"
+               "destination": "chldtn"
             }
           ],
           "internalconfig": {
             "corsaurl": "https://corsa-1.ncsu.ben/",
             "corsatoken": "9b95dda0314beb7acf620084dff53e5df7eaf80f9ee453cfb3550f33aecd356561fcf22568ac8365f2892725f129147ceb5718cb711c3a93b136030348dd9eeb",
-            "corsabridge": "br24",
+            "corsabridge": "br23",
             "corsabwin":19,
             "corsabwout":20,
             "corsaratelimitbridge":"br20",
@@ -218,7 +208,7 @@
             "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,11],
-	    "managementvlanbackupports":[2, 11]
+	    "managementvlanbackupports":[1, 11]
           }
         }
       ],
@@ -230,30 +220,6 @@
     }
   },
   "participants": {
-    "sdonovan": {
-      "credentials": "1234",
-      "organization": "Georgia Tech/RNOC",
-      "contact": "sdonovan@gatech.edu",
-      "type": "administrator",
-      "permitted_actions": [
-        "tbd"
-      ],
-      "restrictions": [
-        "tbd"
-      ]
-    },
-    "jchung": {
-      "credentials": "4321",
-      "organization": "Georgia Tech/RNOC",
-      "contact": "jchung@gatech.edu",
-      "type": "user",
-      "permitted_actions": [
-        "tbd"
-      ],
-      "restrictions": [
-        "tbd"
-      ]
-    },
     "cwang": {
       "credentials": "1234",
       "organization": "RENCI",

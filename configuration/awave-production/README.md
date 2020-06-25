@@ -2,48 +2,57 @@
 
 ## Testbed Topology
 
-![alt text](figures/AW-SDX-Topology.png)
+![alt text](figures/AW-SDX-Production_Setup-0-Topology.png)
+Note: Santiago/Chile is shown tentatively. Actual connection path may be different.
 
 ## Node Layout
 
-![alt text](figures/AW-SDX-Node-Layout.png)
+![alt text](figures/AW-SDX-Production_Setup-2-Node_Layout.png)
 
-Direct Link: https://www.draw.io/#G1C7yn7oQ9FrGdVVxNnJtcGu9MOPG7U2xL
+## Tunnel Layout
+
+![alt text](figures/AW-SDX-Production_Setup-2-Node_Layout.png)
+
 
 ```
 # Out-of-band management
+
+- Miami
+- miami-corsa     : 67.17.206.198
+- miami-vm        : 190.103.186.106
+
+- Atlanta
+- sox-corsa       : 143.215.216.3
+- Baremetal server: 128.61.149.224
+- awsdx-ctrl (VM) : 128.61.149.223
+- awsdx-app (VM)  : 128.61.149.224
+
 # OpenFlow Conrol Connection
 
 # SDX Controller
-192.168.201.156 atlanticwave-sdx-controller.renci.ben
+128.61.149.224 awsdx-app sdx.atlanticwave-sdx.net
 
-# Local Controllers (running on BF40G Nodes)
-192.168.201.196   bf40g1.renci.ben  atlanticwave-lc-renci.renci.ben
-192.168.202.39    bg40g1.duke.ben   atlanticwave-lc-duke.renci.ben
-192.168.203.10    bg40g1.unc.ben    atlanticwave-lc-unc.renci.ben
-192.168.204.21    bg40g1.ncsu.ben   atlanticwave-lc-ncsu.renci.ben
+# Local Controllers 
+128.61.149.223  awsdx-ctrl lc-atl.atlanticwave-sdx.net
+190.103.186.106 miami-vm   lc-mia.atlanticwave-sdx.net
 
 # Corsa Switches
-192.168.201.168   corsa-2.renci.ben
-192.168.201.169   corsa-1.renci.ben
-192.168.202.30    corsa-1.duke.ben
-192.168.203.30    corsa-1.unc.ben
-192.168.204.30    corsa-1.ncsu.ben
+143.215.216.3 sox-corsa   corsa-atl.atlanticwave-sdx.net
+67.17.206.198 miami-corsa corsa-mia.atlanticwave-sdx.net
 
 ```
 
 ```
 # In-band management
-# VLAN 1411 is used for in-band management
+# VLAN 1805 for MIAMI and VLAN 3621 for ATLANTA is used for in-band management
 
 # SDX Controller
-10.14.11.254 atlanticwave-sdx-controller.renci.ben
+10.14.11.254 sdx.atlanticwave-sdx.net
 
 # Local Controllers
-10.14.11.1    atlanticwave-lc-renci.renci.ben
-10.14.11.2    atlanticwave-lc-duke.renci.ben
-10.14.11.3    atlanticwave-lc-unc.renci.ben
-10.14.11.4    atlanticwave-lc-ncsu.renci.ben
+10.14.11.1    lc-atl.atlanticwave-sdx.net
+10.14.11.2    lc-mia.atlanticwave-sdx.net
+10.14.11.3    lc-chl.atlanticwave-sdx.net
 
 ```
 
@@ -52,9 +61,6 @@ Direct Link: https://www.draw.io/#G1C7yn7oQ9FrGdVVxNnJtcGu9MOPG7U2xL
 Ports are set to `passthrough` mode. (ctag mode strips off the VLAN tag that prevent flows with `dl_vlan` match field being pushed properly. This can be a pure openflow behavior that needs to be elaborated.)
 
 Openflow control connection is established through default namespace (and associated out-of-band management interface).
-
-![alt text](figures/AW-SDX-Corsa-Tunnel-Layout.png)
-
 
 
 ### Set port tunnel-modes
