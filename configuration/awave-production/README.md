@@ -160,7 +160,8 @@ configure bridge add br19 openflow resources 10
 configure bridge br19 controller add CONTbr19 172.17.1.1 6653 
 
 # Create L2Tunnel Rate-limiting VFC
-
+# by using scripts in ratelimiting-vfc directory
+python make-rate-limiting-switch-clean-sox.py
 
 ```
 
@@ -189,19 +190,19 @@ amlight-corsa# configure bridge add br19 openflow resources 10
 amlight-corsa# configure bridge br19 controller add CONTbr19 172.17.1.1 6653 
 
 # Create L2Tunnel Rate-limiting VFC
-
-
+# by using scripts in ratelimiting-vfc directory
+python make-rate-limiting-switch-clean-miami.py
 ```
 
 
 ### Rate Limiting VFC
 
 Physical ports are in ctag tunnel-mode.
-On RENCI-1, DUKE, UNC, NCSU switches Port 21 and 22 are attached to the rate-limiting VFC.
-On RENCI-2 switch ports 27 and 28 are attached to the rate-limiting VFC.
+miami-corsa: Port 25 and 26 are attached to the rate-limiting VFC.
+sox-corsa: Port 31 and 32 are attached to the rate-limiting VFC.
 
 ```
-# Create rate limiting VFC (br20) on RENCI-1 | RENCI-2 | DUKE | UNC | NCSU
+# Create rate limiting VFC (br20) 
 configure bridge add br20 vpws resources 2
 configure bridge br20 controller add Eline 172.17.2.1 6653
 application eline configure connection add atlanticwave 21 22 "Rate Limiting VFC"
@@ -210,11 +211,8 @@ application eline configure connection add atlanticwave 21 22 "Rate Limiting VFC
 Scripts in ratelimiting-vfc can be used to delete and create the rate-limiting VFCs.
 
 ```
-python make-rate-limiting-switch-clean-renci.py 
-python make-rate-limiting-switch-clean-duke.py 
-python make-rate-limiting-switch-clean-unc.py 
-python make-rate-limiting-switch-clean-ncsu.py 
-python make-rate-limiting-switch-clean-renci-2.py
+python make-rate-limiting-switch-clean-miami.py 
+python make-rate-limiting-switch-clean-sox.py 
 
 or 
 
