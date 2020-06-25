@@ -11,7 +11,7 @@ Note: Santiago/Chile is shown tentatively. Actual connection path may be differe
 
 ## Tunnel Layout
 
-![alt text](figures/AW-SDX-Production_Setup-2-Node_Layout.png)
+![alt text](figures/AW-SDX-Production_Setup-3-Tunnel_Layout-L2Multipoint.png)
 
 
 ```
