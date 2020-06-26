@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Proejct
 
@@ -28,10 +29,10 @@ class BasicActionTest(unittest.TestCase):
         a_match = SDXAction("a", 6, a_field)
         b_field = LCAction('field')
         b_match = SDXAction("a", 6, b_field)
-        self.failUnlessEqual(a_match, b_match)
+        self.assertEqual(a_match, b_match)
 
     def test_lookup(self):
-        self.failUnlessEqual(type(SDXActionModifySRCMAC),
+        self.assertEqual(type(SDXActionModifySRCMAC),
                              type(SDXAction.lookup_action_type("ModifySRCMAC")))
 
     def test_failed_lookup(self):

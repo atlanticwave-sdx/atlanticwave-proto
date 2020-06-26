@@ -1,10 +1,12 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 # Unit tests for RyuTranslateInterfaace
 
+from builtins import str
 import unittest
 import mock
 import subprocess
@@ -141,8 +143,8 @@ class RyuTranslateTests(unittest.TestCase):
 #        print "Removal: %s" % output
         removalmatch = re.search("priority=100,", output)
         # ''
-        self.failUnlessEqual(removalmatch, None) # Removal Failure
-        self.failUnlessEqual(match, ofpm)  # Installation failure
+        self.assertEqual(removalmatch, None) # Removal Failure
+        self.assertEqual(match, ofpm)  # Installation failure
 
 
         
@@ -259,8 +261,8 @@ class RyuTranslateTests(unittest.TestCase):
         removalmatch = re.search("priority=100,", output)
         
         # ''
-        self.failUnlessEqual(removalmatch, None) # Removal Failure
-        self.failUnlessEqual(action, ofpa)  # Installation failure
+        self.assertEqual(removalmatch, None) # Removal Failure
+        self.assertEqual(action, ofpa)  # Installation failure
 
 
 

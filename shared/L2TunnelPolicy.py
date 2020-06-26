@@ -1,9 +1,12 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import zip
+from builtins import str
 from .UserPolicy import *
 from datetime import datetime
 from shared.constants import *
@@ -293,7 +296,7 @@ class L2TunnelPolicy(UserPolicy):
 
     def _get_neighbor(self, topo, node, port):
         ''' helper function that gets the name of the neighbor '''
-        for n in topo[node].keys():
+        for n in list(topo[node].keys()):
             if topo[node][n][node] == port:
                 return n
 
@@ -309,7 +312,7 @@ class L2TunnelPolicy(UserPolicy):
         jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
+        if jsonstring not in list(json_rule.keys()):
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
         self.start_time = json_rule[jsonstring]['starttime']

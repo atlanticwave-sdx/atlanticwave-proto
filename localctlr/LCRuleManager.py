@@ -1,7 +1,12 @@
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
-import cPickle as pickle
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
+import pickle as pickle
 from lib.AtlanticWaveManager import AtlanticWaveManager
 from shared.ManagementLCRecoverRule import *
 
@@ -118,7 +123,7 @@ class LCRuleManager(AtlanticWaveManager):
             if type(filter) != dict:
                 raise LCRuleManagerTypeError("filter is not a dictionary: %s" %
                                              type(filter))
-            for key in filter.keys():
+            for key in list(filter.keys()):
                 if key not in self._valid_table_columns:
                     raise LCRuleManagerValidationError(
                         "filter column '%s' is not a valid filtering field %s" %

@@ -1,9 +1,14 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import zip
+from builtins import str
+from past.utils import old_div
 from .UserPolicy import *
 from .L2TunnelPolicy import *
 from datetime import datetime
@@ -124,8 +129,8 @@ class EndpointConnectionPolicy(UserPolicy):
             total_time += 1
 
         data_in_bits = self.data * 8
-        self.bandwidth = int(ceil(max(data_in_bits/(total_time - EndpointConnectionPolicy.buffer_time_sec),
-                                      (data_in_bits/total_time)*EndpointConnectionPolicy.buffer_bw_percent)))
+        self.bandwidth = int(ceil(max(old_div(data_in_bits,(total_time - EndpointConnectionPolicy.buffer_time_sec)),
+                                      (old_div(data_in_bits,total_time))*EndpointConnectionPolicy.buffer_bw_percent)))
 
         # Second, get the path, and reserve bw and a VLAN on it
         self.switchpath = tm.find_valid_path(self.src, self.dst,
@@ -271,7 +276,7 @@ class EndpointConnectionPolicy(UserPolicy):
         jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
+        if jsonstring not in list(json_rule.keys()):
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
         self.deadline = str(json_rule[jsonstring]['deadline'])

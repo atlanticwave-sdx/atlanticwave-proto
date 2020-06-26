@@ -7,10 +7,12 @@ Created on Sat Sep  7 12:57:57 2013
 
 @author: xinghualu
 """
+from __future__ import unicode_literals
 
 # This is a generalized implementation of the Kou algorithm for creating Steiner Trees.  It is not
 # tied to GOGrapher and can be used with any networkx wieghted graph.
 
+from builtins import range
 from heapq import *
 from networkx import *
 from networkx import Graph
@@ -111,12 +113,12 @@ def _trimTree(graph, voi):
 
 
 def _trim(node, graph, trimKeepTrack, voi):
-        if len(graph.adj[node].keys()) > 1:
-                for nodeNeighbor in graph.adj[node].keys():
+        if len(list(graph.adj[node].keys())) > 1:
+                for nodeNeighbor in list(graph.adj[node].keys()):
                         if nodeNeighbor not in trimKeepTrack:
                                 trimKeepTrack.append(nodeNeighbor)
                                 graph = _trim(nodeNeighbor, graph, trimKeepTrack, voi)
-        if len(graph.adj[node].keys()) < 2:
+        if len(list(graph.adj[node].keys())) < 2:
                 if node not in voi:
                         graph.remove_node(node)
         return graph

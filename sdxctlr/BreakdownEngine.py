@@ -1,8 +1,11 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import hex
+from builtins import str
 from lib.AtlanticWaveModule import AtlanticWaveModule
 from .AuthorizationInspector import AuthorizationInspector
 from .TopologyManager import TopologyManager

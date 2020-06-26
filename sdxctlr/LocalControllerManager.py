@@ -1,8 +1,11 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import hex
+from builtins import object
 import json
 from lib.AtlanticWaveManager import AtlanticWaveManager
 from .AuthenticationInspector import AuthenticationInspector
@@ -58,7 +61,7 @@ class LocalControllerManager(AtlanticWaveManager):
             self.localctlr_db = results
             
         # Push information to the A&A Inspectors.
-        for ctlrname in self.localctlr_db.keys():
+        for ctlrname in list(self.localctlr_db.keys()):
             ctlr = self.localctlr_db[ctlrname]
             self._send_to_AI(ctlr)
 
@@ -77,14 +80,14 @@ class LocalControllerManager(AtlanticWaveManager):
         self._send_to_AI(rec)
 
     def _get_controller(self, controllername):
-        if controllername not in self.localctlr_db.keys():
+        if controllername not in list(self.localctlr_db.keys()):
             return None
         return self.localctlr_db[controllername]
 
     def new_controller_connection(self, controllerip):
         '''This is called by the SDXController when a new local controller 
            connects which informs the TopologyManager of the change. '''
-        for key in self.localctlr_db.keys():
+        for key in list(self.localctlr_db.keys()):
             entry = self.localctlr_db[key]
             if entry.lcip == controllerip:
                 entry.set_connected()
@@ -95,7 +98,7 @@ class LocalControllerManager(AtlanticWaveManager):
         
     def remove_controller_connection(self, controllerip):
         ''' When a local controller has disconnected, this is called. '''
-        for key in self.localctlr_db.keys():
+        for key in list(self.localctlr_db.keys()):
             entry = self.localctlr_db[key]
             if entry.lcip == controllerip:
                 entry.set_disconnected()

@@ -1,6 +1,8 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AtlanticWave/SDX Project
 
+from builtins import object
 class PathResource(object):
     ''' Represents a resource that a rule needs. This is a parent class, and 
         isn't actually useful by itself. '''

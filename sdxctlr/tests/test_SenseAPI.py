@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -43,7 +44,7 @@ class SingletonTest(unittest.TestCase):
         first = SenseAPI(DB_FILE)
         second = SenseAPI()
 
-        self.failUnless(first is second)
+        self.assert(first is second)
 
 
 class PutGetDeltaTest(unittest.TestCase):
@@ -83,12 +84,12 @@ class PutGetDeltaTest(unittest.TestCase):
                        self.sdx_rule_reduction, self.model_id)
         raw_delta = api._get_delta_by_id(delta_id)
 
-        self.failUnlessEqual(raw_delta['delta_id'], delta_id)
-        self.failUnlessEqual(raw_delta['raw_request'], self.raw_request)
-        self.failUnlessEqual(raw_delta['addition'], self.sdx_rule_addition)
-        self.failUnlessEqual(raw_delta['reduction'], self.sdx_rule_reduction)
-        self.failUnlessEqual(raw_delta['model_id'], self.model_id)
-        self.failUnlessEqual(raw_delta['status'], STATUS_ACCEPTED)
+        self.assertEqual(raw_delta['delta_id'], delta_id)
+        self.assertEqual(raw_delta['raw_request'], self.raw_request)
+        self.assertEqual(raw_delta['addition'], self.sdx_rule_addition)
+        self.assertEqual(raw_delta['reduction'], self.sdx_rule_reduction)
+        self.assertEqual(raw_delta['model_id'], self.model_id)
+        self.assertEqual(raw_delta['status'], STATUS_ACCEPTED)
 
     def test_get(self):
         # Test _put_delta() and get_delta()
@@ -130,23 +131,23 @@ class PutGetDeltaTest(unittest.TestCase):
                        self.sdx_rule_reduction, self.model_id, self.status)
         raw_delta = api._get_delta_by_id(delta_id)
 
-        self.failUnlessEqual(raw_delta['delta_id'], delta_id)
-        self.failUnlessEqual(raw_delta['raw_request'], self.raw_request)
-        self.failUnlessEqual(raw_delta['addition'], self.sdx_rule_addition)
-        self.failUnlessEqual(raw_delta['reduction'], self.sdx_rule_reduction)
-        self.failUnlessEqual(raw_delta['model_id'], self.model_id)
-        self.failUnlessEqual(raw_delta['status'], self.status)
+        self.assertEqual(raw_delta['delta_id'], delta_id)
+        self.assertEqual(raw_delta['raw_request'], self.raw_request)
+        self.assertEqual(raw_delta['addition'], self.sdx_rule_addition)
+        self.assertEqual(raw_delta['reduction'], self.sdx_rule_reduction)
+        self.assertEqual(raw_delta['model_id'], self.model_id)
+        self.assertEqual(raw_delta['status'], self.status)
 
         api._put_delta(delta_id, status=self.status_created, update=True)
         raw_delta = api._get_delta_by_id(delta_id)
         #print "    %s" % raw_delta
 
-        self.failUnlessEqual(raw_delta['delta_id'], delta_id)
-        self.failUnlessEqual(raw_delta['raw_request'], self.raw_request)
-        self.failUnlessEqual(raw_delta['addition'], self.sdx_rule_addition)
-        self.failUnlessEqual(raw_delta['reduction'], self.sdx_rule_reduction)
-        self.failUnlessEqual(raw_delta['model_id'], self.model_id)
-        self.failUnlessEqual(raw_delta['status'], self.status_created)
+        self.assertEqual(raw_delta['delta_id'], delta_id)
+        self.assertEqual(raw_delta['raw_request'], self.raw_request)
+        self.assertEqual(raw_delta['addition'], self.sdx_rule_addition)
+        self.assertEqual(raw_delta['reduction'], self.sdx_rule_reduction)
+        self.assertEqual(raw_delta['model_id'], self.model_id)
+        self.assertEqual(raw_delta['status'], self.status_created)
 
     def test_put_invalid(self):
         # Test invalid _put_delta commands
@@ -159,7 +160,7 @@ class PutGetDeltaTest(unittest.TestCase):
 
         #   - Put invalid things
         delta_id = 6
-        self.failUnlessRaises(SenseAPIError, api._put_delta,
+        self.assertRaises(SenseAPIError, api._put_delta,
                               delta_id, self.raw_request,
                               self.sdx_rule_addition)
                               # missing one item            
@@ -169,14 +170,14 @@ class PutGetDeltaTest(unittest.TestCase):
         api._put_delta(delta_id, self.raw_request,
                        self.sdx_rule_addition, self.sdx_rule_reduction,
                        self.model_id, self.status)
-        self.failUnlessRaises(SenseAPIError, api._put_delta,
+        self.assertRaises(SenseAPIError, api._put_delta,
                               delta_id, self.raw_request,
                               self.sdx_rule_addition, self.sdx_rule_reduction,
                               self.model_id, self.status) 
         
         #   - Put update on delta that doesn't exist
         delta_id = 8
-        self.failUnlessRaises(SenseAPIError, api._put_delta,
+        self.assertRaises(SenseAPIError, api._put_delta,
                               delta_id, self.raw_request, update=True)
 
         #   - Put empty update in
@@ -184,7 +185,7 @@ class PutGetDeltaTest(unittest.TestCase):
         api._put_delta(delta_id, self.raw_request,
                        self.sdx_rule_addition, self.sdx_rule_reduction,
                        self.model_id, self.status)
-        self.failUnlessRaises(SenseAPIError, api._put_delta,
+        self.assertRaises(SenseAPIError, api._put_delta,
                               delta_id, update=True)
 
 
@@ -199,7 +200,7 @@ class PutGetDeltaTest(unittest.TestCase):
         api = SenseAPI(DB_FILE)
 
         delta_id = 10
-        self.failUnlessEqual(api._get_delta_by_id(delta_id),
+        self.assertEqual(api._get_delta_by_id(delta_id),
                               None)
             
 
@@ -214,7 +215,7 @@ class PutGetDeltaTest(unittest.TestCase):
         api = SenseAPI(DB_FILE)
 
         delta_id = 11
-        self.failUnlessEqual(api.get_delta(delta_id),
+        self.assertEqual(api.get_delta(delta_id),
                               (None,None))
 
 class CommitTest(unittest.TestCase):

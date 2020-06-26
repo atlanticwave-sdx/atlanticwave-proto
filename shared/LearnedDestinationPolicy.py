@@ -1,9 +1,11 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import str
 from .UserPolicy import *
 from datetime import datetime
 from shared.constants import *
@@ -149,7 +151,7 @@ class LearnedDestinationPolicy(UserPolicy):
         jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
+        if jsonstring not in list(json_rule.keys()):
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
         self.dst_switch = str(json_rule[jsonstring]['dstswitch'])

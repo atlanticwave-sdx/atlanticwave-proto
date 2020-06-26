@@ -1,7 +1,9 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
+from builtins import str
 import unittest
 import logging
 import os
@@ -29,7 +31,7 @@ class InitTest(unittest.TestCase):
         secondManager = LCRuleManager()
 
         print(">>>>>>>>>>>> %s" % (firstManager is secondManager))
-        self.failUnless(firstManager is secondManager)
+        self.assert(firstManager is secondManager)
 
     def test_init_fields(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -69,7 +71,7 @@ class AddRuleTest(unittest.TestCase):
         cookie = 2
         switch_id = 10
         status = "NOT A REAL STATUS"
-        self.failUnlessRaises(LCRuleManagerTypeError,
+        self.assertRaises(LCRuleManagerTypeError,
                               m.add_rule, cookie, switch_id, rule, status)
 
     def test_duplicate_add(self):
@@ -81,7 +83,7 @@ class AddRuleTest(unittest.TestCase):
         status = RULE_STATUS_INSTALLING
         m.add_rule(cookie, switch_id, rule, status)
 
-        self.failUnlessRaises(LCRuleManagerValidationError,
+        self.assertRaises(LCRuleManagerValidationError,
                               m.add_rule, cookie, switch_id, rule, status)
     #FIXME: Should there be other check here?
 
@@ -112,7 +114,7 @@ class GetRuleTest(unittest.TestCase):
         m.add_rule(cookie1, switch_id1, rule1, status1)
 
         getrules = m.get_rules(cookie1, switch_id1)
-        self.failUnlessEqual(rule1, getrules[0])
+        self.assertEqual(rule1, getrules[0])
 
         rule2 = "TOTALLY REAL RULE"
         cookie2 = 12
@@ -122,10 +124,10 @@ class GetRuleTest(unittest.TestCase):
         getrules = m.get_rules(cookie1, switch_id1)
         print(">>>>>>>>>", getrules)
         
-        self.failUnlessEqual(rule1, getrules[0])
+        self.assertEqual(rule1, getrules[0])
         getrules = m.get_rules(cookie2, switch_id2)
         print(">>>>>>>>>", getrules)
-        self.failUnlessEqual(rule2, getrules[0])
+        self.assertEqual(rule2, getrules[0])
 
     def test_get_unknown_rule(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -146,9 +148,9 @@ class GetRuleTest(unittest.TestCase):
         #m.add_rule(cookie2, rule2, status2)
 
         getrules = m.get_rules(cookie1, switch_id1)
-        self.failUnlessEqual(rule1, getrules[0])
+        self.assertEqual(rule1, getrules[0])
         getrules = m.get_rules(cookie2, switch_id2)
-        self.failUnlessEqual([], getrules)
+        self.assertEqual([], getrules)
 
     def test_get_rule_full_tuple(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -177,7 +179,7 @@ class FindRuleTest(unittest.TestCase):
         m = LCRuleManager()
         m.__init__()
         rules = m._find_rules()
-        self.failUnlessEqual([], rules)
+        self.assertEqual([], rules)
 
     def test_find_all_rules(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -197,7 +199,7 @@ class FindRuleTest(unittest.TestCase):
 
         rules = m._find_rules()
         print(">>>> rules: %s" % rules)
-        self.failUnlessEqual(len(rules), 2)
+        self.assertEqual(len(rules), 2)
 
     def test_find_filtered_cookie_rules(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -216,7 +218,7 @@ class FindRuleTest(unittest.TestCase):
         m.add_rule(cookie2, switch_id2, rule2, status2)
 
         rules = m._find_rules({'cookie':23})
-        self.failUnlessEqual(len(rules), 1)
+        self.assertEqual(len(rules), 1)
 
     def test_find_filtered_status_rules(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -235,7 +237,7 @@ class FindRuleTest(unittest.TestCase):
         m.add_rule(cookie2, switch_id2, rule2, status2)
 
         rules = m._find_rules({'status':RULE_STATUS_ACTIVE})
-        self.failUnlessEqual(len(rules), 1)
+        self.assertEqual(len(rules), 1)
 
 
     def test_find_filtered_rule_rules(self):
@@ -276,18 +278,18 @@ class ChangeStatusTest(unittest.TestCase):
         for rule in rules:
             print("$$$$$$ %s" % str(rule))
             (pre_cookie, pre_switch_id, pre_rule, pre_status) = rule
-            self.failUnlessEqual(pre_status, status1)
+            self.assertEqual(pre_status, status1)
 
         status2 = RULE_STATUS_ACTIVE
         m.set_status(cookie1, switch_id1, status2)
 
         rules = m.get_rules(cookie1, switch_id1, True)
 
-        self.failUnlessEqual(len(rules), 1)
+        self.assertEqual(len(rules), 1)
         self.failIfEqual(rules, [])
         for rule in rules:
             (post_cookie, post_switch_id, post_rule, post_status) = rule
-            self.failUnlessEqual(post_status, status2)
+            self.assertEqual(post_status, status2)
         self.failIfEqual(status1, status2)
 
     def test_invalid_status_change(self):
@@ -304,10 +306,10 @@ class ChangeStatusTest(unittest.TestCase):
         self.failIfEqual(rules, [])
         for rule in rules:
             (pre_cookie, pre_switch_id, pre_rule, pre_status) = rule
-            self.failUnlessEqual(pre_status, status1)
+            self.assertEqual(pre_status, status1)
 
         status2 = "FAKE STATUS!"
-        self.failUnlessRaises(LCRuleManagerValidationError,
+        self.assertRaises(LCRuleManagerValidationError,
                               m.set_status, cookie1, switch_id1, status2)
     
 
@@ -337,11 +339,11 @@ class RemoveRuleTest(unittest.TestCase):
         m.add_rule(cookie1, switch_id1, rule1, status1)
 
         pre_rule = m.get_rules(cookie1, switch_id1)
-        self.failUnlessEqual(pre_rule, [rule1])
+        self.assertEqual(pre_rule, [rule1])
 
         m.rm_rule(cookie1, switch_id1)
         post_rule = m.get_rules(cookie1, switch_id1)
-        self.failUnlessEqual(post_rule, [])
+        self.assertEqual(post_rule, [])
     
     def test_remove_unknown_rule(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -349,7 +351,7 @@ class RemoveRuleTest(unittest.TestCase):
         m.__init__()
         cookie1 = 42
         switch_id1 = 10
-        self.failUnlessRaises(LCRuleManagerDeletionError,
+        self.assertRaises(LCRuleManagerDeletionError,
                               m.rm_rule, cookie1, switch_id1)
 
     def test_duplicate_remove_rule(self):
@@ -363,13 +365,13 @@ class RemoveRuleTest(unittest.TestCase):
         m.add_rule(cookie1, switch_id1, rule1, status1)
 
         pre_rule = m.get_rules(cookie1, switch_id1)
-        self.failUnlessEqual(pre_rule, [rule1])
+        self.assertEqual(pre_rule, [rule1])
 
         m.rm_rule(cookie1, switch_id1)
         post_rule = m.get_rules(cookie1, switch_id1)
-        self.failUnlessEqual(post_rule, [])
+        self.assertEqual(post_rule, [])
 
-        self.failUnlessRaises(LCRuleManagerDeletionError,
+        self.assertRaises(LCRuleManagerDeletionError,
                               m.rm_rule, cookie1, switch_id1)
     
         
@@ -430,7 +432,7 @@ class InitialRulesTest(unittest.TestCase):
         self.failIfEqual(rules, [])
         for rule in rules:
             (c, sw, r, s) = rule
-            self.failUnlessEqual(r, rule1)
+            self.assertEqual(r, rule1)
 
     def test_initial_rule_rm_rule(self):
         self.logger.warning("BEGIN %s" % (self.id()))
@@ -450,7 +452,7 @@ class InitialRulesTest(unittest.TestCase):
         print("    ^&^&^&^&^ %s" % rules)
         for rule in rules:
             (c,sw,r,s) = rule
-            self.failUnlessEqual(rule1, r)
+            self.assertEqual(rule1, r)
 
         rule2 = "TOTALLY REAL RULE"
         cookie2 = 54
@@ -465,7 +467,7 @@ class InitialRulesTest(unittest.TestCase):
             print("  $$$$ RULE: %s:%s:%s" % (c, sw, r))
         for rule in rules:
             (c,sw,r,s) = rule
-            self.failUnlessEqual(rule1, r)
+            self.assertEqual(rule1, r)
         rules = m.get_rules(cookie2, switch_id2, True)
         self.failIfEqual(rules, [])
         for rule in rules:
@@ -473,7 +475,7 @@ class InitialRulesTest(unittest.TestCase):
             print("  $$$$ RULE: %s:%s:%s" % (c, sw, r))
         for rule in rules:
             (c,sw,r,s) = rule
-            self.failUnlessEqual(rule2, r)
+            self.assertEqual(rule2, r)
 
         m.add_initial_rule(SDXMessageInstallRule(rule1), cookie1, switch_id1)
         
@@ -490,10 +492,10 @@ class InitialRulesTest(unittest.TestCase):
         self.failIfEqual(rules, [])
         for rule in rules:
             (c, sw, r, s) = rule
-            self.failUnlessEqual(r, rule1)
+            self.assertEqual(r, rule1)
 
         rules = m.get_rules(cookie2, switch_id2, True)
-        self.failUnlessEqual([], rules)
+        self.assertEqual([], rules)
         
 
     def test_initial_rule_twice_rule(self):
@@ -525,20 +527,20 @@ class InitialRulesTest(unittest.TestCase):
 
 
         rules = m._find_rules()
-        self.failUnlessEqual(1, len(rules))
+        self.assertEqual(1, len(rules))
         rules = m.get_rules(cookie1, switch_id1, True)
         self.failIfEqual(rules, [])
         for rule in rules:
             (c, sw, r, s) = rule
             self.assertEqual(rule1, r.data['rule'])
         rules = m.get_rules(cookie2, switch_id2)
-        self.failUnlessEqual(rules, [])
+        self.assertEqual(rules, [])
 
 
         m.rm_rule(cookie1, switch_id1)
 
         rules = m._find_rules()
-        self.failUnlessEqual(0, len(rules)) #empty
+        self.assertEqual(0, len(rules)) #empty
         
         m.add_initial_rule(SDXMessageInstallRule(rule2), cookie2, switch_id2)
 
@@ -552,15 +554,15 @@ class InitialRulesTest(unittest.TestCase):
 
         rules = m._find_rules()
         print("((((((((RULES %s" %rules)
-        self.failUnlessEqual(1, len(rules))
+        self.assertEqual(1, len(rules))
         rules = m.get_rules(cookie1, switch_id1)
-        self.failUnlessEqual([], rules)
+        self.assertEqual([], rules)
 
         rules = m.get_rules(cookie2, switch_id2, True)
         self.failIfEqual(rules, [])
         for rule in rules:
             (c,sw,r,s) = rule
-            self.failUnlessEqual(rule2, r.data['rule'])
+            self.assertEqual(rule2, r.data['rule'])
 
 if __name__ == '__main__':
     unittest.main()

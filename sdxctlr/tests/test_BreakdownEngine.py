@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -43,7 +44,7 @@ class SingletonTest(unittest.TestCase):
         first = BreakdownEngine()
         second =  BreakdownEngine()
 
-        self.failUnless(first is second)
+        self.assert(first is second)
         del topo
 
 #FIXME: Nothing's mocked here!
@@ -63,7 +64,7 @@ class BreakdownTest(unittest.TestCase):
         topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
                                
         engine = BreakdownEngine(CATCH_ERRORS=False)
-        self.failUnlessRaises(Exception, engine.get_breakdown, invalid_rule)
+        self.assertRaises(Exception, engine.get_breakdown, invalid_rule)
         del engine
 
 

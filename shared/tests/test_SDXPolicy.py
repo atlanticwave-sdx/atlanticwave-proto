@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -5,6 +6,7 @@
 # Unit tests for shared.SDXPolicy module
 
 
+from builtins import str
 import unittest
 from shared.SDXPolicy import *
 #from shared.SDXMatches import *

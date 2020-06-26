@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -18,7 +19,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = LocalControllerManager(manifest=CONFIG_FILE)
         secondManager = LocalControllerManager(manifest=CONFIG_FILE)
 
-        self.failUnless(firstManager is secondManager)
+        self.assert(firstManager is secondManager)
 
 class VerifyLCTest(unittest.TestCase):
     
@@ -69,7 +70,7 @@ class VerifyLCTest(unittest.TestCase):
         man = LocalControllerManager(manifest=CONFIG_FILE)
 
         ctlrname = "NOTREAL"
-        self.failUnless(man._get_controller(ctlrname) == None)
+        self.assert(man._get_controller(ctlrname) == None)
 
         ctlrname = "nyc"
         credentials = "nycpw"
@@ -78,11 +79,11 @@ class VerifyLCTest(unittest.TestCase):
 
         man.add_controller(ctlrname, credentials, lcip, switchips)
         part = man._get_controller(ctlrname)
-        self.failUnless(part != None)
-        self.failUnless(part.shortname == ctlrname)
-        self.failUnless(part.credentials == credentials)
-        self.failUnless(part.lcip == lcip)
-        self.failUnless(part.switchips == switchips)
+        self.assert(part != None)
+        self.assert(part.shortname == ctlrname)
+        self.assert(part.credentials == credentials)
+        self.assert(part.lcip == lcip)
+        self.assert(part.switchips == switchips)
 
         # Make sure the old ones are still there.
         ctlrname = 'atl'

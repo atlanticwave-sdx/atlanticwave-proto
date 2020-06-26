@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -6,6 +7,7 @@ from __future__ import print_function
 # initiates transfers between our pseudo-DTN applications
 
 
+from builtins import input
 import sys
 import subprocess
 from datetime import datetime, timedelta
@@ -142,7 +144,7 @@ def print_endpoint(endpoints):
 
 def get_ep_dict_from_num(endpoints, num):
     a = 0
-    for ep in endpoints.keys():
+    for ep in list(endpoints.keys()):
         if a == num:
             return endpoints[ep]
         a += 1
@@ -208,8 +210,8 @@ def transfer_file(srcdataip, dstctrlip, dstport, filename):
 while(True):
     # Select src and destination
     print_endpoint(endpoints)
-    src = input("Source: ")
-    dst = input("Destination: ")
+    src = eval(input("Source: "))
+    dst = eval(input("Destination: "))
     
     # Establish a path between src and dst for 1 sec
     srcdict = get_ep_dict_from_num(endpoints, int(src))
@@ -232,7 +234,7 @@ while(True):
         delete_tunnel()
 
     # Let user choose file to transfer
-    filenumber = input("Choose a file: ")
+    filenumber = eval(input("Choose a file: "))
     filename = fileslist[int(filenumber)]
 
     # Reestablish path between src and dest

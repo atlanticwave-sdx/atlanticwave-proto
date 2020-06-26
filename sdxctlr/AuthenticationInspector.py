@@ -1,7 +1,9 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import hex
 import logging
 from lib.AtlanticWaveInspector import AtlanticWaveInspector
 
@@ -29,7 +31,7 @@ class AuthenticationInspector(AtlanticWaveInspector):
             may change over time, for instance, for the initial deployment, 
             credentials could be a hashed password, while later it will be a 
             certificate/cert operation. ''' 
-        if username not in self._credential_store.keys():
+        if username not in list(self._credential_store.keys()):
             self.logger.warning('User does not exist: %s', username)
             return False
         if self._credential_store[username] != credentials:
@@ -45,7 +47,7 @@ class AuthenticationInspector(AtlanticWaveInspector):
         ''' This is used by both the ParticipantManager and 
             LocalControllerManager to add a single user, credential pair that 
             is authorized. '''
-        if username in self._credential_store.keys():
+        if username in list(self._credential_store.keys()):
             self.logger.info('User\'s credentials changing: %s', username)
         else:
             self.logger.info('New user being added to store: %s', username)

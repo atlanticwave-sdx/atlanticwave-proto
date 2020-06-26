@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -7,6 +8,7 @@ from __future__ import print_function
 #   https://pythonprogramming.net/ftp-transfers-python-ftplib/
 #   https://stackoverflow.com/questions/111954/using-pythons-ftplib-to-get-a-directory-listing-portably
 
+from builtins import str
 from flask import Flask, jsonify, abort, make_response, request
 from flask_restful import Api, Resource, reqparse, fields, marshal
 from threading import Thread

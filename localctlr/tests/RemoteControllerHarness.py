@@ -1,8 +1,10 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import object
 from shared.SDXControllerConnectionManager import *
 from lib.Connection import select as cxnselect
 from lib.Singleton import Singleton
@@ -23,12 +25,12 @@ from shared.SDXActions import *
 from shared.MatchActionLCRule import *
 from shared.LCFields import *
 from shared.LCAction import *
+from future.utils import with_metaclass
 
 dummy_log = "Testing"
 
-class RemoteControllerHarness(object):
+class RemoteControllerHarness(with_metaclass(Singleton, object)):
     ''' Harness for local controller testing. '''
-    __metaclass__ = Singleton
 
     def __init__(self):
         # Create useful examples

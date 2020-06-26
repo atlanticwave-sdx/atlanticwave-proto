@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -37,7 +38,7 @@ class SingletonTest(unittest.TestCase):
         firstInspector = ValidityInspector()
         secondInspector = ValidityInspector()
 
-        self.failUnless(firstInspector is secondInspector)
+        self.assert(firstInspector is secondInspector)
 
 #FIXME: Nothing's mocked here!
 
@@ -45,12 +46,12 @@ class ValidityTest(unittest.TestCase):
     def test_good_valid(self):
         valid_rule = UserPolicyStandin(True, "")
         inspector = ValidityInspector()
-        self.failUnless(inspector.is_valid_rule(valid_rule))
+        self.assert(inspector.is_valid_rule(valid_rule))
                         
     def test_bad_valid(self):
         invalid_rule = UserPolicyStandin(False, "")
         inspector = ValidityInspector()
-        self.failUnlessRaises(Exception, inspector.is_valid_rule, invalid_rule)
+        self.assertRaises(Exception, inspector.is_valid_rule, invalid_rule)
 
 if __name__ == '__main__':
     unittest.main()

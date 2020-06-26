@@ -1,10 +1,16 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 # Edited by John Skandalakis
 # AtlanticWave/SDX Project
 # Login based on example code from https://github.com/maxcountryman/flask-login
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
+from builtins import range
 from lib.AtlanticWaveModule import AtlanticWaveModule
 
 from shared.SDXPolicy import SDXIngressPolicy, SDXEgressPolicy
@@ -43,8 +49,8 @@ import json
 from threading import Thread
 
 #stuff to serve sdxctlr/static content - I will change this in an update but for now this is viable.
-import SimpleHTTPServer
-import SocketServer
+import http.server
+import socketserver
 
 #System stuff
 import sys, os, traceback
@@ -1381,7 +1387,7 @@ class RestAPI(AtlanticWaveModule):
         '''        
         def _parse_post_data(data_json):
             print(data_json)
-            if "L2Multipoint" in data_json.keys():
+            if "L2Multipoint" in list(data_json.keys()):
                 # This parses out the individual "multipointelements" and
                 # reinserts them into the data_json object
                 count = int(data_json['L2Multipoint'].pop('count'))
@@ -1393,9 +1399,9 @@ class RestAPI(AtlanticWaveModule):
                         {"switch":node,
                          "port":int(portstr),
                          "vlan":int(vlanstr)})
-            elif ("SDXEgress" in data_json.keys() or
-                  "SDXIngress" in data_json.keys()):
-                if "SDXEgress" in data_json.keys():
+            elif ("SDXEgress" in list(data_json.keys()) or
+                  "SDXIngress" in list(data_json.keys())):
+                if "SDXEgress" in list(data_json.keys()):
                     pol = "SDXEgress"
                     # See SDXPolicy.py for source of this list
                     types = {'src_mac':str, 'src_ip':str,
@@ -1516,7 +1522,7 @@ class RestAPI(AtlanticWaveModule):
     @app.route(EP_LOGIN, methods=['POST'])
     def login():
         # Extract username and password
-        if 'username' in flask.request.form.keys():
+        if 'username' in list(flask.request.form.keys()):
             username = flask.request.form['username']
             password = flask.request.form['password']
         else:

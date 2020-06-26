@@ -1,10 +1,15 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-import cPickle as pickle
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
+import pickle as pickle
 
 from threading import Timer, Lock, Thread
 from datetime import datetime, timedelta
@@ -256,7 +261,7 @@ class RuleManager(AtlanticWaveManager):
             if type(filter) != dict:
                 raise RuleManagerTypeError("filter is not a dictionary: %s" % 
                                            type(filter))
-            for key in filter.keys():
+            for key in list(filter.keys()):
                 if key not in self._valid_table_columns:
                     raise RuleManagerValidationError("filter column '%s' is not a valid filtering field %s" % (key, self._valid_table_columns))
 
@@ -270,10 +275,10 @@ class RuleManager(AtlanticWaveManager):
 
         #FIXME: need to figure out what to send back to the caller of the rules. What does the rule look like? Should it be the JSON version? I think so.
         retval = [(x['hash'],
-                   pickle.loads(str(x['rule'])).get_json_rule(),
+                   pickle.loads(x['rule']).get_json_rule(),
                    x['ruletype'],
-                   pickle.loads(str(x['rule'])).get_user(),
-                   STATE_TO_STRING(str(x['state']))) for x in results]
+                   pickle.loads(x['rule']).get_user(),
+                   STATE_TO_STRING(x['state'])) for x in results]
         return retval
 
     def get_breakdown_rules_by_LC(self, lc):

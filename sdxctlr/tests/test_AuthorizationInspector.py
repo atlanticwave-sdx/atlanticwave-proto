@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -16,7 +17,7 @@ class SingletonTest(unittest.TestCase):
         firstInspector = AuthorizationInspector()
         secondInspector = AuthorizationInspector()
 
-        self.failUnless(firstInspector is secondInspector)
+        self.assert(firstInspector is secondInspector)
 
 
 #FIXME: This is boring because the AuthorizationInspector is boring right now.

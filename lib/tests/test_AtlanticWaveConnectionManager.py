@@ -1,9 +1,11 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Unit tests for shared.ConnectionManager module.
 
+from builtins import str
 import unittest
 import threading
 from time import sleep
@@ -17,7 +19,7 @@ class InitTest(unittest.TestCase):
         firstManager =  AtlanticWaveConnectionManager(loggerid)
         secondManager = AtlanticWaveConnectionManager(loggerid)
 
-        self.failUnless(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
 
 
@@ -41,7 +43,7 @@ class OpenListeningPortTest(unittest.TestCase):
         self.SendThread.start()
         
         sleep(0.25) # Rather than messing about with locks.
-        self.failUnlessEqual(self.object_received, self.object_to_send)
+        self.assertEqual(self.object_received, self.object_to_send)
 
     def listening_thread(self):
         self.manager.new_connection_callback(self.receiving_thread)
@@ -85,7 +87,7 @@ class OpenSendingText(unittest.TestCase):
 
         cxn.send(self.object_to_send)
         sleep(0.1 )  # Rather than messing about with locks.
-        self.failUnlessEqual(self.object_received, self.object_to_send)        
+        self.assertEqual(self.object_received, self.object_to_send)        
 
     def receiving_thread(self):
         # Based on https://pymotw.com/2/socket/tcp.html,
@@ -101,7 +103,7 @@ class OpenSendingText(unittest.TestCase):
                 total_len = 0
                 total_data = []
                 size = sys.maxsize
-                size_data = ''
+                size_data = b''
                 sock_data = ''
                 recv_size = 8192
                 while total_len < size:
@@ -115,14 +117,14 @@ class OpenSendingText(unittest.TestCase):
                                 recv_size = 524288
                             total_data.append(size_data[4:])
                             total_len = sum([len(i) for i in total_data])
-                            data_raw = ''.join(total_data)
+                            data_raw = b"".join(total_data)
                         else:
                             size_data += sock_data
                         
                     else:
                         total_data.append(sock_data)
                         total_len = sum([len(i) for i in total_data])
-                        data_raw = ''.join(total_data)
+                        data_raw = b"".join(total_data)
 
                 # Unpickle!
                 data = pickle.loads(data_raw)
@@ -134,7 +136,7 @@ class OpenSendingText(unittest.TestCase):
 
 class FailureTests(unittest.TestCase):
     def test_connection_type_failure(self):
-        self.failUnlessRaises(TypeError, AtlanticWaveConnectionManager,
+        self.assertRaises(TypeError, AtlanticWaveConnectionManager,
                               __name__, unittest.TestCase)
 
         

@@ -1,11 +1,16 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Some parts are based on the Sense Resource Manager for the OSCARS interface:
 # https://bitbucket.org/berkeleylab/sensenrm-oscars/src/d09db31aecbe7654f03f15eed671c0675c5317b5/sensenrm_server.py
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
 from lib.AtlanticWaveManager import AtlanticWaveManager
 
 from shared.L2MultipointPolicy import L2MultipointPolicy
@@ -19,7 +24,7 @@ from .UserManager import UserManager
 from .RuleRegistry import RuleRegistry
 
 from threading import Lock
-import cPickle as pickle
+import pickle as pickle
 import rdflib
 from rdflib.util import list2set
 
@@ -225,11 +230,11 @@ class SenseAPI(AtlanticWaveManager):
         print("Neighbors of Miadtn: %s" % self.current_topo['miadtn'])
         print("Neighbors of br1   : %s" % self.current_topo['br1'])
         print("Neighbors of br2   : %s" % self.current_topo['br2'])
-        print("br1 neighbor list  : %s" % self.current_topo['br1'].keys())
-        print("br2 neighbor list  : %s" % self.current_topo['br2'].keys())
-        for n in self.current_topo['br1'].keys():
+        print("br1 neighbor list  : %s" % list(self.current_topo['br1'].keys()))
+        print("br2 neighbor list  : %s" % list(self.current_topo['br2'].keys()))
+        for n in list(self.current_topo['br1'].keys()):
             print("br1-%s:  %s" % (n, self.current_topo['br1'][n]['br1']))
-        for n in self.current_topo['br2'].keys():
+        for n in list(self.current_topo['br2'].keys()):
             print("br2-%s:  %s" % (n, self.current_topo['br2'][n]['br2']))
         print("\n\n")
 
@@ -621,7 +626,7 @@ class SenseAPI(AtlanticWaveManager):
                 #print self.current_topo[node]
                 t = self.current_topo.node[node]['type']
                 alias = None
-                if 'alias' in self.current_topo.node[node].keys():
+                if 'alias' in list(self.current_topo.node[node].keys()):
                     alias = self.current_topo.node[node]['alias']
                 if TOPO_EDGE_TYPE(t):
                     for edge in self.current_topo[node]: # edge dictionary
@@ -709,7 +714,7 @@ class SenseAPI(AtlanticWaveManager):
             link_def += "                nml:belongsTo <%s::%s>, <%s> ;\n" % (fullurn, self.SVC_SENSE, fullurn)
             link_def += "                nml:hasLabelGroup <%s> ;\n" % vlan_name
             link_def += "                nml:hasService <%s> ;\n" % bw_name
-            if 'alias' in node.keys():
+            if 'alias' in list(node.keys()):
                 link_def += "                nml:isAlias <%s> ;\n" % node['alias']
             if bidiports != "":
                 link_def += "                nml:hasBidirectionalPort %s ;\n" % bidiports
@@ -941,7 +946,7 @@ class SenseAPI(AtlanticWaveManager):
         # Parse the args
         self.dlogger.debug("process_delta() begin with args: %s" % args) 
        
-        keys = args.keys()
+        keys = list(args.keys())
         if ('id' not in keys or
             'lastModified' not in keys or
             'modelId' not in keys):
@@ -1113,7 +1118,7 @@ class SenseAPI(AtlanticWaveManager):
                     
                 uuid, svcname = __get_uuid_and_service_name(objects[0])
 
-                if uuid not in services.keys():
+                if uuid not in list(services.keys()):
                     self.dlogger.debug("  _parse_delta(): New UUID %s" % uuid)
                     # Initialize new service things with defaults.
                     services[uuid] = {}
@@ -1179,8 +1184,8 @@ class SenseAPI(AtlanticWaveManager):
         # Have details, now loop through services and create rules that are
         # being described.
         generated_rules = []
-        for uuid in services.keys():
-            for svc in services[uuid].keys():
+        for uuid in list(services.keys()):
+            for svc in list(services[uuid].keys()):
                 self.dlogger.debug("services[uuid][%s]: %s" % (svc, 
 services[uuid][svc]))
                 endpointcount = len(services[uuid][svc]['endpoints'])
@@ -1249,7 +1254,7 @@ services[uuid][svc]))
                             (starttime, endtime, bandwidth, endpoints))
 
         self.logger.info("_parse_delta: Generated %d policies for UUIDs %s" %
-                         (len(generated_rules), str(services.keys())))
+                         (len(generated_rules), str(list(services.keys()))))
         self.dlogger.debug("_parse_delta: Generated policies:")
         for pol in generated_rules:
             self.dlogger.debug("    %s" % pol)

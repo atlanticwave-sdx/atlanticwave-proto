@@ -1,9 +1,11 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import str
 from .UserPolicy import *
 from .FloodTreeLCRule import *
 import networkx as nx
@@ -90,7 +92,7 @@ class FloodTreePolicy(UserPolicy):
     def _parse_json(self, json_rule):
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if self.ruletype not in json_rule.keys():
+        if self.ruletype not in list(json_rule.keys()):
             raise UserPolicyValueError("%s value not in entry:\n    %s" % (self.ruletype, json_rule)) 
 
         # Not much to do here. There's no data on startup.

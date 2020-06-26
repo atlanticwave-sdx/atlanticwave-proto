@@ -1,8 +1,11 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import str
+from builtins import object
 from .LCFields import *
 
 
@@ -53,9 +56,9 @@ class SDXMatch(object):
 
     @staticmethod
     def lookup_match_type(name):
-        if name not in SDXMATCH_TO_CLASS.keys():
+        if name not in list(SDXMATCH_TO_CLASS.keys()):
             raise SDXMatchValueError("%s not in SDXMATCH_TO_CLASS: %s" %
-                                     (name, SDXMATCH_TO_CLASS.keys()))
+                                     (name, list(SDXMATCH_TO_CLASS.keys())))
         return SDXMATCH_TO_CLASS[name]
                                 
     

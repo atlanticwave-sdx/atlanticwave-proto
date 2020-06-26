@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AlanticWave/SDX Project
 
 
 # Unit tests for shared.EdgePortLCRule
 
+from builtins import str
 import unittest
 from shared.EdgePortLCRule import *
 class BasicLCRuleTest(unittest.TestCase):

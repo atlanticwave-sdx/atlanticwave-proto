@@ -1,10 +1,12 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 # Unit tests for the SDXController class
 
+from builtins import object
 import unittest
 import threading
 import networkx as nx
@@ -101,7 +103,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = SDXController(False, no_loop_options)
         secondManager = SDXController()
 
-        self.failUnless(firstManager is secondManager)
+        self.assert(firstManager is secondManager)
         del firstManager
         del secondManager
 

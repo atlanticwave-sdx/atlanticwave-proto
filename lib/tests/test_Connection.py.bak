@@ -1,12 +1,15 @@
+from __future__ import print_function
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Unit tests for lib.Connection module.
 
+from future import standard_library
+standard_library.install_aliases()
 import unittest
 import socket
 import threading
-import cPickle as pickle
+import pickle as pickle
 from time import sleep
 from lib.Connection import *
 
@@ -36,11 +39,11 @@ class InitTest(unittest.TestCase):
         port = 5555
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         cxn = Connection(ip, port, sock)
-        self.failUnlessEqual(cxn.get_address(), "127.0.0.1")
-        self.failUnlessEqual(cxn.get_port(), 5555)
-        self.failUnlessEqual(cxn.get_socket(), sock)
-        print cxn.__repr__()
-        print cxn
+        self.assertEqual(cxn.get_address(), "127.0.0.1")
+        self.assertEqual(cxn.get_port(), 5555)
+        self.assertEqual(cxn.get_socket(), sock)
+        print(cxn.__repr__())
+        print(cxn)
                              
 
 
@@ -79,7 +82,7 @@ class SendTest(unittest.TestCase):
             while True:
                 total_len = 0
                 total_data = []
-                size = sys.maxint
+                size = sys.maxsize
                 size_data = ''
                 sock_data = ''
                 recv_size = 8192
@@ -115,7 +118,7 @@ class SendTest(unittest.TestCase):
     def test_send(self):
         self.SendingSocket.send(self.object_to_send)
         sleep(0.25 )  # Rather than messing about with locks.
-        self.failUnlessEqual(self.object_received, self.object_to_send)
+        self.assertEqual(self.object_received, self.object_to_send)
 
 
 class RecvBlockingTest(unittest.TestCase):
@@ -151,7 +154,7 @@ class RecvBlockingTest(unittest.TestCase):
     def test_blocking_receive(self):
         data = self.ReceivingConnection.recv()
         self.ReceivingConnection.close()
-        self.failUnlessEqual(data, self.object_to_send)
+        self.assertEqual(data, self.object_to_send)
 
 
 class RecvNonBlockingTest(unittest.TestCase):
@@ -189,7 +192,7 @@ class RecvNonBlockingTest(unittest.TestCase):
         self.ReceivingConnection.register_receive_callback(self.receiving_callback)
         self.ReceivingConnection.start_receive_thread()
         sleep(0.25) # Rather than messing about with locks.
-        self.failUnlessEqual(self.object_received, self.object_to_send)
+        self.assertEqual(self.object_received, self.object_to_send)
 
     def receiving_callback(self, data):
         self.object_received = data
@@ -236,10 +239,10 @@ class ValidSelectTest(unittest.TestCase):
 
         readable, writable, exceptional = select(rlist, wlist, xlist, 2.0)
 
-        self.failIf(readable == [])
+        self.assertFalse(readable == [])
 
         self.object_received=cxn.recv()
-        self.failUnlessEqual(self.object_received, self.object_to_send)
+        self.assertEqual(self.object_received, self.object_to_send)
 
 class invalidSelectTest(unittest.TestCase):
     def test_invalid_select_init1(self):

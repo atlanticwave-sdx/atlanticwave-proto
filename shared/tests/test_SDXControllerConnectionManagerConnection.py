@@ -1,12 +1,16 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Unit tests for shared.SDXControllerConnectionManagerConnection module.
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import unittest
 import socket
 import threading
-import cPickle as pickle
+import pickle as pickle
 from time import sleep
 from shared.SDXControllerConnectionManagerConnection import *
 from lib.Connection import select as cxnselect
@@ -53,87 +57,87 @@ class SDXMessageInitTest(unittest.TestCase):
         msg = SDXMessageHeartbeatRequest()
         json_msg = {'HBREQ':{}}
         msg2 = SDXMessageHeartbeatRequest(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_HeartbeatResponse_init(self):
         msg = SDXMessageHeartbeatResponse()
         json_msg = {'HBRESP':{}}
         msg2 = SDXMessageHeartbeatResponse(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_CapabilitiesRequest_init(self):
         msg = SDXMessageCapabilitiesRequest()
         json_msg = {'CAPREQ':{}}
         msg2 = SDXMessageCapabilitiesRequest(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_CapabilitiesResponse_init(self):
         msg = SDXMessageCapabilitiesResponse('data')
         json_msg = {'CAPRESP':{'capabilities':'data'}}
         msg2 = SDXMessageCapabilitiesResponse(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_InitialRuleCount_init(self):
         msg = SDXMessageInitialRuleCount(17)
         json_msg = {'INITRC':{'initial_rule_count':17}}
         msg2 = SDXMessageInitialRuleCount(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_InitialRuleRequest_init(self):
         msg = SDXMessageInitialRuleRequest(12)
         json_msg = {'INITRREQ':{'rules_to_go':12}}
         msg2 = SDXMessageInitialRuleRequest(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_InitialRulesComplete_init(self):
         msg = SDXMessageInitialRulesComplete()
         json_msg = {'INITCOMP':{}}
         msg2 = SDXMessageInitialRulesComplete(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_TransitionToMainPhase_init(self):
         msg = SDXMessageTransitionToMainPhase()
         json_msg = {'TRANSMP':{}}
         msg2 = SDXMessageTransitionToMainPhase(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_InstallRule_init(self):
         msg = SDXMessageInstallRule("jibberish!", 3)
         json_msg = {'INSTALL':{'rule':"jibberish!", 'switch_id':3}}
         msg2 = SDXMessageInstallRule(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
         
     def test_InstallRuleComplete_init(self):
         msg = SDXMessageInstallRuleComplete(33)
         json_msg = {'INSTCOMP':{'cookie':33}}
         msg2 = SDXMessageInstallRuleComplete(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_InstallRuleFailure_init(self):
         msg = SDXMessageInstallRuleFailure(33,"some error condition")
         json_msg = {'INSTFAIL':{'cookie':33,
                                 'failure_reason':"some error condition"}}
         msg2 = SDXMessageInstallRuleFailure(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_RemoveRule_init(self):
         msg = SDXMessageRemoveRule(4321, 3)
         json_msg = {'REMOVE':{'cookie':4321, 'switch_id':3}}
         msg2 = SDXMessageRemoveRule(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
         
     def test_RemoveRuleComplete_init(self):
         msg = SDXMessageRemoveRuleComplete(33)
         json_msg = {'RMCOMP':{'cookie':33}}
         msg2 = SDXMessageRemoveRuleComplete(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_RemoveRuleFailure_init(self):
         msg = SDXMessageRemoveRuleFailure(33,"some error condition")
         json_msg = {'RMFAIL':{'cookie':33,
                               'failure_reason':"some error condition"}}
         msg2 = SDXMessageRemoveRuleFailure(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_UnknownSource_init(self):
         msg = SDXMessageUnknownSource("11:22:33:44:55:66", 3, "switch-a")
@@ -141,14 +145,14 @@ class SDXMessageInitTest(unittest.TestCase):
                                'port':3,
                                'switch':"switch-a"}}
         msg2 = SDXMessageUnknownSource(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
     def test_SwitchChangeCallback_init(self):
         msg = SDXMessageSwitchChangeCallback(1234,'OPAQUEDATA!')
         json_msg = {'CALLBACK':{'cookie':1234,
                                 'data':"OPAQUEDATA!"}}
         msg2 = SDXMessageSwitchChangeCallback(json_msg=json_msg)
-        self.failUnlessEqual(msg, msg2)
+        self.assertEqual(msg, msg2)
 
 
 class SDXConnectionEstablishmentTest(unittest.TestCase):
@@ -329,8 +333,8 @@ class SDXConnectionHeartbeatTest(unittest.TestCase):
                 
     def test_heartbeat(self):
         # Confirm that connections are established, get current heartbeat counts
-        self.failUnlessEqual(self.ClientCxn.get_state(),  "MAIN_PHASE")
-        self.failUnlessEqual(self.ServerCxn.get_state(),  "MAIN_PHASE")
+        self.assertEqual(self.ClientCxn.get_state(),  "MAIN_PHASE")
+        self.assertEqual(self.ServerCxn.get_state(),  "MAIN_PHASE")
         init_client_req_count = self.ClientCxn._heartbeat_request_sent
         init_client_resp_count = self.ClientCxn._heartbeat_response_sent
         init_server_req_count = self.ServerCxn._heartbeat_request_sent

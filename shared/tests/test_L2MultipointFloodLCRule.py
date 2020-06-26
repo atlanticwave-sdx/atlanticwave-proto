@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AlanticWave/SDX Project
 
 
 # Unit tests for shared.L2MultipointFloodLCRule
 
+from builtins import str
 import unittest
 from shared.L2MultipointFloodLCRule import *
 
@@ -38,26 +40,26 @@ class BasicLCRuleTest(unittest.TestCase):
         L2MultipointFloodLCRule(1,[1,2,3],1000)
 
         # flooding_port
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointFloodLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointFloodLCRule,
                               1,
                               ['a','b','c'], # Must be a list of ints or None
                               1000)
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointFloodLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointFloodLCRule,
                               1,
                               2, # Must be a list of ints or None
                               1000)
         
         # intermediate_vlan - must be None or an int.
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointFloodLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointFloodLCRule,
                               1,[1,2,3],
                               'a') # Must be an int 
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointFloodLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointFloodLCRule,
                               1,[1,2,3],
                               None) # Must be an int
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointFloodLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointFloodLCRule,
                               1,[1,2,3],
                               (1,2)) # Must be an int 
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointFloodLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointFloodLCRule,
                               1,[1,2,3],
                               [1]) # Must be an int 
 

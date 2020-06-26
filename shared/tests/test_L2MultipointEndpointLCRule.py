@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AlanticWave/SDX Project
 
 
 # Unit tests for shared.L2MultipointEndpointLCRule
 
+from builtins import str
 import unittest
 from shared.L2MultipointEndpointLCRule import *
 
@@ -89,58 +91,58 @@ class BasicLCRuleTest(unittest.TestCase):
                                             1000, None)
 
         # flooding_port
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,
                               ['a','b','c'], # Must be a list of ints or None
                               [(4,100),(5,200)],1000, None)
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,
                               2, # Must be a list of ints or None
                               [(4,100),(5,200)],1000, None)
         
         # endpoint_ports_and_vlans - list of tuples, cannot be None
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],
                               [4,100,5,200], # Must be list of tuples
                               1000, None)
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],
                               5, # Must be list of tuples
                               1000, None)
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],
                               (4,100), # Must be list of tuples
                               1000, None)
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],
                               None, # Must be list of tuples
                               1000, None)
 
         # intermediate_vlan - must be None or an int.
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],[(4,100),(5,200)],
                               [1000], # Must be an int or None
                               None)
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],[(4,100),(5,200)],
                               'a', # Must be an int or None
                               None)
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],[(4,100),(5,200)],
                               (1,2), # Must be an int or None
                               None)
 
         # Bandwidth
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],[(4,100),(5,200)],1000,
                               1.1) # Must be an int or None
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],[(4,100),(5,200)],1000,
                               'a') # Must be an int or None
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],[(4,100),(5,200)],1000,
                               (1,2)) # Must be an int or None
-        self.failUnlessRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
+        self.assertRaises(LCRuleTypeError, L2MultipointEndpointLCRule,
                               1,[1,2,3],[(4,100),(5,200)],1000,
                               [1,2]) # Must be an int or None
 

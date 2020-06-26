@@ -1,10 +1,16 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
+from builtins import object
 from lib.Connection import Connection
-import cPickle as pickle
+import pickle as pickle
 import struct
 import threading
 import socket
@@ -68,13 +74,13 @@ class SDXMessage(object):
         return json_msg
 
     def parse_json(self, json_msg):
-        if self.name not in json_msg.keys():
+        if self.name not in list(json_msg.keys()):
             raise SDXMessageValueError("%s is not in %s: %s" % (self.name,
                                                 self.__class__.__name__,
                                                 json_msg))
 
         if json_msg[self.name] != None:
-            for entry in json_msg[self.name].keys():
+            for entry in list(json_msg[self.name].keys()):
                 if entry not in self.data_json_name:
                     raise SDXMessageValueError("%s is not in %s: %s" % (entry,
                                                 self.data_json_name,
@@ -570,9 +576,9 @@ class SDXControllerConnection(Connection):
             self.msg_ack = msg_num
 
             # Make the correct SDXMessage out of it.
-            if len(data.keys()) != 1:
-                raise SDXMessageValueError("There were multiple keys in the received data: %s" % data.keys())
-            msgtype = data.keys()[0]
+            if len(list(data.keys())) != 1:
+                raise SDXMessageValueError("There were multiple keys in the received data: %s" % list(data.keys()))
+            msgtype = list(data.keys())[0]
             msg = SDX_MESSAGE_NAME_TO_CLASS[msgtype](json_msg=data)
 
             # These are handy logs when needing to look at *everything*

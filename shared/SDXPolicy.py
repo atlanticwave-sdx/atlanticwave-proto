@@ -1,9 +1,11 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import str
 from .UserPolicy import *
 from datetime import datetime
 from shared.constants import rfc3339format
@@ -90,12 +92,12 @@ class SDXPolicy(UserPolicy):
                 if type(match_entry) != dict:
                     raise UserPolicyTypeError("match is not a list %s: %s" %
                                               (type(match_entry), match_entry))
-                if len(match_entry.keys()) != 1:
+                if len(list(match_entry.keys())) != 1:
                     raise UserPolicyValueError("match has more than one key %s: %s : %s" %
-                                               (len(match_entry.keys()),
-                                                match_entry.keys(),
+                                               (len(list(match_entry.keys())),
+                                                list(match_entry.keys()),
                                                 match_entry))
-                m = match_entry.keys()[0]
+                m = list(match_entry.keys())[0]
                 v = match_entry[m]
 
                 # Check to confirm that it is a valid Match type
@@ -115,12 +117,12 @@ class SDXPolicy(UserPolicy):
                     raise UserPolicyTypeError("action is not a list %s: %s" %
                                               (type(action_entry),
                                                action_entry))
-                if len(action_entry.keys()) != 1:
+                if len(list(action_entry.keys())) != 1:
                     raise UserPolicyValueError("action has more than one key %s: %s : %s" %
-                                               (len(action_entry.keys()),
-                                                action_entry.keys(),
+                                               (len(list(action_entry.keys())),
+                                                list(action_entry.keys()),
                                                 action_entry))
-                a = action_entry.keys()[0]
+                a = list(action_entry.keys())[0]
                 v = action_entry[a]
 
                 # Check to confirm that it is a valid action type
@@ -149,7 +151,7 @@ class SDXPolicy(UserPolicy):
         jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
+        if jsonstring not in list(json_rule.keys()):
             raise UserPolicyValueError("%s value %s not in entry:\n    %s" %
                                        ('rules', jsonstring, json_rule))
         
@@ -162,7 +164,7 @@ class SDXPolicy(UserPolicy):
         actions_json = json_rule[jsonstring]['actions']
 
         for match_entry in json_rule[jsonstring]['matches']:
-            m = match_entry.keys()[0]
+            m = list(match_entry.keys())[0]
             v = match_entry[m]
 
             # This is described in check_syntax()
@@ -170,7 +172,7 @@ class SDXPolicy(UserPolicy):
             self.matches.append(match)
 
         for action_entry in actions_json:
-            a = action_entry.keys()[0]
+            a = list(action_entry.keys())[0]
             v = action_entry[a]
 
             # Same magic as above

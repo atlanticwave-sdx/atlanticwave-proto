@@ -1,7 +1,9 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
+from builtins import object
 class UserPolicyError(Exception):
     pass
 

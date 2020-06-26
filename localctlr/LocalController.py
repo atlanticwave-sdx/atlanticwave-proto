@@ -1,9 +1,17 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import unicode_literals
 # Copyrightg 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import hex
+from builtins import range
+from past.utils import old_div
 import logging
 import threading
 import sys
@@ -13,8 +21,8 @@ import os
 import re
 import atexit
 import traceback
-import cPickle as pickle
-from Queue import Queue, Empty
+import pickle as pickle
+from queue import Queue, Empty
 from time import sleep
 
 from lib.AtlanticWaveModule import AtlanticWaveModule
@@ -164,7 +172,7 @@ class LocalController(AtlanticWaveModule):
                 self.start_sdx_controller_connection() #Restart!
 
             if len(rlist) == 0:
-                sleep(timeout/2)
+                sleep(old_div(timeout,2))
                 continue
 
             try:
@@ -747,14 +755,14 @@ class LocalController(AtlanticWaveModule):
                                    % (l2mp_bw_in_port, l2mp_bw_out_port))
 
                 key='corsabridge'
-                if key not in internal_config.keys():
+                if key not in list(internal_config.keys()):
                     self.logger.debug("corsabridge is not present in the internal_config in %s" %
                               switch_id)
                     return
                 bridge = internal_config['corsabridge']
 
                 key='corsaratelimitbridgel2mp'
-                if key not in internal_config.keys():
+                if key not in list(internal_config.keys()):
                     self.logger.debug("corsabridge is not present in the internal_config in %s" %
                               switch_id)
                     return

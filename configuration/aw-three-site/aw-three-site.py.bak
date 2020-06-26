@@ -1,3 +1,4 @@
+from __future__ import print_function
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.link import TCLink
@@ -123,17 +124,17 @@ def TwoSite():
                                 ip='127.0.0.1', port=6653)
     
     net.build()
-    print "net.build"
+    print("net.build")
     
     atlswitch.start([atlctlr])
     miaswitch.start([miactlr])
     gruswitch.start([gructlr])
     #net.start()
-    print "net.start"
+    print("net.start")
     CLI(net)
-    print "CLI(net)"
+    print("CLI(net)")
     net.stop()
-    print "net.stop"
+    print("net.stop")
 
 
 if __name__ == '__main__':

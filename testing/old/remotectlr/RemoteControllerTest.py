@@ -74,17 +74,17 @@ class RemoteControllerTest(unittest.TestCase):
 
         # Installation tests
         for line, good_line in zip(lines[1:], good_lines):
-            self.failUnlessEqual(line.split(',')[6].strip(), good_line['test6'])
-            self.failUnlessEqual(line.split(',')[7].strip(), good_line['test7'])
+            self.assertEqual(line.split(',')[6].strip(), good_line['test6'])
+            self.assertEqual(line.split(',')[7].strip(), good_line['test7'])
             if 'test8' in good_line.keys():
-                self.failUnlessEqual(line.split(',')[8].strip(), good_line['test8'])
+                self.assertEqual(line.split(',')[8].strip(), good_line['test8'])
             if 'test9' in good_line.keys():
-                self.failUnlessEqual(line.split(',')[9].strip(), good_line['test9'])
+                self.assertEqual(line.split(',')[9].strip(), good_line['test9'])
             if 'test10' in good_line.keys():
-                self.failUnlessEqual(line.split(',')[10].strip(), good_line['test10'])
+                self.assertEqual(line.split(',')[10].strip(), good_line['test10'])
 
         # Removal test
-        self.failUnlessEqual(rmlines[1].strip(), "")
+        self.assertEqual(rmlines[1].strip(), "")
 
     def run_test(self, testnum):
         test = self.tests[testnum]

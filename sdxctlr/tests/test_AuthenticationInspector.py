@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -15,7 +16,7 @@ class SingletonTest(unittest.TestCase):
     def test_singleton(self):
         firstInspector = AuthenticationInspector()
         secondInspector = AuthenticationInspector()
-        self.failUnless(firstInspector is secondInspector)
+        self.assert(firstInspector is secondInspector)
 
 class AddingUsers(unittest.TestCase):
     def test_add_single_user(self):
@@ -24,7 +25,7 @@ class AddingUsers(unittest.TestCase):
         
         ai = AuthenticationInspector()
         ai.add_user(user, credentials)
-        self.failUnless(ai.is_authenticated(user, credentials))
+        self.assert(ai.is_authenticated(user, credentials))
 
     def test_add_many_users(self):
         user1 = "natasha"
@@ -35,8 +36,8 @@ class AddingUsers(unittest.TestCase):
                     (user2, credentials2))
         ai = AuthenticationInspector()
         ai.add_users(userlist)
-        self.failUnless(ai.is_authenticated(user1, credentials1))
-        self.failUnless(ai.is_authenticated(user2, credentials2))
+        self.assert(ai.is_authenticated(user1, credentials1))
+        self.assert(ai.is_authenticated(user2, credentials2))
 
 
     def test_overwrite_user(self):
@@ -46,12 +47,12 @@ class AddingUsers(unittest.TestCase):
 
         ai = AuthenticationInspector()
         ai.add_user(user, credentials1)
-        self.failUnless(ai.is_authenticated(user, credentials1))
+        self.assert(ai.is_authenticated(user, credentials1))
 
         # Change password
         ai.add_user(user, credentials2)
-        self.failUnless(ai.is_authenticated(user, credentials2))
-        self.failUnlessEqual(ai.is_authenticated(user, credentials1),
+        self.assert(ai.is_authenticated(user, credentials2))
+        self.assertEqual(ai.is_authenticated(user, credentials1),
                              False)
 
 class NonUserTest(unittest.TestCase):
@@ -59,7 +60,7 @@ class NonUserTest(unittest.TestCase):
         user = "badname"
         credentials = "badnamepw"
         ai = AuthenticationInspector()
-        self.failUnlessEqual(ai.is_authenticated(user, credentials),
+        self.assertEqual(ai.is_authenticated(user, credentials),
                              False)
 
     def test_bad_password(self):
@@ -69,8 +70,8 @@ class NonUserTest(unittest.TestCase):
 
         ai = AuthenticationInspector()
         ai.add_user(user, credentials)
-        self.failUnless(ai.is_authenticated(user, credentials))
-        self.failUnlessEqual(ai.is_authenticated(user, badcredentials),
+        self.assert(ai.is_authenticated(user, credentials))
+        self.assertEqual(ai.is_authenticated(user, badcredentials),
                              False)
 
 

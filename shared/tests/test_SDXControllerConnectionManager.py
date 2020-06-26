@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -41,7 +42,7 @@ class InitTest(unittest.TestCase):
         firstManager = SDXControllerConnectionManager(dummy_log)
         secondManager = SDXControllerConnectionManager(dummy_log)
 
-        self.failUnless(firstManager is secondManager)
+        self.assert(firstManager is secondManager)
 
 class OpenListeningPortTest(unittest.TestCase):
     def setUp(self):
@@ -96,8 +97,8 @@ class OpenListeningPortTest(unittest.TestCase):
         
 
         sleep(0.1) # Rather than messing about with locks
-        self.failUnlessEqual(self.clientstate, "MAIN_PHASE")
-        self.failUnlessEqual(self.serverstate, "MAIN_PHASE")
+        self.assertEqual(self.clientstate, "MAIN_PHASE")
+        self.assertEqual(self.serverstate, "MAIN_PHASE")
 
 class OpenSendPortTest(unittest.TestCase):
     def setUp(self):
@@ -154,8 +155,8 @@ class OpenSendPortTest(unittest.TestCase):
         self.SendThread.start()
 
         sleep(0.1) # Rather than messing about with locks
-        self.failUnlessEqual(self.clientstate, "MAIN_PHASE")
-        self.failUnlessEqual(self.serverstate, "MAIN_PHASE")
+        self.assertEqual(self.clientstate, "MAIN_PHASE")
+        self.assertEqual(self.serverstate, "MAIN_PHASE")
         
         
 

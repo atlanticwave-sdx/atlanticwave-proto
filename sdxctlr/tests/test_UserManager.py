@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -22,7 +23,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = UserManager(db, CONFIG_FILE)
         secondManager = UserManager(db, CONFIG_FILE)
 
-        self.failUnless(firstManager is secondManager)
+        self.assert(firstManager is secondManager)
 
 class VerifyParticipantsTest(unittest.TestCase):
     @mock.patch('sdxctlr.UserManager.AuthorizationInspector',
@@ -37,10 +38,10 @@ class VerifyParticipantsTest(unittest.TestCase):
         permitted_actions = ['tbd']
 
         part = man.get_user(username)
-        self.failUnless(part != None)
-        self.failUnless(part['username'] == username)
-        self.failUnless(part['credentials'] == credentials)
-        self.failUnless(part['permitted_actions'] == permitted_actions)
+        self.assert(part != None)
+        self.assert(part['username'] == username)
+        self.assert(part['credentials'] == credentials)
+        self.assert(part['permitted_actions'] == permitted_actions)
 
     @mock.patch('sdxctlr.UserManager.AuthorizationInspector',
                 autospec=True)

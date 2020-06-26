@@ -1,13 +1,19 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
+from builtins import object
 import logging
 import threading
 import dataset
-import cPickle as pickle
+import pickle as pickle
 import requests
 import json
 from time import sleep
@@ -447,7 +453,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # First, wait till we have at least one datapath.
         self.logger.info("Looking for datapath")
-        while len(self.datapaths.keys()) == 0:
+        while len(list(self.datapaths.keys())) == 0:
             self.logger.info("Waiting " + str(self.datapaths))
             sleep(1)
 
@@ -461,9 +467,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # FIXME - This is static: only installing rules right now.
             event_type, event_data = self.inter_cm_cxn.recv_cmd()
             (switch_id, event) = event_data
-            if switch_id not in self.datapaths.keys():
+            if switch_id not in list(self.datapaths.keys()):
                 self.logger.warning("switch_id %s does not match known switches: %s" %
-                                    (switch_id, self.datapaths.keys()))
+                                    (switch_id, list(self.datapaths.keys())))
 
                 # FIXME - Need to update this for sending errors back
                 continue
@@ -535,13 +541,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
             return
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
         else:
             raise ValueError("DPID %s does not have managementvlan" %
                              datapath.id)
             return
-        if 'managementvlanports' in internal_config.keys():
+        if 'managementvlanports' in list(internal_config.keys()):
             managementvlanports = internal_config['managementvlanports']
         else:
             raise ValueError("DPID %s does not have managementvlanports" %
@@ -587,11 +593,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -624,12 +630,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
-        if 'managementvlanports' in internal_config.keys():
+        if 'managementvlanports' in list(internal_config.keys()):
             managementvlanports = internal_config['managementvlanports']
 
-        if 'managementvlanbackupports' in internal_config.keys():
+        if 'managementvlanbackupports' in list(internal_config.keys()):
             managementvlanbackupports = internal_config['managementvlanbackupports']
         else:
             self.logger.debug("No backup port provided")
@@ -637,11 +643,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -661,11 +667,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Add backup management vlan ports
         results = []
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             managementvlanbackupports = internal_config['managementvlanbackupports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -699,12 +705,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
-        if 'managementvlanports' in internal_config.keys():
+        if 'managementvlanports' in list(internal_config.keys()):
             managementvlanports = internal_config['managementvlanports']
 
-        if 'sdxmanagementvlanbackupports' in internal_config.keys():
+        if 'sdxmanagementvlanbackupports' in list(internal_config.keys()):
             sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
         else:
             self.logger.debug("No SDX management VLAN backup port provided")
@@ -712,11 +718,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -736,11 +742,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Add backup management vlan ports
         results = []
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -1445,7 +1451,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             args[m.get_name()] = m.get()
             # Add the prereqs to the list too
             for prereq in m.get_prereqs():
-                if prereq.get_name() in args.keys():
+                if prereq.get_name() in list(args.keys()):
                     pass
                 args[prereq.get_name()] = prereq.get()
                 # FIXME: If there's a prereq in conflict (i.e., user specified

@@ -1,12 +1,19 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import hex
+from past.utils import old_div
 import threading
 import sys
-from Queue import Queue, Empty
+from queue import Queue, Empty
 
 from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
@@ -148,7 +155,7 @@ class SDXController(AtlanticWaveModule):
 
     def _clean_up_oustanding_cxn(self, name):
         # Check to see if there's an existing connection. If there is, close it.
-        if name in self.connections.keys():
+        if name in list(self.connections.keys()):
             old_cxn = self.connections[name]
             self.logger.warning("Closing old connection for %s : %s" %
                                 (name, old_cxn))
@@ -248,7 +255,7 @@ class SDXController(AtlanticWaveModule):
 
     def _main_loop(self):
         # Set up the select structures
-        rlist = self.connections.values()
+        rlist = list(self.connections.values())
         wlist = []
         xlist = rlist
         timeout = 2.0
@@ -296,7 +303,7 @@ class SDXController(AtlanticWaveModule):
                 # This can happen if, say, there's a disconnection that hasn't
                 # cleaned up or occured *during* the timeout period. This is due
                 # to select failing.
-                sleep(timeout/2)
+                sleep(old_div(timeout,2))
                 continue
 
             # Loop through readable

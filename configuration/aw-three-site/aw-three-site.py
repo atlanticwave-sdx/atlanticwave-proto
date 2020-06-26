@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.link import TCLink

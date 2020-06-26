@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -24,29 +25,29 @@ class BasicFieldTest(unittest.TestCase):
     def test_equality(self):
         a_field = LCField('field')
         b_field = LCField('field')
-        self.failUnlessEqual(a_field, b_field)
+        self.assertEqual(a_field, b_field)
 
         c_field = LCField('field', 1)
         d_field = LCField('field', 1)
-        self.failUnlessEqual(c_field, d_field)
+        self.assertEqual(c_field, d_field)
 
     def test_get(self):
         a_field = LCField('field', 1)
-        self.failUnlessEqual(a_field.get(), 1)
+        self.assertEqual(a_field.get(), 1)
 
         b_field = LCField('field')
-        self.failUnlessEqual(b_field.get(), None)
+        self.assertEqual(b_field.get(), None)
         
     def test_set(self):
         a_field = LCField('field')
         b_field = LCField('field')
-        self.failUnlessEqual(a_field, b_field)
+        self.assertEqual(a_field, b_field)
 
         a_field.set(3)
         b_field.set(3)
-        self.failUnlessEqual(a_field, b_field)
-        self.failUnlessEqual(a_field.get(), 3)
-        self.failUnlessEqual(a_field.get(), 3)
+        self.assertEqual(a_field, b_field)
+        self.assertEqual(a_field.get(), 3)
+        self.assertEqual(a_field.get(), 3)
         
 
     def test_validity(self):
@@ -66,7 +67,7 @@ class NumberFieldTest(unittest.TestCase):
         num_field2 = number_field('field', 1, 100, others=[102])
         num_field3 = number_field('field', 1, 100, others=[102,103])
 
-        self.failUnlessRaises(TypeError, number_field, 'field', 1, 100, value="a")
+        self.assertRaises(TypeError, number_field, 'field', 1, 100, value="a")
     
     def test_empty_init(self):
         try:
@@ -113,9 +114,9 @@ class NumberFieldTest(unittest.TestCase):
 #        print num_field4
         
 
-        self.failUnlessRaises(TypeError, num_field4.check_validity)
-        self.failUnlessRaises(ValueError, num_field.check_validity)
-        self.failUnlessRaises(ValueError, num_field2.check_validity)
+        self.assertRaises(TypeError, num_field4.check_validity)
+        self.assertRaises(ValueError, num_field.check_validity)
+        self.assertRaises(ValueError, num_field2.check_validity)
         num_field3.check_validity()
     
 

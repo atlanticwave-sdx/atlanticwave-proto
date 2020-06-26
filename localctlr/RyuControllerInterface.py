@@ -1,8 +1,11 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import str
+from builtins import hex
 from .ControllerInterface import *
 from .InterRyuControllerConnectionManager import *
 from ryu.ofproto import ofproto_v1_3
