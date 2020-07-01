@@ -201,7 +201,7 @@ class RyuControllerFullTests(unittest.TestCase):
 
         # Removal
         for line in rmlines:
-            self.assert("priority=100" not in line)
+            self.assertTrue("priority=100" not in line)
 
     def test_rule_installation(self):
         self.logger.warning("BEGIN %s" % (self.id()))

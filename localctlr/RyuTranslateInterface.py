@@ -1100,80 +1100,81 @@ class RyuTranslateInterface(app_manager.RyuApp):
             self.logger.debug("L2MultipointEndpointLCRule: Corsa Case L2MULTIPOINTCORSABWDISABLED %s " % (L2MULTIPOINTCORSABWDISABLED))
 
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-		    self.logger.debug("L2MultipointEndpointLCRule: port: %s -  vlan: %s" % (port, vlan))
-		    self.logger.debug("L2MultipointEndpointLCRule: IN_PORT: %s -  VLAN_VID: %s" % (IN_PORT(port), VLAN_VID(vlan)))
-
-		    bridge = internal_config['corsabridge']
-		    bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
-		    bandwidth = mperule.get_bandwidth()
-
-		    port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                self.logger.debug("L2MultipointEndpointLCRule: port: %s -  vlan: %s" % (port, vlan))
+                self.logger.debug("L2MultipointEndpointLCRule: IN_PORT: %s -  VLAN_VID: %s" % (IN_PORT(port), VLAN_VID(vlan)))
+                bridge = internal_config['corsabridge']
+                bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
+                bandwidth = mperule.get_bandwidth()
+                
+                port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
 				       bridge + "/tunnels")
-
-		    port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                       
+                port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
 						      bridge_ratelimit_l2mp + "/tunnels")
-		    valid_responses = [201]
+                              
+                valid_responses = [201]
+                
+                l2mp_bw_in_port = vlan
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
-		    l2mp_bw_in_port = vlan
-		    l2mp_bw_out_port = int(intermediate_vlan) + 10000
-
-		    self.logger.debug("L2MultipointEndpointLCRule: l2mp_bw_in_port: %s -  l2mp_bw_out_port: %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
+                self.logger.debug("L2MultipointEndpointLCRule: l2mp_bw_in_port: %s -  l2mp_bw_out_port: %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
 
 
-		    # Create tunnels and ofports on corsabridge
-		    # 1422  --> 5
-		    # 10001 --> 6
+		        # Create tunnels and ofports on corsabridge
+		        # 1422  --> 5
+		        # 10001 --> 6
 
-		    request_url = port_url_bridge
+                request_url = port_url_bridge
 
-		    jsonval = {'ofport': l2mp_bw_out_port,
+                jsonval = {'ofport': l2mp_bw_out_port,
 				'port': internal_config['corsabwoutl2mp'],
 				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
-		    self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
-		    results.append(TranslatedCorsaRuleContainer("post",
-								 request_url,
-								 jsonval,
-								 internal_config['corsatoken'],
-								 valid_responses))
-
-		    jsonval = {'ofport': l2mp_bw_in_port,
+                
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
+    							 request_url,
+    							 jsonval,
+    							 internal_config['corsatoken'],
+    							 valid_responses))
+                                 
+                jsonval = {'ofport': l2mp_bw_in_port,
 				'port': internal_config['corsabwinl2mp'],
 				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
 
-		    self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
-		    results.append(TranslatedCorsaRuleContainer("post",
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
 								 internal_config['corsatoken'],
 								 valid_responses))
 
 
-		    # Create tunnels and ofports on corsaratelimitbridgel2mp (br19)
-		    # 1422  --> 7
-		    # 10001 --> 8
+		        # Create tunnels and ofports on corsaratelimitbridgel2mp (br19)
+		        # 1422  --> 7
+		        # 10001 --> 8
 	 
-		    request_url = port_url_bridge_ratelimit_l2mp
+                request_url = port_url_bridge_ratelimit_l2mp
 
-		    jsonval = {'ofport': l2mp_bw_in_port,
+                jsonval = {'ofport': l2mp_bw_in_port,
 				'port': internal_config['corsaratelimitportsl2mp'][0],
 				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
-		    self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
-		    results.append(TranslatedCorsaRuleContainer("post",
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
 								 internal_config['corsatoken'],
 								 valid_responses))
 
-		    jsonval = {'ofport': l2mp_bw_out_port,
+                jsonval = {'ofport': l2mp_bw_out_port,
 				'port': internal_config['corsaratelimitportsl2mp'][1],
 				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
 
-		    self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
-		    results.append(TranslatedCorsaRuleContainer("post",
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
 								 internal_config['corsatoken'],
@@ -1191,9 +1192,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             self.logger.debug("L2MultipointEndpointLCRule: ENDPOINT TABLE and LEARNING TABLE")
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-		#self.logger.debug("--- L2MultipointEndpointLCRule: port: %s - vlan: %s" % (port, vlan))
-		l2mp_bw_in_port = vlan
-		l2mp_bw_out_port = int(intermediate_vlan) + 10000
+		        #self.logger.debug("--- L2MultipointEndpointLCRule: port: %s - vlan: %s" % (port, vlan))
+                l2mp_bw_in_port = vlan
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
                 # Flow.1
                 matches = [IN_PORT(port), VLAN_VID(vlan)]
@@ -1240,16 +1241,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Flooding ports
 
             for port in flooding_ports:
-		self.logger.debug("L2MultipointEndpointLCRule -1- : port: %s " % (port))
+                self.logger.debug("L2MultipointEndpointLCRule -1- : port: %s " % (port))
                 # Flow.4
                 matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
                 actions = []
                 for outport in flooding_ports:
-		    self.logger.debug("L2MultipointEndpointLCRule -2- : outport: %s " % (outport))
+                    self.logger.debug("L2MultipointEndpointLCRule -2- : outport: %s " % (outport))
                     if outport != port:
                         actions.append(Forward(outport))
                 for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
-		    self.logger.debug("L2MultipointEndpointLCRule -3- : outport: %s " % (outport))
+                    self.logger.debug("L2MultipointEndpointLCRule -3- : outport: %s " % (outport))
                     if outport != port:
                         actions.append(SetField(VLAN_VID(vlan)))
                         actions.append(Forward(l2mp_bw_out_port))
@@ -1275,7 +1276,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
                 # Flow.8
-		l2mp_bw_out_port = int(intermediate_vlan) + 10000
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
                 matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
                 actions = []
@@ -1304,10 +1305,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # Endpoint ports
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-		self.logger.debug("L2MultipointEndpointLCRule -4- : port: %s " % (port))
+                self.logger.debug("L2MultipointEndpointLCRule -4- : port: %s " % (port))
 
-		l2mp_bw_in_port = vlan
-		l2mp_bw_out_port = int(intermediate_vlan) + 10000
+                l2mp_bw_in_port = vlan
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
  
                 # Flow.6
                 matches = [IN_PORT(l2mp_bw_in_port), VLAN_VID(vlan)]

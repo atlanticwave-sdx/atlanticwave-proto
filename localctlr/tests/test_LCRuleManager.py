@@ -31,7 +31,7 @@ class InitTest(unittest.TestCase):
         secondManager = LCRuleManager()
 
         print(">>>>>>>>>>>> %s" % (firstManager is secondManager))
-        self.assert(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
     def test_init_fields(self):
         self.logger.warning("BEGIN %s" % (self.id()))
