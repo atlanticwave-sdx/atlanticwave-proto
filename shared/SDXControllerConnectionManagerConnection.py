@@ -536,7 +536,7 @@ class SDXControllerConnection(Connection):
             
         try:
             sock_data = ''
-            meta_data = ''
+            meta_data = b''
             meta_tries = 0
             while (len(meta_data) < 12 and
                    meta_tries < 10):
@@ -561,7 +561,7 @@ class SDXControllerConnection(Connection):
                 recv_size = size - total_len
                 if recv_size > 524388:
                     recv_size = 524288
-            data_raw = ''.join(total_data)
+            data_raw = b"".join(total_data)
 
             # Unpickle!
             data = pickle.loads(data_raw)

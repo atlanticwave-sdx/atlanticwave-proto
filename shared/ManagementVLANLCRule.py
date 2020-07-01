@@ -100,4 +100,12 @@ class ManagementVLANLCRule(LCRule):
 
     def get_untagged_mgmt_vlan_ports(self):
         return self.untagged_mgmt_vlan_ports
+
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.get_switch_id() == other.get_switch_id() and
+                self.get_cookie() == other.get_cookie() and 
+                self.get_mgmt_vlan() == other.get_mgmt_vlan() and 
+                self.get_mgmt_vlan_ports() == other.get_mgmt_vlan_ports() and 
+                self.get_untagged_mgmt_vlan_ports() == other.get_untagged_mgmt_vlan_ports())
     

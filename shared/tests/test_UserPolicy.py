@@ -87,7 +87,7 @@ class ClassMethodsTest(unittest.TestCase):
 
     @mock.patch('shared.UserPolicy.UserPolicy._parse_json', autospec=True)
     def test_get_html_help(self, uppatch):
-        with mock.patch('__builtin__.open', self.filecontents):
+        with mock.patch('builtins.open', self.filecontents):
             self.assertEquals("firstline\nsecondline\nthirdline\nforthline\n",
                               UserPolicy.get_html_help())
     

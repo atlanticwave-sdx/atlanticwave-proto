@@ -61,3 +61,10 @@ class MatchActionLCRule(LCRule):
 
     def get_ingress(self):
         return self.ingress
+
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.get_switch_id() == other.get_switch_id() and
+                self.get_cookie() == other.get_cookie() and 
+                self.get_matches() == other.get_matches() and 
+                self.get_actions() == other.get_actions())

@@ -31,8 +31,9 @@ class PathResource(object):
 
     def __eq__(self, other):
         return (type(self) == type(other) and
+                self._name == other._name and
                 self.get_location() == other.get_location() and
-                self.get_value() == self.get_value())
+                self.get_value() == other.get_value())
     
     def get_location(self):
         return self.location

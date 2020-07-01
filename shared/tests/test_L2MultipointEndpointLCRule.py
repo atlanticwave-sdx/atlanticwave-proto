@@ -15,12 +15,12 @@ class BasicLCRuleTest(unittest.TestCase):
         lcrule1 = L2MultipointEndpointLCRule(1,[1,2,3],[(4,100),(5,200)],
                                             1000, None)
 
-        self.assertEquals(1, lcrule1.get_switch_id())
-        self.assertEquals([1,2,3], lcrule1.get_flooding_ports())
-        self.assertEquals([(4,100),(5,200)],
+        self.assertEqual(1, lcrule1.get_switch_id())
+        self.assertEqual([1,2,3], lcrule1.get_flooding_ports())
+        self.assertEqual([(4,100),(5,200)],
                           lcrule1.get_endpoint_ports_and_vlans())
-        self.assertEquals(1000, lcrule1.get_intermediate_vlan())
-        self.assertEquals(None, lcrule1.get_bandwidth())
+        self.assertEqual(1000, lcrule1.get_intermediate_vlan())
+        self.assertEqual(None, lcrule1.get_bandwidth())
         self.assertEqual("L2MultipointEndpointLCRule: switch 1, None:([1, 2, 3]), ([(4, 100), (5, 200)]), 1000, None",
                          str(lcrule1))
 
@@ -29,10 +29,10 @@ class BasicLCRuleTest(unittest.TestCase):
 
         self.assertEqual(1, lcrule2.get_switch_id())
         self.assertEqual([3], lcrule2.get_flooding_ports())
-        self.assertEquals([(4,100)],
+        self.assertEqual([(4,100)],
                           lcrule2.get_endpoint_ports_and_vlans())
-        self.assertEquals(1000, lcrule2.get_intermediate_vlan())
-        self.assertEquals(100000, lcrule2.get_bandwidth())
+        self.assertEqual(1000, lcrule2.get_intermediate_vlan())
+        self.assertEqual(100000, lcrule2.get_bandwidth())
         self.assertEqual("L2MultipointEndpointLCRule: switch 1, None:([3]), ([(4, 100)]), 1000, 100000",
                          str(lcrule2))
 
@@ -41,19 +41,19 @@ class BasicLCRuleTest(unittest.TestCase):
 
         self.assertEqual(1, lcrule3.get_switch_id())
         self.assertEqual([], lcrule3.get_flooding_ports())
-        self.assertEquals([(4,100),(5,200)],
+        self.assertEqual([(4,100),(5,200)],
                           lcrule3.get_endpoint_ports_and_vlans())
-        self.assertEquals(1000, lcrule3.get_intermediate_vlan())
-        self.assertEquals(100000, lcrule3.get_bandwidth())
+        self.assertEqual(1000, lcrule3.get_intermediate_vlan())
+        self.assertEqual(100000, lcrule3.get_bandwidth())
         self.assertEqual("L2MultipointEndpointLCRule: switch 1, None:([]), ([(4, 100), (5, 200)]), 1000, 100000",
                          str(lcrule3))
 
         self.assertEqual(1, lcrule3.get_switch_id())
         self.assertEqual([], lcrule3.get_flooding_ports())
-        self.assertEquals([(4,100),(5,200)],
+        self.assertEqual([(4,100),(5,200)],
                           lcrule3.get_endpoint_ports_and_vlans())
-        self.assertEquals(1000, lcrule3.get_intermediate_vlan())
-        self.assertEquals(100000, lcrule3.get_bandwidth())
+        self.assertEqual(1000, lcrule3.get_intermediate_vlan())
+        self.assertEqual(100000, lcrule3.get_bandwidth())
         self.assertEqual("L2MultipointEndpointLCRule: switch 1, None:([]), ([(4, 100), (5, 200)]), 1000, 100000",
                          str(lcrule3))
 

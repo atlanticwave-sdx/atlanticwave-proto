@@ -18,8 +18,8 @@ class BasicLCRuleTest(unittest.TestCase):
         self.assertEqual(1, lcrule1.get_switch_id())
         self.assertEqual('aa:bb:cc:dd:ee', lcrule1.get_dst_address())
         self.assertEqual(2, lcrule1.get_outport())
-        self.assertEquals(1000, lcrule1.get_intermediate_vlan())
-        self.assertEquals(100, lcrule1.get_out_vlan())
+        self.assertEqual(1000, lcrule1.get_intermediate_vlan())
+        self.assertEqual(100, lcrule1.get_out_vlan())
         self.assertEqual("L2MultipointLearnedDestinationLCRule: switch 1, None:aa:bb:cc:dd:ee:2",
                          str(lcrule1))
 

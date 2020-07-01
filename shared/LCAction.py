@@ -28,7 +28,7 @@ class LCAction(object):
         return self.__str__()
 
     def get(self):
-        return None
+        return self._name
 
     def __eq__(self, other):
         return (type(other) == type(self) and

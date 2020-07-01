@@ -42,7 +42,7 @@ class InitTest(unittest.TestCase):
         firstManager = SDXControllerConnectionManager(dummy_log)
         secondManager = SDXControllerConnectionManager(dummy_log)
 
-        self.assert(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
 class OpenListeningPortTest(unittest.TestCase):
     def setUp(self):

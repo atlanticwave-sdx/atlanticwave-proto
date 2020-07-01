@@ -16,7 +16,7 @@ class BasicLCRuleTest(unittest.TestCase):
 
         self.assertEqual(1, lcrule1.get_switch_id())
         self.assertEqual([1,2,3], lcrule1.get_flooding_ports())
-        self.assertEquals(1000, lcrule1.get_intermediate_vlan())
+        self.assertEqual(1000, lcrule1.get_intermediate_vlan())
         self.assertEqual("L2MultipointFloodLCRule: switch 1, None:([1, 2, 3]), 1000",
                          str(lcrule1))
 
