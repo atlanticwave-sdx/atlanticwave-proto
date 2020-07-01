@@ -19,7 +19,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = LocalControllerManager(manifest=CONFIG_FILE)
         secondManager = LocalControllerManager(manifest=CONFIG_FILE)
 
-        self.assert(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
 class VerifyLCTest(unittest.TestCase):
     
@@ -35,10 +35,10 @@ class VerifyLCTest(unittest.TestCase):
 
         part = man._get_controller(ctlrname)
         self.assertNotEqual(part, None)
-        self.assertEquals(part.shortname, ctlrname)
-        self.assertEquals(part.credentials, credentials)
-        self.assertEquals(part.lcip, lcip)
-        self.assertEquals(part.switchips, switchips)
+        self.assertEqual(part.shortname, ctlrname)
+        self.assertEqual(part.credentials, credentials)
+        self.assertEqual(part.lcip, lcip)
+        self.assertEqual(part.switchips, switchips)
                
         ctlrname = 'mia'
         credentials = "miapw"
@@ -47,10 +47,10 @@ class VerifyLCTest(unittest.TestCase):
 
         part = man._get_controller(ctlrname)
         self.assertNotEqual(part, None)
-        self.assertEquals(part.shortname, ctlrname)
-        self.assertEquals(part.credentials, credentials)
-        self.assertEquals(part.lcip, lcip)
-        self.assertEquals(part.switchips, switchips)
+        self.assertEqual(part.shortname, ctlrname)
+        self.assertEqual(part.credentials, credentials)
+        self.assertEqual(part.lcip, lcip)
+        self.assertEqual(part.switchips, switchips)
 
         ctlrname = 'gru'
         credentials = "grupw"
@@ -59,10 +59,10 @@ class VerifyLCTest(unittest.TestCase):
 
         part = man._get_controller(ctlrname)
         self.assertNotEqual(part, None)
-        self.assertEquals(part.shortname, ctlrname)
-        self.assertEquals(part.credentials, credentials)
-        self.assertEquals(part.lcip, lcip)
-        self.assertEquals(part.switchips, switchips)
+        self.assertEqual(part.shortname, ctlrname)
+        self.assertEqual(part.credentials, credentials)
+        self.assertEqual(part.lcip, lcip)
+        self.assertEqual(part.switchips, switchips)
 
     @mock.patch('sdxctlr.LocalControllerManager.AuthenticationInspector',
                 autospec=True)
@@ -70,7 +70,7 @@ class VerifyLCTest(unittest.TestCase):
         man = LocalControllerManager(manifest=CONFIG_FILE)
 
         ctlrname = "NOTREAL"
-        self.assert(man._get_controller(ctlrname) == None)
+        self.assertTrue(man._get_controller(ctlrname) == None)
 
         ctlrname = "nyc"
         credentials = "nycpw"
@@ -79,11 +79,11 @@ class VerifyLCTest(unittest.TestCase):
 
         man.add_controller(ctlrname, credentials, lcip, switchips)
         part = man._get_controller(ctlrname)
-        self.assert(part != None)
-        self.assert(part.shortname == ctlrname)
-        self.assert(part.credentials == credentials)
-        self.assert(part.lcip == lcip)
-        self.assert(part.switchips == switchips)
+        self.assertTrue(part != None)
+        self.assertTrue(part.shortname == ctlrname)
+        self.assertTrue(part.credentials == credentials)
+        self.assertTrue(part.lcip == lcip)
+        self.assertTrue(part.switchips == switchips)
 
         # Make sure the old ones are still there.
         ctlrname = 'atl'
@@ -93,10 +93,10 @@ class VerifyLCTest(unittest.TestCase):
 
         part = man._get_controller(ctlrname)
         self.assertNotEqual(part, None)
-        self.assertEquals(part.shortname, ctlrname)
-        self.assertEquals(part.credentials, credentials)
-        self.assertEquals(part.lcip, lcip)
-        self.assertEquals(part.switchips, switchips)
+        self.assertEqual(part.shortname, ctlrname)
+        self.assertEqual(part.credentials, credentials)
+        self.assertEqual(part.lcip, lcip)
+        self.assertEqual(part.switchips, switchips)
                
         ctlrname = 'mia'
         credentials = "miapw"
@@ -105,10 +105,10 @@ class VerifyLCTest(unittest.TestCase):
 
         part = man._get_controller(ctlrname)
         self.assertNotEqual(part, None)
-        self.assertEquals(part.shortname, ctlrname)
-        self.assertEquals(part.credentials, credentials)
-        self.assertEquals(part.lcip, lcip)
-        self.assertEquals(part.switchips, switchips)
+        self.assertEqual(part.shortname, ctlrname)
+        self.assertEqual(part.credentials, credentials)
+        self.assertEqual(part.lcip, lcip)
+        self.assertEqual(part.switchips, switchips)
 
         ctlrname = 'gru'
         credentials = "grupw"
@@ -117,10 +117,10 @@ class VerifyLCTest(unittest.TestCase):
 
         part = man._get_controller(ctlrname)
         self.assertNotEqual(part, None)
-        self.assertEquals(part.shortname, ctlrname)
-        self.assertEquals(part.credentials, credentials)
-        self.assertEquals(part.lcip, lcip)
-        self.assertEquals(part.switchips, switchips)
+        self.assertEqual(part.shortname, ctlrname)
+        self.assertEqual(part.credentials, credentials)
+        self.assertEqual(part.lcip, lcip)
+        self.assertEqual(part.switchips, switchips)
 
     @mock.patch('sdxctlr.LocalControllerManager.AuthenticationInspector',
                 autospec=True)

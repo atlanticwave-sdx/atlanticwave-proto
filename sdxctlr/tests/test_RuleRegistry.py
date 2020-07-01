@@ -18,7 +18,7 @@ class SingletonTest(unittest.TestCase):
         firstRegistry = RuleRegistry()
         secondRegistry = RuleRegistry()
 
-        self.assert(firstRegistry is secondRegistry)
+        self.assertTrue(firstRegistry is secondRegistry)
 
 class AddingRulesTest(unittest.TestCase):
     def test_add_ruletype(self):
@@ -32,7 +32,7 @@ class AddingRulesTest(unittest.TestCase):
         reg = RuleRegistry()
         reg.add_ruletype(FakeRuleType)
         retval = reg.get_rule_class("FakeRuleType")
-        self.assert(retval is FakeRuleType)
+        self.assertTrue(retval is FakeRuleType)
 
 
 class NonRuleTest(unittest.TestCase):

@@ -280,7 +280,7 @@ class SenseAPI(AtlanticWaveManager):
         print("\n\n&&&&& RULE_HASHES &&&&&")
         for h in hashes:
             print("%s - %s %s" % (h['hash'], h['delta_id'],
-                                  pickle.loads(str(h['policy']))))
+                                  pickle.loads(h['policy'])))
         print("&&&&&        &&&&&\n\n")
 
         
@@ -1331,11 +1331,12 @@ services[uuid][svc]))
         # -- push the rule_hash into the hashDB with _put_rule_hash_by_policy()
         if delta['addition'] != None:
             for policy in delta['addition']:
+                rule_hash = RuleManager()
                 try:
-                    rule_hash = RuleManager().add_rule(policy)
+                    rule_hash.add_rule(policy)
                     self._put_rule_hash_by_policy(policy, rule_hash,
                                                   deltaid)
-                except:
+                except Exception as e:
                     self.dlogger.info("commit: addition failed: %s" %
                                       rule_hash)
                     self.logger.error("commit: addition failed: %s, %s" %
@@ -1390,9 +1391,9 @@ services[uuid][svc]))
         
         # Unpickle the pickled values and rebuild dictionary to return
         delta = {'delta_id':raw_delta['delta_id'],
-                 'raw_request':pickle.loads(str(raw_delta['raw_request'])),
-                 'addition':pickle.loads(str(raw_delta['addition'])),
-                 'reduction':pickle.loads(str(raw_delta['reduction'])),
+                 'raw_request':pickle.loads(raw_delta['raw_request']),
+                 'addition':pickle.loads(raw_delta['addition']),
+                 'reduction':pickle.loads(raw_delta['reduction']),
                  'status':raw_delta['status'],
                  'last_modified':raw_delta['last_modified'],
                  'timestamp':raw_delta['timestamp'],
@@ -1430,7 +1431,7 @@ services[uuid][svc]))
         print("\n\nPOLICY: %s" % policy)
 
         for raw_hash in self.hash_table.find():
-            if pickle.loads(str(raw_hash['policy'])) == policy:
+            if pickle.loads(raw_hash['policy']) == policy:
                 rule_hash = raw_hash['hash']
                 self.dlogger.debug("_get_rule_hash_by_policy() successful %s" %
                                    rule_hash)
@@ -1489,9 +1490,9 @@ services[uuid][svc]))
         ''' Helper to convert DB's form to what the endpoints are expecting. '''
         raw_request = delta['raw_request']
         if unpickle:
-            raw_request = pickle.loads(str(raw_request))
-        reduction = raw_request['reduction']
-        addition = raw_request['addition']
+            raw_request = pickle.loads(raw_request)
+        reduction = delta['reduction']
+        addition = delta['addition']
             
         d = {'id':delta['delta_id'],
              'lastModified':delta['last_modified'],
@@ -1607,8 +1608,8 @@ services[uuid][svc]))
         # Unpickle the pickled values and rebuild dictionary to return
         model = {'model_id':raw_model['model_id'],
                  'model_data':raw_model['model_data'],
-                 'model_raw_info':pickle.loads(str(
-                     raw_model['model_raw_info'])),
+                 'model_raw_info':pickle.loads(
+                     raw_model['model_raw_info']),
                  'timestamp':raw_model['timestamp']}
 
         self.dlogger.debug('_get_model_by_id() on %s successful' % model_id)

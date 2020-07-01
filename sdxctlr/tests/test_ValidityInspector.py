@@ -38,7 +38,7 @@ class SingletonTest(unittest.TestCase):
         firstInspector = ValidityInspector()
         secondInspector = ValidityInspector()
 
-        self.assert(firstInspector is secondInspector)
+        self.assertTrue(firstInspector is secondInspector)
 
 #FIXME: Nothing's mocked here!
 
@@ -46,7 +46,7 @@ class ValidityTest(unittest.TestCase):
     def test_good_valid(self):
         valid_rule = UserPolicyStandin(True, "")
         inspector = ValidityInspector()
-        self.assert(inspector.is_valid_rule(valid_rule))
+        self.assertTrue(inspector.is_valid_rule(valid_rule))
                         
     def test_bad_valid(self):
         invalid_rule = UserPolicyStandin(False, "")

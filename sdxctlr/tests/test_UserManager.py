@@ -23,7 +23,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = UserManager(db, CONFIG_FILE)
         secondManager = UserManager(db, CONFIG_FILE)
 
-        self.assert(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
 class VerifyParticipantsTest(unittest.TestCase):
     @mock.patch('sdxctlr.UserManager.AuthorizationInspector',
@@ -38,10 +38,10 @@ class VerifyParticipantsTest(unittest.TestCase):
         permitted_actions = ['tbd']
 
         part = man.get_user(username)
-        self.assert(part != None)
-        self.assert(part['username'] == username)
-        self.assert(part['credentials'] == credentials)
-        self.assert(part['permitted_actions'] == permitted_actions)
+        self.assertTrue(part != None)
+        self.assertTrue(part['username'] == username)
+        self.assertTrue(part['credentials'] == credentials)
+        self.assertTrue(part['permitted_actions'] == permitted_actions)
 
     @mock.patch('sdxctlr.UserManager.AuthorizationInspector',
                 autospec=True)
@@ -52,7 +52,7 @@ class VerifyParticipantsTest(unittest.TestCase):
 
         username = "NOTREAL"
 
-        self.assertEquals(man.get_user(username), None)
+        self.assertEqual(man.get_user(username), None)
 
 
     @mock.patch('sdxctlr.UserManager.AuthorizationInspector',
@@ -79,14 +79,14 @@ class VerifyParticipantsTest(unittest.TestCase):
                 'restrictions':restrictions}
         man.add_user(user)
         part = man.get_user(username)
-        self.assertNotEquals(None, part)
-        self.assertEquals(username, part['username'])
-        self.assertEquals(credentials, part['credentials'])
-        self.assertEquals(organization, part['organization'])
-        self.assertEquals(contact, part['contact'])
-        self.assertEquals(typeval, part['type'])
-        self.assertEquals(permitted_actions, part['permitted_actions'])
-        self.assertEquals(restrictions, part['restrictions'])
+        self.assertNotEqual(None, part)
+        self.assertEqual(username, part['username'])
+        self.assertEqual(credentials, part['credentials'])
+        self.assertEqual(organization, part['organization'])
+        self.assertEqual(contact, part['contact'])
+        self.assertEqual(typeval, part['type'])
+        self.assertEqual(permitted_actions, part['permitted_actions'])
+        self.assertEqual(restrictions, part['restrictions'])
 
         # Make sure old one's still there.
         username = "sdonovan"
@@ -94,10 +94,10 @@ class VerifyParticipantsTest(unittest.TestCase):
         permitted_actions = ['tbd']
 
         part = man.get_user(username)
-        self.assertNotEquals(part, None)
-        self.assertEquals(part['username'], username)
-        self.assertEquals(part['credentials'], credentials)
-        self.assertEquals(part['permitted_actions'], permitted_actions)
+        self.assertNotEqual(part, None)
+        self.assertEqual(part['username'], username)
+        self.assertEqual(part['credentials'], credentials)
+        self.assertEqual(part['permitted_actions'], permitted_actions)
 
         
 if __name__ == '__main__':

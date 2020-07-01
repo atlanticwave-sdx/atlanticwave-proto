@@ -45,7 +45,7 @@ class UserPolicyStandin(UserPolicy):
         # Verify that topology is a nx.Graph, and authorization_func is ???
         if not isinstance(topology, nx.Graph):
             raise Exception("Topology is not nx.Graph")
-        if self.valid == True:
+        if self.json_rule == True:
             return True
         raise Exception("NOT VALID")
     
@@ -55,7 +55,7 @@ class UserPolicyStandin(UserPolicy):
         if not isinstance(topology, TopologyManager):
             print("- Raising Exception")
             raise Exception("Topology is not nx.Graph")
-        if self.valid == True:
+        if self.json_rule == True:
             print("- Success")
             return [UserPolicyBreakdown("1.2.3.4",
                                         [RuleStandin("rule1"),
@@ -103,7 +103,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = SDXController(False, no_loop_options)
         secondManager = SDXController()
 
-        self.assert(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
         del firstManager
         del secondManager
 
@@ -118,13 +118,13 @@ class AddRuleTest(unittest.TestCase):
         sdxctlr = SDXController(False, no_loop_options)
         
         man = RuleManager()#'db','sdxcontroller',rmhappy,rmhappy)
-        valid_rule = UserPolicyStandin(True, True)
+        valid_rule = UserPolicyStandin("sdonovan", True)
 
         sdxctlr._send_breakdown_rule = mock.MagicMock()
 
         rule_num = man.add_rule(valid_rule)
 
-        man.remove_rule(rule_num, 'sdonovan')
+        man.remove_rule(rule_num, "sdonovan")
         
 
 class JsonUploadTest(unittest.TestCase):
@@ -148,7 +148,7 @@ class JsonUploadTest(unittest.TestCase):
             "bandwidth":1}}
 
         # Get a JSON policy from a file
-        l2rule = L2TunnelPolicy('sdonovan', l2json)
+        l2rule = L2TunnelPolicy("sdonovan", l2json)
 
         rule_num = man.add_rule(l2rule)
         man.remove_rule(rule_num, 'sdonovan')

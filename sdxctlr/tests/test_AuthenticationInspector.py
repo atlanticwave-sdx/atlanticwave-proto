@@ -16,7 +16,7 @@ class SingletonTest(unittest.TestCase):
     def test_singleton(self):
         firstInspector = AuthenticationInspector()
         secondInspector = AuthenticationInspector()
-        self.assert(firstInspector is secondInspector)
+        self.assertTrue(firstInspector is secondInspector)
 
 class AddingUsers(unittest.TestCase):
     def test_add_single_user(self):
@@ -25,7 +25,7 @@ class AddingUsers(unittest.TestCase):
         
         ai = AuthenticationInspector()
         ai.add_user(user, credentials)
-        self.assert(ai.is_authenticated(user, credentials))
+        self.assertTrue(ai.is_authenticated(user, credentials))
 
     def test_add_many_users(self):
         user1 = "natasha"
@@ -36,8 +36,8 @@ class AddingUsers(unittest.TestCase):
                     (user2, credentials2))
         ai = AuthenticationInspector()
         ai.add_users(userlist)
-        self.assert(ai.is_authenticated(user1, credentials1))
-        self.assert(ai.is_authenticated(user2, credentials2))
+        self.assertTrue(ai.is_authenticated(user1, credentials1))
+        self.assertTrue(ai.is_authenticated(user2, credentials2))
 
 
     def test_overwrite_user(self):
@@ -47,11 +47,11 @@ class AddingUsers(unittest.TestCase):
 
         ai = AuthenticationInspector()
         ai.add_user(user, credentials1)
-        self.assert(ai.is_authenticated(user, credentials1))
+        self.assertTrue(ai.is_authenticated(user, credentials1))
 
         # Change password
         ai.add_user(user, credentials2)
-        self.assert(ai.is_authenticated(user, credentials2))
+        self.assertTrue(ai.is_authenticated(user, credentials2))
         self.assertEqual(ai.is_authenticated(user, credentials1),
                              False)
 
@@ -70,7 +70,7 @@ class NonUserTest(unittest.TestCase):
 
         ai = AuthenticationInspector()
         ai.add_user(user, credentials)
-        self.assert(ai.is_authenticated(user, credentials))
+        self.assertTrue(ai.is_authenticated(user, credentials))
         self.assertEqual(ai.is_authenticated(user, badcredentials),
                              False)
 

@@ -44,7 +44,7 @@ class SingletonTest(unittest.TestCase):
         first = BreakdownEngine()
         second =  BreakdownEngine()
 
-        self.assert(first is second)
+        self.assertTrue(first is second)
         del topo
 
 #FIXME: Nothing's mocked here!
@@ -55,7 +55,7 @@ class BreakdownTest(unittest.TestCase):
         valid_rule = UserPolicyStandin(True, "")
         topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
         engine = BreakdownEngine()
-        self.assertEquals(engine.get_breakdown(valid_rule), "Success")
+        self.assertEqual(engine.get_breakdown(valid_rule), "Success")
         del topo
                         
     def test_bad_valid(self):

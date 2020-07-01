@@ -71,7 +71,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         secondManager = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
 
-        self.assert(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
 class AddRuleTest(unittest.TestCase):
     def test_good_test_add_rule(self):
@@ -104,7 +104,7 @@ class AddRuleTest(unittest.TestCase):
         valid_rule = UserPolicyStandin(True, True)
 
 #        print man.add_rule(valid_rule)
-        self.assert(isinstance(man.add_rule(valid_rule), int))
+        self.assertTrue(isinstance(man.add_rule(valid_rule), int))
 
     def test_invalid_add_rule(self):
         topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
@@ -131,10 +131,10 @@ class RemoveRuleTest(unittest.TestCase):
         #FIXME
         hash = man.add_rule(valid_rule)
         man.get_rule_details(hash)
-        self.assert(man.get_rule_details(hash) != None)
+        self.assertTrue(man.get_rule_details(hash) != None)
 
         man.remove_rule(hash, "dummy_user")
-        self.assert(man.get_rule_details(hash) == None)
+        self.assertTrue(man.get_rule_details(hash) == None)
 
 class GetRules(unittest.TestCase):
     def test_get_rules(self):
@@ -143,7 +143,7 @@ class GetRules(unittest.TestCase):
         valid_rule = UserPolicyStandin(True, True)
 
         hash = man.add_rule(valid_rule)
-        self.assert(man.get_rules() != [])
+        self.assertTrue(man.get_rules() != [])
 
 
 class RemoveAllRules(unittest.TestCase):
@@ -155,12 +155,12 @@ class RemoveAllRules(unittest.TestCase):
         # Add a rule.
         man.add_rule(valid_rule)
 
-        self.assert(man.get_rules() != [])
+        self.assertTrue(man.get_rules() != [])
         
         man.remove_all_rules("dummy_user")
 
         rules = man.get_rules()
-        self.assert(man.get_rules() == [])
+        self.assertTrue(man.get_rules() == [])
 
         
 if __name__ == '__main__':

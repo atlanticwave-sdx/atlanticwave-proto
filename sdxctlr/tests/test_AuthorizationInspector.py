@@ -17,7 +17,7 @@ class SingletonTest(unittest.TestCase):
         firstInspector = AuthorizationInspector()
         secondInspector = AuthorizationInspector()
 
-        self.assert(firstInspector is secondInspector)
+        self.assertTrue(firstInspector is secondInspector)
 
 
 #FIXME: This is boring because the AuthorizationInspector is boring right now.

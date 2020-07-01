@@ -44,7 +44,7 @@ class SingletonTest(unittest.TestCase):
         first = SenseAPI(DB_FILE)
         second = SenseAPI()
 
-        self.assert(first is second)
+        self.assertTrue(first is second)
 
 
 class PutGetDeltaTest(unittest.TestCase):
@@ -537,8 +537,8 @@ class DeltaTest(unittest.TestCase):
 
         delta,status = api.process_deltas(deltadata)
 
-        self.assertEquals(delta, None)
-        self.assertEquals(status, HTTP_BAD_REQUEST)
+        self.assertEqual(delta, None)
+        self.assertEqual(status, HTTP_BAD_REQUEST)
 
     def atest_bad_process_addition_decode(self):
         # Testing invalid reduction data
@@ -555,8 +555,8 @@ class DeltaTest(unittest.TestCase):
 
         delta,status = api.process_deltas(deltadata)
 
-        self.assertEquals(delta, None)
-        self.assertEquals(status, HTTP_BAD_REQUEST)
+        self.assertEqual(delta, None)
+        self.assertEqual(status, HTTP_BAD_REQUEST)
         
     def atest_bad_process_reduction_invalid_reduction(self):
         # Testing invalid reduction data
@@ -573,8 +573,8 @@ class DeltaTest(unittest.TestCase):
 
         delta,status = api.process_deltas(deltadata)
 
-        self.assertEquals(delta, None)
-        self.assertEquals(status, HTTP_BAD_REQUEST)
+        self.assertEqual(delta, None)
+        self.assertEqual(status, HTTP_BAD_REQUEST)
 
     def atest_bad_process_addition_invalid_addition(self):
         # Testing invalid reduction data
@@ -591,8 +591,8 @@ class DeltaTest(unittest.TestCase):
 
         delta,status = api.process_deltas(deltadata)
 
-        self.assertEquals(delta, None)
-        self.assertEquals(status, HTTP_BAD_REQUEST)
+        self.assertEqual(delta, None)
+        self.assertEqual(status, HTTP_BAD_REQUEST)
 
     
 if __name__ == '__main__':

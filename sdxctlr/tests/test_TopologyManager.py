@@ -23,7 +23,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = TopologyManager(topology_file=CONFIG_FILE) 
         secondManager = TopologyManager(topology_file=CONFIG_FILE)
 
-        self.assert(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
 class VerifyTopoTest(unittest.TestCase):
     def setUp(self):
@@ -34,7 +34,7 @@ class VerifyTopoTest(unittest.TestCase):
     def test_get_topo(self):
         man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
-        self.assert(isinstance(topo, nx.Graph))
+        self.assertTrue(isinstance(topo, nx.Graph))
         
     def test_simple_topo(self):
         man = TopologyManager(topology_file=CONFIG_FILE)
@@ -51,7 +51,7 @@ class VerifyTopoTest(unittest.TestCase):
         #print "EXPECT: %s" % expected_nodes
         self.assertEquals(len(nodes), len(expected_nodes))
         for node in expected_nodes:
-            self.assert(node in nodes)
+            self.assertTrue(node in nodes)
 
         #FIXME: Need to look at details! In the future, anyway.
 
@@ -66,14 +66,14 @@ class VerifyTopoTest(unittest.TestCase):
             ('br3', 'br4')]
         edges = topo.edges()
 
-        self.assert(len(edges) == len(expected_edges))
+        self.assertTrue(len(edges) == len(expected_edges))
         for edge in expected_edges:
             (a, b) = edge
             reversed_edge = (b,a)
             # We don't care about ordering of the edges)
             # Both options below end up with same result.
-            self.assert((edge in edges) or (reversed_edge in edges))
-            self.assert(topo.has_edge(a, b))
+            self.assertTrue((edge in edges) or (reversed_edge in edges))
+            self.assertTrue(topo.has_edge(a, b))
 
         #import json
         #print json.dumps(topo.nodes(data=True), indent=1)
@@ -324,7 +324,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.assert(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
         # Get a tree connecting sw4, sw8, and sw6
         nodes = ["sw4", "sw6", "sw8"]
@@ -334,7 +334,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.assert(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
     def test_find_vlan(self):
         man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
@@ -503,7 +503,7 @@ class SteinerTreeWithLoopTest(unittest.TestCase):
         self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.assert(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
         # Get a tree connecting sw1, sw3, sw8, sw6
         nodes = ["sw1", "sw3", "sw6", "sw8"]
@@ -513,7 +513,7 @@ class SteinerTreeWithLoopTest(unittest.TestCase):
         self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.assert(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
         # Get a tree connecting sw1, sw3, sw8
         nodes = ["sw1", "sw3", "sw8"]
@@ -523,7 +523,7 @@ class SteinerTreeWithLoopTest(unittest.TestCase):
         self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.assert(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
 
 
