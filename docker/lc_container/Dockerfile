@@ -1,18 +1,21 @@
 FROM ubuntu:16.04
 
-RUN apt update && apt install -y git python-virtualenv pypy python-pip net-tools vim
+RUN apt update && apt install -y git python-virtualenv pypy python-pip net-tools vim pypy3 python3-pip python3-venv
 
 # This really should point to a particular version
 RUN git clone -b python3upgrade https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 
 # Virtualenv setup
-RUN virtualenv -p /usr/bin/pypy /appenv
-RUN . /appenv/bin/activate
-RUN pip install -r atlanticwave-proto/requirements.txt
+#RUN virtualenv -p /usr/bin/pypy /appenv
+#RUN . /appenv/bin/activate
+#RUN pip install -r atlanticwave-proto/requirements.txt
 #run pip install dataset
 
+RUN python3 -m venv appenv
+RUN source app-env/bin/activate
+
 # Install and patch Ryu - there's a small bug with Ryu that needs to be patched
-RUN pip install ryu
+RUN pip3 install ryu
 RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
 
 # Setup the PYTHONPATH script
