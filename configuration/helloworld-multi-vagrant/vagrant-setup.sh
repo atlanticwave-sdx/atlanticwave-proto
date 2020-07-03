@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # apt work
+sudo add-apt-repository ppa:pypy/ppa
 sudo apt update
 
 sudo apt install -y git docker.io
