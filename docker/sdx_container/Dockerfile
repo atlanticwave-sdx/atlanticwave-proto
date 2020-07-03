@@ -1,16 +1,20 @@
 FROM ubuntu:16.04
 
+RUN apt update && apt-get install -y software-properties-common
+RUN add-apt-repository ppa:pypy/ppa
+RUN apt-get update \
+  && apt-get install -y python3-pip python3-dev pypy3 python3-venv git net-tools vim
+
 RUN update-alternatives --remove python /usr/bin/python2
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-RUN add-apt-repository ppa:pypy/ppa
-RUN apt update && apt install -y git python-virtualenv pypy3 python3-venv python-pip python3-pip net-tools vim
+
 # Virtualenv setup
 #RUN virtualenv -p /usr/bin/pypy /appenv
 #RUN . /appenv/bin/activate
 #run pip install dataset
 
 RUN python -m venv appenv
-RUN source tutorial-env/bin/activate
+RUN . appenv/bin/activate
 
 # Setup the PYTHONPATH script
 ENV PYTHONPATH $PYTHONPATH:/atlanticwave-proto
