@@ -19,7 +19,7 @@ RUN . appenv/bin/activate
 
 # Install and patch Ryu - there's a small bug with Ryu that needs to be patched
 RUN pip3 install ryu
-RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
+CMD ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
 
 # Setup the PYTHONPATH script
 ENV PYTHONPATH $PYTHONPATH:.:/atlanticwave-proto
