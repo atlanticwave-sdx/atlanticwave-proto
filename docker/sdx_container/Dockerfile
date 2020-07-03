@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 
 RUN update-alternatives --remove python /usr/bin/python2
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-sudo add-apt-repository ppa:pypy/ppa
+RUN add-apt-repository ppa:pypy/ppa
 RUN apt update && apt install -y git python-virtualenv pypy3 python3-venv python-pip python3-pip net-tools vim
 # Virtualenv setup
 #RUN virtualenv -p /usr/bin/pypy /appenv
