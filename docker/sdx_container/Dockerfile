@@ -1,13 +1,14 @@
 FROM ubuntu:16.04
 
 RUN apt update && apt install -y git python-virtualenv pypy3 python3-venv python-pip python3-pip net-tools vim
-
+RUN update-alternatives --remove python /usr/bin/python2
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 # Virtualenv setup
 #RUN virtualenv -p /usr/bin/pypy /appenv
 #RUN . /appenv/bin/activate
 #run pip install dataset
 
-RUN python3 -m venv appenv
+RUN python -m venv appenv
 RUN source tutorial-env/bin/activate
 
 # Setup the PYTHONPATH script

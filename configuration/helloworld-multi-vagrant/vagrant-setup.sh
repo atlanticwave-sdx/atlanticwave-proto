@@ -2,7 +2,9 @@
 
 # apt work
 sudo apt update
-sudo apt install -y git mininet docker.io
+sudo update-alternatives --remove python /usr/bin/python2
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+sudo apt install -y git pypy3 python3-pip python3-venv mininet docker.io
 
 #sudo groupadd docker #Already added
 sudo usermod -aG docker $USER

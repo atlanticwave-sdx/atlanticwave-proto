@@ -31,5 +31,5 @@ else
 fi
 
 cd localctlr/
-python3 LocalController.py -n $SITE -m $MANIFEST -H $SDXIP
+python LocalController.py -n $SITE -m $MANIFEST -H $SDXIP
 

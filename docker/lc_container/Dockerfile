@@ -1,6 +1,8 @@
 FROM ubuntu:16.04
 
 RUN apt update && apt install -y git python-virtualenv pypy python-pip net-tools vim pypy3 python3-pip python3-venv
+RUN update-alternatives --remove python /usr/bin/python2
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
 # This really should point to a particular version
 RUN git clone -b python3upgrade https://github.com/atlanticwave-sdx/atlanticwave-proto.git
@@ -11,7 +13,7 @@ RUN git clone -b python3upgrade https://github.com/atlanticwave-sdx/atlanticwave
 #RUN pip install -r atlanticwave-proto/requirements.txt
 #run pip install dataset
 
-RUN python3 -m venv appenv
+RUN python -m venv appenv
 RUN source app-env/bin/activate
 
 # Install and patch Ryu - there's a small bug with Ryu that needs to be patched
