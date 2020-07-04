@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 # AtlanticWave/SDX Project
 
 
-from .LCRule import *
+from LCRule import *
 
 VLAN_MIN = 0
 VLAN_MAX = 4080

@@ -6,11 +6,11 @@ from __future__ import unicode_literals
 
 
 from builtins import str
-from .UserPolicy import *
+from UserPolicy import *
 from datetime import datetime
 from shared.constants import *
-from .EdgePortLCRule import *
-from .ManagementSDXRecoverRule import *
+from EdgePortLCRule import *
+from ManagementSDXRecoverRule import *
 import networkx as nx
 
 class ManagementSDXRecoverPolicy(UserPolicy):

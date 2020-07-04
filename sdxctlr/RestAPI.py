@@ -19,12 +19,12 @@ from shared.L2TunnelPolicy import L2TunnelPolicy
 from shared.EndpointConnectionPolicy import EndpointConnectionPolicy
 from shared.SDXControllerConnectionManager import *
 
-from .AuthenticationInspector import AuthenticationInspector
-from .AuthorizationInspector import AuthorizationInspector
-from .RuleManager import RuleManager
-from .TopologyManager import TopologyManager
-from .UserManager import UserManager
-from .RuleRegistry import RuleRegistry, RuleRegistryTypeError
+from AuthenticationInspector import AuthenticationInspector
+from AuthorizationInspector import AuthorizationInspector
+from RuleManager import RuleManager
+from TopologyManager import TopologyManager
+from UserManager import UserManager
+from RuleRegistry import RuleRegistry, RuleRegistryTypeError
 
 #API Stuff
 import flask

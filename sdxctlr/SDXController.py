@@ -20,17 +20,17 @@ from lib.Connection import select as cxnselect
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
 from shared.UserPolicy import UserPolicyBreakdown
-from .AuthenticationInspector import *
-from .AuthorizationInspector import *
-from .BreakdownEngine import *
-from .LocalControllerManager import *
-from .RestAPI import *
-from .RuleManager import *
-from .RuleRegistry import *
-from .TopologyManager import *
-from .ValidityInspector import *
-from .UserManager import *
-from .SenseAPI import *
+from AuthenticationInspector import *
+from AuthorizationInspector import *
+from BreakdownEngine import *
+from LocalControllerManager import *
+from RestAPI import *
+from RuleManager import *
+from RuleRegistry import *
+from TopologyManager import *
+from ValidityInspector import *
+from UserManager import *
+from SenseAPI import *
 
 # Known UserPolicies
 #FIXME: from shared.JsonUploadPolicy import *

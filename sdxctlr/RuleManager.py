@@ -15,10 +15,10 @@ from threading import Timer, Lock, Thread
 from datetime import datetime, timedelta
 
 from lib.AtlanticWaveManager import AtlanticWaveManager
-from .AuthorizationInspector import AuthorizationInspector
-from .BreakdownEngine import BreakdownEngine
-from .ValidityInspector import ValidityInspector
-from .TopologyManager import TopologyManager
+from AuthorizationInspector import AuthorizationInspector
+from BreakdownEngine import BreakdownEngine
+from ValidityInspector import ValidityInspector
+from TopologyManager import TopologyManager
 
 from shared.constants import *
 

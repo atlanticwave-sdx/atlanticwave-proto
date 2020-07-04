@@ -27,12 +27,12 @@ from time import sleep
 
 from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
-from .RyuControllerInterface import *
-from .RyuTranslateInterface import *
-from .LCRuleManager import *
+from RyuControllerInterface import *
+from RyuTranslateInterface import *
+from LCRuleManager import *
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
-from .switch_messages import *
+from switch_messages import *
 from shared.ManagementLCRecoverRule import *
 
 LOCALHOST = "127.0.0.1"

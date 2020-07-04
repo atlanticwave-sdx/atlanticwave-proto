@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 
 from builtins import str
 from builtins import object
-from .LCFields import *
-from .LCAction import *
+from LCFields import *
+from LCAction import *
 
 class SDXActionTypeError(TypeError):
     pass

@@ -14,8 +14,8 @@ import pickle as pickle
 import json
 
 from lib.AtlanticWaveManager import AtlanticWaveManager
-from .AuthorizationInspector import AuthorizationInspector
-from .AuthenticationInspector import AuthenticationInspector
+from AuthorizationInspector import AuthorizationInspector
+from AuthenticationInspector import AuthenticationInspector
 
 
 class UserManager(AtlanticWaveManager):

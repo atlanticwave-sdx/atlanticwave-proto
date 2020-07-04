@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 
 from builtins import hex
 from lib.AtlanticWaveInspector import AtlanticWaveInspector
-from .AuthorizationInspector import AuthorizationInspector 
-from .TopologyManager import TopologyManager
+from AuthorizationInspector import AuthorizationInspector 
+from TopologyManager import TopologyManager
 
 class ValidityInspectorError(Exception):
     ''' Parent class, can be used as a catch-all for the other errors '''

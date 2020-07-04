@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 
 from builtins import str
-from .UserPolicy import *
+from UserPolicy import *
 from datetime import datetime
 from shared.constants import rfc3339format
 from shared.SDXMatches import *
