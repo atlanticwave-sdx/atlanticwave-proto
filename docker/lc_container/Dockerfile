@@ -14,12 +14,17 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 #RUN pip install -r atlanticwave-proto/requirements.txt
 #run pip install dataset
 
+# This really should point to a particular version
+RUN git clone -b python3upgrade https://github.com/atlanticwave-sdx/atlanticwave-proto.git
+
 RUN python -m venv appenv
 RUN . appenv/bin/activate
 
+RUN pip3 install -r atlanticwave-proto/requirements.txt
+
 # Install and patch Ryu - there's a small bug with Ryu that needs to be patched
 RUN pip3 install ryu
-CMD ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
+RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
 
 # Setup the PYTHONPATH script
 ENV PYTHONPATH $PYTHONPATH:.:/atlanticwave-proto
