@@ -20,6 +20,7 @@ RUN git clone -b python3upgrade https://github.com/atlanticwave-sdx/atlanticwave
 RUN python -m venv appenv
 RUN . appenv/bin/activate
 
+RUN pip3 install future
 RUN pip3 install -r atlanticwave-proto/requirements.txt
 
 # Install and patch Ryu - there's a small bug with Ryu that needs to be patched
