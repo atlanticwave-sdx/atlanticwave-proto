@@ -28,7 +28,7 @@ RUN pip3 install ryu
 RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
 
 # Setup the PYTHONPATH script
-ENV PYTHONPATH ./atlanticwave-proto:$PYTHONPATH
+ENV PYTHONPATH /atlanticwave-proto:$PYTHONPATH
 
 COPY run_lc.sh .
 COPY ./*.manifest ./

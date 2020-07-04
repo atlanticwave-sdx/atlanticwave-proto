@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 # AtlanticWave/SDX Project
 
 from builtins import str
-from UserPolicy import *
+from shared.UserPolicy import *
 from datetime import datetime
 from shared.constants import *
 from shared.L2MultipointEndpointLCRule import L2MultipointEndpointLCRule

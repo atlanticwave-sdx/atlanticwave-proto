@@ -18,7 +18,7 @@ RUN . appenv/bin/activate
 
 RUN pip3 install future
 # Setup the PYTHONPATH script
-ENV PYTHONPATH ./atlanticwave-proto:$PYTHONPATH
+ENV PYTHONPATH /atlanticwave-proto:$PYTHONPATH
 
 COPY run_sdx.sh .
 COPY ./*.manifest ./
