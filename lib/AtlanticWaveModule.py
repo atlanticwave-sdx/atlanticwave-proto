@@ -12,7 +12,7 @@ from __future__ import unicode_literals
 from builtins import hex
 from builtins import str
 from builtins import object
-from .Singleton import Singleton
+from lib.Singleton import Singleton
 import logging
 import dataset
 import os

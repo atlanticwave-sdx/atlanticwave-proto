@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
-from LCRule import *
+from shared.LCRule import *
 
 class ManagementLCRecoverRule(LCRule):
     ''' This structure is used to pass the Management VLAN recover rule to 

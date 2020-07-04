@@ -16,12 +16,12 @@ from lib.AtlanticWaveManager import AtlanticWaveManager
 from shared.L2MultipointPolicy import L2MultipointPolicy
 from shared.L2TunnelPolicy import L2TunnelPolicy
 
-from AuthenticationInspector import AuthenticationInspector
-from AuthorizationInspector import AuthorizationInspector
-from RuleManager import RuleManager, RuleManagerError
-from TopologyManager import TopologyManager, TOPO_EDGE_TYPE
-from UserManager import UserManager
-from RuleRegistry import RuleRegistry
+from sdxctlr.AuthenticationInspector import AuthenticationInspector
+from sdxctlr.AuthorizationInspector import AuthorizationInspector
+from sdxctlr.RuleManager import RuleManager, RuleManagerError
+from sdxctlr.TopologyManager import TopologyManager, TOPO_EDGE_TYPE
+from sdxctlr.UserManager import UserManager
+from sdxctlr.RuleRegistry import RuleRegistry
 
 from threading import Lock
 import pickle as pickle

@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 # database. Each Manager provides the appropriate functions to access the
 # particular type of data that the given manager cares about.
 
-from .AtlanticWaveModule import AtlanticWaveModule
+from lib.AtlanticWaveModule import AtlanticWaveModule
 
 class AtlanticWaveManager(AtlanticWaveModule):
     def __init__(self, loggerid, db_filename=":memory:"):

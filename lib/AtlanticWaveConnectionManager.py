@@ -6,9 +6,9 @@ from __future__ import unicode_literals
 
 
 from builtins import str
-from lib.Singleton import Singleton
-from lib.Connection import Connection
-from .AtlanticWaveModule import *
+from Singleton import Singleton
+from Connection import Connection
+from lib.AtlanticWaveModule import *
 
 import socket
 from socket import error as socket_error

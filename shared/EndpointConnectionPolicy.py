@@ -9,8 +9,8 @@ from __future__ import unicode_literals
 from builtins import zip
 from builtins import str
 from past.utils import old_div
-from UserPolicy import *
-from L2TunnelPolicy import *
+from shared.UserPolicy import *
+from shared.L2TunnelPolicy import *
 from datetime import datetime
 import networkx as nx
 from shared.PathResource import VLANPathResource, BandwidthPathResource

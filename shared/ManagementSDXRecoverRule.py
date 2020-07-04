@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 # from LCRule import *
 
-from LCRule import *
+from shared.LCRule import *
 
 class ManagementSDXRecoverRule(LCRule):
     ''' This rule by SDX to try covering connection once LocalController

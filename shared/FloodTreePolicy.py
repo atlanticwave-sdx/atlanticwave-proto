@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 
 
 from builtins import str
-from UserPolicy import *
-from FloodTreeLCRule import *
+from shared.UserPolicy import *
+from shared.FloodTreeLCRule import *
 import networkx as nx
 
 

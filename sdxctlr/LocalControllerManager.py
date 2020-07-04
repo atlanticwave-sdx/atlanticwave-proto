@@ -8,7 +8,7 @@ from builtins import hex
 from builtins import object
 import json
 from lib.AtlanticWaveManager import AtlanticWaveManager
-from AuthenticationInspector import AuthenticationInspector
+from sdxctlr.AuthenticationInspector import AuthenticationInspector
 #from TopologyManager import TopologyManager
 
 #FIXME: This shouldn't be hard coded.

@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 from builtins import zip
 from builtins import str
-from UserPolicy import *
+from shared.UserPolicy import *
 from datetime import datetime
 from shared.constants import *
 from shared.VlanTunnelLCRule import VlanTunnelLCRule

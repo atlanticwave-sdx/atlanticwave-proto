@@ -4,9 +4,9 @@ from __future__ import unicode_literals
 # AtlanticWave/SDX Project
 
 
-from LCRule import *
-from LCFields import *
-from LCAction import *
+from shared.LCRule import *
+from shared.LCFields import *
+from shared.LCAction import *
 
 class MatchActionLCRule(LCRule):
     ''' This structure is used to pass Rules that create match-action rules on

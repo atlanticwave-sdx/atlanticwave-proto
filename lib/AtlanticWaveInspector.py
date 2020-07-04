@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 # AtlanticWaveManager modules that provides database services for validating
 # against.
 
-from .AtlanticWaveModule import AtlanticWaveModule
+from AtlanticWaveModule import AtlanticWaveModule
 
 class AtlanticWaveInspector(AtlanticWaveModule):
     def __init__(self, loggerid):

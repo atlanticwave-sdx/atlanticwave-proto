@@ -7,8 +7,8 @@ from __future__ import unicode_literals
 from builtins import hex
 from builtins import str
 from lib.AtlanticWaveModule import AtlanticWaveModule
-from AuthorizationInspector import AuthorizationInspector
-from TopologyManager import TopologyManager
+from sdxctlr.AuthorizationInspector import AuthorizationInspector
+from sdxctlr.TopologyManager import TopologyManager
 
 
 class BreakdownEngine(AtlanticWaveModule):

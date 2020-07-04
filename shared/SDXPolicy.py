@@ -1,12 +1,12 @@
 from __future__ import print_function
-from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import absolute_import
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 from builtins import str
-from UserPolicy import *
+from shared.UserPolicy import *
 from datetime import datetime
 from shared.constants import rfc3339format
 from shared.SDXMatches import *
