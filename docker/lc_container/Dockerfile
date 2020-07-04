@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 RUN apt update && apt-get install -y software-properties-common
 RUN add-apt-repository ppa:pypy/ppa
 RUN apt-get update \
-  && apt-get install -y python3-pip python3-dev pypy3 python3-venv git net-tools vim
+  && apt-get install -y future python3-pip python3-dev pypy3 python3-venv git net-tools vim
 
 RUN update-alternatives --remove python /usr/bin/python2
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
@@ -27,7 +27,7 @@ RUN pip3 install ryu
 RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
 
 # Setup the PYTHONPATH script
-ENV PYTHONPATH $PYTHONPATH:.:/atlanticwave-proto
+ENV PYTHONPATH ./atlanticwave-proto:$PYTHONPATH
 
 COPY run_lc.sh .
 COPY ./*.manifest ./

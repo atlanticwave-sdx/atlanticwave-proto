@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 
 
 from builtins import str
-from Singleton import Singleton
-from Connection import Connection
+from lib.Singleton import Singleton
+from lib.Connection import Connection
 from lib.AtlanticWaveModule import *
 
 import socket
