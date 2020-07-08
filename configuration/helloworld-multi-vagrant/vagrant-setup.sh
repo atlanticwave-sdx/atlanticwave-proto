@@ -8,7 +8,6 @@ fi
 echo "----------------------------"
 echo "Deploying BRANCH = ${BRANCH}"
 echo "----------------------------"
-exit 0;
 
 # apt work
 sudo add-apt-repository ppa:pypy/ppa
