@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# default BRANCH=master if not provided
+if [[ -z "${BRANCH}" ]]; then
+  BRANCH='master'
+fi
+
+echo "----------------------------"
+echo "Deploying BRANCH = ${BRANCH}"
+echo "----------------------------"
+exit 0;
+
 # apt work
 sudo add-apt-repository ppa:pypy/ppa
 sudo apt update
@@ -17,7 +27,7 @@ git clone git://github.com/mininet/mininet
 mininet/util/install.sh -nfv
 
 # git work
-git clone -b python3upgrade https://github.com/atlanticwave-sdx/atlanticwave-proto.git
+git clone -b ${BRANCH} https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 
 # Docker work: build SDX Controller and Local Controller containers
 cd ~/atlanticwave-proto/
