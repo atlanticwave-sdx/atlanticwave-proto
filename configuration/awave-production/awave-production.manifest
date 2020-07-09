@@ -45,7 +45,7 @@
       "internalconfig": {
         "ryucxninternalport": 55781,
         "openflowport": 6681,
-	"backuplcswitch": "mias1"
+	"backuplc": "mias1"
       },
       "switchinfo": [
         {
@@ -90,7 +90,8 @@
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [27,28],
             "managementvlan":3621,
-            "managementvlanports":[1]
+            "managementvlanports":[1],
+            "sdxmanagementvlanbackupports":[1]
           }
         }
       ],
@@ -149,7 +150,8 @@
             "corsaratelimitportsl2mp": [15,16],
             "managementvlan":1805,
             "managementvlanports":[1,2],
-            "managementvlanbackupports":[1, 2]
+            "managementvlanbackupports":[1,2],
+            "sdxmanagementvlanbackupports":[1,2]
           }
         }
       ],
@@ -208,7 +210,8 @@
             "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,11],
-	    "managementvlanbackupports":[1, 11]
+	    "managementvlanbackupports":[1,11],
+            "sdxmanagementvlanbackupports":[1, 11]
           }
         }
       ],
