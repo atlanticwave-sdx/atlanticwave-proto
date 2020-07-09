@@ -45,7 +45,7 @@
       "internalconfig": {
         "ryucxninternalport": 55781,
         "openflowport": 6681,
-	"backuplc": "mias1"
+	"backuplcswitch": "mias1"
       },
       "switchinfo": [
         {
@@ -109,7 +109,7 @@
       "internalconfig": {
         "ryucxninternalport": 55782,
         "openflowport": 6682,
-        "backuplc": "atls1"
+        "backuplcswitch": "atls1"
       },
       "switchinfo": [
         {
@@ -169,7 +169,7 @@
       "internalconfig": {
         "ryucxninternalport": 55783,
         "openflowport": 6683,
-	"backuplc": "mias1"
+	"backuplcswitch": "mias1"
       },
       "switchinfo": [
         { 
