@@ -152,11 +152,11 @@ configure bridge br21 dpid 0xC9
 configure bridge br21 tunnel attach ofport 1 port 1
 configure bridge br21 tunnel attach ofport 29 port 29
 configure bridge br21 tunnel attach ofport 30 port 30
-configure bridge br21 controller add CONTbr21 128.61.149.223 6681
+configure bridge br21 controller add CONTbr21 143.215.216.21 6681
 
 # Create Multipoint Rate-limiting VFC
 
-configure bridge add br19 openflow resources 10
+configure bridge add br19 l2-vpn resources 10
 configure bridge br19 controller add CONTbr19 172.17.1.1 6653 
 
 # Create L2Tunnel Rate-limiting VFC
@@ -186,7 +186,7 @@ amlight-corsa# configure bridge br22 controller add CONTbr22 190.103.186.106 668
 
 # Create Multipoint Rate-limiting VFC
 
-amlight-corsa# configure bridge add br19 openflow resources 10
+amlight-corsa# configure bridge add br19 l2-vpn resources 10
 amlight-corsa# configure bridge br19 controller add CONTbr19 172.17.1.1 6653 
 
 # Create L2Tunnel Rate-limiting VFC
