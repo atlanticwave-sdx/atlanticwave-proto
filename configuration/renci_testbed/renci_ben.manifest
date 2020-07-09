@@ -60,7 +60,7 @@
       "internalconfig": {
         "ryucxninternalport": 55781,
         "openflowport": 6681,
-	"backuplcswitch": "dukes1"
+	"backuplc": "dukes1"
       },
       "switchinfo": [
         {
@@ -168,7 +168,7 @@
       "internalconfig": {
         "ryucxninternalport": 55782,
         "openflowport": 6682,
-	"backuplcswitch": "rencis1"
+	"backuplc": "rencis1"
       },
       "switchinfo": [
         { 
@@ -231,7 +231,7 @@
       "internalconfig": {
         "ryucxninternalport": 55783,
         "openflowport": 6683,
-	"backuplcswitch": "ncsus1"
+	"backuplc": "ncsus1"
       },
       "switchinfo": [
         { 
