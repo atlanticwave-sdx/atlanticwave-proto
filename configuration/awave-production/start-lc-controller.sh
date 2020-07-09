@@ -2,6 +2,7 @@
 
 SITE="$1"
 export SITE
+echo "--- SITE: $SITE"
 
 MODE="$2"
 echo "--- MODE: $MODE"
@@ -58,5 +59,3 @@ docker volume create atlanticwave-proto
 docker run --rm --network host -v atlanticwave-proto:/atlanticwave-proto -e MANIFEST="/${MANIFEST}" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} lc_container
 
 docker ps -a
-#echo "The IP of the VM is:"
-#ifconfig | awk '/inet addr/{print substr($2,6)}' | awk '/192.168/{print}'

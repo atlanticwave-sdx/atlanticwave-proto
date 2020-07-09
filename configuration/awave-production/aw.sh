@@ -189,7 +189,7 @@ while getopts "R:B:G:H:m:cbprsH" opt; do
             build_docker_image_local $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR $TYPE $AW_CONFIG $AW_MANIFEST
             ;;
         r)
-            title "Run Docker Container for ${TYPE} - MODE: $MODE"
+            title "Run Docker Container for ${TYPE} - MODE: $MODE - SITE: $SITE"
             run_docker_container $SITE $WORK_DIR $TYPE $MODE
             ;;
         s)
