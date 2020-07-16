@@ -31,7 +31,7 @@ class RyuControllerInterface(ControllerInterface):
 
 
     def __init__(self, lcname, conffile, lcip,
-                 ryu_cxn_port, openflow_port, lc_callback,
+                 ryu_cxn_port, openflow_port, lc_callback, controltopo,
                  loggeridprefix='localcontroller', 
                  run_ryu_manager=True, run_main_loop=True):
         loggerid = loggeridprefix + '.ryucontrollerinterface'
@@ -44,6 +44,7 @@ class RyuControllerInterface(ControllerInterface):
         self.openflow_port = openflow_port
         self.lc_callback = lc_callback
         self.ryu_process = None
+        self.controltopo = controltopo
 
         # Set up server connection for RyuTranslateInterface to connect to.
         self.inter_cm = InterRyuControllerConnectionManager()
@@ -71,12 +72,13 @@ class RyuControllerInterface(ControllerInterface):
             subprocess.Popen(['env'])
             self.logger.debug("ENV - shell=True")
             subprocess.Popen(['env'], shell=True)
-            self.ryu_process = subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --ofp-listen-host %s --atlanticwave-lcname %s --atlanticwave-conffile %s' % 
+            self.ryu_process = subprocess.Popen(['ryu-manager --app-list %s/RyuTranslateInterface.py --log-dir . --log-file ryu.log --verbose --ofp-tcp-listen-port %s --ofp-listen-host %s --atlanticwave-lcname %s --atlanticwave-conffile %s --atlanticwave-controltopo %s' % 
                                                  (current_dir, 
                                                   self.openflow_port, 
                                                   '0.0.0.0', 
                                                   self.lcname, 
-                                                  self.conffile)], 
+                                                  self.conffile,
+                                                  self.controltopo)], 
                                                 shell=True,
                                                 #env=os.environ,
                                                 preexec_fn=os.setsid)

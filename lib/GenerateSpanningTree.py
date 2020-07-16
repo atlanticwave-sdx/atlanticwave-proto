@@ -7,6 +7,7 @@ import json
 import networkx as nx
 from threading import Lock
 from SteinerTree import make_steiner_tree
+from networkx.readwrite import json_graph
 
 def TOPO_VALID_TYPE(typestr):
     if (typestr == "switch" or
@@ -157,13 +158,6 @@ def find_vlan_on_tree(tree, topo):
             # Check each point on the path
             on_path = False
             for node in tree.nodes():
-                print("node:")
-                print(node)
-                print("topo.node[node]")
-                print(topo.node[node])
-                if 'type' in topo.node[node]:
-                    print("topo.node[node]['type']")
-                    print(topo.node[node]['type'])
                 if 'type' in topo.node[node] and topo.node[node]['type'] == "switch":
                     if vlan in topo.node[node]['vlans_in_use']:
                         on_path = True
@@ -235,13 +229,43 @@ def find_valid_steiner_tree(nodes, topo, bw=None):
             print("find_valid_steiner_tree: Could not find VLAN, unhandled!")
             pass
 
-
         # Has BW and VLAN available, return it.
-        print("find_valid_steiner_tree: Successful %s" %
-                            tree.edges())
+        #print("find_valid_steiner_tree: Successful %s" %
+        #                    tree.edges())
+
+        print("Json steiner tree:")
+        #json_data = json.dumps(dict(nodes=tree.nodes(), edges=tree.edges()))
+
+        data = {}
+
+        for node in tree.nodes():
+            for edge in tree.edges():
+                if  node in edge:
+                    if node in data:
+                        if (edge[0] == node):
+                            data[node].append(edge[1])
+                        else:
+                            data[node].append(edge[0])
+                    else:
+                        data[node] = []
+                        if (edge[0] == node):
+                            data[node].append(edge[1])
+                        else:
+                            data[node].append(edge[0])
+                        #data[node].append(edge)
+        
+        print(json.dumps(data))
+        json_data = json.dumps(data)
+
+        tree_file_name = append_name(mani, 'spanning_tree')
+        with open(tree_file_name, 'w') as out:
+            out.write(json_data)
+        out.close()
+        
         return tree
-    
-    
+
+def append_name(filename, appendix):
+    return "{0}_{2}.{1}".format(*filename.rsplit('.', 1) + [appendix])
 
 if __name__ == '__main__':
     #from optparse import OptionParser
@@ -257,7 +281,6 @@ if __name__ == '__main__':
                         action="store", help="specifies the manifest")    
 
     options = parser.parse_args()
-    #print(options)
 
     if not options.manifest:
         parser.print_help()
@@ -265,12 +288,10 @@ if __name__ == '__main__':
 
     mani = options.manifest
     results = parse_manifest(mani)
-    #print(results)
 
     topo = nx.Graph()
     lcs = []
     topolock = Lock()
     nodes = []
     import_topology(mani, topo, lcs, topolock, nodes)
-    print(type(topo))
     find_valid_steiner_tree(nodes, topo)

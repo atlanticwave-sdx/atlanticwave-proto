@@ -167,6 +167,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.name = CONF['atlanticwave']['lcname']
         self.conf_file = CONF['atlanticwave']['conffile']
         self.db_name = CONF['atlanticwave']['dbfile']
+        self.control_topo = CONF['atlanticwave']['controltopo']
+        print "~~~~~~~~~~~CW~~~~~~~~~~~~~~~~~~~CONTROLTOPO:~~~~~~~~~~~~~~"
+        print self.control_topo
         if self.db_name == "":
             self.db_name = ":memory:"
 
