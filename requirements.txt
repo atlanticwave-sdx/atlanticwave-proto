@@ -19,7 +19,7 @@ six==1.10.0
 SQLAlchemy==1.1.3
 Werkzeug==0.15.3
 dataset==0.8.0
-ryu==4.11
+ryu==4.34
 docker==3.4.1
 docker-pycreds==0.3.0
 tinyrpc==0.9.4

@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 RUN apt update && apt-get install -y software-properties-common
 RUN add-apt-repository ppa:pypy/ppa
@@ -24,7 +24,7 @@ RUN pip3 install future
 RUN pip3 install -r atlanticwave-proto/requirements.txt
 
 # Install and patch Ryu - there's a small bug with Ryu that needs to be patched
-RUN pip3 install ryu
+#RUN pip3 install ryu
 RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip3 show ryu | grep Location: | awk '{print $NF}'`
 
 # Setup the PYTHONPATH script
