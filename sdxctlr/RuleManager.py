@@ -292,7 +292,7 @@ class RuleManager(AtlanticWaveManager):
         all_rules = self.rule_table.find()
         # For each rule, look at each breakdown
         for table_entry in all_rules:
-            rule = pickle.loads(str(table_entry['rule']))
+            rule = pickle.loads(table_entry['rule'])
             for bd in rule.get_breakdown():
                 # If Breakdown is for this LC, add to bd_list
                 rule_lc = bd.get_lc()
@@ -612,7 +612,7 @@ class RuleManager(AtlanticWaveManager):
                                     'state':ACTIVE_RULE}, 
                                    ['hash'])
             
-            self._install_rule(pickle.loads(str(rule['rule'])))
+            self._install_rule(pickle.loads(rule['rule']))
             
         
         # Set timer for next rule install, if necessary.
@@ -722,7 +722,7 @@ class RuleManager(AtlanticWaveManager):
         if table_entry == None:
             raise RuleManagerError("rule_hash doesn't exist: %s" % cookie)
 
-        policy = pickle.loads(str(table_entry['rule']))
+        policy = pickle.loads(table_entry['rule'])
 
         breakdown = policy.switch_change_callback(TopologyManager(),
                                                   AuthorizationInspector(),
@@ -733,7 +733,7 @@ class RuleManager(AtlanticWaveManager):
         self.logger.debug("_change_callback_dispatch %s"% cookie)
         self._install_breakdown(breakdown)
 
-        extendedbd = pickle.loads(str(table_entry['extendedbd']))
+        extendedbd = pickle.loads(table_entry['extendedbd'])
         if extendedbd == None:
             extendedbd = breakdown
         else:

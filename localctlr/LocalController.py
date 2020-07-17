@@ -382,7 +382,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_switch_internal_config(self, dpid):
         ''' Gets switch internal config information based on datapath passed in
@@ -394,7 +394,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_ryu_config_in_db(self):
         # Returns the ryu configuration dictionary if it exists or None if it
@@ -404,7 +404,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_LC_config_in_db(self):
         # Returns the LC configuration dictionary if it exists or None if it
@@ -414,7 +414,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
     
     def _get_SDX_config_in_db(self):
         # Returns the SDX configuration dictionary if it exists or None if it
@@ -424,7 +424,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_switch_internal_config_count(self):
         # Returns a count of internal configs.
@@ -460,7 +460,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_config_filename_in_db(self):
         # Returns the manifest filename if it exists or None if it does not.
@@ -469,7 +469,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _setup(self, options): 
         self.manifest = options.manifest

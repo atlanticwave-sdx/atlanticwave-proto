@@ -348,7 +348,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_switch_internal_config_count(self):
         # Returns a count of internal configs.
@@ -369,7 +369,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_lcip_in_db(self):
         # Returns the lcip if it exists or None if it does not.
@@ -378,7 +378,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_ryu_cxn_port_in_db(self):
         # Returns the Ryu Cxn Port if it exists or None if it does not.
@@ -387,7 +387,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _setup(self):
         dbname = self.db_name
@@ -1872,8 +1872,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
             return (None, None, None, None)
         return (result['switchid'],
                 result['switchcookie'],
-                pickle.loads(str(result['sdxrule'])),
-                pickle.loads(str(result['switchrules'])),
+                pickle.loads(result['sdxrule']),
+                pickle.loads(result['switchrules']),
                 result['switchtable'])
 
     def _get_new_OF_cookie(self, sdx_cookie, switch_id):
