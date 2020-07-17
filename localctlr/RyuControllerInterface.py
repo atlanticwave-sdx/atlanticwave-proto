@@ -56,7 +56,7 @@ class RyuControllerInterface(ControllerInterface):
         self.inter_cm_thread = threading.Thread(target=self._inter_cm_thread)
         self.inter_cm_thread.daemon = True
         self.inter_cm_thread.start()
-        
+        print("lcname:"+self.lcname)
         # Start up Ryu as a subprocess
         # FIXME: need a way to get the path to RyuTranslateInterface better than this
         #        self.ryu_thread = threading.Thread(target=main,

@@ -25,7 +25,7 @@ RUN pip3 install -r atlanticwave-proto/requirements.txt
 
 # Install and patch Ryu - there's a small bug with Ryu that needs to be patched
 RUN pip3 install ryu
-RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
+RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip3 show ryu | grep Location: | awk '{print $NF}'`
 
 # Setup the PYTHONPATH script
 ENV PYTHONPATH /atlanticwave-proto:$PYTHONPATH
