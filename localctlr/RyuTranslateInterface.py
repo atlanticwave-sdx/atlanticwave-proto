@@ -168,8 +168,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.conf_file = CONF['atlanticwave']['conffile']
         self.db_name = CONF['atlanticwave']['dbfile']
         self.control_topo = CONF['atlanticwave']['controltopo']
-        print "~~~~~~~~~~~CW~~~~~~~~~~~~~~~~~~~CONTROLTOPO:~~~~~~~~~~~~~~"
-        print self.control_topo
+
         if self.db_name == "":
             self.db_name = ":memory:"
 
@@ -526,6 +525,46 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         of_cookie = self._get_new_OF_cookie(-1)  # FIXME: magic number
         results = []
+
+        try:
+            with open(self.control_topo) as control_topo_file:
+                controltopo = json.load(control_topo_file)
+        except Exception as e:
+            self.logger.warning("exception when opening control plane topology file: %s" %
+                                str(e))
+        
+        # Get config file, if it exists
+        try:
+            self.logger.info("Opening config file %s" % self.conf_file)
+            with open(self.conf_file) as data_file:
+                data = json.load(data_file)
+            lcdata = data['localcontrollers'][self.name]
+        except Exception as e:
+            self.logger.warning("exception when opening config file: %s" %
+                                str(e))
+
+        # TODO: one lc can have multiple switches
+        portinfo = []
+        switchname = ""
+        for entry in lcdata['switchinfo']:
+            if str(entry['dpid']) == str(datapath.id):
+                self.logger.info("Found portinfo for %s" % entry['name'])
+                portinfo = entry['portinfo']
+                switchname = entry['name']
+
+        #print portinfo
+        if not portinfo:
+            raise ValueError("DPID %s does not have port info" %
+                             datapath.id)
+
+        #print switchname
+        steiner_tree_dist_nodes = controltopo[switchname]
+        managementvlanports = []
+        for entry in portinfo:
+            if entry['destination'] in steiner_tree_dist_nodes:
+                managementvlanports.append(int(entry['portnumber']))
+        #print "managementvlanports: "
+        #print managementvlanports
 
         # In-band Communication
         # Extract management VLAN and ports from the manifest
