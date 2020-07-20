@@ -1,17 +1,17 @@
 #/bin/bash
-
+set -x
 SITE="$1"
 export SITE
-echo "--- SITE: $SITE"
+echo "--- $0 - SITE: $SITE"
 
 MODE="$2"
-echo "--- MODE: $MODE"
+echo "--- $0 - MODE: $MODE"
 
 CONFIG="$3"
-echo "--- CONFIG: $CONFIG"
+echo "--- $0 - CONFIG: $CONFIG"
 
 MANIFEST="$4"
-echo "--- MANIFEST: $MANIFEST"
+echo "--- $0 - MANIFEST: $MANIFEST"
 
 if [ "$MODE" == "detached" ]; then
   OPTS="dit"
@@ -42,6 +42,8 @@ case ${SITE} in
               ;;
 esac
 
+echo "--- $0 - LC_SITE: $LC_SITE"
+echo "--- $0 - RYU_PORT: $RYU_PORT"
 
 # Local Controller
 cd atlanticwave-proto/localctlr/

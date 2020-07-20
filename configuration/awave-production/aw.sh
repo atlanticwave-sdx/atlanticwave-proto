@@ -140,6 +140,10 @@ run_docker_container(){
 
    # Run Docker Container ( renci | duke | unc | ncsu )
    cd ${WORK_DIR}
+   echo "--- $0 - SITE: $SITE "
+   echo "--- $0 - MODE: $MODE "
+   echo "--- $0 - CONFIG: $CONFIG"
+   echo "--- $0 - MANIFEST: $MANIFEST"
    ./start-${TYPE}-controller.sh ${SITE} ${MODE} ${CONFIG} ${MANIFEST}
 }
 
@@ -189,8 +193,8 @@ while getopts "R:B:G:H:m:cbprsH" opt; do
             build_docker_image_local $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR $TYPE $AW_CONFIG $AW_MANIFEST
             ;;
         r)
-            title "Run Docker Container for ${TYPE} - MODE: $MODE - SITE: $SITE"
-            run_docker_container $SITE $WORK_DIR $TYPE $MODE
+            title "Run Docker Container for TYPE: ${TYPE} - MODE: $MODE - SITE: $SITE - CONFIGURATION: $AW_CONFIG - MANIFEST: $AW_MANIFEST"
+            run_docker_container $SITE $WORK_DIR $TYPE $MODE $AW_CONFIG $AW_MANIFEST
             ;;
         s)
             title "Stop Docker Containers"
