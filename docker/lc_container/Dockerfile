@@ -14,6 +14,7 @@ RUN pip install -r atlanticwave-proto/requirements.txt
 #run pip install dataset
 
 # Install and patch Ryu - there's a small bug with Ryu that needs to be patched
+RUN pip install --upgrade oslo.config
 RUN pip install ryu
 RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
 
