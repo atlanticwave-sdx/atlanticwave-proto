@@ -29,4 +29,4 @@ aniso8601==3.0.2
 flask-restful==0.3.6
 testfixtures==6.8.2
 mock>=0.8.0
-oslo.config==8.2.0
+oslo.config>=8.0.1
