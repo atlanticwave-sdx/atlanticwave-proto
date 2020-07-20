@@ -543,7 +543,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             self.logger.warning("exception when opening config file: %s" %
                                 str(e))
 
-        # TODO: one lc can have multiple switches
+        # TODO: double check the case where one lc has multiple switches
         portinfo = []
         switchname = ""
         for entry in lcdata['switchinfo']:
@@ -552,19 +552,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 portinfo = entry['portinfo']
                 switchname = entry['name']
 
-        #print portinfo
         if not portinfo:
             raise ValueError("DPID %s does not have port info" %
                              datapath.id)
 
-        #print switchname
         steiner_tree_dist_nodes = controltopo[switchname]
         managementvlanports = []
         for entry in portinfo:
-            if entry['destination'] in steiner_tree_dist_nodes:
+            if entry['destination'] in steiner_tree_dist_nodes and 'dtn' not in entry['destination']:
                 managementvlanports.append(int(entry['portnumber']))
-        #print "managementvlanports: "
-        #print managementvlanports
 
         # In-band Communication
         # Extract management VLAN and ports from the manifest
@@ -574,8 +570,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                              datapath.id)
         if 'managementvlan' in internal_config.keys():
             managementvlan = internal_config['managementvlan']
-        if 'managementvlanports' in internal_config.keys():
-            managementvlanports = internal_config['managementvlanports']
+
+        # Old method that reads managementvlanports from manifest
+        #if 'managementvlanports' in internal_config.keys():
+        #    managementvlanports = internal_config['managementvlanports']
 
         for table in ALL_TABLES_EXCEPT_LAST:
             matches = []  # FIXME: what's the equivalent of match(*)?
