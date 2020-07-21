@@ -57,3 +57,4 @@ rm -f ${AW_MANIFEST}
 # Copy over run scripts
 cd ../../configuration/${AW_CONFIG}
 cp start-sdx-controller.sh ~
+chmod +x ~/start-sdx-controller.sh

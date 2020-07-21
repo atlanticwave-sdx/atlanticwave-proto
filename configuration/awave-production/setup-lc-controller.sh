@@ -58,3 +58,4 @@ rm -f ${AW_MANIFEST}
 # Copy over run scripts
 cd ../../configuration/${AW_CONFIG}
 cp start-lc-controller.sh ~
+chmod +x ~/start-lc-controller.sh
