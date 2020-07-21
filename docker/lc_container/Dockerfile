@@ -17,6 +17,7 @@ RUN pip install -r atlanticwave-proto/requirements.txt
 RUN pip install --upgrade oslo.config
 RUN pip install ryu
 RUN ./atlanticwave-proto/vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
+RUN pip install pip==9.0.3
 
 # Setup the PYTHONPATH script
 ENV PYTHONPATH $PYTHONPATH:.:/atlanticwave-proto
