@@ -35,7 +35,7 @@ AW_REPO="https://github.com/atlanticwave-sdx/atlanticwave-proto.git"
 AW_BRANCH="master"
 AW_CONFIG="awave-production"
 AW_MANIFEST="awave-production.manifest"
-
+MODE="attached"
 
 clean_up (){
 
@@ -198,6 +198,7 @@ while getopts "R:B:G:H:m:cbprsH" opt; do
             echo "--- $0 - CONFIG: $CONFIG"
             echo "--- $0 - MANIFEST: $MANIFEST"
             run_docker_container $SITE $WORK_DIR $TYPE $MODE $AW_CONFIG $AW_MANIFEST
+            #run_docker_container $SITE $AW_MANIFEST $AW_CONFIG 
 
             ;;
         s)
