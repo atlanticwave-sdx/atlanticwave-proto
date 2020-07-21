@@ -132,12 +132,11 @@ build_docker_image_local(){
 
 run_docker_container(){
    SITE=$1
-   #WORK_DIR=$2
+   WORK_DIR=$2
    TYPE=$3
    MODE=$4
    CONFIG=$5
-   MANIFEST=$2
-   #MANIFEST="${CONFIG}.manifest"
+   MANIFEST=$6
 
    cd ${WORK_DIR}
    echo "--- $0 - SITE: $SITE "
@@ -194,8 +193,12 @@ while getopts "R:B:G:H:m:cbprsH" opt; do
             ;;
         r)
             title "Run Docker Container for TYPE: ${TYPE} - MODE: $MODE - SITE: $SITE - CONFIGURATION: $AW_CONFIG - MANIFEST: $AW_MANIFEST"
-            ###run_docker_container $SITE $WORK_DIR $TYPE $MODE $AW_CONFIG ${AW_MANIFEST}
-            run_docker_container $SITE $AW_MANIFEST $TYPE $MODE $AW_CONFIG 
+            echo "--- $0 - SITE: $SITE "
+            echo "--- $0 - MODE: $MODE "
+            echo "--- $0 - CONFIG: $CONFIG"
+            echo "--- $0 - MANIFEST: $MANIFEST"
+            run_docker_container $SITE $WORK_DIR $TYPE $MODE $AW_CONFIG $AW_MANIFEST
+
             ;;
         s)
             title "Stop Docker Containers"
