@@ -46,8 +46,8 @@ git checkout ${AW_BRANCH}
 cp configuration/${AW_CONFIG}/${AW_MANIFEST} docker/lc_container/
 
 if [[ $EUID -eq 0 ]]; then
-  #sudo systemctl restart docker
-  sudo service docker restart
+  sudo systemctl restart docker
+  #sudo service docker restart
 fi
 
 cd docker/lc_container
@@ -56,5 +56,5 @@ docker build -t lc_container .
 rm -f ${AW_MANIFEST}
 
 # Copy over run scripts
-cd ../../configuration/renci_testbed
+cd ../../configuration/${AW_CONFIG}
 cp start-lc-controller.sh ~

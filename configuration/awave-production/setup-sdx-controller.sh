@@ -55,5 +55,5 @@ docker build -t sdx_container .
 rm -f ${AW_MANIFEST}
 
 # Copy over run scripts
-cd ../../configuration/renci_testbed
+cd ../../configuration/${AW_CONFIG}
 cp start-sdx-controller.sh ~

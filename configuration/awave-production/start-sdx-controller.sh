@@ -2,15 +2,16 @@
 
 SITE="$1"
 export SITE
+echo "--- $0 - SITE: $SITE"
 
 MODE="$2"
-echo "--- MODE: $MODE"
+echo "--- $0 - MODE: $MODE"
 
 CONFIG="$3"
-echo "--- CONFIG: $CONFIG"
+echo "--- $0 - CONFIG: $CONFIG"
 
 MANIFEST="$4"
-echo "--- MANIFEST: $MANIFEST"
+echo "--- $0 - MANIFEST: $MANIFEST"
 
 if [ "$MODE" == "detached" ]; then
   OPTS="dit"
