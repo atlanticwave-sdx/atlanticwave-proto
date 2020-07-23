@@ -3,7 +3,6 @@
 ## Testbed Topology
 
 ![alt text](figures/AW-SDX-Production_Setup-0-Topology.png)
-Note: Santiago/Chile is shown tentatively. Actual connection path may be different.
 
 ## Node Layout
 
@@ -27,6 +26,10 @@ Note: Santiago/Chile is shown tentatively. Actual connection path may be differe
 - awsdx-ctrl (VM) : 128.61.149.223
 - awsdx-app (VM)  : 128.61.149.224
 
+- Santiago
+- santiago-corsa  : 139.229.127.101
+- santiago-dtn    : 200.0.207.86
+
 # OpenFlow Conrol Connection
 
 # SDX Controller
@@ -35,18 +38,18 @@ Note: Santiago/Chile is shown tentatively. Actual connection path may be differe
 # Local Controllers 
 128.61.149.223  awsdx-ctrl  lc-atl.atlanticwave-sdx.net
 190.103.186.106 miami-vm    lc-mia.atlanticwave-sdx.net
-190.103.186.107 santiago-vm lc-chl.atlanticwave-sdx.net
+200.0.207.86    santiago-vm lc-chl.atlanticwave-sdx.net
 
 # Corsa Switches
-143.215.216.3 sox-corsa      corsa-atl.atlanticwave-sdx.net
-67.17.206.198 miami-corsa    corsa-mia.atlanticwave-sdx.net
-67.17.206.199 santiago-corsa corsa-chl.atlanticwave-sdx.net
+143.215.216.3   sox-corsa      corsa-atl.atlanticwave-sdx.net
+67.17.206.198   miami-corsa    corsa-mia.atlanticwave-sdx.net
+139.229.127.101 santiago-corsa corsa-chl.atlanticwave-sdx.net
 
 ```
 
 ```
 # In-band management
-# VLAN 1805 for MIAMI and VLAN 3621 for ATLANTA is used for in-band management
+# VLANs across sites are shown on topology drawing.
 
 # SDX Controller
 10.14.11.254 sdx.atlanticwave-sdx.net
@@ -63,6 +66,7 @@ Note: Santiago/Chile is shown tentatively. Actual connection path may be differe
 Configuration on the switches prior to the deployment is saved on the files.
 - [sox-corsa](config/sox-corsa.cfg)
 - [miami-corsa](config/miami-corsa.cfg)
+- [chl-corsa](config/chl-corsa.cfg)
 
 Also, backup of the active-configuration is saved on the switches.
 
