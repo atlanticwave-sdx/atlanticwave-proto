@@ -28,13 +28,13 @@
     "chlctlr": {
       "type": "localcontroller",
       "friendlyname": "Santiago Chile Controller",
-      "location": "25.755595, -80.373499",
-      "vlan": 3631},
+      "location": "-33.446739, -70.675723",
+      "vlan": 1806},
     "chldtn": {
       "type": "dtn",
       "friendlyname": "Santiago Chile DTN",
-      "location": "25.755595, -80.373499",
-      "vlan": 3632}
+      "location": "-33.446739, -70.675723",
+      "vlan": 1808}
   },
   "localcontrollers": {
     "atlctlr":{
@@ -61,18 +61,23 @@
               "speed": 80000000000,
               "destination": "mias1"
 	    },
-            { 
-              "portnumber": 1,
+            {
+      	      "portnumber": 2,
               "speed": 80000000000,
-              "destination": "sdx"
+              "destination": "chls1"
+	    },
+            { 
+              "portnumber": 3,
+              "speed": 80000000000,
+              "destination": "atlctlr"
             },
             {
-      	      "portnumber": 1,
+      	      "portnumber": 4,
 	       "speed": 80000000000,
-	       "destination": "atlctlr"
+	       "destination": "sdx"
 	    },
             {
-      	      "portnumber": 1,
+      	      "portnumber": 10,
 	       "speed": 80000000000,
 	       "destination": "atldtn"
 	    }
@@ -90,8 +95,9 @@
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [27,28],
             "managementvlan":3621,
-            "managementvlanports":[1],
-            "sdxmanagementvlanbackupports":[1]
+            "managementvlanports":[1,2,3,4],
+            "managementvlanbackupports":[1,2,3,4],
+            "sdxmanagementvlanbackupports":[1,2,3,4]
           }
         }
       ],
@@ -121,17 +127,22 @@
           "model": "2.3.0",
           "portinfo": [
             {
-              "portnumber": 2,
+              "portnumber": 1,
               "speed": 80000000000,
               "destination": "atls1"
             },
             {
-              "portnumber": 1,
+              "portnumber": 2,
+               "speed": 80000000000,
+               "destination": "chls1"
+            },
+            {
+              "portnumber": 3,
                "speed": 80000000000,
                "destination": "miactlr"
             },
             {
-              "portnumber": 4,
+              "portnumber": 10,
                "speed": 80000000000,
                "destination": "miadtn"
             }
@@ -149,9 +160,9 @@
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [15,16],
             "managementvlan":1805,
-            "managementvlanports":[1,2],
-            "managementvlanbackupports":[1,2],
-            "sdxmanagementvlanbackupports":[1,2]
+            "managementvlanports":[1,2,3],
+            "managementvlanbackupports":[1,2,3],
+            "sdxmanagementvlanbackupports":[1,2,3]
           }
         }
       ],
@@ -164,7 +175,7 @@
     "chlctlr":{
       "shortname": "chlctlr",
       "credentials": "chlpwd",
-      "location": "25.755595, -80.373499",
+      "location": "-33.446739, -70.675723",
       "lcip": "10.14.11.3",
       "internalconfig": {
         "ryucxninternalport": 55783,
@@ -183,35 +194,40 @@
             { 
               "portnumber": 1,
               "speed": 80000000000,
-              "destination": "chls1"
+              "destination": "atls1"
             },
             { 
-              "portnumber": 11,
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "mias1"
+            },
+            { 
+              "portnumber": 3,
                "speed": 80000000000,
                "destination": "chlctlr"
             },
             { 
-              "portnumber": 12,
+              "portnumber": 10,
                "speed": 80000000000,
                "destination": "chldtn"
             }
           ],
           "internalconfig": {
-            "corsaurl": "https://corsa-1.ncsu.ben/",
-            "corsatoken": "9b95dda0314beb7acf620084dff53e5df7eaf80f9ee453cfb3550f33aecd356561fcf22568ac8365f2892725f129147ceb5718cb711c3a93b136030348dd9eeb",
+            "corsaurl": "https://corsa-chl.atlanticwave-sdx.net/",
+            "corsatoken": "fb34e134e179611014491cfa878b99695b9527df93a21164d3c56218eb6794b44322f5c513530e88818b80da64a0a15df8698dd644da1bc46883a864a66e21bb",
             "corsabridge": "br23",
-            "corsabwin":19,
-            "corsabwout":20,
+            "corsabwin":21,
+            "corsabwout":22,
             "corsaratelimitbridge":"br20",
-            "corsaratelimitports":[21,22],
-            "corsabwinl2mp": 5,
-            "corsabwoutl2mp": 6,
+            "corsaratelimitports":[23,24],
+            "corsabwinl2mp": 25,
+            "corsabwoutl2mp": 26,
             "corsaratelimitbridgel2mp": "br19",
-            "corsaratelimitportsl2mp": [7,8],
-            "managementvlan":1411,
-            "managementvlanports":[1,11],
-	    "managementvlanbackupports":[1,11],
-            "sdxmanagementvlanbackupports":[1, 11]
+            "corsaratelimitportsl2mp": [27,28],
+            "managementvlan":1806,
+            "managementvlanports":[1,2,3],
+	    "managementvlanbackupports":[1,2,3],
+            "sdxmanagementvlanbackupports":[1,2,3]
           }
         }
       ],
