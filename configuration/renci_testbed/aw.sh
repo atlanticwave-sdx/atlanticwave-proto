@@ -39,8 +39,11 @@ esac
 #TYPE=$(hostnamectl --transient | cut -d- -f2 ) # sdx | lc 
 
 AW_REPO="https://github.com/atlanticwave-sdx/atlanticwave-proto.git"
+#AW_BRANCH="mcevik-production-deployment"
 AW_BRANCH="master"
-
+AW_CONFIG="awave-production"
+AW_MANIFEST="awave-production.manifest"
+MODE="attached"
 
 clean_up (){
 
@@ -105,15 +108,16 @@ build_docker_image(){
    TMP_DIR=$3
    WORK_DIR=$4
    TYPE=$5
+   CONFIG=$6
+   MANIFEST=$7
    
    cd $TMP_DIR
-   title "Clone Branch ${AW_BRANCH}"
+   title "Clone Branch ${BR} - Configuration: ${CONFIG} - Manifest: ${MANIFEST}"
    git clone -b $BR $REPO
-   cp ${TMP_DIR}/atlanticwave-proto/configuration/renci_testbed/setup-${TYPE}-controller.sh ${WORK_DIR}
+   cp ${TMP_DIR}/atlanticwave-proto/configuration/${CONFIG}/setup-${TYPE}-controller.sh ${WORK_DIR}
    chmod +x ${WORK_DIR}/setup-${TYPE}-controller.sh 
    cd ${WORK_DIR}
-   ./setup-${TYPE}-controller.sh -R ${AW_REPO} -B ${AW_BRANCH}
-
+   ./setup-${TYPE}-controller.sh -R ${REPO} -B ${BR} -G ${CONFIG} -H ${MANIFEST}
 }
 
 
@@ -123,12 +127,14 @@ build_docker_image_local(){
    TMP_DIR=$3
    WORK_DIR=$4
    TYPE=$5
+   CONFIG=$6
+   MANIFEST=$7
    
    cd $TMP_DIR
-   cp ${TMP_DIR}/atlanticwave-proto/configuration/renci_testbed/setup-${TYPE}-controller.sh ${WORK_DIR}
+   cp ${TMP_DIR}/atlanticwave-proto/configuration/${CONFIG}/setup-${TYPE}-controller.sh ${WORK_DIR}
    chmod +x ${WORK_DIR}/setup-${TYPE}-controller.sh 
    cd ${WORK_DIR}
-   ./setup-${TYPE}-controller.sh -R ${AW_REPO} -B ${AW_BRANCH}
+   ./setup-${TYPE}-controller.sh -R ${REPO} -B ${BR} -G ${CONFIG} -H ${MANIFEST}
 
 }
 
@@ -137,10 +143,15 @@ run_docker_container(){
    WORK_DIR=$2
    TYPE=$3
    MODE=$4
+   CONFIG=$5
+   MANIFEST=$6
 
-   # Run Docker Container ( renci | duke | unc | ncsu )
    cd ${WORK_DIR}
-   ./start-${TYPE}-controller.sh ${SITE} ${MODE}
+   echo "--- $0 - SITE: $SITE "
+   echo "--- $0 - MODE: $MODE "
+   echo "--- $0 - CONFIG: $CONFIG"
+   echo "--- $0 - MANIFEST: $MANIFEST"
+   ./start-${TYPE}-controller.sh ${SITE} ${MODE} ${CONFIG} ${MANIFEST}
 }
 
 
@@ -149,13 +160,20 @@ stop_docker_container(){
 }
 
 
-while getopts "R:B:m:cbprsH" opt; do
+while getopts "R:B:G:H:m:cbprsH" opt; do
     case $opt in
         R)
             AW_REPO=${OPTARG}
             ;;
         B)
             AW_BRANCH=${OPTARG}
+            ;;
+        G)
+            # Set this to the directories under git atlanticwave-proto/configuration (eg. renci_testbed, awave-production)
+            AW_CONFIG=${OPTARG}
+            ;;
+        H)
+            AW_MANIFEST=${OPTARG}
             ;;
         m)
             MODE=${OPTARG}
@@ -173,17 +191,23 @@ while getopts "R:B:m:cbprsH" opt; do
             title "Cleanup Docker Containers and Images"
             cleanup_docker ${TYPE}
             title "Build Docker Image"
-            build_docker_image $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE}
+            build_docker_image $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR $TYPE $AW_CONFIG $AW_MANIFEST
             ;;
         p)
             title "Cleanup Docker Containers and Images"
             cleanup_docker ${TYPE}
             title "Build Docker Image"
-            build_docker_image_local $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR ${TYPE}
+            build_docker_image_local $AW_REPO $AW_BRANCH $TMP_DIR $WORK_DIR $TYPE $AW_CONFIG $AW_MANIFEST
             ;;
         r)
-            title "Run Docker Container for ${TYPE} - MODE: $MODE"
-            run_docker_container $SITE $WORK_DIR $TYPE $MODE
+            title "Run Docker Container for TYPE: ${TYPE} - MODE: $MODE - SITE: $SITE - CONFIGURATION: $AW_CONFIG - MANIFEST: $AW_MANIFEST"
+            echo "--- $0 - SITE: $SITE "
+            echo "--- $0 - MODE: $MODE "
+            echo "--- $0 - CONFIG: $CONFIG"
+            echo "--- $0 - MANIFEST: $MANIFEST"
+            run_docker_container $SITE $WORK_DIR $TYPE $MODE $AW_CONFIG $AW_MANIFEST
+            #run_docker_container $SITE $AW_MANIFEST $AW_CONFIG 
+
             ;;
         s)
             title "Stop Docker Containers"
