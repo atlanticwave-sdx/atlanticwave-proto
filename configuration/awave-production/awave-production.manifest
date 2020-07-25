@@ -67,17 +67,17 @@
               "destination": "chls1"
 	    },
             { 
-              "portnumber": 3,
+              "portnumber": 10,
               "speed": 80000000000,
-              "destination": "atlctlr"
+              "destination": "sdx"
             },
             {
-      	      "portnumber": 4,
+      	      "portnumber": 11,
 	       "speed": 80000000000,
-	       "destination": "sdx"
+	       "destination": "atlctlr"
 	    },
             {
-      	      "portnumber": 10,
+      	      "portnumber": 12,
 	       "speed": 80000000000,
 	       "destination": "atldtn"
 	    }
@@ -95,9 +95,9 @@
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [27,28],
             "managementvlan":3621,
-            "managementvlanports":[1,2,3,4],
-            "managementvlanbackupports":[1,2,3,4],
-            "sdxmanagementvlanbackupports":[1,2,3,4]
+            "managementvlanports":[1,2,10,11],
+            "managementvlanbackupports":[1,2,10,11],
+            "sdxmanagementvlanbackupports":[1,2,10,11]
           }
         }
       ],
@@ -137,12 +137,12 @@
                "destination": "chls1"
             },
             {
-              "portnumber": 3,
+              "portnumber": 11,
                "speed": 80000000000,
                "destination": "miactlr"
             },
             {
-              "portnumber": 10,
+              "portnumber": 12,
                "speed": 80000000000,
                "destination": "miadtn"
             }
@@ -160,9 +160,9 @@
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [15,16],
             "managementvlan":1805,
-            "managementvlanports":[1,2,3],
-            "managementvlanbackupports":[1,2,3],
-            "sdxmanagementvlanbackupports":[1,2,3]
+            "managementvlanports":[1,2,11],
+            "managementvlanbackupports":[1,2,11],
+            "sdxmanagementvlanbackupports":[1,2,11]
           }
         }
       ],
@@ -202,12 +202,12 @@
               "destination": "mias1"
             },
             { 
-              "portnumber": 3,
+              "portnumber": 11,
                "speed": 80000000000,
                "destination": "chlctlr"
             },
             { 
-              "portnumber": 10,
+              "portnumber": 12,
                "speed": 80000000000,
                "destination": "chldtn"
             }
@@ -225,9 +225,9 @@
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [27,28],
             "managementvlan":1806,
-            "managementvlanports":[1,2,3],
-	    "managementvlanbackupports":[1,2,3],
-            "sdxmanagementvlanbackupports":[1,2,3]
+            "managementvlanports":[1,2,11],
+	    "managementvlanbackupports":[1,2,11],
+            "sdxmanagementvlanbackupports":[1,2,11]
           }
         }
       ],

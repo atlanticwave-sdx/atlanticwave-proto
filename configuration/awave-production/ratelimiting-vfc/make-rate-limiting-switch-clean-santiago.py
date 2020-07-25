@@ -8,8 +8,8 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 token = "fb34e134e179611014491cfa878b99695b9527df93a21164d3c56218eb6794b44322f5c513530e88818b80da64a0a15df8698dd644da1bc46883a864a66e21bb"
 verify = False
 bridge_name = "br20"
-port1 = "25"
-port2 = "26"
+port1 = "23"
+port2 = "24"
 url = "https://139.229.127.101/"
 
 
