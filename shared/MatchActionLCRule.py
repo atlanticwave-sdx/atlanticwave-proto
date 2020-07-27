@@ -1,10 +1,12 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from LCRule import *
-from LCFields import *
-from LCAction import *
+from shared.LCRule import *
+from shared.LCFields import *
+from shared.LCAction import *
 
 class MatchActionLCRule(LCRule):
     ''' This structure is used to pass Rules that create match-action rules on
@@ -59,3 +61,10 @@ class MatchActionLCRule(LCRule):
 
     def get_ingress(self):
         return self.ingress
+
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.get_switch_id() == other.get_switch_id() and
+                self.get_cookie() == other.get_cookie() and 
+                self.get_matches() == other.get_matches() and 
+                self.get_actions() == other.get_actions())

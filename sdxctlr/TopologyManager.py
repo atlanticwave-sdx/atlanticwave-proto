@@ -1,7 +1,13 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import zip
+from builtins import hex
+from builtins import str
+from builtins import range
 from lib.AtlanticWaveManager import AtlanticWaveManager
 from threading import Lock
 from datetime import datetime
@@ -149,7 +155,7 @@ class TopologyManager(AtlanticWaveManager):
         with open(manifest_filename) as data_file:
             data = json.load(data_file)
 
-        for unikey in data['endpoints'].keys():
+        for unikey in list(data['endpoints'].keys()):
             # All the other nodes
             key = str(unikey)
             endpoint = data['endpoints'][key]
@@ -168,7 +174,7 @@ class TopologyManager(AtlanticWaveManager):
                 self.topo.node[key]['vlans_in_use'] = []
                     
 
-        for key in data['localcontrollers'].keys():
+        for key in list(data['localcontrollers'].keys()):
             # Generic per-location information that applies to all switches at
             # a location.
             # FIXME: Everything's wrapped as a str or int because Unicode.
@@ -250,9 +256,9 @@ class TopologyManager(AtlanticWaveManager):
                         self.topo.edge[name][destination]['bw_in_use'] = 0
 
                         # VLANs available
-                        if 'available_vlans' in port.keys():
+                        if 'available_vlans' in list(port.keys()):
                             self.topo.edge[name][destination]['available_vlans'] = str(port['available_vlans'])
-                        elif 'available_vlans' in self.topo.node[port['destination']].keys():
+                        elif 'available_vlans' in list(self.topo.node[port['destination']].keys()):
                             self.topo.edge[name][destination]['available_vlans'] = str(self.topo.node[port['destination']]['available_vlans'])
                         else:
                             self.topo.edge[name][destination]['available_vlans'] = "0-4095"
@@ -266,14 +272,14 @@ class TopologyManager(AtlanticWaveManager):
     # -----------------
 
     def check_vlan_available(self, vlan_str, vlan):
-        if vlan_str not in self._cached_vlans.keys():
+        if vlan_str not in list(self._cached_vlans.keys()):
             self._parse_available_vlans(vlan_str)
         valid_vlans = self._cached_vlans[vlan_str]
 
         return vlan in valid_vlans        
 
     def get_available_vlan_list(self, vlan_str):
-        if vlan_str not in self._cached_vlans.keys():
+        if vlan_str not in list(self._cached_vlans.keys()):
             self._parse_available_vlans(vlan_str)
         return self._cached_vlans[vlan_str]
     
@@ -365,7 +371,7 @@ class TopologyManager(AtlanticWaveManager):
         with self.topolock:
             # Make sure the path is clear -> very similar to find_vlan_on_path
             for node in nodes:
-                print "\nself.topo.node[%s]: %s\n" % (node, self.topo.node[node])
+                print("\nself.topo.node[%s]: %s\n" % (node, self.topo.node[node]))
                 if vlan in self.topo.node[node]['vlans_in_use']:
                     raise TopologyManagerError("VLAN %d is already reserved on node %s" % (vlan, node))
 
@@ -464,24 +470,24 @@ class TopologyManager(AtlanticWaveManager):
     def reserve_vlan_on_path(self, path, vlan):
         ''' Marks a VLAN in use on a provided path. Raises an error if the VLAN
             is in use at the time at any location. '''
-        node_pairs = zip(path[0:-1], path[1:])
+        node_pairs = list(zip(path[0:-1], path[1:]))
         self.reserve_vlan(path, node_pairs, vlan)
         
     def unreserve_vlan_on_path(self, path, vlan):
         ''' Removes reservations on a given path for a given VLAN. '''
-        node_pairs = zip(path[0:-1], path[1:])
+        node_pairs = list(zip(path[0:-1], path[1:]))
         self.unreserve_vlan(path, node_pairs, vlan)
 
     def reserve_bw_on_path(self, path, bw):
         ''' Reserves a specified amount of bandwidth on a given path. Raises an
             error if the bandwidth is not available at any part of the path. '''
-        node_pairs = zip(path[0:-1], path[1:])
+        node_pairs = list(zip(path[0:-1], path[1:]))
         self.reserve_bw(node_pairs, bw)
         
     def unreserve_bw_on_path(self, path, bw):
         ''' Removes reservations on a given path for a given amount of
             bandwidth. '''
-        node_pairs = zip(path[0:-1], path[1:])
+        node_pairs = list(zip(path[0:-1], path[1:]))
         self.unreserve_bw(node_pairs, bw)
 
     def find_vlan_on_path(self, path):
@@ -704,7 +710,7 @@ class TopologyManager(AtlanticWaveManager):
             returns name of neighbor if exists, None if it doesn't.
         '''
         # Check if port is in use: loop through neighbors
-        for neighbor in self.topo[switchname].keys():
+        for neighbor in list(self.topo[switchname].keys()):
             # - if neighbor is using that port, good, we have a match
             if self.topo[switchname][neighbor][switchname] == portnum:
                 # --return neighbor name

@@ -1,7 +1,17 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import unicode_literals
 # Copyrightg 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import hex
+from builtins import range
+from past.utils import old_div
 import logging
 import threading
 import sys
@@ -11,18 +21,18 @@ import os
 import re
 import atexit
 import traceback
-import cPickle as pickle
-from Queue import Queue, Empty
+import pickle as pickle
+from queue import Queue, Empty
 from time import sleep
 
 from lib.AtlanticWaveModule import AtlanticWaveModule
 from lib.Connection import select as cxnselect
-from RyuControllerInterface import *
-from RyuTranslateInterface import *
-from LCRuleManager import *
+from localctlr.RyuControllerInterface import *
+from localctlr.RyuTranslateInterface import *
+from localctlr.LCRuleManager import *
 from shared.SDXControllerConnectionManager import *
 from shared.SDXControllerConnectionManagerConnection import *
-from switch_messages import *
+from localctlr.switch_messages import *
 from shared.ManagementLCRecoverRule import *
 
 LOCALHOST = "127.0.0.1"
@@ -149,7 +159,7 @@ class LocalController(AtlanticWaveModule):
                 pass
  
             if self.sdx_connection == None:
-                print "SDX_CXN = None, start_cxn_thread = %s" % str(self.start_cxn_thread)
+                print("SDX_CXN = None, start_cxn_thread = %s" % str(self.start_cxn_thread))
             # Restart SDX Connection if it's failed.
             if (self.sdx_connection == None and
                 self.start_cxn_thread == None):
@@ -162,7 +172,7 @@ class LocalController(AtlanticWaveModule):
                 self.start_sdx_controller_connection() #Restart!
 
             if len(rlist) == 0:
-                sleep(timeout/2)
+                sleep(old_div(timeout,2))
                 continue
 
             try:
@@ -372,7 +382,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_switch_internal_config(self, dpid):
         ''' Gets switch internal config information based on datapath passed in
@@ -384,7 +394,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_ryu_config_in_db(self):
         # Returns the ryu configuration dictionary if it exists or None if it
@@ -394,7 +404,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_LC_config_in_db(self):
         # Returns the LC configuration dictionary if it exists or None if it
@@ -404,7 +414,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
     
     def _get_SDX_config_in_db(self):
         # Returns the SDX configuration dictionary if it exists or None if it
@@ -414,7 +424,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_switch_internal_config_count(self):
         # Returns a count of internal configs.
@@ -450,7 +460,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_config_filename_in_db(self):
         # Returns the manifest filename if it exists or None if it does not.
@@ -459,7 +469,7 @@ class LocalController(AtlanticWaveModule):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _setup(self, options): 
         self.manifest = options.manifest
@@ -745,14 +755,14 @@ class LocalController(AtlanticWaveModule):
                                    % (l2mp_bw_in_port, l2mp_bw_out_port))
 
                 key='corsabridge'
-                if key not in internal_config.keys():
+                if key not in list(internal_config.keys()):
                     self.logger.debug("corsabridge is not present in the internal_config in %s" %
                               switch_id)
                     return
                 bridge = internal_config['corsabridge']
 
                 key='corsaratelimitbridgel2mp'
-                if key not in internal_config.keys():
+                if key not in list(internal_config.keys()):
                     self.logger.debug("corsabridge is not present in the internal_config in %s" %
                               switch_id)
                     return
@@ -847,14 +857,14 @@ class LocalController(AtlanticWaveModule):
         return self.switch_connection.get_ryu_process()
 
     def receive_exit(self):
-        print "EXIT RECEIVED"
-        print "\n\n%d\n\n" % self.get_ryu_process().pid
+        print("EXIT RECEIVED")
+        print("\n\n%d\n\n" % self.get_ryu_process().pid)
         os.killpg(self.get_ryu_process().pid, signal.SIGKILL)
 
 # Cleanup related functions
 def receive_signal(signum, stack):
-    print "Caught signal %d" % signum
-    print "stack: \n" + "".join(traceback.format_stack(stack))
+    print("Caught signal %d" % signum)
+    print("stack: \n" + "".join(traceback.format_stack(stack)))
     exit()        
 
 
@@ -878,7 +888,7 @@ if __name__ == '__main__':
                         help="Port number of SDX Controller")
 
     options = parser.parse_args()
-    print options
+    print(options)
 
     config_info_present = options.manifest or options.database
     if not config_info_present or not options.name:

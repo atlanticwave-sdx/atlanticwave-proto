@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Proejct
 
@@ -28,10 +29,10 @@ class BasicMatchTest(unittest.TestCase):
         a_match = SDXMatch("a", 6, a_field)
         b_field = LCField('field')
         b_match = SDXMatch("a", 6, b_field)
-        self.failUnlessEqual(a_match, b_match)
+        self.assertEqual(a_match, b_match)
 
     def test_lookup(self):
-        self.failUnlessEqual(type(SDXMatchSRCMAC),
+        self.assertEqual(type(SDXMatchSRCMAC),
                              type(SDXMatch.lookup_match_type("src_mac")))
 
     def test_failed_lookup(self):

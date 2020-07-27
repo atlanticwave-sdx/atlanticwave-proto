@@ -1,15 +1,19 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from ControllerInterface import *
-from InterRyuControllerConnectionManager import *
+from builtins import str
+from builtins import hex
+from localctlr.ControllerInterface import *
+from localctlr.InterRyuControllerConnectionManager import *
 from ryu.ofproto import ofproto_v1_3
 from ryu.cmd.manager import main
 from lib.Singleton import Singleton
 from lib.Connection import select as cxnselect
 from shared.LCRule import LCRule
-from switch_messages import *
+from localctlr.switch_messages import *
 
 import threading
 import subprocess
@@ -52,7 +56,7 @@ class RyuControllerInterface(ControllerInterface):
         self.inter_cm_thread = threading.Thread(target=self._inter_cm_thread)
         self.inter_cm_thread.daemon = True
         self.inter_cm_thread.start()
-        
+        print("lcname:"+self.lcname)
         # Start up Ryu as a subprocess
         # FIXME: need a way to get the path to RyuTranslateInterface better than this
         #        self.ryu_thread = threading.Thread(target=main,

@@ -1,8 +1,14 @@
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
-import cPickle as pickle
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
+import pickle as pickle
 from lib.AtlanticWaveManager import AtlanticWaveManager
+from shared.ManagementLCRecoverRule import *
 
 # List of rule statuses
 RULE_STATUS_ACTIVE       = 1
@@ -67,7 +73,7 @@ class LCRuleManager(AtlanticWaveManager):
             for dupe in dupes:
                 (c,sid,lcr,stat) = dupe
                 if lcr == lcrule:
-                    if isinstance(ManagementLCRecoverRule):
+                    if isinstance(lcrule,ManagementLCRecoverRule):
                         self.logger.debug("ManagementLCRecoverRule, ignored.")
                     else:
                         raise LCRuleManagerValidationError(
@@ -117,7 +123,7 @@ class LCRuleManager(AtlanticWaveManager):
             if type(filter) != dict:
                 raise LCRuleManagerTypeError("filter is not a dictionary: %s" %
                                              type(filter))
-            for key in filter.keys():
+            for key in list(filter.keys()):
                 if key not in self._valid_table_columns:
                     raise LCRuleManagerValidationError(
                         "filter column '%s' is not a valid filtering field %s" %
@@ -129,7 +135,7 @@ class LCRuleManager(AtlanticWaveManager):
         # Send Back results.
         retval = [(x['cookie'],
                    x['switch_id'],
-                   pickle.loads(str(x['rule'])),
+                   pickle.loads(x['rule']),
                    x['status']) for x in results]
         return retval
 
@@ -139,10 +145,10 @@ class LCRuleManager(AtlanticWaveManager):
         if full_tuple:
             retval = [(x['cookie'],
                        x['switch_id'],
-                       pickle.loads(str(x['rule'])),
+                       pickle.loads(x['rule']),
                        x['status']) for x in rules]
             return retval
-        retval = [pickle.loads(str(x['rule'])) for x in rules]
+        retval = [pickle.loads(x['rule']) for x in rules]
         return retval
 
     def get_rules(self, cookie, switch_id, full_tuple=False):
@@ -162,12 +168,12 @@ class LCRuleManager(AtlanticWaveManager):
         if full_tuple:
             retval = [(x['cookie'],
                        x['switch_id'],
-                       pickle.loads(str(x['rule'])),
+                       pickle.loads(x['rule']),
                        x['status']) for x in rules]
             self.logger.debug("%s - %s --- MCEVIK get_rules: retval full_tuple: %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
             return retval
 
-        retval = [pickle.loads(str(x['rule'])) for x in rules]
+        retval = [pickle.loads(x['rule']) for x in rules]
         self.logger.debug("%s - %s --- MCEVIK get_rules: retval : %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
         return retval
 

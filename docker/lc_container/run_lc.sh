@@ -24,8 +24,8 @@ then
   cd atlanticwave-proto/
   git pull
 else
-  rm `pip show ryu | grep Location: | awk '{print $NF}'`/ryu/flags.py
-  cp `pip show ryu | grep Location: | awk '{print $NF}'`/ryu/flags.orig `pip show ryu | grep Location: | awk '{print $NF}'`/ryu/flags.py
+  rm `pip3 show ryu | grep Location: | awk '{print $NF}'`/ryu/flags.py
+  cp `pip3 show ryu | grep Location: | awk '{print $NF}'`/ryu/flags.orig `pip show ryu | grep Location: | awk '{print $NF}'`/ryu/flags.py
   cd $AWAVEDIR
   ./vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
 fi

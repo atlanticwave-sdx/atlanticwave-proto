@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AlanticWave/SDX Project
 
 
 # Unit tests for shared.L2MultipointLearnedDestinationLCRule
 
+from builtins import str
 import unittest
 from shared.L2MultipointLearnedDestinationLCRule import *
 
@@ -16,8 +18,8 @@ class BasicLCRuleTest(unittest.TestCase):
         self.assertEqual(1, lcrule1.get_switch_id())
         self.assertEqual('aa:bb:cc:dd:ee', lcrule1.get_dst_address())
         self.assertEqual(2, lcrule1.get_outport())
-        self.assertEquals(1000, lcrule1.get_intermediate_vlan())
-        self.assertEquals(100, lcrule1.get_out_vlan())
+        self.assertEqual(1000, lcrule1.get_intermediate_vlan())
+        self.assertEqual(100, lcrule1.get_out_vlan())
         self.assertEqual("L2MultipointLearnedDestinationLCRule: switch 1, None:aa:bb:cc:dd:ee:2",
                          str(lcrule1))
 
@@ -51,49 +53,49 @@ class BasicLCRuleTest(unittest.TestCase):
                                              2, 1000, 100)
 
         # outport - must be an int
-        self.failUnlessRaises(LCRuleTypeError,
+        self.assertRaises(LCRuleTypeError,
                               L2MultipointLearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee',
                               'a', # Must be an int
                               1000, 100)
-        self.failUnlessRaises(LCRuleTypeError,
+        self.assertRaises(LCRuleTypeError,
                               L2MultipointLearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee',
                               (1,2), # Must be an int
                               1000, 100)
-        self.failUnlessRaises(LCRuleTypeError,
+        self.assertRaises(LCRuleTypeError,
                               L2MultipointLearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee',
                               [1], # Must be an int
                               1000, 100)
         
         # intermediate_vlan - must be an int.
-        self.failUnlessRaises(LCRuleTypeError,
+        self.assertRaises(LCRuleTypeError,
                               L2MultipointLearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee', 2,
                               'a', # Must be an int
                               100)
-        self.failUnlessRaises(LCRuleTypeError,
+        self.assertRaises(LCRuleTypeError,
                               L2MultipointLearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee', 2,
                               (1,2), # Must be an int
                               100)
-        self.failUnlessRaises(LCRuleTypeError,
+        self.assertRaises(LCRuleTypeError,
                               L2MultipointLearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee', 2,
                               [1], # Must be an int
                               100)
 
         # out_vlan - must be an int.
-        self.failUnlessRaises(LCRuleTypeError,
+        self.assertRaises(LCRuleTypeError,
                               L2MultipointLearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee', 2, 1000,
                               'a') # Must be an int
-        self.failUnlessRaises(LCRuleTypeError,
+        self.assertRaises(LCRuleTypeError,
                               L2MultipointLearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee', 2, 1000,
                               (1,2)) # Must be an int
-        self.failUnlessRaises(LCRuleTypeError,
+        self.assertRaises(LCRuleTypeError,
                               L2MultipointLearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee', 2, 1000,
                               [1]) # Must be an int

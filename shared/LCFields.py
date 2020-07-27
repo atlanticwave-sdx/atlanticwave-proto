@@ -1,7 +1,10 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import str
+from builtins import object
 import sys
 from netaddr import EUI, IPAddress
 from shared.ofconstants import *
@@ -99,7 +102,7 @@ class number_field(LCField):
     def __init__(self, name, minval, maxval, value=None, 
                  mask=False, others=[], prereqs=[]):
         if value is not None:
-            if type(value) is not int and type(value) is not long:
+            if type(value) is not int and type(value) is not int:
                 raise LCFieldTypeError("value is not a number")
         
         self.minval = minval

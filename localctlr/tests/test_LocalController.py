@@ -1,15 +1,18 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 # Unit tests for LocalController class
 
+from builtins import object
 import unittest
 import mock
 import subprocess
 import os
 from localctlr.LocalController import *
-from RemoteControllerHarness import RemoteControllerHarness
+from .RemoteControllerHarness import RemoteControllerHarness
 from time import sleep
 
 FNULL = open(os.devnull, 'w')
@@ -119,7 +122,7 @@ class LocalControllerTest(unittest.TestCase):
             if test6 != None:
                 argcount += 1
 
-            raise(TypeError("call_test_rule_installation() takes at least 4 arguments (%d given)" % argcount))
+            raise TypeError
 
         sleep(1)
         #self.logger.debug("test_rule_installation_" + str(num))
@@ -148,20 +151,20 @@ class LocalControllerTest(unittest.TestCase):
             for e in line.split(','):
                 self.logger.debug("%d:%s" % (count, e))
                 count += 1
-            self.failUnlessEqual(line.split(',')[5].strip(), test5)
-            self.failUnlessEqual(line.split(',')[6].strip(), test6)
+            self.assertEqual(line.split(',')[5].strip(), test5)
+            self.assertEqual(line.split(',')[6].strip(), test6)
             if test7 != None:
-                self.failUnlessEqual(line.split(',')[7].strip(), test7)
+                self.assertEqual(line.split(',')[7].strip(), test7)
             if test8 != None:
-                self.failUnlessEqual(line.split(',')[8].strip(), test8)
+                self.assertEqual(line.split(',')[8].strip(), test8)
             if test9 != None:
-                self.failUnlessEqual(line.split(',')[9].strip(), test9)
+                self.assertEqual(line.split(',')[9].strip(), test9)
             if test10 != None:
-                self.failUnlessEqual(line.split(',')[10].strip(), test10)
+                self.assertEqual(line.split(',')[10].strip(), test10)
 
         # Removal
         for line in rmlines:
-            self.failUnless("priority=100" not in line)
+            self.assertTrue("priority=100" not in line)
                 
             
     def test_rule_installation_0(self):

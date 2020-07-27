@@ -1,11 +1,19 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
+from builtins import object
 import logging
 import threading
 import dataset
-import cPickle as pickle
+import pickle as pickle
 import requests
 import json
 from time import sleep
@@ -15,8 +23,8 @@ from shared.LCAction import *
 from shared.LCFields import *
 from shared.LCRule import *
 from shared.ofconstants import *
-from oftables import *
-from InterRyuControllerConnectionManager import *
+from localctlr.oftables import *
+from localctlr.InterRyuControllerConnectionManager import *
 
 # Ryu libraries
 from ryu import cfg
@@ -340,7 +348,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_switch_internal_config_count(self):
         # Returns a count of internal configs.
@@ -361,7 +369,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_lcip_in_db(self):
         # Returns the lcip if it exists or None if it does not.
@@ -370,7 +378,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_ryu_cxn_port_in_db(self):
         # Returns the Ryu Cxn Port if it exists or None if it does not.
@@ -379,7 +387,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _setup(self):
         dbname = self.db_name
@@ -445,7 +453,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # First, wait till we have at least one datapath.
         self.logger.info("Looking for datapath")
-        while len(self.datapaths.keys()) == 0:
+        while len(list(self.datapaths.keys())) == 0:
             self.logger.info("Waiting " + str(self.datapaths))
             sleep(1)
 
@@ -459,9 +467,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # FIXME - This is static: only installing rules right now.
             event_type, event_data = self.inter_cm_cxn.recv_cmd()
             (switch_id, event) = event_data
-            if switch_id not in self.datapaths.keys():
+            if switch_id not in list(self.datapaths.keys()):
                 self.logger.warning("switch_id %s does not match known switches: %s" %
-                                    (switch_id, self.datapaths.keys()))
+                                    (switch_id, list(self.datapaths.keys())))
 
                 # FIXME - Need to update this for sending errors back
                 continue
@@ -533,13 +541,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
             return
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
         else:
             raise ValueError("DPID %s does not have managementvlan" %
                              datapath.id)
             return
-        if 'managementvlanports' in internal_config.keys():
+        if 'managementvlanports' in list(internal_config.keys()):
             managementvlanports = internal_config['managementvlanports']
         else:
             raise ValueError("DPID %s does not have managementvlanports" %
@@ -585,11 +593,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -622,12 +630,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
-        if 'managementvlanports' in internal_config.keys():
+        if 'managementvlanports' in list(internal_config.keys()):
             managementvlanports = internal_config['managementvlanports']
 
-        if 'managementvlanbackupports' in internal_config.keys():
+        if 'managementvlanbackupports' in list(internal_config.keys()):
             managementvlanbackupports = internal_config['managementvlanbackupports']
         else:
             self.logger.debug("No backup port provided")
@@ -635,11 +643,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -659,11 +667,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Add backup management vlan ports
         results = []
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             managementvlanbackupports = internal_config['managementvlanbackupports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -697,12 +705,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
-        if 'managementvlanports' in internal_config.keys():
+        if 'managementvlanports' in list(internal_config.keys()):
             managementvlanports = internal_config['managementvlanports']
 
-        if 'sdxmanagementvlanbackupports' in internal_config.keys():
+        if 'sdxmanagementvlanbackupports' in list(internal_config.keys()):
             sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
         else:
             self.logger.debug("No SDX management VLAN backup port provided")
@@ -710,11 +718,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -734,11 +742,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Add backup management vlan ports
         results = []
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -888,14 +896,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Find out the request_url
             tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                           bridge + "/tunnels?list=true")
-            print
+            print()
             "Requesting tunnels from %s" % tunnel_url
             rest_return = requests.get(tunnel_url,
                                        headers={'Authorization':
                                                     internal_config['corsatoken']},
                                        verify=False)  # FIXME: HARDCODED
 
-            print
+            print()
             "Looking for %s on ports %s" % (vlan,
                                             internal_config['corsaratelimitports'])
 
@@ -920,7 +928,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 'value': 0}]
                     valid_responses = [204]
 
-                    print
+                    print()
                     "Patching %s:%s" % (request_url, json)
                     results.append(TranslatedCorsaRuleContainer("patch",
                                                                 request_url,
@@ -1092,80 +1100,81 @@ class RyuTranslateInterface(app_manager.RyuApp):
             self.logger.debug("L2MultipointEndpointLCRule: Corsa Case L2MULTIPOINTCORSABWDISABLED %s " % (L2MULTIPOINTCORSABWDISABLED))
 
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-		    self.logger.debug("L2MultipointEndpointLCRule: port: %s -  vlan: %s" % (port, vlan))
-		    self.logger.debug("L2MultipointEndpointLCRule: IN_PORT: %s -  VLAN_VID: %s" % (IN_PORT(port), VLAN_VID(vlan)))
-
-		    bridge = internal_config['corsabridge']
-		    bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
-		    bandwidth = mperule.get_bandwidth()
-
-		    port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                self.logger.debug("L2MultipointEndpointLCRule: port: %s -  vlan: %s" % (port, vlan))
+                self.logger.debug("L2MultipointEndpointLCRule: IN_PORT: %s -  VLAN_VID: %s" % (IN_PORT(port), VLAN_VID(vlan)))
+                bridge = internal_config['corsabridge']
+                bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
+                bandwidth = mperule.get_bandwidth()
+                
+                port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
 				       bridge + "/tunnels")
-
-		    port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
+                       
+                port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
 						      bridge_ratelimit_l2mp + "/tunnels")
-		    valid_responses = [201]
+                              
+                valid_responses = [201]
+                
+                l2mp_bw_in_port = vlan
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
-		    l2mp_bw_in_port = vlan
-		    l2mp_bw_out_port = int(intermediate_vlan) + 10000
-
-		    self.logger.debug("L2MultipointEndpointLCRule: l2mp_bw_in_port: %s -  l2mp_bw_out_port: %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
+                self.logger.debug("L2MultipointEndpointLCRule: l2mp_bw_in_port: %s -  l2mp_bw_out_port: %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
 
 
-		    # Create tunnels and ofports on corsabridge
-		    # 1422  --> 5
-		    # 10001 --> 6
+		        # Create tunnels and ofports on corsabridge
+		        # 1422  --> 5
+		        # 10001 --> 6
 
-		    request_url = port_url_bridge
+                request_url = port_url_bridge
 
-		    jsonval = {'ofport': l2mp_bw_out_port,
+                jsonval = {'ofport': l2mp_bw_out_port,
 				'port': internal_config['corsabwoutl2mp'],
 				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
-		    self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
-		    results.append(TranslatedCorsaRuleContainer("post",
-								 request_url,
-								 jsonval,
-								 internal_config['corsatoken'],
-								 valid_responses))
-
-		    jsonval = {'ofport': l2mp_bw_in_port,
+                
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
+    							 request_url,
+    							 jsonval,
+    							 internal_config['corsatoken'],
+    							 valid_responses))
+                                 
+                jsonval = {'ofport': l2mp_bw_in_port,
 				'port': internal_config['corsabwinl2mp'],
 				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
 
-		    self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
-		    results.append(TranslatedCorsaRuleContainer("post",
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
 								 internal_config['corsatoken'],
 								 valid_responses))
 
 
-		    # Create tunnels and ofports on corsaratelimitbridgel2mp (br19)
-		    # 1422  --> 7
-		    # 10001 --> 8
+		        # Create tunnels and ofports on corsaratelimitbridgel2mp (br19)
+		        # 1422  --> 7
+		        # 10001 --> 8
 	 
-		    request_url = port_url_bridge_ratelimit_l2mp
+                request_url = port_url_bridge_ratelimit_l2mp
 
-		    jsonval = {'ofport': l2mp_bw_in_port,
+                jsonval = {'ofport': l2mp_bw_in_port,
 				'port': internal_config['corsaratelimitportsl2mp'][0],
 				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
-		    self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
-		    results.append(TranslatedCorsaRuleContainer("post",
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
 								 internal_config['corsatoken'],
 								 valid_responses))
 
-		    jsonval = {'ofport': l2mp_bw_out_port,
+                jsonval = {'ofport': l2mp_bw_out_port,
 				'port': internal_config['corsaratelimitportsl2mp'][1],
 				'vlan-id': vlan,
 				'shaped-rate': bandwidth}
 
-		    self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
-		    results.append(TranslatedCorsaRuleContainer("post",
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
 								 request_url,
 								 jsonval,
 								 internal_config['corsatoken'],
@@ -1183,9 +1192,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             self.logger.debug("L2MultipointEndpointLCRule: ENDPOINT TABLE and LEARNING TABLE")
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-		#self.logger.debug("--- L2MultipointEndpointLCRule: port: %s - vlan: %s" % (port, vlan))
-		l2mp_bw_in_port = vlan
-		l2mp_bw_out_port = int(intermediate_vlan) + 10000
+		        #self.logger.debug("--- L2MultipointEndpointLCRule: port: %s - vlan: %s" % (port, vlan))
+                l2mp_bw_in_port = vlan
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
                 # Flow.1
                 matches = [IN_PORT(port), VLAN_VID(vlan)]
@@ -1232,16 +1241,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Flooding ports
 
             for port in flooding_ports:
-		self.logger.debug("L2MultipointEndpointLCRule -1- : port: %s " % (port))
+                self.logger.debug("L2MultipointEndpointLCRule -1- : port: %s " % (port))
                 # Flow.4
                 matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
                 actions = []
                 for outport in flooding_ports:
-		    self.logger.debug("L2MultipointEndpointLCRule -2- : outport: %s " % (outport))
+                    self.logger.debug("L2MultipointEndpointLCRule -2- : outport: %s " % (outport))
                     if outport != port:
                         actions.append(Forward(outport))
                 for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
-		    self.logger.debug("L2MultipointEndpointLCRule -3- : outport: %s " % (outport))
+                    self.logger.debug("L2MultipointEndpointLCRule -3- : outport: %s " % (outport))
                     if outport != port:
                         actions.append(SetField(VLAN_VID(vlan)))
                         actions.append(Forward(l2mp_bw_out_port))
@@ -1267,7 +1276,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              priority)
 
                 # Flow.8
-		l2mp_bw_out_port = int(intermediate_vlan) + 10000
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
                 matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
                 actions = []
@@ -1296,10 +1305,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # Endpoint ports
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-		self.logger.debug("L2MultipointEndpointLCRule -4- : port: %s " % (port))
+                self.logger.debug("L2MultipointEndpointLCRule -4- : port: %s " % (port))
 
-		l2mp_bw_in_port = vlan
-		l2mp_bw_out_port = int(intermediate_vlan) + 10000
+                l2mp_bw_in_port = vlan
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
  
                 # Flow.6
                 matches = [IN_PORT(l2mp_bw_in_port), VLAN_VID(vlan)]
@@ -1443,7 +1452,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             args[m.get_name()] = m.get()
             # Add the prereqs to the list too
             for prereq in m.get_prereqs():
-                if prereq.get_name() in args.keys():
+                if prereq.get_name() in list(args.keys()):
                     pass
                 args[prereq.get_name()] = prereq.get()
                 # FIXME: If there's a prereq in conflict (i.e., user specified
@@ -1863,8 +1872,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
             return (None, None, None, None)
         return (result['switchid'],
                 result['switchcookie'],
-                pickle.loads(str(result['sdxrule'])),
-                pickle.loads(str(result['switchrules'])),
+                pickle.loads(result['sdxrule']),
+                pickle.loads(result['switchrules']),
                 result['switchtable'])
 
     def _get_new_OF_cookie(self, sdx_cookie, switch_id):

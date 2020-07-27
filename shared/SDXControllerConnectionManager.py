@@ -1,8 +1,12 @@
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Commands
 # SDX to LC
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
 SDX_NEW_RULE = "NEW_RULE"
 SDX_RM_RULE = "RM_RULE"
 
@@ -22,7 +26,7 @@ from lib.Connection import Connection
 from shared.SDXControllerConnectionManagerConnection import *
 from shared.UserPolicy import UserPolicyBreakdown
 
-from Queue import Queue, Empty
+from queue import Queue, Empty
 
 # Connection Queue actions defininition
 NEW_CXN = "New Connection"
@@ -99,7 +103,7 @@ class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
     def _find_lc_cxn(self, bd):
         lc = bd.get_lc()
         lc_cxn = None
-        if lc in self.associations.keys():
+        if lc in list(self.associations.keys()):
             lc_cxn = self.associations[lc]
 
         if lc_cxn == None:
@@ -119,7 +123,7 @@ class SDXControllerConnectionManager(AtlanticWaveConnectionManager):
         ''' This is used to dissociate a connection upon connection disconnect.
             This will prevent silly things like trying to send data out dead 
             connections. '''
-        if name in self.associations.keys():
+        if name in list(self.associations.keys()):
             del self.associations[name]
 
     def get_cxn_queue_element(self):

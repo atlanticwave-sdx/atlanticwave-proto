@@ -1,9 +1,16 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from UserPolicy import *
-from L2TunnelPolicy import *
+from builtins import zip
+from builtins import str
+from past.utils import old_div
+from shared.UserPolicy import *
+from shared.L2TunnelPolicy import *
 from datetime import datetime
 import networkx as nx
 from shared.PathResource import VLANPathResource, BandwidthPathResource
@@ -69,13 +76,13 @@ class EndpointConnectionPolicy(UserPolicy):
         super(EndpointConnectionPolicy, self).__init__(username,
                                                        json_rule)
 
-        print "Passed: %s:%s:%s:%s:%s:%s:%s" % (self.deadline,
+        print("Passed: %s:%s:%s:%s:%s:%s:%s" % (self.deadline,
                                                 self.src,
                                                 self.dst,
                                                 self.data,
                                                 self.bandwidth,
                                                 self.intermediate_vlan,
-                                                self.fullpath)
+                                                self.fullpath))
         # Second
         pass
 
@@ -102,8 +109,8 @@ class EndpointConnectionPolicy(UserPolicy):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
-            print "%s: Exception %s at %s:%d" % (cls.get_policy_name(),
-                                                 str(e), filename,lineno)
+            print("%s: Exception %s at %s:%d" % (cls.get_policy_name(),
+                                                 str(e), filename,lineno))
             raise
 
     def breakdown_rule(self, tm, ai):
@@ -122,8 +129,8 @@ class EndpointConnectionPolicy(UserPolicy):
             total_time += 1
 
         data_in_bits = self.data * 8
-        self.bandwidth = int(ceil(max(data_in_bits/(total_time - EndpointConnectionPolicy.buffer_time_sec),
-                                      (data_in_bits/total_time)*EndpointConnectionPolicy.buffer_bw_percent)))
+        self.bandwidth = int(ceil(max(old_div(data_in_bits,(total_time - EndpointConnectionPolicy.buffer_time_sec)),
+                                      (old_div(data_in_bits,total_time))*EndpointConnectionPolicy.buffer_bw_percent)))
 
         # Second, get the path, and reserve bw and a VLAN on it
         self.switchpath = tm.find_valid_path(self.src, self.dst,
@@ -269,7 +276,7 @@ class EndpointConnectionPolicy(UserPolicy):
         jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
+        if jsonstring not in list(json_rule.keys()):
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
         self.deadline = str(json_rule[jsonstring]['deadline'])

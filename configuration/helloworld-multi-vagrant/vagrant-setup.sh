@@ -1,15 +1,32 @@
 #!/bin/bash
 
-# apt work
-sudo apt update
-sudo apt install -y git mininet docker.io
+# default BRANCH=master if not provided
+if [[ -z "${BRANCH}" ]]; then
+  BRANCH='master'
+fi
 
+echo "----------------------------"
+echo "Deploying BRANCH = ${BRANCH}"
+echo "----------------------------"
+
+# apt work
+sudo add-apt-repository ppa:pypy/ppa
+sudo apt update
+
+sudo apt install -y git docker.io
 #sudo groupadd docker #Already added
 sudo usermod -aG docker $USER
 
+sudo apt install -y pypy3 python3-pip python3-venv
+
+sudo update-alternatives --remove python /usr/bin/python2
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+
+git clone git://github.com/mininet/mininet
+mininet/util/install.sh -nfv
 
 # git work
-git clone -b master https://github.com/atlanticwave-sdx/atlanticwave-proto.git
+git clone -b ${BRANCH} https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 
 # Docker work: build SDX Controller and Local Controller containers
 cd ~/atlanticwave-proto/

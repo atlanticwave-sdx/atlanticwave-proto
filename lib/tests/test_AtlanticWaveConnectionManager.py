@@ -1,8 +1,11 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Unit tests for shared.ConnectionManager module.
 
+from builtins import str
 import unittest
 import threading
 from time import sleep
@@ -16,7 +19,7 @@ class InitTest(unittest.TestCase):
         firstManager =  AtlanticWaveConnectionManager(loggerid)
         secondManager = AtlanticWaveConnectionManager(loggerid)
 
-        self.failUnless(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
 
 
@@ -40,7 +43,7 @@ class OpenListeningPortTest(unittest.TestCase):
         self.SendThread.start()
         
         sleep(0.25) # Rather than messing about with locks.
-        self.failUnlessEqual(self.object_received, self.object_to_send)
+        self.assertEqual(self.object_received, self.object_to_send)
 
     def listening_thread(self):
         self.manager.new_connection_callback(self.receiving_thread)
@@ -55,7 +58,7 @@ class OpenListeningPortTest(unittest.TestCase):
         self.SendingSock.close()
 
     def receiving_thread(self, cxn):
-        print "Recieving Conne cction NEW! %s" % str(cxn)
+        print("Recieving Conne cction NEW! %s" % str(cxn))
         self.ReceivingConnection = cxn
         data = self.ReceivingConnection.recv()
         self.object_received = data
@@ -76,15 +79,15 @@ class OpenSendingText(unittest.TestCase):
         self.ReceiveThread.daemon = True
         self.ReceiveThread.start()
 
-        print self.manager.__repr__()
-        print self.manager
+        print(self.manager.__repr__())
+        print(self.manager)
 
     def test_sending_port(self):
         cxn = self.manager.open_outbound_connection(self.ip, self.port)
 
         cxn.send(self.object_to_send)
         sleep(0.1 )  # Rather than messing about with locks.
-        self.failUnlessEqual(self.object_received, self.object_to_send)        
+        self.assertEqual(self.object_received, self.object_to_send)        
 
     def receiving_thread(self):
         # Based on https://pymotw.com/2/socket/tcp.html,
@@ -99,8 +102,8 @@ class OpenSendingText(unittest.TestCase):
             while True:
                 total_len = 0
                 total_data = []
-                size = sys.maxint
-                size_data = ''
+                size = sys.maxsize
+                size_data = b''
                 sock_data = ''
                 recv_size = 8192
                 while total_len < size:
@@ -114,14 +117,14 @@ class OpenSendingText(unittest.TestCase):
                                 recv_size = 524288
                             total_data.append(size_data[4:])
                             total_len = sum([len(i) for i in total_data])
-                            data_raw = ''.join(total_data)
+                            data_raw = b"".join(total_data)
                         else:
                             size_data += sock_data
                         
                     else:
                         total_data.append(sock_data)
                         total_len = sum([len(i) for i in total_data])
-                        data_raw = ''.join(total_data)
+                        data_raw = b"".join(total_data)
 
                 # Unpickle!
                 data = pickle.loads(data_raw)
@@ -133,7 +136,7 @@ class OpenSendingText(unittest.TestCase):
 
 class FailureTests(unittest.TestCase):
     def test_connection_type_failure(self):
-        self.failUnlessRaises(TypeError, AtlanticWaveConnectionManager,
+        self.assertRaises(TypeError, AtlanticWaveConnectionManager,
                               __name__, unittest.TestCase)
 
         

@@ -1,9 +1,13 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from LCFields import *
-from LCAction import *
+from builtins import str
+from builtins import object
+from shared.LCFields import *
+from shared.LCAction import *
 
 class SDXActionTypeError(TypeError):
     pass
@@ -54,9 +58,9 @@ class SDXAction(object):
 
     @staticmethod
     def lookup_action_type(name):
-        if name not in SDXACTION_TO_CLASS.keys():
+        if name not in list(SDXACTION_TO_CLASS.keys()):
             raise SDXActionValueError("%s not in SDXACTION_TO_CLASS: %s" %
-                                     (name, SDXACTION_TO_CLASS.keys()))
+                                     (name, list(SDXACTION_TO_CLASS.keys())))
         return SDXACTION_TO_CLASS[name]
 
 

@@ -1,9 +1,11 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
-from LCRule import *
+# from LCRule import *
 
-from LCRule import *
+from shared.LCRule import *
 
 class ManagementSDXRecoverRule(LCRule):
     ''' This rule by SDX to try covering connection once LocalController

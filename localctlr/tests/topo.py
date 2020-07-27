@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.cli import CLI

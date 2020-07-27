@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -6,12 +9,16 @@
 # project. It contains Singleton functionality (since all modules are
 # singletons) and logging/debugging facilities that are commonly used.
 
-from Singleton import Singleton
+from builtins import hex
+from builtins import str
+from builtins import object
+from lib.Singleton import Singleton
 import logging
 import dataset
 import os
 import sys
 from traceback import format_stack
+from future.utils import with_metaclass
 
 class AtlanticWaveModuleValueError(ValueError):
     pass
@@ -19,9 +26,7 @@ class AtlanticWaveModuleValueError(ValueError):
 class AtlanticWaveModuleTypeError(TypeError):
     pass
 
-class AtlanticWaveModule(object):
-    __metaclass__ = Singleton
-
+class AtlanticWaveModule(with_metaclass(Singleton, object)):
     def __init__(self, loggerid, logfilename=None, debuglogfilename=None):
         ''' Takes two mandatory parameters to properly setup logging, with one
             optional parameter for secondary logging:
@@ -115,10 +120,10 @@ class AtlanticWaveModule(object):
                 t = self.db.load_table(table)
                 if print_table_on_load:
                     entries = t.find()
-                    print "\n\n&&&&& ENTRIES in %s &&&&&" % name
+                    print("\n\n&&&&& ENTRIES in %s &&&&&" % name)
                     for e in entries:
-                        print "\n%s" % str(e)
-                    print "&&&&& END ENTRIES &&&&&\n\n"
+                        print("\n%s" % str(e))
+                    print("&&&&& END ENTRIES &&&&&\n\n")
                     
                 setattr(self, name, t)
                 

@@ -1,9 +1,13 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from UserPolicy import *
-from FloodTreeLCRule import *
+from builtins import str
+from shared.UserPolicy import *
+from shared.FloodTreeLCRule import *
 import networkx as nx
 
 
@@ -40,8 +44,8 @@ class FloodTreePolicy(UserPolicy):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
-            print "%s: Exception %s at %s:%d" % (cls.get_policy_name(),
-                                                 str(e), filename,lineno)
+            print("%s: Exception %s at %s:%d" % (cls.get_policy_name(),
+                                                 str(e), filename,lineno))
             raise
 
     def breakdown_rule(self, tm, ai):
@@ -88,7 +92,7 @@ class FloodTreePolicy(UserPolicy):
     def _parse_json(self, json_rule):
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if self.ruletype not in json_rule.keys():
+        if self.ruletype not in list(json_rule.keys()):
             raise UserPolicyValueError("%s value not in entry:\n    %s" % (self.ruletype, json_rule)) 
 
         # Not much to do here. There's no data on startup.

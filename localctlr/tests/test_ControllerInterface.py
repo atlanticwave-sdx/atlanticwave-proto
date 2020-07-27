@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -31,13 +32,13 @@ class BasicTests(unittest.TestCase):
     def test_send_command(self):
         self.logger.warning("BEGIN %s" % (self.id()))
         ctlr = ControllerInterface("test")
-        self.failUnlessRaises(NotImplementedError, ctlr.send_command,
+        self.assertRaises(NotImplementedError, ctlr.send_command,
                               'test', 'test')
 
     def test_remove_rule(self):
         self.logger.warning("BEGIN %s" % (self.id()))
         ctlr = ControllerInterface("test")
-        self.failUnlessRaises(NotImplementedError, ctlr.remove_rule,
+        self.assertRaises(NotImplementedError, ctlr.remove_rule,
                               'test', 'test')
         
 
