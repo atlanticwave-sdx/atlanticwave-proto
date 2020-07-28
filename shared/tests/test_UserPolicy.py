@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -14,7 +15,7 @@ class BasicTest(unittest.TestCase):
     # NotImplementedErrors scattered about. Mock is going to be heavily used.
     
     def test_init_catch_error(self):
-        self.failUnlessRaises(NotImplementedError,
+        self.assertRaises(NotImplementedError,
                               UserPolicy,
                               'sdonovan',
                               'teststring')
@@ -23,11 +24,11 @@ class BasicTest(unittest.TestCase):
     def test_init(self, uppatch):
         up = UserPolicy('sdonovan', 'teststring')
 
-        self.failUnlessRaises(NotImplementedError,
+        self.assertRaises(NotImplementedError,
                               up.breakdown_rule,
                               None,
                               None)
-        self.failUnlessRaises(NotImplementedError,
+        self.assertRaises(NotImplementedError,
                               up.check_validity,
                               None,
                               None)
@@ -80,13 +81,13 @@ class ClassMethodsTest(unittest.TestCase):
                                            ("firstline\nsecondline\n"
                                             "thirdline\nforthline\n"))
     def test_not_implemented_class_methods(self):
-        self.failUnlessRaises(NotImplementedError,
+        self.assertRaises(NotImplementedError,
                               UserPolicy.check_syntax,
                               "TestJson")
 
     @mock.patch('shared.UserPolicy.UserPolicy._parse_json', autospec=True)
     def test_get_html_help(self, uppatch):
-        with mock.patch('__builtin__.open', self.filecontents):
+        with mock.patch('builtins.open', self.filecontents):
             self.assertEquals("firstline\nsecondline\nthirdline\nforthline\n",
                               UserPolicy.get_html_help())
     

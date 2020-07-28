@@ -1,11 +1,19 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
+from builtins import object
 import logging
 import threading
 import dataset
-import cPickle as pickle
+import pickle as pickle
 import requests
 import json
 from time import sleep
@@ -15,8 +23,8 @@ from shared.LCAction import *
 from shared.LCFields import *
 from shared.LCRule import *
 from shared.ofconstants import *
-from oftables import *
-from InterRyuControllerConnectionManager import *
+from localctlr.oftables import *
+from localctlr.InterRyuControllerConnectionManager import *
 
 # Ryu libraries
 from ryu import cfg
@@ -37,12 +45,14 @@ from shared.L2MultipointFloodLCRule import *
 from shared.L2MultipointLearnedDestinationLCRule import *
 from shared.FloodTreeLCRule import *
 from shared.ManagementVLANLCRule import *
+from shared.ManagementLCRecoverRule import *
+from shared.ManagementSDXRecoverRule import *
 
 LOCALHOST = "127.0.0.1"
 
 CONF = cfg.CONF
 
-L2MULTIPOINTCORSABWDISABLED = True
+L2MULTIPOINTCORSABWDISABLED = False
 
 
 class TranslatedRuleContainer(object):
@@ -340,7 +350,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_switch_internal_config_count(self):
         # Returns a count of internal configs.
@@ -361,7 +371,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_lcip_in_db(self):
         # Returns the lcip if it exists or None if it does not.
@@ -370,7 +380,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _get_ryu_cxn_port_in_db(self):
         # Returns the Ryu Cxn Port if it exists or None if it does not.
@@ -379,7 +389,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if d == None:
             return None
         val = d['value']
-        return pickle.loads(str(val))
+        return pickle.loads(val)
 
     def _setup(self):
         dbname = self.db_name
@@ -445,7 +455,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # First, wait till we have at least one datapath.
         self.logger.info("Looking for datapath")
-        while len(self.datapaths.keys()) == 0:
+        while len(list(self.datapaths.keys())) == 0:
             self.logger.info("Waiting " + str(self.datapaths))
             sleep(1)
 
@@ -459,9 +469,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # FIXME - This is static: only installing rules right now.
             event_type, event_data = self.inter_cm_cxn.recv_cmd()
             (switch_id, event) = event_data
-            if switch_id not in self.datapaths.keys():
+            if switch_id not in list(self.datapaths.keys()):
                 self.logger.warning("switch_id %s does not match known switches: %s" %
-                                    (switch_id, self.datapaths.keys()))
+                                    (switch_id, list(self.datapaths.keys())))
 
                 # FIXME - Need to update this for sending errors back
                 continue
@@ -523,7 +533,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         self.remove_all_flows(datapath)
 
-        of_cookie = self._get_new_OF_cookie(-1)  # FIXME: magic number
+        of_cookie = self._get_new_OF_cookie(-1,-1)  # FIXME: magic number
         results = []
 
         try:
@@ -561,6 +571,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         for entry in portinfo:
             if entry['destination'] in steiner_tree_dist_nodes and 'dtn' not in entry['destination']:
                 managementvlanports.append(int(entry['portnumber']))
+            else:
+                raise ValueError("DPID %s does not have valid steiner tree" %
+                             datapath.id)
+                return
 
         # In-band Communication
         # Extract management VLAN and ports from the manifest
@@ -568,12 +582,22 @@ class RyuTranslateInterface(app_manager.RyuApp):
         if internal_config == None:
             raise ValueError("DPID %s does not have internal_config" %
                              datapath.id)
-        if 'managementvlan' in internal_config.keys():
+            return
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
-
+        else:
+            raise ValueError("DPID %s does not have managementvlan" %
+                             datapath.id)
+            return
+        
         # Old method that reads managementvlanports from manifest
-        #if 'managementvlanports' in internal_config.keys():
+        #if 'managementvlanports' in list(internal_config.keys()):
         #    managementvlanports = internal_config['managementvlanports']
+        #else:
+        #    raise ValueError("DPID %s does not have managementvlanports" %
+        #                     datapath.id)
+        #    return
+
 
         for table in ALL_TABLES_EXCEPT_LAST:
             matches = []  # FIXME: what's the equivalent of match(*)?
@@ -589,9 +613,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # For last table
         #   - Create a default drop rule (if necessary needed). Priority 0
         for i in (managementvlanports):
+            self.logger.debug("Using default management ports.")
             matches = [IN_PORT(i)]
             actions = [Drop()]
-            priorty = PRIORITY_DEFAULT_PLUS_ONE
+            priority = PRIORITY_DEFAULT_PLUS_ONE
             table = LASTTABLE
             marule = MatchActionLCRule(switch_id, matches, actions)
             results += self._translate_MatchActionLCRule(datapath,
@@ -602,7 +627,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Catch-all for those not in the same port
         matches = []
         actions = [Drop()]
-        priorty = PRIORITY_DEFAULT
+        priority = PRIORITY_DEFAULT
         table = LASTTABLE
         marule = MatchActionLCRule(switch_id, matches, actions)
         results += self._translate_MatchActionLCRule(datapath,
@@ -613,11 +638,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # In-band Communication
         # If the management VLAN needs to be setup, set it up.
-        if 'managementvlan' in internal_config.keys():
+        if 'managementvlan' in list(internal_config.keys()):
             managementvlan = internal_config['managementvlan']
             managementvlanports = internal_config['managementvlanports']
             untaggedmanagementvlanports = []
-            if 'untaggedmanagementvlanports' in internal_config.keys():
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
                 untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
 
             table = L2TUNNELTABLE
@@ -630,6 +655,156 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                             of_cookie,
                                                             mvrule)
 
+        # Install default rules
+        for rule in results:
+            self.add_flow(datapath, rule)
+
+    def _backup_port_recover(self, datapath, of_cookie, lc_recover_rule):
+        '''Remove existing default port and use backup port'''
+        self.logger.debug("got ManagementLCRecoverRule")
+        self.logger.debug("Checking if backup port is available")
+        switch_id = 0  # This is unimportant:
+        # it's never used in the translation
+
+        of_cookie = self._get_new_OF_cookie(-1, -1)  # FIXME: magic number
+        results = []
+
+        # In-band Communication
+        # Extract management VLAN and ports from the manifest
+        internal_config = self._get_switch_internal_config(datapath.id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+        if 'managementvlan' in list(internal_config.keys()):
+            managementvlan = internal_config['managementvlan']
+        if 'managementvlanports' in list(internal_config.keys()):
+            managementvlanports = internal_config['managementvlanports']
+
+        if 'managementvlanbackupports' in list(internal_config.keys()):
+            managementvlanbackupports = internal_config['managementvlanbackupports']
+        else:
+            self.logger.debug("No backup port provided")
+            return
+
+        # In-band Communication
+        # If the management VLAN needs to be setup, set it up.
+        if 'managementvlan' in list(internal_config.keys()):
+            managementvlan = internal_config['managementvlan']
+            managementvlanports = internal_config['managementvlanports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
+
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          managementvlanports,
+                                          untaggedmanagementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
+        self.logger.debug("REMOVING default flows")
+        # Install default rules
+        for rule in results:
+            self.remove_flow(datapath, rule)
+
+        # Add backup management vlan ports
+        results = []
+        if 'managementvlan' in list(internal_config.keys()):
+            managementvlan = internal_config['managementvlan']
+            managementvlanbackupports = internal_config['managementvlanbackupports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
+
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          managementvlanbackupports,
+                                          untaggedmanagementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
+        self.logger.debug("ADDING backup management VLAN flows")
+        # Install default rules
+        for rule in results:
+            self.add_flow(datapath, rule)
+
+    def _backup_port_recover_from_sdx_msg(self, datapath, of_cookie, lc_recover_rule):
+        '''Remove existing default port and use backup port'''
+        self.logger.debug("got ManagementSDXRecoverRule from SDX message")
+        self.logger.debug("Checking if backup port is available")
+        switch_id = 0  # This is unimportant:
+        # it's never used in the translation
+
+        of_cookie = self._get_new_OF_cookie(-1, -1)  # FIXME: magic number
+        results = []
+
+        # In-band Communication
+        # Extract management VLAN and ports from the manifest
+        internal_config = self._get_switch_internal_config(datapath.id)
+        if internal_config == None:
+            raise ValueError("DPID %s does not have internal_config" %
+                             datapath.id)
+        if 'managementvlan' in list(internal_config.keys()):
+            managementvlan = internal_config['managementvlan']
+        if 'managementvlanports' in list(internal_config.keys()):
+            managementvlanports = internal_config['managementvlanports']
+
+        if 'sdxmanagementvlanbackupports' in list(internal_config.keys()):
+            sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
+        else:
+            self.logger.debug("No SDX management VLAN backup port provided")
+            return
+
+        # In-band Communication
+        # If the management VLAN needs to be setup, set it up.
+        if 'managementvlan' in list(internal_config.keys()):
+            managementvlan = internal_config['managementvlan']
+            managementvlanports = internal_config['managementvlanports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
+
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          managementvlanports,
+                                          untaggedmanagementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
+        self.logger.debug("REMOVING default flows")
+        # Install default rules
+        for rule in results:
+            self.remove_flow(datapath, rule)
+
+        # Add backup management vlan ports
+        results = []
+        if 'managementvlan' in list(internal_config.keys()):
+            managementvlan = internal_config['managementvlan']
+            sdxmanagementvlanbackupports = internal_config['sdxmanagementvlanbackupports']
+            untaggedmanagementvlanports = []
+            if 'untaggedmanagementvlanports' in list(internal_config.keys()):
+                untaggedmanagementvlanports = internal_config['untaggedmanagementvlanports']
+
+            table = L2TUNNELTABLE
+            mvrule = ManagementVLANLCRule(switch_id,
+                                          managementvlan,
+                                          sdxmanagementvlanbackupports,
+                                          untaggedmanagementvlanports)
+            results += self._translate_ManagementVLANLCRule(datapath,
+                                                            table,
+                                                            of_cookie,
+                                                            mvrule)
+
+        self.logger.debug("ADDING SDX msg backup flows")
         # Install default rules
         for rule in results:
             self.add_flow(datapath, rule)
@@ -766,14 +941,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
             # Find out the request_url
             tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
                           bridge + "/tunnels?list=true")
-            print
+            print()
             "Requesting tunnels from %s" % tunnel_url
             rest_return = requests.get(tunnel_url,
                                        headers={'Authorization':
                                                     internal_config['corsatoken']},
                                        verify=False)  # FIXME: HARDCODED
 
-            print
+            print()
             "Looking for %s on ports %s" % (vlan,
                                             internal_config['corsaratelimitports'])
 
@@ -798,7 +973,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 'value': 0}]
                     valid_responses = [204]
 
-                    print
+                    print()
                     "Patching %s:%s" % (request_url, json)
                     results.append(TranslatedCorsaRuleContainer("patch",
                                                                 request_url,
@@ -966,19 +1141,110 @@ class RyuTranslateInterface(app_manager.RyuApp):
         # Corsa Case
         else:
             # Endpoint rules
+
+            self.logger.debug("L2MultipointEndpointLCRule: Corsa Case L2MULTIPOINTCORSABWDISABLED %s " % (L2MULTIPOINTCORSABWDISABLED))
+
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-                # - Ingress rule from endpoints -
-                #  - endpoint_table
-                #  - match inport(endpoint), vlan(endpoint)
-                #   - set current VLAN tag to inport's value
-                #   - Push new VLAN tag
-                #   - Set new VLAN tag to intermediate
-                #   - Forward to bw-in port
+                self.logger.debug("L2MultipointEndpointLCRule: port: %s -  vlan: %s" % (port, vlan))
+                self.logger.debug("L2MultipointEndpointLCRule: IN_PORT: %s -  VLAN_VID: %s" % (IN_PORT(port), VLAN_VID(vlan)))
+                bridge = internal_config['corsabridge']
+                bridge_ratelimit_l2mp = internal_config['corsaratelimitbridgel2mp']
+                bandwidth = mperule.get_bandwidth()
+                
+                port_url_bridge = (internal_config['corsaurl'] + "api/v1/bridges/" +
+				       bridge + "/tunnels")
+                       
+                port_url_bridge_ratelimit_l2mp = (internal_config['corsaurl'] + "api/v1/bridges/" +
+						      bridge_ratelimit_l2mp + "/tunnels")
+                              
+                valid_responses = [201]
+                
+                l2mp_bw_in_port = vlan
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
+
+                self.logger.debug("L2MultipointEndpointLCRule: l2mp_bw_in_port: %s -  l2mp_bw_out_port: %s" % (l2mp_bw_in_port, l2mp_bw_out_port))
+
+
+		        # Create tunnels and ofports on corsabridge
+		        # 1422  --> 5
+		        # 10001 --> 6
+
+                request_url = port_url_bridge
+
+                jsonval = {'ofport': l2mp_bw_out_port,
+				'port': internal_config['corsabwoutl2mp'],
+				'vlan-id': vlan,
+				'shaped-rate': bandwidth}
+                
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
+    							 request_url,
+    							 jsonval,
+    							 internal_config['corsatoken'],
+    							 valid_responses))
+                                 
+                jsonval = {'ofport': l2mp_bw_in_port,
+				'port': internal_config['corsabwinl2mp'],
+				'vlan-id': vlan,
+				'shaped-rate': bandwidth}
+
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
+								 request_url,
+								 jsonval,
+								 internal_config['corsatoken'],
+								 valid_responses))
+
+
+		        # Create tunnels and ofports on corsaratelimitbridgel2mp (br19)
+		        # 1422  --> 7
+		        # 10001 --> 8
+	 
+                request_url = port_url_bridge_ratelimit_l2mp
+
+                jsonval = {'ofport': l2mp_bw_in_port,
+				'port': internal_config['corsaratelimitportsl2mp'][0],
+				'vlan-id': vlan,
+				'shaped-rate': bandwidth}
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
+								 request_url,
+								 jsonval,
+								 internal_config['corsatoken'],
+								 valid_responses))
+
+                jsonval = {'ofport': l2mp_bw_out_port,
+				'port': internal_config['corsaratelimitportsl2mp'][1],
+				'vlan-id': vlan,
+				'shaped-rate': bandwidth}
+
+                self.logger.debug("L2MultipointEndpointLCRule: Tunnel attach %s:%s" % (request_url, jsonval))
+                results.append(TranslatedCorsaRuleContainer("post",
+								 request_url,
+								 jsonval,
+								 internal_config['corsatoken'],
+								 valid_responses))
+
+
+
+            self.logger.debug("L2MultipointEndpointLCRule: mperule.get_flooding_ports           : %s" % (mperule.get_flooding_ports()))
+            self.logger.debug("L2MultipointEndpointLCRule: mperule.get_endpoint_ports_and_vlans : %s" % (mperule.get_endpoint_ports_and_vlans()))
+
+            # Endpoint ports
+            # - Translate VLANs on ingress on endpoint_table
+            # - Install learning rules on intermediate VLAN on ingress on
+            #   learning table
+
+            self.logger.debug("L2MultipointEndpointLCRule: ENDPOINT TABLE and LEARNING TABLE")
+            for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
+		        #self.logger.debug("--- L2MultipointEndpointLCRule: port: %s - vlan: %s" % (port, vlan))
+                l2mp_bw_in_port = vlan
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
+
+                # Flow.1
                 matches = [IN_PORT(port), VLAN_VID(vlan)]
-                actions = [SetField(VLAN_VID(port)),
-                           PushVLAN(),
-                           SetField(VLAN_VID(intermediate_vlan)),
-                           Forward(internal_config['corsabwin'])]
+                actions = []
+                actions.append(Forward(l2mp_bw_in_port))
                 priority = PRIORITY_L2MULTIPOINT
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
@@ -987,31 +1253,19 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
-                # - Translate rule
-                #  - translate_table
-                #  - match metadata(MD_L2M_TRANSLATE), vlan(endpoint)
-                #    See "Rule Needed Once", below, as to why this happens
-                #   - set metadata(endpoint)
-                #   - set VLAN tag to intermediate
-                matches = [METADATA(MD_L2M_TRANSLATE, MD_L2M_MASK),
-                           VLAN_VID(port)]
-                actions = [WriteMetadata(port, MD_L2M_MASK),
-                           SetField(VLAN_VID(intermediate_vlan))]
-                priority = PRIORITY_L2MULTIPOINT_TRANSLATE
+                # Flow.2
+                matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(vlan)]
+                actions = [SetField(VLAN_VID(intermediate_vlan)), Continue()]
+                priority = PRIORITY_L2MULTIPOINT
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
-                                                             translate_table,
+                                                             endpoint_table,
                                                              of_cookie,
                                                              marule,
                                                              priority)
 
-                # - Learning rule
-                #  - learning_table
-                #   - match metadata(endpoint), vlan(intermediate)
-                #    - continue
-                #    - Forward to controller
-                matches = [METADATA(port, MD_L2M_MASK),
-                           VLAN_VID(intermediate_vlan)]
+                # Flow.3
+                matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
                 actions = [Continue(), Forward(OFPP_CONTROLLER)]
                 priority = PRIORITY_L2MULTIPOINT_LEARNING
                 marule = MatchActionLCRule(switch_id, matches, actions)
@@ -1021,100 +1275,30 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
-            # Rule Needed Once
-            # - Ingress rule from bw-out port (bw has been managed)
-            #  - endpoint_table
-            #  - match inport(bw-out), vlan(intermediate)
-            #   - pop outer VLAN
-            #   - set metadata(MD_L2M_TRANSLATE)
-            #   - goto translate_table
-            matches = [IN_PORT(internal_config['corsabwout']),
-                       VLAN_VID(intermediate_vlan)]
-            actions = [PopVLAN(),
-                       WriteMetadata(MD_L2M_TRANSLATE, MD_L2M_MASK),
-                       GotoTable(translate_table)]
-            priority = PRIORITY_L2MULTIPOINT
-            marule = MatchActionLCRule(switch_id, matches, actions)
-            results += self._translate_MatchActionLCRule(datapath,
-                                                         endpoint_table,
-                                                         of_cookie,
-                                                         marule,
-                                                         priority)
-
-            bridge = internal_config['corsaratelimitbridge']
-            vlan = intermediate_vlan
-            bandwidth = mperule.get_bandwidth()
-
-            tunnel_url = (internal_config['corsaurl'] + "api/v1/bridges/" +
-                          bridge + "/tunnels?list=true")
-            rest_return = requests.get(tunnel_url,
-                                       headers={'Authorization':
-                                                    internal_config['corsatoken']},
-                                       verify=False)  # FIXME: HARDCODED
-
-            # - Corsa BW Management rule
-            for entry in rest_return.json()['list']:
-                if (entry['vlan-id'] == vlan and
-                        int(entry['port']) in internal_config['corsaratelimitports']):
-                    request_url = entry['links']['self']['href']
-                    jsonval = [{'op': 'replace',
-                                'path': '/meter/cir',
-                                'value': bandwidth},
-                               {'op': 'replace',
-                                'path': '/meter/cbs',
-                                'value': bandwidth},
-                               {'op': 'replace',
-                                'path': '/meter/eir',
-                                'value': 0},
-                               {'op': 'replace',
-                                'path': '/meter/ebs',
-                                'value': 0}]
-                    # [{'op':'replace',
-                    #  'path':'/meter/cir',
-                    #  'value':bandwidth},
-                    # {'op':'replace',
-                    #  'path':'/meter/eir',
-                    #  'value':bandwidth}]
-                    valid_responses = [204]
-
-                    print
-                    "Patching %s:%s" % (request_url, json)
-                    results.append(TranslatedCorsaRuleContainer("patch",
-                                                                request_url,
-                                                                jsonval,
-                                                                internal_config['corsatoken'],
-                                                                valid_responses))
-
-            # All ports
+            self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE")
+            # Endpoint and Flooding ports.
+            # - Install flooding rules on flood table
             flooding_ports = mperule.get_flooding_ports()
             endpoint_ports = [port for (port, vlan) in
                               mperule.get_endpoint_ports_and_vlans()]
-            ports = flooding_ports + endpoint_ports
-            # - Flooding rules for endpoints
-            #  - flood_table
-            #   - match metadata(endpoint), vlan(intermediate)
-            #   - set vlan to outbound port, fwd
-            #    - Repeat for all ports
-            # - Flooding rules for flooding ports
-            #  - flood_table
-            #   - match inport(flood port), vlan(intermediate)
-            #   - set vlan to outbound port, fwd
-            #    - Repeat for all ports
-            for port in ports:
-                matches = []
-                if port in endpoint_ports:
-                    matches = [METADATA(port, MD_L2M_MASK),
-                               VLAN_VID(intermediate_vlan)]
-                elif port in flooding_ports:
-                    matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
+
+
+            # Flooding ports
+
+            for port in flooding_ports:
+                self.logger.debug("L2MultipointEndpointLCRule -1- : port: %s " % (port))
+                # Flow.4
+                matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
                 actions = []
                 for outport in flooding_ports:
+                    self.logger.debug("L2MultipointEndpointLCRule -2- : outport: %s " % (outport))
                     if outport != port:
                         actions.append(Forward(outport))
                 for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
+                    self.logger.debug("L2MultipointEndpointLCRule -3- : outport: %s " % (outport))
                     if outport != port:
                         actions.append(SetField(VLAN_VID(vlan)))
-                        actions.append(Forward(outport))
+                        actions.append(Forward(l2mp_bw_out_port))
                 priority = PRIORITY_L2M_FLOOD_FORWARDING
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
@@ -1122,15 +1306,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              of_cookie,
                                                              marule,
                                                              priority)
-
-                if port in endpoint_ports:
-                    matches = [METADATA(port, MD_L2M_MASK),
-                               VLAN_VID(intermediate_vlan),
-                               ETH_DST('ff:ff:ff:ff:ff:ff')]
-                elif port in flooding_ports:
-                    matches = [IN_PORT(port),
-                               VLAN_VID(intermediate_vlan),
-                               ETH_DST('ff:ff:ff:ff:ff:ff')]
+                
+                # Flow.5
+                matches = [IN_PORT(port),
+                           VLAN_VID(intermediate_vlan),
+                           ETH_DST('ff:ff:ff:ff:ff:ff')]
                 # Same actions as above, no need to rebuild
                 priority = PRIORITY_L2M_BROADCAST_FORWARDING
                 marule = MatchActionLCRule(switch_id, matches, actions)
@@ -1140,6 +1320,65 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              marule,
                                                              priority)
 
+                # Flow.8
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
+
+                matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
+                actions = []
+                actions.append(Forward(port))
+                priority = PRIORITY_L2M_FLOOD_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+                # Flow.9
+                matches = [IN_PORT(l2mp_bw_out_port),
+                           VLAN_VID(intermediate_vlan),
+                           ETH_DST('ff:ff:ff:ff:ff:ff')]
+                # Same actions as above, no need to rebuild
+                priority = PRIORITY_L2M_BROADCAST_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+
+
+
+            # Endpoint ports
+            for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
+                self.logger.debug("L2MultipointEndpointLCRule -4- : port: %s " % (port))
+
+                l2mp_bw_in_port = vlan
+                l2mp_bw_out_port = int(intermediate_vlan) + 10000
+ 
+                # Flow.6
+                matches = [IN_PORT(l2mp_bw_in_port), VLAN_VID(vlan)]
+                actions = []
+                actions.append(Forward(port))
+                priority = PRIORITY_L2M_FLOOD_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+                # Flow.7
+                matches = [IN_PORT(l2mp_bw_in_port),
+                           VLAN_VID(vlan),
+                           ETH_DST('ff:ff:ff:ff:ff:ff')]
+                # Same actions as above, no need to rebuild
+                priority = PRIORITY_L2M_BROADCAST_FORWARDING
+                marule = MatchActionLCRule(switch_id, matches, actions)
+                results += self._translate_MatchActionLCRule(datapath,
+                                                             flood_table,
+                                                             of_cookie,
+                                                             marule,
+                                                             priority)
+               
         return results
 
     def _translate_L2MultipointLearnedDestinationLCRule(self, datapath,
@@ -1258,7 +1497,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             args[m.get_name()] = m.get()
             # Add the prereqs to the list too
             for prereq in m.get_prereqs():
-                if prereq.get_name() in args.keys():
+                if prereq.get_name() in list(args.keys()):
                     pass
                 args[prereq.get_name()] = prereq.get()
                 # FIXME: If there's a prereq in conflict (i.e., user specified
@@ -1415,6 +1654,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
         table = rc.get_table()
         match = rc.get_match()
 
+        self.logger.debug("RyuTranslateInterface:remove_flow(): %d,%d:%d:%s:%s:%s:%s" % (
+                cookie,
+                datapath.id,
+                table,
+                command,out_group,out_port,match))
+        
         mod = parser.OFPFlowMod(datapath=datapath, cookie=cookie,
                                 table_id=table, command=command,
                                 out_group=out_group, out_port=out_port,
@@ -1449,8 +1694,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
                             (sdx_rule, type(sdx_rule)))
 
         # Get a cookie based on the SDX Controller cookie
-        of_cookie = self._get_new_OF_cookie(sdx_rule.get_cookie())
-        self.logger.debug("Cookie 0x%02x used for %s" % (of_cookie, sdx_rule))
+        of_cookie = self._get_new_OF_cookie(sdx_rule.get_cookie(), datapath.id)
+        self.logger.debug("Cookie 0x%02x used in datapath %s for %s" % (of_cookie, datapath.id, sdx_rule))
 
         # Convert rule into instructions for Ryu. Switch through the different
         # types of supported LCRules for individual translation.
@@ -1501,7 +1746,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         elif isinstance(sdx_rule, L2MultipointFloodLCRule):
             # Installs
             switch_table = FORWARDINGTABLE
-            self.logger.error("L2MultipointFlood: %d:%d:%s" % (switch_table,
+            self.logger.debug("L2MultipointFlood: %d:%d:%s" % (switch_table,
                                                                of_cookie,
                                                                sdx_rule))
 
@@ -1516,7 +1761,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             flood_table = FORWARDINGTABLE
             learning_table = LEARNINGTABLE
             switch_table = endpoint_table  # Used in some logs down below.
-            self.logger.error("L2MultipointEndpo: %d,%d:%d:%s" % (
+            self.logger.debug("L2MultipointEndpointLCRule: %d,%d:%d:%s" % (
                 endpoint_table, flood_table,
                 of_cookie,
                 sdx_rule))
@@ -1556,17 +1801,26 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                                 of_cookie,
                                                                 sdx_rule)
 
+        elif isinstance(sdx_rule, ManagementLCRecoverRule):
+            self._backup_port_recover(datapath, of_cookie, sdx_rule)
+            return
+
+        elif isinstance(sdx_rule, ManagementSDXRecoverRule):
+            self._backup_port_recover_from_sdx_msg(datapath, of_cookie, sdx_rule)
+            return
+
         if switch_rules == None or switch_table == None:
-            self.logger.error(
-                "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
-                sdx_rule, switch_rules, switch_table)
+            if not isinstance(sdx_rule, ManagementLCRecoverRule):
+                self.logger.error(
+                    "switch_rules or switch_table is None for msg: %s\n  switch_rules - %s\n  switch_table - %s" %
+                    sdx_rule, switch_rules, switch_table)
             # FIXME: This shouldn't happen...
             pass
 
         # Save off instructions to local database.
         self.logger.debug("Inserting into switch table %d switch rules %s" %
                           (switch_table, switch_rules))
-        self._install_rule_in_db(sdx_rule.get_cookie(), of_cookie,
+        self._install_rule_in_db(sdx_rule.get_cookie(), datapath.id, of_cookie,
                                  sdx_rule, switch_rules, switch_table)
 
         # Send instructions to the switch.
@@ -1586,12 +1840,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # Remove a rule.
         # Find the OF cookie based on the SDX Cookie
-        of_cookie = self._find_OF_cookie(sdx_cookie)
+        of_cookie = self._find_OF_cookie(sdx_cookie,datapath.id)
 
         # Get the Rules based on the it.
-        (swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie)
+        (switch_id, swcookie, sdxrule, swrules, table) = self._get_rule_in_db(sdx_cookie, datapath.id)
 
-        if (swcookie == None and
+        if (switch_id == None and 
+                swcookie == None and
                 sdxrule == None and
                 swrules == None and
                 table == None):
@@ -1599,13 +1854,19 @@ class RyuTranslateInterface(app_manager.RyuApp):
                               sdx_cookie)
             return
 
+        self.logger.error("RyuTranslateInterface:remove_rule(): remove a rule for sdx_cookie %s:%s" %
+                              (sdx_cookie, switch_id))
         try:
             # Remove flows
             for rule in swrules:
                 if type(rule) == TranslatedLCRuleContainer:
+                    self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedLCRuleContainer rule for sdx_cookie %s:%s" %
+                              (sdx_cookie, switch_id))
                     self.remove_flow(datapath, rule)
                 elif type(rule) == TranslatedCorsaRuleContainer:
                     # Currently, don't have to do anything here.
+                    self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedCorsaRuleContainer rule for sdx_cookie %s:%s" %
+                              (sdx_cookie, switch_id))
                     pass
         except Exception as e:
             self.logger.error("Error in remove_rule %s:%s" % (sdx_cookie,
@@ -1617,9 +1878,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
             raise e
 
         # Remove rule infomation from database
-        self._remove_rule_in_db(sdx_cookie)
+        self._remove_rule_in_db(sdx_cookie, switch_id)
 
-    def _install_rule_in_db(self, sdxcookie, switchcookie,
+    def _install_rule_in_db(self, sdxcookie, switch_id, switchcookie,
                             sdxrule, switchrules, switchtable):
         ''' This installs a rule into the DB. This makes life a lot easier and
             provides a central point to handle DB interactions. '''
@@ -1634,36 +1895,39 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         # FIXME: Checking to make sure it's not already there?
         self.rule_table.insert({'sdxcookie': sdxcookie,
+                                'switchid': switch_id,
                                 'switchcookie': switchcookie,
                                 'sdxrule': pickle.dumps(sdxrule),
                                 'switchrules': pickle.dumps(switchrules),
                                 'switchtable': switchtable})
 
-    def _remove_rule_in_db(self, sdx_cookie):
+    def _remove_rule_in_db(self, sdx_cookie, switch_id):
         ''' This removes a rule from the DB. This makes life a lot easier and
             provides a central point to handle DB interactions. '''
         # FIXME: Make sure it does exist.
-        self.rule_table.delete(sdxcookie=sdx_cookie)
+        self.rule_table.delete(sdxcookie=sdx_cookie, switchid=switch_id)
 
-    def _get_rule_in_db(self, sdx_cookie):
+    def _get_rule_in_db(self, sdx_cookie, switch_id):
         ''' This returns a rule from the DB. This makes life a lot easier and
             provides a central point to handle DB interactions.
             Returns a tuple:
             (switchcookie, sdxrule, switchrules, switchtable) '''
-        result = self.rule_table.find_one(sdxcookie=sdx_cookie)
+        result = self.rule_table.find_one(sdxcookie=sdx_cookie, switchid=switch_id)
         if result == None:
             return (None, None, None, None)
-        return (result['switchcookie'],
-                pickle.loads(str(result['sdxrule'])),
-                pickle.loads(str(result['switchrules'])),
+        return (result['switchid'],
+                result['switchcookie'],
+                pickle.loads(result['sdxrule']),
+                pickle.loads(result['switchrules']),
                 result['switchtable'])
 
-    def _get_new_OF_cookie(self, sdx_cookie):
+    def _get_new_OF_cookie(self, sdx_cookie, switch_id):
         ''' Creates a new cookie that can be used by OpenFlow switches.
             Populates a local database with information so that cookie can be
             looked up for rule removal. '''
-        if self.rule_table.find_one(sdxcookie=sdx_cookie) != None:
+        if self.rule_table.find_one(sdxcookie=sdx_cookie, switchid=switch_id) != None:
             # FIXME: This shouldn't happen...
+            self.logger.error("Existing sdxcookie: %s, switchid: %s",sdx_cookie,switch_id)
             pass
 
         of_cookie = self.current_of_cookie
@@ -1671,18 +1935,18 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
         return of_cookie
 
-    def _find_OF_cookie(self, sdx_cookie):
+    def _find_OF_cookie(self, sdx_cookie, switch_id):
         ''' Looks up OpenFlow cookie in local database based on a provided
             sdx_cookie. '''
-        result = self.rule_table.find_one(sdxcookie=sdx_cookie)
+        result = self.rule_table.find_one(sdxcookie=sdx_cookie, switchid=switch_id)
         if result == None:
             return None
         return result['switchcookie']
 
-    def _find_sdx_cookie(self, of_cookie):
+    def _find_sdx_cookie(self, of_cookie, switch_id):
         ''' Loops up the SDX cookie in local database based on a provided
             of_cookie. '''
-        result = self.rule_table.find_one(switchcookie=of_cookie)
+        result = self.rule_table.find_one(switchcookie=of_cookie,switchid=switch_id)
         if result == None:
             return None
         return result['sdxcookie']
@@ -1751,7 +2015,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         eth = pkt.get_protocols(ethernet.ethernet)[0]
         src_address = eth.src
         of_cookie = ev.msg.cookie
-        sdx_cookie = self._find_sdx_cookie(of_cookie)
+        sdx_cookie = self._find_sdx_cookie(of_cookie, datapath.id)
 
         self.inter_cm_cxn.send_cmd(ICX_L2MULTIPOINT_UNKNOWN_SOURCE,
                                    {"cookie": sdx_cookie,

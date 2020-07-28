@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AlanticWave/SDX Project
 
 
 # Unit tests for shared.LearnedDestinationLCRule
 
+from builtins import str
 import unittest
 from shared.LearnedDestinationLCRule import *
 
@@ -36,13 +38,13 @@ class BasicLCRuleTest(unittest.TestCase):
         LearnedDestinationLCRule(1,'aa:bb:cc:dd:ee', 2)
 
         # outport - must be an int
-        self.failUnlessRaises(LCRuleTypeError, LearnedDestinationLCRule,
+        self.assertRaises(LCRuleTypeError, LearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee',
                               'a') # Must be an int
-        self.failUnlessRaises(LCRuleTypeError, LearnedDestinationLCRule,
+        self.assertRaises(LCRuleTypeError, LearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee',
                               (1,2)) # Must be an int
-        self.failUnlessRaises(LCRuleTypeError, LearnedDestinationLCRule,
+        self.assertRaises(LCRuleTypeError, LearnedDestinationLCRule,
                               1, 'aa:bb:cc:dd:ee',
                               [1]) # Must be an int
 

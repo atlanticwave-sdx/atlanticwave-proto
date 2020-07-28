@@ -1,8 +1,14 @@
+from __future__ import unicode_literals
 # Copyright 2018 - Sean Donovan
 # AtlanticWave/SDX Project
 
-import cPickle as pickle
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import str
+import pickle as pickle
 from lib.AtlanticWaveManager import AtlanticWaveManager
+from shared.ManagementLCRecoverRule import *
 
 # List of rule statuses
 RULE_STATUS_ACTIVE       = 1
@@ -67,15 +73,21 @@ class LCRuleManager(AtlanticWaveManager):
             for dupe in dupes:
                 (c,sid,lcr,stat) = dupe
                 if lcr == lcrule:
-                    raise LCRuleManagerValidationError(
-                        "Duplicate add_rule for %s:%s:%s" %
-                        (cookie, switch_id, str(lcrule)))
+                    if isinstance(lcrule,ManagementLCRecoverRule):
+                        self.logger.debug("ManagementLCRecoverRule, ignored.")
+                    else:
+                        raise LCRuleManagerValidationError(
+                            "Duplicate add_rule for %s:%s:%s" %
+                            (cookie, switch_id, str(lcrule)))
 
         # Translate rule into a string so it can be stored
         self.rule_table.insert({'cookie':cookie,
                                 'switch_id':switch_id,
                                 'status':status,
                                 'rule':textrule})
+
+        listrules = self._find_rules({})
+        self.logger.debug("%s - %s --- MCEVIK add_rule: listrules: %s" % (self.__class__.__name__, hex(id(self)), str(listrules)))
 
     def rm_rule(self, cookie, switch_id):
         # Remove LC rule identified by cookie and switch_id
@@ -98,7 +110,9 @@ class LCRuleManager(AtlanticWaveManager):
             self.rule_table.update({'cookie':cookie,
                                     'switch_id':switch_id,
                                     'status':status},
-                                   ['cookie'])
+                                   ['cookie','switch_id'])
+        listrules = self._find_rules({})
+        self.logger.debug("%s - %s --- MCEVIK set_status: listrules: %s" % (self.__class__.__name__, hex(id(self)), str(listrules)))
 
     def _find_rules(self, filter={}):
         # If filter=={}, return all rules.
@@ -109,7 +123,7 @@ class LCRuleManager(AtlanticWaveManager):
             if type(filter) != dict:
                 raise LCRuleManagerTypeError("filter is not a dictionary: %s" %
                                              type(filter))
-            for key in filter.keys():
+            for key in list(filter.keys()):
                 if key not in self._valid_table_columns:
                     raise LCRuleManagerValidationError(
                         "filter column '%s' is not a valid filtering field %s" %
@@ -121,10 +135,21 @@ class LCRuleManager(AtlanticWaveManager):
         # Send Back results.
         retval = [(x['cookie'],
                    x['switch_id'],
-                   pickle.loads(str(x['rule'])),
+                   pickle.loads(x['rule']),
                    x['status']) for x in results]
         return retval
-        
+
+    def list_all_rules(self, full_tuple=False):
+        rules = self.rule_table.find()
+        self.logger.debug("Retrieving all rules.")
+        if full_tuple:
+            retval = [(x['cookie'],
+                       x['switch_id'],
+                       pickle.loads(x['rule']),
+                       x['status']) for x in rules]
+            return retval
+        retval = [pickle.loads(x['rule']) for x in rules]
+        return retval
 
     def get_rules(self, cookie, switch_id, full_tuple=False):
         ''' Returns a list of all rules matching cookie and switch_id. 
@@ -132,17 +157,24 @@ class LCRuleManager(AtlanticWaveManager):
             If  full_tuple==True, then a list of tuples will be returned:
                 (cookie, switch_id, rule, status)
         '''
+
+        listrules = self._find_rules({})
+        self.logger.debug("%s - %s --- MCEVIK get_rules: listrules: %s" % (self.__class__.__name__, hex(id(self)), str(listrules)))
+
         # Get the rule specified by cookie
         rules = self.rule_table.find(cookie=cookie, switch_id=switch_id)
+        self.logger.debug("%s - %s --- MCEVIK get_rules: rules: %s" % (self.__class__.__name__, hex(id(self)), str(rules)))
 
         if full_tuple:
             retval = [(x['cookie'],
                        x['switch_id'],
-                       pickle.loads(str(x['rule'])),
+                       pickle.loads(x['rule']),
                        x['status']) for x in rules]
+            self.logger.debug("%s - %s --- MCEVIK get_rules: retval full_tuple: %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
             return retval
 
-        retval = [pickle.loads(str(x['rule'])) for x in rules]
+        retval = [pickle.loads(x['rule']) for x in rules]
+        self.logger.debug("%s - %s --- MCEVIK get_rules: retval : %s" % (self.__class__.__name__, hex(id(self)), str(retval)))
         return retval
 
     def add_initial_rule(self, rule, cookie, switch_id):

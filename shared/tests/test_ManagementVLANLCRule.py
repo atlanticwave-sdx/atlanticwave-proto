@@ -1,3 +1,5 @@
+from __future__ import division
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AlanticWave/SDX Project
 
@@ -6,10 +8,12 @@
 ### Hard Coded in ManagementVLANLCRule.py
 ###MANAGEMENT_VLAN_MIN = 1401
 ###MANAGEMENT_VLAN_MAX = 1415
+from builtins import str
+from past.utils import old_div
 import unittest
 from shared.ManagementVLANLCRule import *
 
-TEST_VLAN=(MANAGEMENT_VLAN_MIN+MANAGEMENT_VLAN_MAX)/2
+TEST_VLAN=old_div((MANAGEMENT_VLAN_MIN+MANAGEMENT_VLAN_MAX),2)
 class BasicLCRuleTest(unittest.TestCase):
 
     def test_BasicLCRule(self):
@@ -44,61 +48,61 @@ class BasicLCRuleTest(unittest.TestCase):
         ManagementVLANLCRule(1, TEST_VLAN, [1,2], [3])
 
         # mgmt_vlan
-        self.failUnlessRaises(LCRuleTypeError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleTypeError, ManagementVLANLCRule,
                               1,
                               'a', # Must be an int
                               [1,2],[3])
-        self.failUnlessRaises(LCRuleTypeError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleTypeError, ManagementVLANLCRule,
                               1,
                               [1,2], # Must be an int
                               [1,2],[3])
-        self.failUnlessRaises(LCRuleTypeError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleTypeError, ManagementVLANLCRule,
                               1,
                               (1,2), # Must be an int
                               [1,2],[3])
-        self.failUnlessRaises(LCRuleValueError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleValueError, ManagementVLANLCRule,
                               1,
                               0, # Must be between MANAGEMENT_VLAN_MIN and MANAGEMENT_VLAN_MAX
                               [1,2],[3])
-        self.failUnlessRaises(LCRuleValueError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleValueError, ManagementVLANLCRule,
                               1,
                               -1, # Must be between MANAGEMENT_VLAN_MIN and MANAGEMENT_VLAN_MAX
                               [1,2],[3])
-        self.failUnlessRaises(LCRuleValueError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleValueError, ManagementVLANLCRule,
                               1,
                               MANAGEMENT_VLAN_MAX+1, # Must be between MANAGEMENT_VLAN_MIN and MANAGEMENT_VLAN_MAX
                               [1,2],[3])
-        self.failUnlessRaises(LCRuleValueError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleValueError, ManagementVLANLCRule,
                               1,
                               MANAGEMENT_VLAN_MIN-1, # MANAGEMENT_VLAN_MIN and MANAGEMENT_VLAN_MAX
                               [1,2],[3])
-        self.failUnlessRaises(LCRuleValueError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleValueError, ManagementVLANLCRule,
                               1,
                               5000, # Must be between 1 and 4095
                               [1,2],[3])
 
         # mgmt_vlan_ports - List of numbers 
-        self.failUnlessRaises(LCRuleTypeError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleTypeError, ManagementVLANLCRule,
                               1, TEST_VLAN,
                               [1,'a'], # must be list of numbers
                               [3])
-        self.failUnlessRaises(LCRuleTypeError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleTypeError, ManagementVLANLCRule,
                               1, TEST_VLAN,
                               (1,2), # must be list of numbers
                               [3])
-        self.failUnlessRaises(LCRuleTypeError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleTypeError, ManagementVLANLCRule,
                               1, TEST_VLAN,
                               12, # must be list of numbers
                               [3])
 
         # untagged_mgmt_vlan_ports - List of numbers 
-        self.failUnlessRaises(LCRuleTypeError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleTypeError, ManagementVLANLCRule,
                               1, TEST_VLAN, [1,2],
                               [1,'a']) # must be list of numbers
-        self.failUnlessRaises(LCRuleTypeError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleTypeError, ManagementVLANLCRule,
                               1, TEST_VLAN, [1,2],
                               (1,2)) # must be list of numbers
-        self.failUnlessRaises(LCRuleTypeError, ManagementVLANLCRule,
+        self.assertRaises(LCRuleTypeError, ManagementVLANLCRule,
                               1, TEST_VLAN, [1,2],
                               12) # must be list of numbers
 if __name__ == '__main__':

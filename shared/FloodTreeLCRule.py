@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
-from LCRule import *
+from shared.LCRule import *
 
 class FloodTreeLCRule(LCRule):
     ''' This structure is used to pass the ports that belong to a spanning tree
@@ -43,3 +45,18 @@ class FloodTreeLCRule(LCRule):
 
     def get_ports(self):
         return self.ports
+    
+    def get_switch_id(self):
+        return self.switch_id
+
+    def get_cookie(self):
+        return self.cookie
+
+    def set_ports(self, ports):
+        self.ports = ports
+
+    def set_switch_id(self, switch_id):
+        self.switch_id = switch_id
+
+    def set_cookie(self, cookie):
+        self.cookie = cookie

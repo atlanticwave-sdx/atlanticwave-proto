@@ -1,9 +1,12 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 # Unit tests for the TopologyManager class
 
+from builtins import range
 import unittest
 import threading
 #import mock
@@ -20,7 +23,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = TopologyManager(topology_file=CONFIG_FILE) 
         secondManager = TopologyManager(topology_file=CONFIG_FILE)
 
-        self.failUnless(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
 class VerifyTopoTest(unittest.TestCase):
     def setUp(self):
@@ -31,7 +34,7 @@ class VerifyTopoTest(unittest.TestCase):
     def test_get_topo(self):
         man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
-        self.failUnless(isinstance(topo, nx.Graph))
+        self.assertTrue(isinstance(topo, nx.Graph))
         
     def test_simple_topo(self):
         man = TopologyManager(topology_file=CONFIG_FILE)
@@ -48,7 +51,7 @@ class VerifyTopoTest(unittest.TestCase):
         #print "EXPECT: %s" % expected_nodes
         self.assertEquals(len(nodes), len(expected_nodes))
         for node in expected_nodes:
-            self.failUnless(node in nodes)
+            self.assertTrue(node in nodes)
 
         #FIXME: Need to look at details! In the future, anyway.
 
@@ -63,14 +66,14 @@ class VerifyTopoTest(unittest.TestCase):
             ('br3', 'br4')]
         edges = topo.edges()
 
-        self.failUnless(len(edges) == len(expected_edges))
+        self.assertTrue(len(edges) == len(expected_edges))
         for edge in expected_edges:
             (a, b) = edge
             reversed_edge = (b,a)
             # We don't care about ordering of the edges)
             # Both options below end up with same result.
-            self.failUnless((edge in edges) or (reversed_edge in edges))
-            self.failUnless(topo.has_edge(a, b))
+            self.assertTrue((edge in edges) or (reversed_edge in edges))
+            self.assertTrue(topo.has_edge(a, b))
 
         #import json
         #print json.dumps(topo.nodes(data=True), indent=1)
@@ -94,7 +97,7 @@ class VLANTopoTest(unittest.TestCase):
         
         # It should return 1
         vlan = man.find_vlan_on_path(path)
-        self.failUnlessEqual(vlan, 1)
+        self.assertEqual(vlan, 1)
 
     def test_path_with_node_set(self):
         man = TopologyManager(topology_file=CONFIG_FILE)
@@ -127,9 +130,9 @@ class VLANTopoTest(unittest.TestCase):
         self.assertEqual(vlan, 1)
         
         # Add VLAN 1 to one of the points on the path
-        print "\n%s" % man.topo.edge['br3']['br4']
+        print("\n%s" % man.topo.edge['br3']['br4'])
         man.topo.edge["br3"]["br4"]['vlans_in_use'].append(1)
-        print man.topo.edge['br3']['br4']
+        print(man.topo.edge['br3']['br4'])
         
         # Should return 2
         vlan = man.find_vlan_on_path(path)
@@ -145,14 +148,14 @@ class VLANTopoTest(unittest.TestCase):
 
         # Should return 1
         vlan = man.find_vlan_on_path(path)
-        self.failUnlessEqual(vlan, 1)
+        self.assertEqual(vlan, 1)
         
         # Add VLANs 1-4090 to one of the points on the path        
-        man.topo.node["br4"]['vlans_in_use'] = range(1,4090)
+        man.topo.node["br4"]['vlans_in_use'] = list(range(1,4090))
         
         # Should return None
         vlan = man.find_vlan_on_path(path)
-        self.failUnlessEqual(vlan, None)
+        self.assertEqual(vlan, None)
         man.topo.node["br4"]['vlans_in_use'] = []
 
 
@@ -165,13 +168,13 @@ class VLANTopoTest(unittest.TestCase):
 
         # Should return 1
         vlan = man.find_vlan_on_path(path)
-        self.failUnlessEqual(vlan, 1)
+        self.assertEqual(vlan, 1)
         
         # Add VLANs 1-4090 to one of the points on the path        
-        man.topo.edge["br4"]["br3"]['vlans_in_use'] = range(1,4090)
+        man.topo.edge["br4"]["br3"]['vlans_in_use'] = list(range(1,4090))
         # Should return None
         vlan = man.find_vlan_on_path(path)
-        self.failUnlessEqual(vlan, None)
+        self.assertEqual(vlan, None)
         man.topo.edge["br4"]["br3"]['vlans_in_use'] = []
 
     def test_reserve_on_empty(self):
@@ -197,7 +200,7 @@ class VLANTopoTest(unittest.TestCase):
         man.topo.edge["br4"]["br3"]['vlans_in_use'].append(1)
 
         # Reserve path on VLAN 1
-        self.failUnlessRaises(Exception, man.reserve_vlan_on_path, path, 1)
+        self.assertRaises(Exception, man.reserve_vlan_on_path, path, 1)
         # Should throw an exception
 
     def test_unreserve_vlan(self):
@@ -212,7 +215,7 @@ class VLANTopoTest(unittest.TestCase):
         man.reserve_vlan_on_path(path, 100)
 
         # Reserve path on VLAN 100
-        self.failUnlessRaises(Exception, man.reserve_vlan_on_path, path, 100)
+        self.assertRaises(Exception, man.reserve_vlan_on_path, path, 100)
         # Should throw an exception
 
         # Unreserve path
@@ -256,7 +259,7 @@ class BWTopoTest(unittest.TestCase):
         # Get a path
         path = nx.shortest_path(topo, source="br4", target="br2")
 
-        self.failUnlessRaises(Exception, man.reserve_bw_on_path, path, 
+        self.assertRaises(Exception, man.reserve_bw_on_path, path, 
                               8000000001)
 
     def test_unreserve_reservation(self):
@@ -284,10 +287,10 @@ class BWTopoTest(unittest.TestCase):
         man.reserve_bw_on_path(path, 100)
         man.unreserve_bw_on_path(path, 100)
         
-        self.failUnlessRaises(Exception, man.unreserve_bw_on_path, path, 100)
+        self.assertRaises(Exception, man.unreserve_bw_on_path, path, 100)
 
         man.reserve_bw_on_path(path, 100)
-        self.failUnlessRaises(Exception, man.unreserve_bw_on_path, path, 200)
+        self.assertRaises(Exception, man.unreserve_bw_on_path, path, 200)
 
  
 class SteinerTreeNoLoopTest(unittest.TestCase):
@@ -318,20 +321,20 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         tree = man.find_valid_steiner_tree(nodes)
         expected_tree_nodes = ["sw1", "sw2", "sw5", "sw6", "sw7", "sw8"]
         returned_tree_nodes = tree.nodes()
-        self.failUnlessEqual(len(expected_tree_nodes), 
+        self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.failUnless(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
         # Get a tree connecting sw4, sw8, and sw6
         nodes = ["sw4", "sw6", "sw8"]
         tree = man.find_valid_steiner_tree(nodes)
         expected_tree_nodes = ["sw4", "sw5", "sw6", "sw7", "sw8"]
         returned_tree_nodes = tree.nodes()
-        self.failUnlessEqual(len(expected_tree_nodes), 
+        self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.failUnless(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
     def test_find_vlan(self):
         man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
@@ -393,7 +396,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         man.reserve_vlan_on_tree(tree, vlan)
 
         # Should work
-        self.failUnlessRaises(Exception, man.reserve_vlan_on_tree, tree, vlan)
+        self.assertRaises(Exception, man.reserve_vlan_on_tree, tree, vlan)
 
     def test_reserve_bandwidth(self):
         man = TopologyManager(topology_file=STEINER_NO_LOOP_CONFIG_FILE)
@@ -430,7 +433,7 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         tree = man.find_valid_steiner_tree(nodes)
 
         # Should work
-        self.failUnlessRaises(Exception, man.reserve_bw_on_tree, tree, 
+        self.assertRaises(Exception, man.reserve_bw_on_tree, tree, 
                               80000000001)
 
     def test_unreserve_bw(self):
@@ -461,10 +464,10 @@ class SteinerTreeNoLoopTest(unittest.TestCase):
         man.reserve_bw_on_tree(tree, 100)
         man.unreserve_bw_on_tree(tree, 100)
 
-        self.failUnlessRaises(Exception, man.unreserve_bw_on_tree, tree, 100)
+        self.assertRaises(Exception, man.unreserve_bw_on_tree, tree, 100)
 
         man.reserve_bw_on_tree(tree, 100)
-        self.failUnlessRaises(Exception, man.unreserve_bw_on_tree, tree, 200)
+        self.assertRaises(Exception, man.unreserve_bw_on_tree, tree, 200)
         man.unreserve_bw_on_tree(tree, 100)
 
     
@@ -497,30 +500,30 @@ class SteinerTreeWithLoopTest(unittest.TestCase):
         tree = man.find_valid_steiner_tree(nodes)
         expected_tree_nodes = ["sw1", "sw2", "sw5", "sw4", "sw7"]
         returned_tree_nodes = tree.nodes()
-        self.failUnlessEqual(len(expected_tree_nodes), 
+        self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.failUnless(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
         # Get a tree connecting sw1, sw3, sw8, sw6
         nodes = ["sw1", "sw3", "sw6", "sw8"]
         tree = man.find_valid_steiner_tree(nodes)
         expected_tree_nodes = ["sw1", "sw2", "sw3", "sw8", "sw7", "sw6"]
         returned_tree_nodes = tree.nodes()
-        self.failUnlessEqual(len(expected_tree_nodes), 
+        self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.failUnless(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
         # Get a tree connecting sw1, sw3, sw8
         nodes = ["sw1", "sw3", "sw8"]
         tree = man.find_valid_steiner_tree(nodes)
         expected_tree_nodes = ["sw1", "sw2", "sw3", "sw8"]
         returned_tree_nodes = tree.nodes()
-        self.failUnlessEqual(len(expected_tree_nodes), 
+        self.assertEqual(len(expected_tree_nodes), 
                              len(returned_tree_nodes))
         for node in expected_tree_nodes:
-            self.failUnless(node in returned_tree_nodes)
+            self.assertTrue(node in returned_tree_nodes)
 
 
 

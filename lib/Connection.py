@@ -1,10 +1,16 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import str
+from builtins import object
 import socket
 import select as pyselect
-import cPickle as pickle
+import pickle as pickle
 import logging
 import threading
 import sys
@@ -111,7 +117,8 @@ class Connection(object):
         try:
             # Based on https://code.activestate.com/recipes/408859-socketrecv-three-ways-to-turn-it-into-recvall/
             sock_data = ''
-            size_data = ''
+            size_data = b''
+            size=0
             while len(size_data) < 4:
                 sock_data = self.sock.recv(4 - len(size_data))
                 size_data += sock_data
@@ -130,7 +137,7 @@ class Connection(object):
                 recv_size = size - total_len
                 if recv_size > 524388:
                     recv_size = 524288
-            data_raw = ''.join(total_data)
+            data_raw = b"".join(total_data)
 
             # Unpickle!
             data = pickle.loads(data_raw)

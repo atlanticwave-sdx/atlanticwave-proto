@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 # Unit tests for shared.LCAction module
 
+from builtins import str
 import unittest
 from shared.LCAction import *
 from shared.LCFields import *

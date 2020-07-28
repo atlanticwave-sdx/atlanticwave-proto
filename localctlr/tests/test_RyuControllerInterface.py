@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
@@ -26,7 +28,7 @@ switch_id = 1
 
 
 def lccallback(a,b):
-    print "LCCALLBACK: %s, %s"% (a,b)
+    print("LCCALLBACK: %s, %s"% (a,b))
 
 class RyuControllerInterfaceInit(unittest.TestCase):
     @classmethod
@@ -162,18 +164,18 @@ class RyuControllerFullTests(unittest.TestCase):
         sleep(1)
         #print "test_rule_installation_" + str(num)
         #print "LC: %s" % (self.ctlrint)
-        print "SENDING NEW COMMAND: %s" % rule
+        print("SENDING NEW COMMAND: %s" % rule)
         self.ctlrint.send_command(self.switch_id, rule)
         sleep(1) # To make sure the rule changes have propogated.
                  # 0.1 second isn't enough
         output = subprocess.check_output(['ovs-ofctl', '-O', 'OpenFlow13','dump-flows', 'br_ovs'])
-        print "\nINSTALL OUTPUT: %s\n" % output
+        print("\nINSTALL OUTPUT: %s\n" % output)
         lines = output.split('\n')
 
         self.ctlrint.remove_rule(self.switch_id, rule.get_cookie())
         sleep(1) # To make sure the rule changes have propogated.
         output = subprocess.check_output(['ovs-ofctl', '-O', 'OpenFlow13','dump-flows', 'br_ovs'])
-        print "\nREMOVE OUTPUT: %s\n" % output
+        print("\nREMOVE OUTPUT: %s\n" % output)
         rmlines = output.split('\n')
 
         # Installation tests
@@ -181,25 +183,25 @@ class RyuControllerFullTests(unittest.TestCase):
             #int "CHECKING LINE: %s" % line
             if "priority=100" not in line:
                 continue
-            print "MATCHED LINE:\n     %s" % line
+            print("MATCHED LINE:\n     %s" % line)
             count = 0
             for e in line.split(','):
-                print "%d:%s" % (count, e)
+                print("%d:%s" % (count, e))
                 count += 1
-            self.failUnlessEqual(line.split(',')[5].strip(), test5)
-            self.failUnlessEqual(line.split(',')[6].strip(), test6)
+            self.assertEqual(line.split(',')[5].strip(), test5)
+            self.assertEqual(line.split(',')[6].strip(), test6)
             if test7 != None:
-                self.failUnlessEqual(line.split(',')[7].strip(), test7)
+                self.assertEqual(line.split(',')[7].strip(), test7)
             if test8 != None:
-                self.failUnlessEqual(line.split(',')[8].strip(), test8)
+                self.assertEqual(line.split(',')[8].strip(), test8)
             if test9 != None:
-                self.failUnlessEqual(line.split(',')[9].strip(), test9)
+                self.assertEqual(line.split(',')[9].strip(), test9)
             if test10 != None:
-                self.failUnlessEqual(line.split(',')[10].strip(), test10)
+                self.assertEqual(line.split(',')[10].strip(), test10)
 
         # Removal
         for line in rmlines:
-            self.failUnless("priority=100" not in line)
+            self.assertTrue("priority=100" not in line)
 
     def test_rule_installation(self):
         self.logger.warning("BEGIN %s" % (self.id()))

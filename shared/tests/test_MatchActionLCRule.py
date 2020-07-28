@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AlanticWave/SDX Project
 
 
 # Unit tests for shared.MatchActionLCRule
 
+from builtins import str
 import unittest
 from shared.MatchActionLCRule import *
 from shared.LCFields import *
@@ -57,32 +59,32 @@ class BasicLCRuleTest(unittest.TestCase):
 
 
         # matches
-        self.failUnlessRaises(LCRuleTypeError, MatchActionLCRule,
+        self.assertRaises(LCRuleTypeError, MatchActionLCRule,
                               1,
                               [lcaction], # Must be a list of LCFields
                               [lcaction])
-        self.failUnlessRaises(LCRuleTypeError, MatchActionLCRule,
+        self.assertRaises(LCRuleTypeError, MatchActionLCRule,
                               1,
                               lcmatch, # Must be a list of LCFields
                               [lcaction])
-        self.failUnlessRaises(LCRuleTypeError, MatchActionLCRule,
+        self.assertRaises(LCRuleTypeError, MatchActionLCRule,
                               1,
                               [1,2,3], # Must be a list of LCFields
                               [lcaction])
         
         # Actions
-        self.failUnlessRaises(LCRuleTypeError, MatchActionLCRule,
+        self.assertRaises(LCRuleTypeError, MatchActionLCRule,
                               1, [lcmatch],
                               [lcmatch]) # Must be a list of LCActions
-        self.failUnlessRaises(LCRuleTypeError, MatchActionLCRule,
+        self.assertRaises(LCRuleTypeError, MatchActionLCRule,
                               1, [lcmatch],
                               lcaction) # Must be a list of LCActions
-        self.failUnlessRaises(LCRuleTypeError, MatchActionLCRule,
+        self.assertRaises(LCRuleTypeError, MatchActionLCRule,
                               1, [lcmatch],
                               [1,2,3]) # Must be a list of LCActions
 
         # ingress
-        self.failUnlessRaises(LCRuleTypeError, MatchActionLCRule,
+        self.assertRaises(LCRuleTypeError, MatchActionLCRule,
                               1, [lcmatch], [lcaction],
                               1) # Must be boolean
 if __name__ == '__main__':

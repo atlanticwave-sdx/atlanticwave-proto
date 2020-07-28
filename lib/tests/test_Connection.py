@@ -1,15 +1,19 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Unit tests for lib.Connection module.
 
+from future import standard_library
+standard_library.install_aliases()
 import unittest
 import socket
 import threading
-import cPickle as pickle
+import pickle as pickle
 from time import sleep
 from lib.Connection import *
-
+import pynetstring
 
 class InitTest(unittest.TestCase):
     def test_empty_init(self):
@@ -36,11 +40,11 @@ class InitTest(unittest.TestCase):
         port = 5555
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         cxn = Connection(ip, port, sock)
-        self.failUnlessEqual(cxn.get_address(), "127.0.0.1")
-        self.failUnlessEqual(cxn.get_port(), 5555)
-        self.failUnlessEqual(cxn.get_socket(), sock)
-        print cxn.__repr__()
-        print cxn
+        self.assertEqual(cxn.get_address(), "127.0.0.1")
+        self.assertEqual(cxn.get_port(), 5555)
+        self.assertEqual(cxn.get_socket(), sock)
+        print(cxn.__repr__())
+        print(cxn)
                              
 
 
@@ -48,7 +52,7 @@ class SendTest(unittest.TestCase):
     def setUp(self):
 
         self.ip = "127.0.0.1"
-        self.port = 5556
+        self.port = 5551
         self.object_to_send = {'a':1, 'b':2, 'c':{'x':7, 'y':8, 'z':9}}
         self.object_received = None
         
@@ -79,8 +83,8 @@ class SendTest(unittest.TestCase):
             while True:
                 total_len = 0
                 total_data = []
-                size = sys.maxint
-                size_data = ''
+                size = sys.maxsize
+                size_data = b''
                 sock_data = ''
                 recv_size = 8192
                 while total_len < size:
@@ -94,14 +98,14 @@ class SendTest(unittest.TestCase):
                                 recv_size = 524288
                             total_data.append(size_data[4:])
                             total_len = sum([len(i) for i in total_data])
-                            data_raw = ''.join(total_data)
+                            data_raw = b"".join(total_data)
                         else:
                             size_data += sock_data
                         
                     else:
                         total_data.append(sock_data)
                         total_len = sum([len(i) for i in total_data])
-                        data_raw = ''.join(total_data)
+                        data_raw = b"".join(total_data)
 
                 # Unpickle!
                 data = pickle.loads(data_raw)
@@ -115,7 +119,9 @@ class SendTest(unittest.TestCase):
     def test_send(self):
         self.SendingSocket.send(self.object_to_send)
         sleep(0.25 )  # Rather than messing about with locks.
-        self.failUnlessEqual(self.object_received, self.object_to_send)
+        print(self.object_received)
+        print(self.object_to_send)
+        self.assertEqual(self.object_received, self.object_to_send)
 
 
 class RecvBlockingTest(unittest.TestCase):
@@ -151,7 +157,9 @@ class RecvBlockingTest(unittest.TestCase):
     def test_blocking_receive(self):
         data = self.ReceivingConnection.recv()
         self.ReceivingConnection.close()
-        self.failUnlessEqual(data, self.object_to_send)
+        print(data)
+        print(self.object_to_send)
+        self.assertEqual(data, self.object_to_send)
 
 
 class RecvNonBlockingTest(unittest.TestCase):
@@ -189,7 +197,7 @@ class RecvNonBlockingTest(unittest.TestCase):
         self.ReceivingConnection.register_receive_callback(self.receiving_callback)
         self.ReceivingConnection.start_receive_thread()
         sleep(0.25) # Rather than messing about with locks.
-        self.failUnlessEqual(self.object_received, self.object_to_send)
+        self.assertEqual(self.object_received, self.object_to_send)
 
     def receiving_callback(self, data):
         self.object_received = data
@@ -236,10 +244,10 @@ class ValidSelectTest(unittest.TestCase):
 
         readable, writable, exceptional = select(rlist, wlist, xlist, 2.0)
 
-        self.failIf(readable == [])
+        self.assertFalse(readable == [])
 
         self.object_received=cxn.recv()
-        self.failUnlessEqual(self.object_received, self.object_to_send)
+        self.assertEqual(self.object_received, self.object_to_send)
 
 class invalidSelectTest(unittest.TestCase):
     def test_invalid_select_init1(self):

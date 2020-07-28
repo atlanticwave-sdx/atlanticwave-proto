@@ -1,14 +1,21 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2017 - Sean Donovan, John Skandalakis
 # AtlanticWave/SDX Project
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import hex
 import os
 
-import cPickle as pickle
+import pickle as pickle
 import json
 
 from lib.AtlanticWaveManager import AtlanticWaveManager
-from AuthorizationInspector import AuthorizationInspector
-from AuthenticationInspector import AuthenticationInspector
+from sdxctlr.AuthorizationInspector import AuthorizationInspector
+from sdxctlr.AuthenticationInspector import AuthenticationInspector
 
 
 class UserManager(AtlanticWaveManager):
@@ -54,7 +61,7 @@ class UserManager(AtlanticWaveManager):
         with open(manifest_filename) as data_file:
             data = json.load(data_file)
 
-        for unikey in data['participants'].keys():
+        for unikey in list(data['participants'].keys()):
             key = str(unikey)
             user = data['participants'][key]
             user['username'] = key
@@ -90,9 +97,9 @@ class UserManager(AtlanticWaveManager):
         temp_user['contact'] = user['contact']
         temp_user['type'] = user['type']
         temp_user['permitted_actions'] = pickle.loads(
-            str(user['permitted_actions']))
+            user['permitted_actions'])
         temp_user['restrictions'] = pickle.loads(
-            str(user['restrictions']))
+            user['restrictions'])
         return temp_user
 
     
@@ -109,8 +116,8 @@ class UserManager(AtlanticWaveManager):
 
 
     def _send_to_AA(self, user):
-        print "Sending %s:%s to AuthenticationInspector" % (user['username'],
-                                                            user['credentials'])
+        print("Sending %s:%s to AuthenticationInspector" % (user['username'],
+                                                            user['credentials']))
         AuthenticationInspector().add_user(user['username'],
                                            user['credentials'])
         AuthorizationInspector().set_user_authorization(

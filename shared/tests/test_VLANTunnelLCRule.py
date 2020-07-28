@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AlanticWave/SDX Project
 
 
 # Unit tests for shared.VLANTunnelLCRule
 
+from builtins import str
 import unittest
 from shared.VlanTunnelLCRule import *
 
@@ -59,83 +61,83 @@ class BasicLCRuleTest(unittest.TestCase):
         lcrule1 = VlanTunnelLCRule(1,2,3,4,5,False,1000)
         
         # inport
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,
                               'a', # Must be an int
                               3,4,5,False,1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,
                               (1,2), # Must be an int
                               3,4,5,False,1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,
                               [1], # Must be an int
                               3,4,5,False,1000)
 
         # outport
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,
                               'a', # Must be an int
                               4,5,False,1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,
                               (1,2), # Must be an int
                               4,5,False,1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,
                               [1], # Must be an int
                               4,5,False,1000)
 
         # vlan_in
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,
                               'a', # Must be an int
                               5,False,1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,
                               (1,2), # Must be an int
                               5,False,1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,
                               [1], # Must be an int
                               5,False,1000)
 
         # vlan_out
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,4,
                               'a', # Must be an int
                               False,1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,4,
                               (1,2), # Must be an int
                               False,1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,4,
                               [1], # Must be an int
                               False,1000)
         
         # bidirectional
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,4,5,
                               [1], # Must be an Boolean
                               1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,4,5,
                               1, # Must be an Boolean
                               1000)
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,4,5,
                               'a', # Must be an Boolean
                               1000)
 
         # bandwidth
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,4,5,False,
                               [1]) # Must be an int
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,4,5,False,
                               1.1) # Must be an int
-        self.failUnlessRaises(LCRuleTypeError, VlanTunnelLCRule,
+        self.assertRaises(LCRuleTypeError, VlanTunnelLCRule,
                               1,2,3,4,5,False,
                               'a') # Must be an int
 if __name__ == '__main__':

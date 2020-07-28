@@ -1,9 +1,12 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 # Unit tests for the SDXController class
 
+from builtins import object
 import unittest
 import threading
 import networkx as nx
@@ -42,18 +45,18 @@ class UserPolicyStandin(UserPolicy):
         # Verify that topology is a nx.Graph, and authorization_func is ???
         if not isinstance(topology, nx.Graph):
             raise Exception("Topology is not nx.Graph")
-        if self.valid == True:
+        if self.json_rule == True:
             return True
         raise Exception("NOT VALID")
     
     def breakdown_rule(self, topology, authorization_func):
         # Verify that topology is a nx.Graph, and authorization_func is ???
-        print "breakdown_rule called: %s:%s" % (authorization_func, topology)
+        print("breakdown_rule called: %s:%s" % (authorization_func, topology))
         if not isinstance(topology, TopologyManager):
-            print "- Raising Exception"
+            print("- Raising Exception")
             raise Exception("Topology is not nx.Graph")
-        if self.valid == True:
-            print "- Success"
+        if self.json_rule == True:
+            print("- Success")
             return [UserPolicyBreakdown("1.2.3.4",
                                         [RuleStandin("rule1"),
                                          RuleStandin("rule2")])]
@@ -100,7 +103,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = SDXController(False, no_loop_options)
         secondManager = SDXController()
 
-        self.failUnless(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
         del firstManager
         del secondManager
 
@@ -115,13 +118,13 @@ class AddRuleTest(unittest.TestCase):
         sdxctlr = SDXController(False, no_loop_options)
         
         man = RuleManager()#'db','sdxcontroller',rmhappy,rmhappy)
-        valid_rule = UserPolicyStandin(True, True)
+        valid_rule = UserPolicyStandin("sdonovan", True)
 
         sdxctlr._send_breakdown_rule = mock.MagicMock()
 
         rule_num = man.add_rule(valid_rule)
 
-        man.remove_rule(rule_num, 'sdonovan')
+        man.remove_rule(rule_num, "sdonovan")
         
 
 class JsonUploadTest(unittest.TestCase):
@@ -145,7 +148,7 @@ class JsonUploadTest(unittest.TestCase):
             "bandwidth":1}}
 
         # Get a JSON policy from a file
-        l2rule = L2TunnelPolicy('sdonovan', l2json)
+        l2rule = L2TunnelPolicy("sdonovan", l2json)
 
         rule_num = man.add_rule(l2rule)
         man.remove_rule(rule_num, 'sdonovan')

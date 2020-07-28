@@ -1,7 +1,9 @@
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
+from builtins import object
 from shared.LCFields import *
 
 class LCActionTypeError(TypeError):
@@ -26,7 +28,7 @@ class LCAction(object):
         return self.__str__()
 
     def get(self):
-        return None
+        return self._name
 
     def __eq__(self, other):
         return (type(other) == type(self) and

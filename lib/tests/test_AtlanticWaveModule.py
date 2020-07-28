@@ -1,8 +1,10 @@
+from __future__ import unicode_literals
 # Copyright 2019 - Sean Donovan
 # AtlanticWave/SDX Project
 
 # Unit test for lib.AtlanticWaveModule
 
+from builtins import str
 import unittest
 import os
 from testfixtures import LogCapture
@@ -82,7 +84,7 @@ class LogSetupTest(unittest.TestCase):
 
                 module.dlogger_tb()
                 
-                self.assertEquals(("Traceback: id: " in str(l)), True)
+                self.assertEqual(("Traceback: id: " in str(l)), True)
                 del module
 
     def test_exception_tb_LogCapture(self):
@@ -96,7 +98,7 @@ class LogSetupTest(unittest.TestCase):
 
                 module.exception_tb(e)
 
-                self.assertEquals(("Exception " in str(l)), True)
+                self.assertEqual(("Exception " in str(l)), True)
                 del module
 
     def exception_thrower(self):

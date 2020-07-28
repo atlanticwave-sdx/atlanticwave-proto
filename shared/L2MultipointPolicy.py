@@ -1,7 +1,11 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
-from UserPolicy import *
+from builtins import str
+from shared.UserPolicy import *
 from datetime import datetime
 from shared.constants import *
 from shared.L2MultipointEndpointLCRule import L2MultipointEndpointLCRule
@@ -103,12 +107,12 @@ class L2MultipointPolicy(UserPolicy):
                                                (vlan, str(endpoint)))
 
         except Exception as e:
-            import os
+            import os,sys
             exc_type, exc_obj, exc_tb = sys.exc_info()
             filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             lineno = exc_tb.tb_lineno
-            print "%s: Exception %s at %s:%d" % (self.get_policy_name(),
-                                                 str(e), filename,lineno)
+            print("%s: Exception %s at %s:%d" % (cls.get_policy_name(),
+                                                 str(e), filename,lineno))
             raise
             
     def breakdown_rule(self, tm, ai):
@@ -248,7 +252,7 @@ class L2MultipointPolicy(UserPolicy):
         jsonstring = self.ruletype
         if type(json_rule) is not dict:
             raise UserPolicyTypeError("json_rule is not a dictionary:\n    %s" % json_rule)
-        if jsonstring not in json_rule.keys():
+        if jsonstring not in list(json_rule.keys()):
             raise UserPolicyValueError("%s value not in entry:\n    %s" % ('rules', json_rule))        
 
         self.start_time = json_rule[jsonstring]['starttime']

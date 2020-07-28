@@ -8,7 +8,7 @@
 
 ![alt text](figures/AW-SDX-Node-Layout.png)
 
-Direct Link: https://drive.google.com/file/d/1BHdOv4X62mmVrFEbLGE5By1Nt3GNLBEo/view?usp=sharing
+Direct Link: https://www.draw.io/#G1C7yn7oQ9FrGdVVxNnJtcGu9MOPG7U2xL
 
 ```
 # Out-of-band management
@@ -47,10 +47,6 @@ Direct Link: https://drive.google.com/file/d/1BHdOv4X62mmVrFEbLGE5By1Nt3GNLBEo/v
 
 ```
 
-
-
-
-
 ## Corsa Switches
 
 Ports are set to `passthrough` mode. (ctag mode strips off the VLAN tag that prevent flows with `dl_vlan` match field being pushed properly. This can be a pure openflow behavior that needs to be elaborated.)
@@ -59,10 +55,9 @@ Openflow control connection is established through default namespace (and associ
 
 ![alt text](figures/AW-SDX-Corsa-Tunnel-Layout.png)
 
-Direct Link: https://drive.google.com/file/d/1BHdOv4X62mmVrFEbLGE5By1Nt3GNLBEo/view?usp=sharing
 
 
-Set port tunnel-modes
+### Set port tunnel-modes
 
 ```
 # RENCI-1
@@ -77,8 +72,7 @@ configure port 20 tunnel-mode passthrough
 
 # RENCI-2
 configure port 23 tunnel-mode passthrough
-configure port 4 tunnel-mode passthrough
-configure port 9 tunnel-mode passthrough
+configure port 8 tunnel-mode passthrough
 configure port 25 tunnel-mode passthrough
 configure port 26 tunnel-mode passthrough
 
@@ -92,7 +86,6 @@ configure port 20 tunnel-mode passthrough
 
 # UNC
 configure port 1 tunnel-mode passthrough
-configure port 2 tunnel-mode passthrough
 configure port 11 tunnel-mode passthrough
 configure port 12 tunnel-mode passthrough
 configure port 19 tunnel-mode passthrough
@@ -100,7 +93,6 @@ configure port 20 tunnel-mode passthrough
 
 # NCSU
 configure port 1 tunnel-mode passthrough
-configure port 2 tunnel-mode passthrough
 configure port 11 tunnel-mode passthrough
 configure port 12 tunnel-mode passthrough
 configure port 19 tunnel-mode passthrough
@@ -109,7 +101,7 @@ configure port 20 tunnel-mode passthrough
 ```
 
 
-Create VFCs on all Corsa switches
+### Create VFCs on all Corsa switches
 
 ```
 # RENCI-1
@@ -118,12 +110,13 @@ configure bridge add br21 openflow resources 10
 configure bridge br21 dpid 0xC9
 configure bridge br21 tunnel attach ofport 1 port 1
 configure bridge br21 tunnel attach ofport 2 port 2
-configure bridge br21 tunnel attach ofport 23 port 23
 configure bridge br21 tunnel attach ofport 11 port 11
 configure bridge br21 tunnel attach ofport 12 port 12
+configure bridge br21 tunnel attach ofport 23 port 23
+configure bridge br21 tunnel attach ofport 30 port 30
 configure bridge br21 tunnel attach ofport 19 port 19 
 configure bridge br21 tunnel attach ofport 20 port 20 
-configure bridge br21 tunnel attach ofport 30 port 30
+
 configure bridge br21 controller add CONTbr21 192.168.201.196 6681
 
 # RENCI-2
@@ -131,8 +124,7 @@ configure bridge br21 controller add CONTbr21 192.168.201.196 6681
 configure bridge add br25 openflow resources 2
 configure bridge br25 dpid 0xCD
 configure bridge br25 tunnel attach ofport 23 port 23
-configure bridge br25 tunnel attach ofport 4 port 4
-configure bridge br25 tunnel attach ofport 9 port 9
+configure bridge br25 tunnel attach ofport 8 port 8
 configure bridge br25 tunnel attach ofport 25 port 25
 configure bridge br25 tunnel attach ofport 26 port 26
 configure bridge br25 controller add CONTbr25 192.168.201.196 6681
@@ -154,7 +146,6 @@ configure bridge br22 controller add CONTbr22 192.168.202.39 6682
 configure bridge add br23 openflow resources 10 
 configure bridge br23 dpid 0xCB
 configure bridge br23 tunnel attach ofport 1 port 1 
-configure bridge br23 tunnel attach ofport 2 port 2 
 configure bridge br23 tunnel attach ofport 11 port 11
 configure bridge br23 tunnel attach ofport 12 port 12
 configure bridge br23 tunnel attach ofport 19 port 19 
@@ -166,7 +157,6 @@ configure bridge br23 controller add CONTbr23 192.168.203.10 6683
 configure bridge add br24 openflow resources 10 
 configure bridge br24 dpid 0xCC
 configure bridge br24 tunnel attach ofport 1 port 1 
-configure bridge br24 tunnel attach ofport 2 port 2 
 configure bridge br24 tunnel attach ofport 11 port 11 
 configure bridge br24 tunnel attach ofport 12 port 12 
 configure bridge br24 tunnel attach ofport 19 port 19 
@@ -175,23 +165,38 @@ configure bridge br24 controller add CONTbr24  192.168.204.21 6684
 
 ```
 
+
+
+### Rate Limiting VFC
+
+Physical ports are in ctag tunnel-mode.
+On RENCI-1, DUKE, UNC, NCSU switches Port 21 and 22 are attached to the rate-limiting VFC.
+On RENCI-2 switch ports 27 and 28 are attached to the rate-limiting VFC.
+
 ```
-# Rate Limiting VFC
 # Create rate limiting VFC (br20) on RENCI-1 | RENCI-2 | DUKE | UNC | NCSU
 configure bridge add br20 vpws resources 2
 configure bridge br20 controller add Eline 172.17.2.1 6653
 application eline configure connection add atlanticwave 21 22 "Rate Limiting VFC"
+```
 
+Scripts in ratelimiting-vfc can be used to delete and create the rate-limiting VFCs.
+
+```
 python make-rate-limiting-switch-clean-renci.py 
 python make-rate-limiting-switch-clean-duke.py 
 python make-rate-limiting-switch-clean-unc.py 
 python make-rate-limiting-switch-clean-ncsu.py 
 python make-rate-limiting-switch-clean-renci-2.py
 
+or 
+
+re-create-all.sh
+
 ```
 
 
-## Run Controllers
+## Run SDX Controller and Local Controllers
 
 Script `aw.sh` can be used to build docker images and run the containers for sdx and local controllers.
 Type of the controller and site names are extracted from hostnames. 

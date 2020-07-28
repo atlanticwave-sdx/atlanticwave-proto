@@ -1,9 +1,12 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 # Copyright 2016 - Sean Donovan
 # AtlanticWave/SDX Project
 
 
 # Unit tests for the RuleManager class
 
+from builtins import object
 import unittest
 import threading
 import networkx as nx
@@ -49,7 +52,7 @@ class UserPolicyStandin(UserPolicy):
     def breakdown_rule(self, topology, authorization_func):
         # Verify that topology is a nx.Graph, and authorization_func is ???
         if not isinstance(topology, TopologyManager):
-            print "- Raising Exception"
+            print("- Raising Exception")
             raise Exception("Topology is not nx.Graph")
         if self.breakdown == True:
             return [UserPolicyBreakdown("1.2.3.4",
@@ -68,7 +71,7 @@ class SingletonTest(unittest.TestCase):
         firstManager = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         secondManager = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
 
-        self.failUnless(firstManager is secondManager)
+        self.assertTrue(firstManager is secondManager)
 
 class AddRuleTest(unittest.TestCase):
     def test_good_test_add_rule(self):
@@ -84,7 +87,7 @@ class AddRuleTest(unittest.TestCase):
         man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         invalid_rule = UserPolicyStandin(False, True)
 
-        self.failUnlessRaises(Exception,
+        self.assertRaises(Exception,
                               man.test_add_rule, invalid_rule)
 
     def test_no_breakdown_test_add_rule(self):
@@ -92,7 +95,7 @@ class AddRuleTest(unittest.TestCase):
         man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         invalid_rule = UserPolicyStandin(True, False)
 
-        self.failUnlessRaises(Exception,
+        self.assertRaises(Exception,
                               man.test_add_rule, invalid_rule)
 
     def test_good_add_rule(self):
@@ -101,14 +104,14 @@ class AddRuleTest(unittest.TestCase):
         valid_rule = UserPolicyStandin(True, True)
 
 #        print man.add_rule(valid_rule)
-        self.failUnless(isinstance(man.add_rule(valid_rule), int))
+        self.assertTrue(isinstance(man.add_rule(valid_rule), int))
 
     def test_invalid_add_rule(self):
         topo = TopologyManager(topology_file=TOPO_CONFIG_FILE)
         man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         invalid_rule = UserPolicyStandin(False, True)
 
-        self.failUnlessRaises(Exception,
+        self.assertRaises(Exception,
                               man.add_rule, invalid_rule)
 
     def test_no_breakdown_add_rule(self):
@@ -116,7 +119,7 @@ class AddRuleTest(unittest.TestCase):
         man = RuleManager(db, 'sdxcontroller', rmhappy, rmhappy)
         invalid_rule = UserPolicyStandin(True, False)
 
-        self.failUnlessRaises(Exception,
+        self.assertRaises(Exception,
                               man.add_rule, invalid_rule)
 
 class RemoveRuleTest(unittest.TestCase):
@@ -128,10 +131,10 @@ class RemoveRuleTest(unittest.TestCase):
         #FIXME
         hash = man.add_rule(valid_rule)
         man.get_rule_details(hash)
-        self.failUnless(man.get_rule_details(hash) != None)
+        self.assertTrue(man.get_rule_details(hash) != None)
 
         man.remove_rule(hash, "dummy_user")
-        self.failUnless(man.get_rule_details(hash) == None)
+        self.assertTrue(man.get_rule_details(hash) == None)
 
 class GetRules(unittest.TestCase):
     def test_get_rules(self):
@@ -140,7 +143,7 @@ class GetRules(unittest.TestCase):
         valid_rule = UserPolicyStandin(True, True)
 
         hash = man.add_rule(valid_rule)
-        self.failUnless(man.get_rules() != [])
+        self.assertTrue(man.get_rules() != [])
 
 
 class RemoveAllRules(unittest.TestCase):
@@ -152,12 +155,12 @@ class RemoveAllRules(unittest.TestCase):
         # Add a rule.
         man.add_rule(valid_rule)
 
-        self.failUnless(man.get_rules() != [])
+        self.assertTrue(man.get_rules() != [])
         
         man.remove_all_rules("dummy_user")
 
         rules = man.get_rules()
-        self.failUnless(man.get_rules() == [])
+        self.assertTrue(man.get_rules() == [])
 
         
 if __name__ == '__main__':
