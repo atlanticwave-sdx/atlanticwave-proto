@@ -291,7 +291,7 @@
       "internalconfig": {
         "ryucxninternalport": 55784,
         "openflowport": 6684,
-	"backuplc": "uncs1"
+	"backuplcswitch": "uncs1"
       },
       "switchinfo": [
         { 
@@ -418,3 +418,4 @@
     }
   }
 }
+
