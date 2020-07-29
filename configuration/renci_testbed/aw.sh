@@ -3,7 +3,7 @@
 TEMP_FILE=/tmp/trap.txt
 CONFIG_DIR="/var/tmp"
 TMP_DIR="/var/tmp"
-WORK_DIR="/root"
+WORK_DIR="$HOME"
 
 
 DELAY=3 
