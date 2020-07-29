@@ -117,6 +117,11 @@ cleanup_docker(){
     for i in `docker images | grep none | awk '{print $3}'`; do docker rmi $i ; done
 }
 
+delete_docker_images(){
+    TYPE=$1
+    for i in `docker ps -a -q`; do echo "--- Container: $i" ; docker stop $i; docker rm -v $i; done
+    for i in `docker images -q`; do docker rmi $i ; done
+}
 
 build_docker_image(){
    REPO=$1
@@ -176,7 +181,7 @@ stop_docker_container(){
 }
 
 
-while getopts "R:B:G:H:m:cbprsH" opt; do
+while getopts "R:B:G:H:m:cdbprsH" opt; do
     case $opt in
         R)
             AW_REPO=${OPTARG}
@@ -200,6 +205,13 @@ while getopts "R:B:G:H:m:cbprsH" opt; do
             
             title "Cleanup Docker Containers and Images"
             cleanup_docker ${TYPE}
+            ;;
+        d)
+            title "Cleanup Files"
+            cleanup_files ${TMP_DIR} ${WORK_DIR} ${TYPE}
+            
+            title "Cleanup Docker Containers and Images"
+            delete_docker_images ${TYPE}
             ;;
         b)
             title "Cleanup Files"
