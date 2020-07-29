@@ -13,12 +13,36 @@ PWD=`pwd`
 HOSTNAME=$(hostname)
 
 case ${HOSTNAME} in
+    bf40g1.renci.ben)
+            SITE="renci"
+            TYPE="lc"
+            ;;
+    bf40g1.duke.ben)
+            SITE="duke"
+            TYPE="lc"
+            ;;
+    bf40g1.unc.ben)
+            SITE="unc"
+            TYPE="lc"
+            ;;
+    bf40g1.ncsu.ben)
+            SITE="ncsu"
+            TYPE="lc"
+            ;;
+    atlanticwave-sdx-controller.renci.ben)
+            SITE="renci"
+            TYPE="sdx"
+            ;;
     sdxlc.ampath.net)
             SITE="mia"
             TYPE="lc"
             ;;
     awsdx-ctrl.cloud.rnoc.gatech.edu)
             SITE="atl"
+            TYPE="lc"
+            ;;
+    acanets-chile)
+            SITE="chl"
             TYPE="lc"
             ;;
     awsdx-app.cloud.rnoc.gatech.edu)

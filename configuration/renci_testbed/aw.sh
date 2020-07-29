@@ -33,6 +33,22 @@ case ${HOSTNAME} in
             SITE="renci"
             TYPE="sdx"
             ;;
+    sdxlc.ampath.net)
+            SITE="mia"
+            TYPE="lc"
+            ;;
+    awsdx-ctrl.cloud.rnoc.gatech.edu)
+            SITE="atl"
+            TYPE="lc"
+            ;;
+    acanets-chile)
+            SITE="chl"
+            TYPE="lc"
+            ;;
+    awsdx-app.cloud.rnoc.gatech.edu)
+            SITE="atl"
+            TYPE="sdx"
+            ;;
 esac
 
 #SITE=$(hostnamectl --transient | cut -d- -f3 | cut -d. -f1) # renci | duke | unc | ncsu
