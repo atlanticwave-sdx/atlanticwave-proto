@@ -17,7 +17,7 @@ for i in `seq 1 25`; do
    NUM_ARRAY20[$i]=$R
 done
 
-for i in `seq 1 60`; do
+for i in `seq 1 75`; do
    R=$(($(($RANDOM%$DIFF))+$MIN))
    NUM_ARRAY50[$i]=$R
 done
@@ -31,12 +31,13 @@ eval a20=($(printf "%q\n" "${NUM_ARRAY20[@]}" | sort -u))
 eval a50=($(printf "%q\n" "${NUM_ARRAY50[@]}" | sort -u))
 eval a100=($(printf "%q\n" "${NUM_ARRAY100[@]}" | sort -u))
 
-echo "--- NUMBERS: ${a20[@]}" 
+echo "--- NUMBERS: ${a50[@]}" 
 
-for i in ${a20[@]}; do 
+for i in ${a50[@]}; do 
+#for i in `seq 91 120`; do 
 
-   echo "--- SEQ = $i"
-   echo "--- DATE = `date`"
+#   echo "--- SEQ = $i"
+#   echo "--- DATE = `date`"
    LINE=`cat ${FILE} | grep -w ^${i}`
    echo $LINE
 
@@ -50,12 +51,12 @@ for i in ${a20[@]}; do
 
    printf -v data '{"L2Tunnel":{"starttime":"2019-02-14T12:00:00","endtime":"2019-02-20T23:59:00","srcswitch":"%s","dstswitch":"%s","srcport":12,"dstport":12,"srcvlan":%i,"dstvlan":%i,"bandwidth":%i}}' ${SRC_SW} ${DST_SW} ${SRC_VLAN} ${DST_VLAN} ${BW}
 
-   echo "--- DATA: $data"
-   curl -X POST http://127.0.0.1:5000/api/v1/policies/type/L2Tunnel -b aw1.cookie -H "Content-Type: application/json" -d "$data"
-   echo " "
-   echo " "
-   echo " "
-   echo " "
-   echo " "
+#   echo "--- DATA: $data"
+   curl -s -X POST http://127.0.0.1:5000/api/v1/policies/type/L2Tunnel -b aw1.cookie -H "Content-Type: application/json" -d "$data"
+#   echo " "
+#   echo " "
+#   echo " "
+#   echo " "
+#   echo " "
  
 done

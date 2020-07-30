@@ -1,0 +1,1 @@
+Scripts that are used to interact with the controllers and create circuits for perfomance testing. These scripts have references on the readme files in renci_testbed and awave-production configurations.

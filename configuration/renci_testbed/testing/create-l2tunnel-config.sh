@@ -1,7 +1,10 @@
 #!/bin/bash
 
 PWD=`pwd`
-FILE="${PWD}/config_file.txt"
+FILE="${PWD}/config_file_l2tunnel.txt"
+
+echo "" > ${FILE}
+
 
 SRC_SW="rencis1"
 DST_SW="dukes1"

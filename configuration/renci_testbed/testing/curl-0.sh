@@ -33,14 +33,14 @@ title(){
 function get1
 {  
    URL=$1
-   curl -s -k -H "Accept: application/json" --request GET ${URL} | python -m json.tool
+   curl -s -k -H "Accept: application/json" --request GET ${URL} | python -m json.tool | jq '.'
 }
 
 function get2
 {  
    URL=$1
    COOKIE=$2
-   curl -s -k -b ${COOKIE} -H "Accept: application/json" --request GET ${URL} | python -m json.tool
+   curl -s -k -b ${COOKIE} -H "Accept: application/json" --request GET ${URL} | python -m json.tool | jq '.'
 }
 
 function post1
@@ -51,7 +51,7 @@ function post1
    curl -k -b ${COOKIE}\
         -H "Content-Type:application/json" \
         -X POST ${URL} \
-        -d ${JSON}  | python -m json.tool
+        -d ${JSON}  | python -m json.tool | jq '.'
 
 
 }
@@ -63,9 +63,9 @@ get(){
    QUERY=$2
    if [[ -n ${QUERY} && ${QUERY} -eq 1  ]]; then
        URL="${URL}?list=true"
-       curl -k -H ${HEADER} -X GET ${URL} | python -m json.tool
+       curl -k -H ${HEADER} -X GET ${URL} | python -m json.tool | jq '.'
    else
-       curl -k -H ${HEADER} -X GET ${URL} | python -m json.tool
+       curl -k -H ${HEADER} -X GET ${URL} | python -m json.tool | jq '.'
    fi
 }
 
@@ -331,7 +331,7 @@ case ${OPERATION} in
                         -b ${COOKIE} \
                         -H "Content-Type: application/json"\
                         -X POST ${URL_ENDPOINTCONNECTION} \
-                        -d "$( generate_post_data_endpointconnection ${DEADLINE} ${SRCENDPOINT} ${DSTENDPOINT} ${DATAQUANTITY} )" | python -m json.tool 
+                        -d "$( generate_post_data_endpointconnection ${DEADLINE} ${SRCENDPOINT} ${DSTENDPOINT} ${DATAQUANTITY} )" | python -m json.tool | jq '.'
                    ;;
     create_l2tunnel)
                    title "L2TUNNEL Create => STARTIME: ${STARTTIME} - ENDTIME: ${ENDTIME} - BW: ${BANDWIDTH} - EP1: ${ENDPOINT1} - EP2: ${ENDPOINT2}"
@@ -341,7 +341,7 @@ case ${OPERATION} in
                         -b ${COOKIE} \
                         -H "Content-Type: application/json"\
                         -X POST ${URL_ENDPOINTCONNECTION} \
-                        -d "$( generate_post_data_l2tunnel ${STARTTIME} ${ENDTIME} ${BANDWIDTH} ${ENDPOINT1} ${ENDPOINT2} )" | python -m json.tool
+                        -d "$( generate_post_data_l2tunnel ${STARTTIME} ${ENDTIME} ${BANDWIDTH} ${ENDPOINT1} ${ENDPOINT2} )" | python -m json.tool | jq '.'
                    ;;
 
     create_ep1)
