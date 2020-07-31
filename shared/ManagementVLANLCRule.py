@@ -30,7 +30,7 @@ from LCRule import *
 ###MANAGEMENT_VLAN_MAX = 4089
 #MANAGEMENT_VLAN_MIN = 1801
 #MANAGEMENT_VLAN_MAX = 1810
-MANAGEMENT_VLAN_MIN = 1400
+MANAGEMENT_VLAN_MIN = 1300
 MANAGEMENT_VLAN_MAX = 1810
 class ManagementVLANLCRule(LCRule):
     ''' This structure is used at each switch that the Management VLAN traverses
