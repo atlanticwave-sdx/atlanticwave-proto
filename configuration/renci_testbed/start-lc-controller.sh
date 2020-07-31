@@ -20,7 +20,8 @@ else
 fi
 
 
-SDXIPVAL="10.14.11.254"
+###SDXIPVAL="10.14.11.254"
+SDXIPVAL="10.10.10.10"
 export SDXIPVAL
 
 case ${SITE} in
