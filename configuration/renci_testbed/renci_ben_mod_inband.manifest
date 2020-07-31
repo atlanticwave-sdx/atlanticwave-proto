@@ -4,12 +4,12 @@
       "type": "sdxcontroller",
       "friendlyname": "SDX Controller",
       "location": "35.939796, -79.018203",
-      "vlan": 1410},
+      "vlan": 1310},
     "rencictlr": {
       "type": "localcontroller",
       "friendlyname": "RENCI Controller",
       "location": "35.939796, -79.018203",
-      "vlan": 1411},
+      "vlan": 1311},
     "rencidtn": {
       "type": "dtn",
       "friendlyname": "RENCI BF40G Node",
@@ -24,7 +24,7 @@
       "type": "localcontroller",
       "friendlyname": "DUKE Controller",
       "location": "36.003614, -78.938755",
-      "vlan": 1412},
+      "vlan": 1312},
     "dukedtn": {
       "type": "dtn",
       "friendlyname": "DUKE BF40G Node",
@@ -34,7 +34,7 @@
       "type": "localcontroller",
       "friendlyname": "UNC Controller",
       "location": "35.903395, -79.048370",
-      "vlan": 1413},
+      "vlan": 1313},
     "uncdtn": {
       "type": "dtn",
       "friendlyname": "UNC BF40G Node",
@@ -44,7 +44,7 @@
       "type": "localcontroller",
       "friendlyname": "NCSU Controller",
       "location": "35.773395, -78.677730",
-      "vlan": 1414},
+      "vlan": 1314},
     "ncsudtn": {
       "type": "dtn",
       "friendlyname": "NCSU BF40G Node",
@@ -56,7 +56,7 @@
       "shortname": "rencictlr",
       "credentials": "rencipwd",
       "location": "35.939796, -79.018203",
-      "lcip": "10.10.10.11",
+      "lcip": "10.13.11.11",
       "internalconfig": {
         "ryucxninternalport": 55781,
         "openflowport": 6681,
@@ -114,7 +114,7 @@
             "corsabwoutl2mp": 6,
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [7,8],
-            "managementvlan":1411,
+            "managementvlan":1311,
             "managementvlanports":[1,2,11,23,30]
           }
         },
@@ -149,7 +149,7 @@
             "corsabwoutl2mp": 4,
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [13,14],
-            "managementvlan":1411,
+            "managementvlan":1311,
             "managementvlanports":[23]
           }
         }
@@ -164,7 +164,7 @@
       "shortname": "dukectlr",
       "credentials": "dukepwd",
       "location":"36.003614, -78.938755",
-      "lcip": "10.10.10.12",
+      "lcip": "10.13.12.11",
       "internalconfig": {
         "ryucxninternalport": 55782,
         "openflowport": 6682,
@@ -212,7 +212,7 @@
             "corsabwoutl2mp": 6,
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [7,8],
-            "managementvlan":1412,
+            "managementvlan":1312,
             "managementvlanports":[1,2,11]
           }
         }
@@ -227,7 +227,7 @@
       "shortname": "uncctlr",
       "credentials": "uncpwd",
       "location":"35.903395, -79.048370",
-      "lcip": "10.10.10.13",
+      "lcip": "10.13.13.11",
       "internalconfig": {
         "ryucxninternalport": 55783,
         "openflowport": 6683,
@@ -270,7 +270,7 @@
             "corsabwoutl2mp": 6,
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [7,8],
-            "managementvlan":1413,
+            "managementvlan":1313,
             "managementvlanports":[1,11],
 	    "managementvlanbackupports":[1, 2, 11],
             "sdxmanagementvlanbackupports":[1, 2, 11]
@@ -287,7 +287,7 @@
       "shortname": "ncsuctlr",
       "credentials": "ncsupwd",
       "location": "35.773395, -78.677730",
-      "lcip": "10.10.10.14",
+      "lcip": "10.13.14.11",
       "internalconfig": {
         "ryucxninternalport": 55784,
         "openflowport": 6684,
@@ -330,7 +330,7 @@
             "corsabwoutl2mp": 6,
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [7,8],
-            "managementvlan":1414,
+            "managementvlan":1314,
             "managementvlanports":[1,11],
 	    "managementvlanbackupports":[2, 11]
           }
