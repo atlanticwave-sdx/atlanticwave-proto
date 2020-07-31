@@ -20,36 +20,33 @@ else
 fi
 
 
-###SDXIPVAL="10.14.11.254"
-###export SDXIPVAL
-
 case ${SITE} in
     renci)
               RYU_PORT=6681
               LC_SITE="rencictlr"
-              #SDXIPVAL="10.14.11.254"
-              SDXIPVAL="10.13.11.10"
+              SDXIPVAL="10.14.11.254"
+              #SDXIPVAL="10.13.11.10"
               export SDXIPVAL
               ;;
     duke)
               RYU_PORT=6682
               LC_SITE="dukectlr"
-              #SDXIPVAL="10.14.11.254"
-              SDXIPVAL="10.13.12.10"
+              SDXIPVAL="10.14.11.254"
+              #SDXIPVAL="10.13.12.10"
               export SDXIPVAL
               ;;
     unc)
               RYU_PORT=6683
               LC_SITE="uncctlr"
-              #SDXIPVAL="10.14.11.254"
-              SDXIPVAL="10.13.13.10"
+              SDXIPVAL="10.14.11.254"
+              #SDXIPVAL="10.13.13.10"
               export SDXIPVAL
               ;;
     ncsu)
               RYU_PORT=6684
               LC_SITE="ncsuctlr"
-              #SDXIPVAL="10.14.11.254"
-              SDXIPVAL="10.13.14.10"
+              SDXIPVAL="10.14.11.254"
+              #SDXIPVAL="10.13.14.10"
               export SDXIPVAL
               ;;
     \?)
