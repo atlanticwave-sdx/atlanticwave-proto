@@ -177,6 +177,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
         self.name = CONF['atlanticwave']['lcname']
         self.conf_file = CONF['atlanticwave']['conffile']
         self.db_name = CONF['atlanticwave']['dbfile']
+        self.control_topo = CONF['atlanticwave']['controltopo']
+
         if self.db_name == "":
             self.db_name = ":memory:"
 
@@ -534,6 +536,48 @@ class RyuTranslateInterface(app_manager.RyuApp):
         of_cookie = self._get_new_OF_cookie(-1,-1)  # FIXME: magic number
         results = []
 
+        try:
+            with open(self.control_topo) as control_topo_file:
+                controltopo = json.load(control_topo_file)
+        except Exception as e:
+            self.logger.warning("exception when opening control plane topology file: %s" %
+                                str(e))
+        
+        # Get config file, if it exists
+        try:
+            self.logger.info("Opening config file %s" % self.conf_file)
+            with open(self.conf_file) as data_file:
+                data = json.load(data_file)
+            lcdata = data['localcontrollers'][self.name]
+        except Exception as e:
+            self.logger.warning("exception when opening config file: %s" %
+                                str(e))
+
+        # TODO: double check the case where one lc has multiple switches
+        portinfo = []
+        switchname = ""
+        for entry in lcdata['switchinfo']:
+            if str(entry['dpid']) == str(datapath.id):
+                self.logger.info("Found portinfo for %s" % entry['name'])
+                portinfo = entry['portinfo']
+                switchname = entry['name']
+
+        if not portinfo:
+            raise ValueError("DPID %s does not have port info" %
+                             datapath.id)
+
+        steiner_tree_dist_nodes = controltopo[switchname]
+
+        managementvlanports = []
+        for entry in portinfo:
+            if entry['destination'] in steiner_tree_dist_nodes and 'dtn' not in entry['destination']:
+                managementvlanports.append(int(entry['portnumber']))
+        
+        if not managementvlanports:
+            raise ValueError("DPID %s does not have valid steiner tree" %
+                             datapath.id)
+            return
+
         # In-band Communication
         # Extract management VLAN and ports from the manifest
         internal_config = self._get_switch_internal_config(datapath.id)
@@ -547,12 +591,15 @@ class RyuTranslateInterface(app_manager.RyuApp):
             raise ValueError("DPID %s does not have managementvlan" %
                              datapath.id)
             return
-        if 'managementvlanports' in list(internal_config.keys()):
-            managementvlanports = internal_config['managementvlanports']
-        else:
-            raise ValueError("DPID %s does not have managementvlanports" %
-                             datapath.id)
-            return
+        
+        # Old method that reads managementvlanports from manifest
+        #if 'managementvlanports' in list(internal_config.keys()):
+        #    managementvlanports = internal_config['managementvlanports']
+        #else:
+        #    raise ValueError("DPID %s does not have managementvlanports" %
+        #                     datapath.id)
+        #    return
+
 
         for table in ALL_TABLES_EXCEPT_LAST:
             matches = []  # FIXME: what's the equivalent of match(*)?

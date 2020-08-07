@@ -100,7 +100,7 @@ class LocalController(AtlanticWaveModule):
         self.switch_connection = RyuControllerInterface(self.name,
                                     self.manifest, self.lcip,
                                     self.ryu_cxn_port, self.openflow_port,
-                                    self.switch_message_cb,
+                                    self.switch_message_cb, self.controltopo,
                                     self.loggerid)
         self.logger.info("RyuControllerInterface setup finish.")
 
@@ -474,6 +474,7 @@ class LocalController(AtlanticWaveModule):
     def _setup(self, options): 
         self.manifest = options.manifest
         dbname = options.database
+        self.controltopo = options.controltopo
 
         # Get DB connection and tables set up.
         db_tuples = [('config_table', self.name+"-config")]
@@ -529,6 +530,20 @@ class LocalController(AtlanticWaveModule):
                                 str(e))
             lcdata = None
         self._add_manifest_filename_to_db(self.manifest)
+
+        if self.controltopo == None:
+            raise Exception("Unable to retrieve control plane spanning tree")
+
+        # Get control plane spanning tree
+        try:
+            self.logger.info("Opening control plane spanning tree file %s" % self.controltopo)
+            with open(self.controltopo) as controltopo_data_file:
+                controltopo_data = json.load(controltopo_data_file)
+            self.logger.info("Successfully opened control plane spanning tree file %s" %
+                             self.controltopo)
+        except Exception as e:
+            self.logger.warning("Exception when opening control plane spanning tree file: %s" %
+                                str(e))
 
         # Check if things are stored in the db. If they are, use them.
         # If not, load from the manifest and store to DB.
@@ -878,6 +893,8 @@ if __name__ == '__main__':
                         default=":memory:")
     parser.add_argument("-m", "--manifest", dest="manifest", type=str,
                         action="store", help="specifies the manifest")
+    parser.add_argument("-c", "--control-plane-topo", dest="controltopo", type=str, 
+                        action="store", help="specifies the control plane topology")
     parser.add_argument("-n", "--name", dest="name", type=str,
                         action="store", help="Specify the name of the LC")
     parser.add_argument("-H", "--host", dest="host", default=IPADDR,
@@ -894,7 +911,9 @@ if __name__ == '__main__':
     if not config_info_present or not options.name:
         parser.print_help()
         exit()
+    if not options.controltopo:
+        parser.print_help()
+        exit()
 
     lc = LocalController(False, options)
     lc._main_loop()
-
