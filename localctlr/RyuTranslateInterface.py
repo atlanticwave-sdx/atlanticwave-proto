@@ -567,14 +567,16 @@ class RyuTranslateInterface(app_manager.RyuApp):
                              datapath.id)
 
         steiner_tree_dist_nodes = controltopo[switchname]
+
         managementvlanports = []
         for entry in portinfo:
             if entry['destination'] in steiner_tree_dist_nodes and 'dtn' not in entry['destination']:
                 managementvlanports.append(int(entry['portnumber']))
-            else:
-                raise ValueError("DPID %s does not have valid steiner tree" %
+        
+        if not managementvlanports:
+            raise ValueError("DPID %s does not have valid steiner tree" %
                              datapath.id)
-                return
+            return
 
         # In-band Communication
         # Extract management VLAN and ports from the manifest
