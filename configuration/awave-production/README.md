@@ -3,6 +3,7 @@
 ## Testbed Topology
 
 ![alt text](figures/AW-SDX-Production_Setup-0-Topology.png)
+![alt text](figures/AW-SDX-Production_Setup-Topology-amlight.png)
 
 ## Node Layout
 
