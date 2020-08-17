@@ -13,6 +13,12 @@ then
 fi
 echo "Manifest file: $MANIFEST"
 
+if ! test $SPANNINGTREEMANIFEST
+then 
+  MANIFEST="../demo/aw-three-site_spanning_tree.manifest"
+fi
+echo "Manifest file: $MANIFEST"
+
 if ! test $SDXIP
 then 
   SDXIP="127.0.0.1"
@@ -31,5 +37,5 @@ else
 fi
 
 cd localctlr/
-python LocalController.py -n $SITE -m $MANIFEST -H $SDXIP
+python LocalController.py -n $SITE -m $MANIFEST -c $SPANNINGTREEMANIFEST -H $SDXIP
 
