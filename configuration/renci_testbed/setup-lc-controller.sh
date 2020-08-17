@@ -33,6 +33,7 @@ git clone ${AW_REPO}
 cd atlanticwave-proto
 git checkout ${AW_BRANCH}
 cp configuration/renci_testbed/renci_ben.manifest docker/lc_container/
+cp configuration/renci_testbed/renci_ben_spanning_tree.manifest docker/lc_container/
 
 if [[ $EUID -eq 0 ]]; then
   #sudo systemctl restart docker
@@ -43,6 +44,7 @@ cd docker/lc_container
 sed -r -i "s/master/${AW_BRANCH}/g" Dockerfile
 docker build -t lc_container .
 rm -f renci_ben.manifest 
+rm -f renci_ben_spanning_tree.manifest
 
 # Copy over run scripts
 cd ../../configuration/renci_testbed
