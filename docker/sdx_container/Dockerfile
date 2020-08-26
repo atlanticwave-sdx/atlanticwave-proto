@@ -24,7 +24,7 @@ COPY run_sdx.sh .
 COPY ./*.manifest ./
 
 # This really should point to a particular version
-RUN git clone -b python3upgrade https://github.com/atlanticwave-sdx/atlanticwave-proto.git
+RUN git clone -b develop https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 RUN cat atlanticwave-proto/requirements.txt
 RUN pip3 install -r atlanticwave-proto/requirements.txt
 
