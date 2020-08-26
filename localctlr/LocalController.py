@@ -706,16 +706,16 @@ class LocalController(AtlanticWaveModule):
         cookie = msg.get_data()['cookie']
         rules = self.rm.get_rules(cookie, switch_id)
 
-        self.logger.debug("--- MCEVIK remove_rule_sdxmsg - switch_id:  %d" % (switch_id)) 
-        self.logger.debug("--- MCEVIK remove_rule_sdxmsg - rules:  %s" % (str(rules))) 
+        #self.logger.debug("--- MCEVIK remove_rule_sdxmsg - switch_id:  %d" % (switch_id)) 
+        #self.logger.debug("--- MCEVIK remove_rule_sdxmsg - rules:  %s" % (str(rules))) 
 
         for i in range(len(rules)):
             r = rules[i]
             rule_type = str(r).split(':')[0]
             rule_text = str(r).split(':')[1:]
             rule_switch = rule_text[0].split(',')[0].split(' ')[2]
-            self.logger.debug("--- MCEVIK i: %d - rule_type:  %s" % (i, rule_type)) 
-            self.logger.debug("--- MCEVIK i: %d - rule_switch:  %s" % (i, rule_switch)) 
+            #self.logger.debug("--- MCEVIK i: %d - rule_type:  %s" % (i, rule_type)) 
+            #self.logger.debug("--- MCEVIK i: %d - rule_switch:  %s" % (i, rule_switch)) 
 
             if (rule_type == 'L2MultipointEndpointLCRule') and (str(rule_switch) == str(switch_id)) :
                 self.logger.debug("remove tunnels for L2Multipoint rate limiting:  %d:%s:%s" % (cookie, switch_id, r)) 
@@ -754,7 +754,7 @@ class LocalController(AtlanticWaveModule):
             return
         for i in range(len(rules)):
             r = rules[i]
-            self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - rules %s" % (r))
+            #self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - rules %s" % (r))
             rule_type = str(r).split(':')[0]
             rule_text = str(r).split(':')[1:]
 
@@ -766,8 +766,8 @@ class LocalController(AtlanticWaveModule):
                 l2mp_bw_in_port = int(vlan)
                 l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
-                self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - l2mp_bw_in_port %s - l2mp_bw_out_port %s" 
-                                   % (l2mp_bw_in_port, l2mp_bw_out_port))
+                #self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - l2mp_bw_in_port %s - l2mp_bw_out_port %s" 
+                #                   % (l2mp_bw_in_port, l2mp_bw_out_port))
 
                 key='corsabridge'
                 if key not in list(internal_config.keys()):
