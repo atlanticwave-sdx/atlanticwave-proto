@@ -26,7 +26,7 @@ done
 
 # yum work
 if [[ $EUID -eq 0 ]]; then
-  sudo yum -y update
+#  sudo yum -y update
   sudo yum -y install git docker-ce
 fi
 
