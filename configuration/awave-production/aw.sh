@@ -197,7 +197,7 @@ stop_docker_container(){
 }
 
 
-while getopts "R:B:G:H:m:cdbprsH" opt; do
+while getopts "R:B:G:H:m:S:T:cdbprsH" opt; do
     case $opt in
         R)
             AW_REPO=${OPTARG}
@@ -214,6 +214,12 @@ while getopts "R:B:G:H:m:cdbprsH" opt; do
             ;;
         m)
             MODE=${OPTARG}
+            ;;
+        S)
+            SITE=${OPTARG}
+            ;;
+        T)
+            TYPE=${OPTARG}
             ;;
         c)
             title "Cleanup Files"
@@ -257,7 +263,7 @@ while getopts "R:B:G:H:m:cdbprsH" opt; do
             title "Stop Docker Containers"
             stop_docker_container 
             ;;
-        H)
+        h)
             usage
             clean_up
             ;;
