@@ -25,15 +25,15 @@ export SDXIPVAL
 
 case ${SITE} in
     atl)
-              RYU_PORT=6681
+              RYU_PORT=6683
               LC_SITE="atlctlr"
               ;;
     mia)
-              RYU_PORT=6682
+              RYU_PORT=6681
               LC_SITE="miactlr"
               ;;
     chl)
-              RYU_PORT=6683
+              RYU_PORT=6682
               LC_SITE="chlctlr"
               ;;
     \?)
