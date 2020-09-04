@@ -4,55 +4,55 @@
       "type": "sdxcontroller",
       "friendlyname": "SDX Controller",
       "location": "33.777026, -84.395826",
-      "vlan": 3621},
+      "vlan": 3001},
     "atlctlr": {
       "type": "localcontroller",
       "friendlyname": "Atlanta Controller",
       "location": "33.777026, -84.395826",
-      "vlan": 3621},
+      "vlan": 3001},
     "atldtn": {
       "type": "dtn",
       "friendlyname": "Atlanta DTN",
       "location": "33.777026, -84.395826",
-      "vlan": 3622},
+      "vlan": 3006},
     "miactlr": {
       "type": "localcontroller",
       "friendlyname": "Miami Controller",
       "location": "25.755595, -80.373499",
-      "vlan": 1805},
+      "vlan": 3001},
     "miadtn": {
       "type": "dtn",
       "friendlyname": "Miami DTN",
       "location": "25.755595, -80.373499",
-      "vlan": 1806},
+      "vlan": 3006},
     "chlctlr": {
       "type": "localcontroller",
       "friendlyname": "Santiago Chile Controller",
       "location": "-33.446739, -70.675723",
-      "vlan": 1806},
+      "vlan": 3001},
     "chldtn": {
       "type": "dtn",
       "friendlyname": "Santiago Chile DTN",
       "location": "-33.446739, -70.675723",
-      "vlan": 1808}
+      "vlan": 3006}
   },
   "localcontrollers": {
     "atlctlr":{
       "shortname": "atlctlr",
       "credentials": "atlpwd",
       "location": "33.777026, -84.395826",
-      "lcip": "10.14.11.1",
+      "lcip": "10.30.1.3",
       "internalconfig": {
-        "ryucxninternalport": 55781,
-        "openflowport": 6681,
+        "ryucxninternalport": 55783,
+        "openflowport": 6683,
 	"backuplcswitch": "mias1"
       },
       "switchinfo": [
         {
           "name":"atls1",
           "friendlyname":"Atlanta-SoX Corsa DP2100",
-          "ip": "10.0.201.1",
-          "dpid":"201",
+          "ip": "143.216.216.3",
+          "dpid":"244135703769933",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -66,18 +66,13 @@
               "speed": 80000000000,
               "destination": "chls1"
 	    },
-            { 
-              "portnumber": 10,
-              "speed": 80000000000,
-              "destination": "sdx"
-            },
             {
-      	      "portnumber": 11,
+      	      "portnumber": 5,
 	       "speed": 80000000000,
 	       "destination": "atlctlr"
 	    },
             {
-      	      "portnumber": 12,
+      	      "portnumber": 5,
 	       "speed": 80000000000,
 	       "destination": "atldtn"
 	    }
@@ -85,7 +80,7 @@
           "internalconfig": {
             "corsaurl": "https://corsa-atl.atlanticwave-sdx.net/",
             "corsatoken": "220ad8798dd5f5089e045533f4f9641ff72cabdf58e825a6332d88d5edce8dafd66de91775e65e514b31167bd5442ac3fc202f5a465d45e64f08b6c7c6d2ae72",
-            "corsabridge": "br21",
+            "corsabridge": "br25",
             "corsabwin": 29,
             "corsabwout": 30,
             "corsaratelimitbridge": "br20",
@@ -94,10 +89,10 @@
             "corsabwoutl2mp": 26,
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [27,28],
-            "managementvlan":3621,
-            "managementvlanports":[1,2,10,11],
-            "managementvlanbackupports":[1,2,10,11],
-            "sdxmanagementvlanbackupports":[1,2,10,11]
+            "managementvlan":3001,
+            "managementvlanports":[1,2,5],
+            "managementvlanbackupports":[1,2,5],
+            "sdxmanagementvlanbackupports":[1,2,5]
           }
         }
       ],
@@ -111,18 +106,18 @@
       "shortname": "miactlr",
       "credentials": "miapwd",
       "location": "25.755595, -80.373499",
-      "lcip": "10.14.11.2",
+      "lcip": "10.30.1.1",
       "internalconfig": {
-        "ryucxninternalport": 55782,
-        "openflowport": 6682,
+        "ryucxninternalport": 55781,
+        "openflowport": 6681,
         "backuplcswitch": "atls1"
       },
       "switchinfo": [
         {
           "name":"mias1",
           "friendlyname":"Miami-Amlight Corsa DP2100",
-          "ip": "10.0.202.1",
-          "dpid":"202",
+          "ip": "67.17.206.198",
+          "dpid":"191973783352897",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -136,13 +131,18 @@
                "speed": 80000000000,
                "destination": "chls1"
             },
+            { 
+              "portnumber": 3,
+              "speed": 80000000000,
+              "destination": "sdx"
+            },
             {
-              "portnumber": 11,
+              "portnumber": 3,
                "speed": 80000000000,
                "destination": "miactlr"
             },
             {
-              "portnumber": 12,
+              "portnumber": 3,
                "speed": 80000000000,
                "destination": "miadtn"
             }
@@ -150,7 +150,7 @@
           "internalconfig": {
             "corsaurl": "https://corsa-mia.atlanticwave-sdx.net/",
             "corsatoken": "66c3f32902dbd56035ecd39fe49c319d06f7fcc5095716bd08a84ccd037fe07633d05a3469e9fed470705289086c159680e95af144b9209d983cff210917916b",
-            "corsabridge": "br22",
+            "corsabridge": "br25",
             "corsabwin":23,
             "corsabwout":24,
             "corsaratelimitbridge":"br20",
@@ -160,9 +160,9 @@
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [15,16],
             "managementvlan":1805,
-            "managementvlanports":[1,2,11],
-            "managementvlanbackupports":[1,2,11],
-            "sdxmanagementvlanbackupports":[1,2,11]
+            "managementvlanports":[1,2,3],
+            "managementvlanbackupports":[1,2,3],
+            "sdxmanagementvlanbackupports":[1,2,3]
           }
         }
       ],
@@ -176,18 +176,18 @@
       "shortname": "chlctlr",
       "credentials": "chlpwd",
       "location": "-33.446739, -70.675723",
-      "lcip": "10.14.11.3",
+      "lcip": "10.30.1.2",
       "internalconfig": {
-        "ryucxninternalport": 55783,
-        "openflowport": 6683,
+        "ryucxninternalport": 55782,
+        "openflowport": 6682,
 	"backuplcswitch": "mias1"
       },
       "switchinfo": [
         { 
           "name":"chls1",
           "friendlyname":"Santiago Corsa DP2100",
-          "ip": "10.0.203.1",
-          "dpid":"203",
+          "ip": "139.229.127.101",
+          "dpid":"82169803558471",
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
@@ -197,17 +197,17 @@
               "destination": "atls1"
             },
             { 
-              "portnumber": 2,
+              "portnumber": 1,
               "speed": 80000000000,
               "destination": "mias1"
             },
             { 
-              "portnumber": 11,
+              "portnumber": 2,
                "speed": 80000000000,
                "destination": "chlctlr"
             },
             { 
-              "portnumber": 12,
+              "portnumber": 2,
                "speed": 80000000000,
                "destination": "chldtn"
             }
@@ -215,7 +215,7 @@
           "internalconfig": {
             "corsaurl": "https://corsa-chl.atlanticwave-sdx.net/",
             "corsatoken": "fb34e134e179611014491cfa878b99695b9527df93a21164d3c56218eb6794b44322f5c513530e88818b80da64a0a15df8698dd644da1bc46883a864a66e21bb",
-            "corsabridge": "br23",
+            "corsabridge": "br25",
             "corsabwin":21,
             "corsabwout":22,
             "corsaratelimitbridge":"br20",
@@ -225,9 +225,9 @@
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [27,28],
             "managementvlan":1806,
-            "managementvlanports":[1,2,11],
-	    "managementvlanbackupports":[1,2,11],
-            "sdxmanagementvlanbackupports":[1,2,11]
+            "managementvlanports":[1,2],
+	    "managementvlanbackupports":[1,2],
+            "sdxmanagementvlanbackupports":[1,2]
           }
         }
       ],
