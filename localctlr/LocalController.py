@@ -767,7 +767,7 @@ class LocalController(AtlanticWaveModule):
                 l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
                 #self.logger.debug("--- MCEVIK: remove_l2mp_ratelimiting_tunnel - l2mp_bw_in_port %s - l2mp_bw_out_port %s" 
-                                   % (l2mp_bw_in_port, l2mp_bw_out_port))
+                #                   % (l2mp_bw_in_port, l2mp_bw_out_port))
 
                 key='corsabridge'
                 if key not in list(internal_config.keys()):
