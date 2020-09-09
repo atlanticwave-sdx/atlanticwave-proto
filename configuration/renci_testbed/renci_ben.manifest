@@ -245,7 +245,10 @@
             { 
               "portnumber": 1,
               "speed": 80000000000,
-              "destination": "rencis1"
+              "destination": "rencis1",
+	      "backupportnumber": 2,
+	      "backupspeed": 80000000000,
+              "backupdestination": "ncsus1"
             },
             { 
               "portnumber": 11,
@@ -305,7 +308,10 @@
             { 
               "portnumber": 1,
               "speed": 80000000000,
-              "destination": "dukes1"
+              "destination": "dukes1",
+	      "backupportnumber": 2,
+              "backupspeed": 80000000000,
+              "backupdestination": "uncs1"
             },
             { 
               "portnumber": 11,
