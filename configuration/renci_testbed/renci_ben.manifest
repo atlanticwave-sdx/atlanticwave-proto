@@ -272,7 +272,7 @@
             "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,11],
-	    "managementvlanbackupports":[1, 2, 11],
+	    "managementvlanbackupports":[2, 11],
             "sdxmanagementvlanbackupports":[1, 2, 11]
           }
         }
@@ -332,7 +332,8 @@
             "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,11],
-	    "managementvlanbackupports":[2, 11]
+	    "managementvlanbackupports":[2, 11],
+            "sdxmanagementvlanbackupports":[1, 2, 11]
           }
         }
       ],
