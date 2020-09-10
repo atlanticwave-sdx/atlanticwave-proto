@@ -208,6 +208,7 @@ class SDXController(AtlanticWaveModule):
         # installs basic rules for edge ports that are automatically determined
         # during breakdown of the rule
         topo = self.tm.get_topology()
+        self.tm.change_to_backup_topo("uncctlr", 1)
         self.logger.warning("New connection - name %s details %s" % (name, cxn))
         for switch in topo.node[name]['switches']:
             json_rule = {"EdgePort":{"switch":switch}}
@@ -420,10 +421,12 @@ if __name__ == '__main__':
     parser.add_argument("-l", "--lcport", dest="lcport", default=PORT,
                         action="store", type=int,
                         help="Port number for LCs to connect to")
+    parser.add_argument("-f", "--failrecover", dest="failrecover", default=True,
+                        action="store", help="Run with failure recover")
 
     options = parser.parse_args()
     print(options)
- 
+
     if not options.manifest:
         parser.print_help()
         exit()

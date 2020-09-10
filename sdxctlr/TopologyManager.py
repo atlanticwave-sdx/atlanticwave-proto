@@ -236,11 +236,17 @@ class TopologyManager(AtlanticWaveManager):
 
                     self.topo.node[name]['internalconfig'] = switchinfo['internalconfig']
 
-                    # Add the links
+                    # Add the links, as well as the backup links if exist
                     for port in switchinfo['portinfo']:
                         portnumber = int(port['portnumber'])
+                        if 'backupportnumber' in port:
+                            backupportnumber = int(port['backupportnumber'])
                         speed = int(port['speed'])
+                        if 'backupspeed' in port:
+                            backupspeed = int(port['backupspeed'])
                         destination = str(port['destination'])
+                        if 'backupdestination' in port:
+                            backupdestination = str(port['backupdestination'])
 
                         # If link already exists
                         if not self.topo.has_edge(name, destination):
@@ -266,6 +272,15 @@ class TopologyManager(AtlanticWaveManager):
                 # Once all the switches have been looked at, add them to the
                 # LC
                 self.topo.node[key]['switches'] = switch_list
+
+    def change_to_backup_topo(self, lcname, portnumber):
+        print("~~~~~~~~~in change_to_backup_topo~~~~~~~~~~~~~")
+        for key in self.topo:
+            print(key)
+        if lcname in self.topo:
+            print(self.topo[lcname])
+        print("~~~~~~~~~out change_to_backup_topo~~~~~~~~~~~~~")
+
 
     # -----------------
     # Generic functions
