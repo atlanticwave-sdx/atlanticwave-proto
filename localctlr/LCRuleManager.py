@@ -3,6 +3,7 @@
 
 import cPickle as pickle
 from lib.AtlanticWaveManager import AtlanticWaveManager
+from shared.ManagementLCRecoverRule import *
 
 # List of rule statuses
 RULE_STATUS_ACTIVE       = 1
