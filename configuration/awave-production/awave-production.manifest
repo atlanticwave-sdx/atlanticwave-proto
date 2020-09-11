@@ -160,9 +160,9 @@
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [15,16],
             "managementvlan":3001,
-            "managementvlanports":[1,2,3],
-            "managementvlanbackupports":[1,2,3],
-            "sdxmanagementvlanbackupports":[1,2,3]
+            "managementvlanports":[1,2,3,4],
+            "managementvlanbackupports":[1,2,3,4],
+            "sdxmanagementvlanbackupports":[1,2,3,4]
           }
         }
       ],
