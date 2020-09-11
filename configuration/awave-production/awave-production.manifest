@@ -14,7 +14,7 @@
       "type": "dtn",
       "friendlyname": "Atlanta DTN",
       "location": "33.777026, -84.395826",
-      "vlan": 3006},
+      "vlan": 3106},
     "miactlr": {
       "type": "localcontroller",
       "friendlyname": "Miami Controller",
@@ -72,7 +72,7 @@
 	       "destination": "atlctlr"
 	    },
             {
-      	      "portnumber": 5,
+      	      "portnumber": 6,
 	       "speed": 80000000000,
 	       "destination": "atldtn"
 	    }
