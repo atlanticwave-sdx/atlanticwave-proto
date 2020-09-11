@@ -100,7 +100,10 @@ class TopologyManager(AtlanticWaveManager):
         # Last modified timestamp
         now = datetime.now()
         self.last_modified = now.strftime(rfc3339format)
-            
+
+        # The json manifest
+        self.manifest_json = {}
+
         #FIXME: Static topology right now.
         self._import_topology(topology_file)
 
@@ -151,9 +154,26 @@ class TopologyManager(AtlanticWaveManager):
         for cb in self.topology_update_callbacks:
             cb(change)
 
-    def _import_topology(self, manifest_filename):
+
+    def _read_manifest_data(self, manifest_filename):
         with open(manifest_filename) as data_file:
-            data = json.load(data_file)
+            self.manifest_json = json.load(data_file)
+
+    def import_backup_topology(self, lcname):
+        self._import_topology(True, lcname)
+
+    def _import_topology(self, manifest_filename = None, backup_topo = False, recovery_controller = None):
+        #with open(manifest_filename) as data_file:
+        #    data = json.load(data_file)
+
+        #backup_topo = True
+        #recovery_controller = "ncsuctlr"
+        if manifest_filename:
+            self._read_manifest_data(manifest_filename)
+        data = self.manifest_json.copy()
+        #print("~~~~~~self.manifest_json~~~~~~~~~~")
+        #print(json.dumps(self.manifest_json, indent=4, sort_keys=True))
+        #print("~~~~~~self.manifest_json~~~~~~~~~~")
 
         for unikey in list(data['endpoints'].keys()):
             # All the other nodes
@@ -237,16 +257,39 @@ class TopologyManager(AtlanticWaveManager):
                     self.topo.node[name]['internalconfig'] = switchinfo['internalconfig']
 
                     # Add the links, as well as the backup links if exist
-                    for port in switchinfo['portinfo']:
+                    if backup_topo and recovery_controller and 'backuplc' in self.topo.node[key]['internalconfig'] and \
+                            recovery_controller == self.topo.node[key]['internalconfig']['backuplc']:
+                        print("~~~~~~~~~~~~~~~~~~~~CW: self.topo.node[key]['internalconfig']['backuplc']:~~~~~~~~~~~~~~~")
+                        print(self.topo.node[key]['internalconfig']['backuplc'])
+                        switchinfosection = switchinfo['sdxbackupportinfo']
+                    else:
+                        switchinfosection = switchinfo['portinfo']
+
+                    #for port in switchinfo['portinfo']:
+                    for port in switchinfosection:
                         portnumber = int(port['portnumber'])
-                        if 'backupportnumber' in port:
-                            backupportnumber = int(port['backupportnumber'])
+                        #if 'backupportnumber' in port:
+                            #print("short name: " + shortname)
+                            #print("name: " + name)
+                            #print("key" + key)
+                        #    backupportnumber = int(port['backupportnumber'])
+                            #print("backupportnumber" + str(backupportnumber))
                         speed = int(port['speed'])
-                        if 'backupspeed' in port:
-                            backupspeed = int(port['backupspeed'])
+                        #if 'backupspeed' in port:
+                        #    backupspeed = int(port['backupspeed'])
                         destination = str(port['destination'])
-                        if 'backupdestination' in port:
-                            backupdestination = str(port['backupdestination'])
+                        #if 'backupdestination' in port:
+                        #    backupdestination = str(port['backupdestination'])
+
+                        if backup_topo and recovery_controller and recovery_controller == key:
+                            if 'backupportnumber' in port:
+                                print("recovery_controller:" + recovery_controller)
+                                portnumber = int(port['backupportnumber'])
+                                print("backupportnumber:" + str(portnumber))
+                            if 'backupspeed' in port:
+                                speed = int(port['backupspeed'])
+                            if 'backupdestination' in port:
+                                destination = str(port['backupdestination'])
 
                         # If link already exists
                         if not self.topo.has_edge(name, destination):
@@ -272,14 +315,6 @@ class TopologyManager(AtlanticWaveManager):
                 # Once all the switches have been looked at, add them to the
                 # LC
                 self.topo.node[key]['switches'] = switch_list
-
-    def change_to_backup_topo(self, lcname, portnumber):
-        print("~~~~~~~~~in change_to_backup_topo~~~~~~~~~~~~~")
-        for key in self.topo:
-            print(key)
-        if lcname in self.topo:
-            print(self.topo[lcname])
-        print("~~~~~~~~~out change_to_backup_topo~~~~~~~~~~~~~")
 
 
     # -----------------
