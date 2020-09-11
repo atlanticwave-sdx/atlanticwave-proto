@@ -59,8 +59,7 @@
       "lcip": "10.14.11.1",
       "internalconfig": {
         "ryucxninternalport": 55781,
-        "openflowport": 6681,
-	"backuplcswitch": "dukes1"
+        "openflowport": 6681
       },
       "switchinfo": [
         {
@@ -167,8 +166,7 @@
       "lcip": "10.14.11.2",
       "internalconfig": {
         "ryucxninternalport": 55782,
-        "openflowport": 6682,
-	"backuplcswitch": "rencis1"
+        "openflowport": 6682
       },
       "switchinfo": [
         { 
@@ -231,7 +229,8 @@
       "internalconfig": {
         "ryucxninternalport": 55783,
         "openflowport": 6683,
-	"backuplcswitch": "ncsus1"
+        "backuplc": "ncsuctlr"
+	      "backuplcswitch": "ncsus1"
       },
       "switchinfo": [
         { 
@@ -246,9 +245,31 @@
               "portnumber": 1,
               "speed": 80000000000,
               "destination": "rencis1",
-	      "backupportnumber": 2,
-	      "backupspeed": 80000000000,
+	            "backupportnumber": 2,
+	            "backupspeed": 80000000000,
               "backupdestination": "ncsus1"
+            },
+            { 
+              "portnumber": 11,
+               "speed": 80000000000,
+               "destination": "uncctlr"
+            },
+            { 
+              "portnumber": 12,
+               "speed": 80000000000,
+               "destination": "uncdtn"
+            }
+          ],
+          "sdxbackupportinfo": [
+            { 
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "rencis1",
+            },
+            {
+              "portnumber": 2,
+	            "speed": 80000000000,
+              "destination": "ncsus1"
             },
             { 
               "portnumber": 11,
@@ -275,7 +296,7 @@
             "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,11],
-	    "managementvlanbackupports":[2, 11],
+	          "managementvlanbackupports":[2, 11],
             "sdxmanagementvlanbackupports":[1, 2, 11]
           }
         }
@@ -294,7 +315,8 @@
       "internalconfig": {
         "ryucxninternalport": 55784,
         "openflowport": 6684,
-	"backuplc": "uncs1"
+        "backuplc": "uncctlr",
+	      "backuplcswitch": "uncs1"
       },
       "switchinfo": [
         { 
@@ -309,9 +331,31 @@
               "portnumber": 1,
               "speed": 80000000000,
               "destination": "dukes1",
-	      "backupportnumber": 2,
+	            "backupportnumber": 2,
               "backupspeed": 80000000000,
               "backupdestination": "uncs1"
+            },
+            { 
+              "portnumber": 11,
+               "speed": 80000000000,
+               "destination": "ncsuctlr"
+            },
+            { 
+              "portnumber": 12,
+               "speed": 80000000000,
+               "destination": "ncsudtn"
+            }
+          ],
+          "sdxbackupportinfo": [
+            { 
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "dukes1"
+            },
+            {
+              "portnumber": 2,
+              "speed": 80000000000,
+              "destination": "uncs1"
             },
             { 
               "portnumber": 11,
@@ -338,7 +382,7 @@
             "corsaratelimitportsl2mp": [7,8],
             "managementvlan":1411,
             "managementvlanports":[1,11],
-	    "managementvlanbackupports":[2, 11],
+	          "managementvlanbackupports":[2, 11],
             "sdxmanagementvlanbackupports":[1, 2, 11]
           }
         }
