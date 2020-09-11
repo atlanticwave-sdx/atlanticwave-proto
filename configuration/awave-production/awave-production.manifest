@@ -4,7 +4,7 @@
       "type": "sdxcontroller",
       "friendlyname": "SDX Controller",
       "location": "33.777026, -84.395826",
-      "vlan": 3000},
+      "vlan": 3001},
     "atlctlr": {
       "type": "localcontroller",
       "friendlyname": "Atlanta Controller",
