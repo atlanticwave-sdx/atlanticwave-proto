@@ -72,7 +72,7 @@
 	       "destination": "atlctlr"
 	    },
             {
-      	      "portnumber": 6,
+      	      "portnumber": 5,
 	       "speed": 80000000000,
 	       "destination": "atldtn"
 	    }
