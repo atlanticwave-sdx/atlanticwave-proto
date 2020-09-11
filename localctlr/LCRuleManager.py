@@ -68,7 +68,7 @@ class LCRuleManager(AtlanticWaveManager):
             for dupe in dupes:
                 (c,sid,lcr,stat) = dupe
                 if lcr == lcrule:
-                    if isinstance(ManagementLCRecoverRule):
+                    if isinstance(lcr, ManagementLCRecoverRule):
                         self.logger.debug("ManagementLCRecoverRule, ignored.")
                     else:
                         raise LCRuleManagerValidationError(
