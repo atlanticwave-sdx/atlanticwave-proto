@@ -229,7 +229,7 @@
       "internalconfig": {
         "ryucxninternalport": 55783,
         "openflowport": 6683,
-        "backuplc": "ncsuctlr"
+        "backuplc": "ncsuctlr",
 	"backuplcswitch": "ncsus1"
       },
       "switchinfo": [
@@ -264,7 +264,7 @@
             { 
               "portnumber": 1,
               "speed": 80000000000,
-              "destination": "rencis1",
+              "destination": "rencis1"
             },
             {
               "portnumber": 2,

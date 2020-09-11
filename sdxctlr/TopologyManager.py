@@ -160,20 +160,20 @@ class TopologyManager(AtlanticWaveManager):
             self.manifest_json = json.load(data_file)
 
     def import_backup_topology(self, lcname):
-        self._import_topology(True, lcname)
+        self.logger.debug("Importing backup topology")
+        self._import_topology(None, True, lcname)
 
-    def _import_topology(self, manifest_filename = None, backup_topo = False, recovery_controller = None):
+    def _import_topology(self, manifest_filename, backup_topo = False, recovery_controller = None):
         #with open(manifest_filename) as data_file:
         #    data = json.load(data_file)
 
-        #backup_topo = True
-        #recovery_controller = "ncsuctlr"
+        #if recovery_controller:
+        #    print("~~~~~~~~~~~CW~~~~~~~~recovery_controller:~~~~~~~~~~~~~~")
+        #    print(recovery_controller)
+
         if manifest_filename:
             self._read_manifest_data(manifest_filename)
         data = self.manifest_json.copy()
-        #print("~~~~~~self.manifest_json~~~~~~~~~~")
-        #print(json.dumps(self.manifest_json, indent=4, sort_keys=True))
-        #print("~~~~~~self.manifest_json~~~~~~~~~~")
 
         for unikey in list(data['endpoints'].keys()):
             # All the other nodes
@@ -259,8 +259,6 @@ class TopologyManager(AtlanticWaveManager):
                     # Add the links, as well as the backup links if exist
                     if backup_topo and recovery_controller and 'backuplc' in self.topo.node[key]['internalconfig'] and \
                             recovery_controller == self.topo.node[key]['internalconfig']['backuplc']:
-                        print("~~~~~~~~~~~~~~~~~~~~CW: self.topo.node[key]['internalconfig']['backuplc']:~~~~~~~~~~~~~~~")
-                        print(self.topo.node[key]['internalconfig']['backuplc'])
                         switchinfosection = switchinfo['sdxbackupportinfo']
                     else:
                         switchinfosection = switchinfo['portinfo']

@@ -219,6 +219,10 @@ class RuleManager(AtlanticWaveManager):
         self._rm_rule_from_db(rule)
         self._call_remove_callbacks(rule)
 
+    def list_all_rules(self):
+        all_rules = self.rule_table.find()
+        return all_rules
+
     def remove_all_rules(self, user):
         ''' Removes all rules. Just an alias for repeatedly calling 
             remove_rule() without needing to know all the hashes. '''
