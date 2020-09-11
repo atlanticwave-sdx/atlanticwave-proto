@@ -24,7 +24,7 @@
       "type": "dtn",
       "friendlyname": "Miami DTN",
       "location": "25.755595, -80.373499",
-      "vlan": 3006},
+      "vlan": 3101},
     "chlctlr": {
       "type": "localcontroller",
       "friendlyname": "Santiago Chile Controller",
@@ -132,17 +132,17 @@
                "destination": "chls1"
             },
             { 
-              "portnumber": 5,
+              "portnumber": 3,
               "speed": 80000000000,
               "destination": "sdx"
             },
             {
-              "portnumber": 3,
+              "portnumber": 4,
                "speed": 80000000000,
                "destination": "miactlr"
             },
             {
-              "portnumber": 4,
+              "portnumber": 5,
                "speed": 80000000000,
                "destination": "miadtn"
             }
