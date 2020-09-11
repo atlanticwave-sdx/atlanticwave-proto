@@ -159,7 +159,7 @@
             "corsabwoutl2mp": 14,
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [15,16],
-            "managementvlan":1805,
+            "managementvlan":3001,
             "managementvlanports":[1,2,3],
             "managementvlanbackupports":[1,2,3],
             "sdxmanagementvlanbackupports":[1,2,3]
@@ -224,7 +224,7 @@
             "corsabwoutl2mp": 26,
             "corsaratelimitbridgel2mp": "br19",
             "corsaratelimitportsl2mp": [27,28],
-            "managementvlan":1806,
+            "managementvlan":3001,
             "managementvlanports":[1,2],
 	    "managementvlanbackupports":[1,2],
             "sdxmanagementvlanbackupports":[1,2]
