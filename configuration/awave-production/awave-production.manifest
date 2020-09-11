@@ -142,7 +142,7 @@
                "destination": "miactlr"
             },
             {
-              "portnumber": 3,
+              "portnumber": 4,
                "speed": 80000000000,
                "destination": "miadtn"
             }
