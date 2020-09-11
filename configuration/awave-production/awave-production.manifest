@@ -132,7 +132,7 @@
                "destination": "chls1"
             },
             { 
-              "portnumber": 3,
+              "portnumber": 5,
               "speed": 80000000000,
               "destination": "sdx"
             },
