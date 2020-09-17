@@ -194,11 +194,6 @@
             { 
               "portnumber": 1,
               "speed": 80000000000,
-              "destination": "atls1"
-            },
-            { 
-              "portnumber": 1,
-              "speed": 80000000000,
               "destination": "mias1"
             },
             { 
@@ -207,7 +202,7 @@
                "destination": "chlctlr"
             },
             { 
-              "portnumber": 2,
+              "portnumber": 3,
                "speed": 80000000000,
                "destination": "chldtn"
             }
