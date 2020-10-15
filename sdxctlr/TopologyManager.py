@@ -270,7 +270,8 @@ class TopologyManager(AtlanticWaveManager):
                         if backup_topo and recovery_controller and recovery_controller != key:
                             found_broken_link = False
                             for si in data['localcontrollers'][recovery_controller]['switchinfo']:
-                                if port['destination'] == si['name']:
+                                if port['destination'] == si['name'] and name == 'dukes1':
+                                #if port['destination'] == si['name']:
                                     print ("~~~~~~~~CW~~~~~~~~switch_info_test['name']:" + si['name'])
                                     found_broken_link = True
                             if found_broken_link:
@@ -300,7 +301,12 @@ class TopologyManager(AtlanticWaveManager):
                             if 'backupdestination' in port:
                                 destination = str(port['backupdestination'])
 
-
+                        print("~~~~~~~CW~~~~~DEBUG~~~~~~~~~")
+                        print("key: " + str(key))
+                        print("name: " + str(name))
+                        print("portnumber: " + str(portnumber))
+                        print("destination: " + str(destination))
+                        print("~~~~~~~CW~~~~~DEBUG~~~~~~~~~END~~~")
                         # If link already exists
                         if not self.topo.has_edge(name, destination):
                             self.topo.add_edge(name,
