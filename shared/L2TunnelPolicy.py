@@ -57,8 +57,9 @@ class L2TunnelPolicy(UserPolicy):
         self.bandwidth = None
 
         # Derived values
-        self.intermediate_vlan = None
+        #self.intermediate_vlan = None
         self.fullpath = None
+        self.intermediate_vlan = {} #per link vlan along the path except for the src and dst links
 
         # For get_endpoints()
         self.endpoints = []
@@ -166,13 +167,21 @@ class L2TunnelPolicy(UserPolicy):
         
         # Get a VLAN to use
         # Topology manager should be able to provide this for us. 
-        self.intermediate_vlan = tm.find_vlan_on_path(self.fullpath)
-        if self.intermediate_vlan == None:
+        #self.intermediate_vlan = tm.find_vlan_on_path(self.fullpath)
+        #if self.intermediate_vlan == None:
+        #    raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
+        
+        self.intermediate_vlans = tm.find_vlans_on_path(self.fullpath)
+        if (self.intermediate_vlans == None) or (len(self.intermediate_vlans)==0):
             raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
 
         # Add necessary resource
-        self.resources.append(VLANPathResource(self.fullpath,
-                                               self.intermediate_vlan))
+        #self.resources.append(VLANPathResource(self.fullpath,
+        #                                       self.intermediate_vlan))
+        for k,v in self.intermediate_vlans:
+            self.resources.append(VLANPortResource(k['src'],
+                                                    k['port'],
+                                                    v))
         self.resources.append(VLANPortResource(self.src_switch,
                                                self.src_port,
                                                self.src_vlan))
@@ -281,9 +290,12 @@ class L2TunnelPolicy(UserPolicy):
             inport = prevedge[node]
             outport = nextedge[node]
 
+            in_vlan=self.intermediate_vlans[prevedge]
+            out_vlan=self.intermediate_vlans[nextvedge]
+            #self.intermediate_vlan
             rule = VlanTunnelLCRule(switch_id, inport, outport,
-                                    self.intermediate_vlan,
-                                    self.intermediate_vlan,
+                                    self.in_vlan,
+                                    self.out_vlan,
                                     True, bandwidth)            
 
             bd.add_to_list_of_rules(rule)

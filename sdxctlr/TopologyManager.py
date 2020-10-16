@@ -15,6 +15,7 @@ import networkx as nx
 import json
 from lib.SteinerTree import make_steiner_tree
 from shared.PathResource import *
+from bitmap import BitMap
 
 from shared.constants import rfc3339format
 #FIXME: This shouldn't be hard coded.
@@ -249,6 +250,8 @@ class TopologyManager(AtlanticWaveManager):
                                                weight=speed)
                         # Set the port number for the current location. The dest
                         # port should be set when the dest side has been run.
+                        self.topo.edge[name][destination]['src'] = name
+                        self.topo.edge[name][destination]['dest'] = destination
                         self.topo.edge[name][destination][name] = portnumber
 
                         # Other fields that may be of use
@@ -490,6 +493,29 @@ class TopologyManager(AtlanticWaveManager):
         node_pairs = list(zip(path[0:-1], path[1:]))
         self.unreserve_bw(node_pairs, bw)
 
+    def find_vlans_on_path(self, path):
+        ''' Finds available VLANs that're not being used at the moment on a provided path.
+            Returns an available VLAN list per link if possible, None if none are available on
+            the submitted path.
+        '''
+        self.dlogger.debug("find_vlan_on_path: %s" % path)
+        selected_vlans = {}
+        with self.topolock: 
+            for (node, nextnode) in zip(path[0:-1], path[1:]):
+                bm=BitMap(4089)
+                vlan_in_use=self.topo.edge[node][nextnode]['vlans_in_use']:
+                available_vlans=self.get_available_vlan_list(
+                            self.topo.edge[node][nextnode]['available_vlans'])
+                for vlan in available_vlans:
+                    bm.set(vlan)
+                for vlan in vlan_in_use:
+                    bm.flip(vlan)
+                first_available_vlan=bm.nonzero()[0]
+                selected_vlans[self.topo.edge[node][nextnode]]=first_available_vlan
+            
+        self.dlogger.debug("find_vlan_on_path returning %s" % selected_vlans)
+        return selected_vlans
+
     def find_vlan_on_path(self, path):
         ''' Finds a VLAN that's not being used at the moment on a provided path.
             Returns an available VLAN if possible, None if none are available on
@@ -551,11 +577,11 @@ class TopologyManager(AtlanticWaveManager):
 
         for path in list_of_paths:
             # For each path, check that a VLAN is available
-            if ignore_endpoints:
-                path = path[1:-1]
-            vlan = self.find_vlan_on_path(path)
-            if vlan == None:
-                continue
+            #if ignore_endpoints:
+            #    path = path[1:-1]
+            #vlan = self.find_vlan_on_path(path)
+            #if vlan == None:
+            #    continue
             
             self.dlogger.debug("find_valid_path found path %s has valid VLANs" %
                                    path)
