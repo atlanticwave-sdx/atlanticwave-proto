@@ -238,35 +238,34 @@ class L2TunnelPolicy(UserPolicy):
                                                 self.src_vlan, srcpath),
                                                (self.dst_switch, self.dst_port,
                                                 self.dst_vlan, dstpath)]:
-            #try:
-            shortname = topology.node[location]['locationshortname']
-            switch_id = topology.node[location]['dpid']
-            bandwidth = self.bandwidth
+            try:
+                shortname = topology.node[location]['locationshortname']
+                switch_id = topology.node[location]['dpid']
+                bandwidth = self.bandwidth
             
-            print("shortname: " + str(shortname))
-            print("switch_id: " + str(switch_id))
-            print("bandwidth: " + str(bandwidth))
+                print("shortname: " + str(shortname))
+                print("switch_id: " + str(switch_id))
+                print("bandwidth: " + str(bandwidth))
 
-            bd = UserPolicyBreakdown(shortname, [])
+                bd = UserPolicyBreakdown(shortname, [])
 
-            # get edge
-            edge = topology.edge[location][path]
-            outport = edge[location]
+                # get edge
+                edge = topology.edge[location][path]
+                outport = edge[location]
 
-            print("EDGE: " + str(edge))
-            print("outport: " + str(outport))
+                print("EDGE: " + str(edge))
+                print("outport: " + str(outport))
 
-            rule = VlanTunnelLCRule(switch_id, inport, outport, 
+                rule = VlanTunnelLCRule(switch_id, inport, outport, 
                                     invlan, self.intermediate_vlan,
                                     True, bandwidth)
 
-            bd.add_to_list_of_rules(rule)
+                bd.add_to_list_of_rules(rule)
 
-            self.breakdown.append(bd)
-            #except Exception as e:
-                #self.dlogger.error("Exception: " + str(e))
-            #    print("Caught exception!")
-            #    print(str(e))
+                self.breakdown.append(bd)
+            except Exception as e:
+                print("Caught exception!")
+                print(str(e))
         print("~~~~~~~~~~~CW~~~~~~~~~~~~~~END: end point break down rule")
         
         # Loop through the intermediary nodes in the path. Python's smart, so
