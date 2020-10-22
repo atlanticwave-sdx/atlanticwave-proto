@@ -94,29 +94,37 @@ class VLANTopoTest(unittest.TestCase):
 
         # Get a path
         path = nx.shortest_path(topo, source="br1", target="br4")
-        
-        # It should return 1
+        print(path)
+        # It should return 10
         vlan = man.find_vlan_on_path(path)
-        self.assertEqual(vlan, 1)
+        print("vlan="+str(vlan))
+        self.assertEqual(vlan, 10)
 
     def test_path_with_node_set(self):
         man = TopologyManager(topology_file=CONFIG_FILE)
         topo = man.get_topology()
 
         # Get a path
-        path = nx.shortest_path(topo, source="br4", target="br3")
-
-        # Should return 1
+        path = nx.shortest_path(topo, source="br4", target="br1")
+        print(path)
+        # Should return 10
         vlan = man.find_vlan_on_path(path)
-        self.assertEqual(vlan, 1)
+        print("vlan="+str(vlan))
+        self.assertEqual(vlan, 10)
 
-        # Add VLAN 1 to one of the points on the path
-        man.topo.node["br4"]['vlans_in_use'].append(1)
+        # Add VLAN 10 to one of the points on the path
+        for (node, nextnode) in zip(path[0:-1], path[1:]):
+            man.topo.edge[node][nextnode]['vlans_in_use'].append(vlan)
+            man.topo.node[node]['vlans_in_use'].append(vlan)
         
-        # Should return 2
-        vlan = man.find_vlan_on_path(path)
-        self.assertEqual(vlan, 2)
-        man.topo.node["br4"]['vlans_in_use'].remove(1)
+        # Should return None
+        vlans = man.find_vlans_on_path(path)
+        print("vlans="+str(vlans))
+        self.assertNotEqual(vlans, None)
+        # Remove VLAN 10 to one of the points on the path
+        for (node, nextnode) in zip(path[0:-1], path[1:]):
+            man.topo.edge[node][nextnode]['vlans_in_use'].remove(vlan)
+            man.topo.node[node]['vlans_in_use'].remove(vlan)
 
     def test_path_with_edge_set(self):
         man = TopologyManager(topology_file=CONFIG_FILE)
@@ -124,20 +132,21 @@ class VLANTopoTest(unittest.TestCase):
 
         # Get a path
         path = nx.shortest_path(topo, source="br2", target="br4")
-
-        # Should return 1
+        print("path="+str(path))
+        # Should return 10
         vlan = man.find_vlan_on_path(path)
-        self.assertEqual(vlan, 1)
+        self.assertEqual(vlan, 10)
         
-        # Add VLAN 1 to one of the points on the path
+        # Add VLAN 10 to one of the points on the path
         print("\n%s" % man.topo.edge['br3']['br4'])
-        man.topo.edge["br3"]["br4"]['vlans_in_use'].append(1)
+        man.topo.edge["br3"]["br4"]['vlans_in_use'].append(10)
         print(man.topo.edge['br3']['br4'])
         
         # Should return 2
-        vlan = man.find_vlan_on_path(path)
-        self.assertEqual(vlan, 2)
-        man.topo.edge["br3"]["br4"]['vlans_in_use'].remove(1)
+        vlans = man.find_vlans_on_path(path)
+        print("vlans="+str(vlans))
+        self.assertNotEqual(vlan, None)
+        man.topo.edge["br3"]["br4"]['vlans_in_use'].remove(10)
 
     def test_path_node_filled(self):
         man = TopologyManager(topology_file=CONFIG_FILE)

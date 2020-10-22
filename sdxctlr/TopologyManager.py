@@ -499,7 +499,7 @@ class TopologyManager(AtlanticWaveManager):
             the submitted path.
         '''
         self.dlogger.debug("find_vlan_on_path: %s" % path)
-        selected_vlans = {}
+        selected_vlans = []
         with self.topolock: 
             for (node, nextnode) in zip(path[0:-1], path[1:]):
                 bm=BitMap(4089)
@@ -509,9 +509,12 @@ class TopologyManager(AtlanticWaveManager):
                 for vlan in available_vlans:
                     bm.set(vlan)
                 for vlan in vlan_in_use:
-                    bm.flip(vlan)
+                    if bm.test(vlan): 
+                        bm.flip(vlan)
                 first_available_vlan=bm.nonzero()[0]
-                selected_vlans[self.topo.edge[node][nextnode]]=first_available_vlan
+                print("node="+node)
+                print("first_available_vlan="+str(first_available_vlan))
+                selected_vlans.append(first_available_vlan)
             
         self.dlogger.debug("find_vlan_on_path returning %s" % selected_vlans)
         return selected_vlans
