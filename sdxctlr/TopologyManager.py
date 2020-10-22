@@ -503,7 +503,7 @@ class TopologyManager(AtlanticWaveManager):
         with self.topolock: 
             for (node, nextnode) in zip(path[0:-1], path[1:]):
                 bm=BitMap(4089)
-                vlan_in_use=self.topo.edge[node][nextnode]['vlans_in_use']:
+                vlan_in_use=self.topo.edge[node][nextnode]['vlans_in_use']
                 available_vlans=self.get_available_vlan_list(
                             self.topo.edge[node][nextnode]['available_vlans'])
                 for vlan in available_vlans:

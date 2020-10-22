@@ -63,13 +63,13 @@
             {
       	      "portnumber": 1,
               "speed": 8000000000,
-              "destination": "br2"
+              "destination": "br2",
               "available_vlans": "1-10"
 	        },
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "br3"
+              "destination": "br3",
               "available_vlans": "10-20"
             },
             {
@@ -112,13 +112,13 @@
             {
       	      "portnumber": 1,
               "speed": 8000000000,
-              "destination": "br1"
+              "destination": "br1",
               "available_vlans": "1-10"
 	        },
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "br3"
+              "destination": "br3",
               "available_vlans": "20-30"
             },
             {
@@ -160,19 +160,19 @@
             {
       	      "portnumber": 1,
               "speed": 8000000000,
-              "destination": "br1"
+              "destination": "br1",
               "available_vlans": "10-20"
 	        },
             {
               "portnumber": 2,
               "speed": 8000000000,
-              "destination": "br2"
+              "destination": "br2",
               "available_vlans": "20-30"
             },
             {
       	      "portnumber": 3,
               "speed": 8000000000,
-              "destination": "br4"
+              "destination": "br4",
               "available_vlans": "30-40"
             },
   	    {
@@ -204,7 +204,7 @@
             {
       	      "portnumber": 1,
               "speed": 8000000000,
-              "destination": "br3"
+              "destination": "br3",
               "available_vlans": "30-40"
             },
             {
