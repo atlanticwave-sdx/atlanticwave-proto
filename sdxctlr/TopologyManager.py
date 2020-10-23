@@ -305,8 +305,8 @@ class TopologyManager(AtlanticWaveManager):
                             for si in data['localcontrollers'][recovery_controller]['switchinfo']:
                                 print("~~~~~~~~~~CW~~~~~~~~~~~~~~~broken_link_node~~~~~~~~~~")
                                 print(broken_link_node)
-                                if port['destination'] == si['name'] and name == broken_link_node: 
-                                #if port['destination'] == si['name'] and name == 'dukes1':
+                                #if port['destination'] == si['name'] and name == broken_link_node: 
+                                if port['destination'] == si['name'] and name == 'dukes1':
                                 #if port['destination'] == si['name']:
                                     print ("~~~~~~~~CW~~~~~~~~switch_info_test['name']:" + si['name'])
                                     found_broken_link = True
