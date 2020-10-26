@@ -109,9 +109,16 @@ class AtlanticWaveModule(with_metaclass(Singleton, object)):
         # https://dataset.readthedocs.io/en/latest/api.html
         # https://github.com/g2p/bedup/issues/38#issuecomment-43703630
         self.logger.critical("Connection to DB: %s" % db_filename)
-        self.db = dataset.connect('sqlite:///' + db_filename, 
-                                  engine_kwargs={'connect_args':
-                                                 {'check_same_thread':False}})
+        if db_filename == ':memory:':
+            self.db = dataset.connect(
+                'sqlite:///:memory:',
+                engine_kwargs={'connect_args': {'check_same_thread': False}}
+            )
+        else:
+            self.db = dataset.connect(
+                'sqlite:///' + db_filename,
+                engine_kwargs={'connect_args': {'check_same_thread': False}}
+            )
 
         #Try loading the tables, if they don't exist, create them.
         for (name, table) in db_tables_tuples:

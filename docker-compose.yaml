@@ -1,0 +1,36 @@
+version: '3.6'
+services:
+  nginx:
+    image: library/nginx:1
+    container_name: sdx-nginx
+#    depends_on:
+#      - flask-app
+#      - react-app
+    ports:
+      - 8080:80
+      - 8443:443
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/ssl
+    restart: unless-stopped
+
+  sdxctlr:
+    build:
+      context: ./docker/sdx_container
+      dockerfile: Dockerfile
+    container_name: sdx-ctlr
+#    depends_on:
+#      - vouch-proxy
+    ports:
+      - 5000:5000
+    restart: unless-stopped
+
+  vouch-proxy:
+    container_name: sdx-vouch-proxy
+    image: voucher/vouch-proxy
+    ports:
+      - 9090:9090
+    volumes:
+      - ./vouch:/config
+      - ./data:/data
+    restart: unless-stopped

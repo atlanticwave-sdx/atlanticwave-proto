@@ -80,7 +80,7 @@
                             <div class="portfolio-image">
                                 <img src="static/images/topo/thumb/item1.jpg" alt="">
                                 <div class="overlay">
-                                    <a class="preview btn btn-danger" title="Network Topology 2016" href="static/images/topo/full/item1.jpg"><i class="icon-eye-open"></i></a>             
+                                    <a class="preview btn btn-danger" title="Network Topology 2016" href="static/images/topo/full/item1.jpg"><i class="icon-eye-open"></i></a>
                                 </div>
                             </div>
                         </div>
@@ -90,13 +90,13 @@
                             <div class="portfolio-image">
                                 <img src="static/images/topo/thumb/item2.jpg" alt="">
                                 <div class="overlay">
-                                    <a class="preview btn btn-danger" title="Network Topology 2017" href="static/images/topo/full/item2.jpg"><i class="icon-eye-open"></i></a>  
+                                    <a class="preview btn btn-danger" title="Network Topology 2017" href="static/images/topo/full/item2.jpg"><i class="icon-eye-open"></i></a>
                                 </div>
-                            </div> 
+                            </div>
 
                         </div>
                     </li>
-                </ul>   
+                </ul>
                 <div class="center gap">
                     <h2>Interactive Topology</h2>
                     <p class="lead">Here is an interactive view of the Network Topology</p>
@@ -123,10 +123,10 @@
 
                     <form action="rule" method="POST" id="NetworkEngr" class="tabcontent">
                       <div class="col-sm-4">
-                        <p>Enter the start date: <input type="text" class="form-control" required="required" id="startdate" name="startdate"> </p> 
-                        <p>Enter the start time: <input type="time" class="form-control" required="required" id="starttime" name="starttime"> </p> 
-                        <p>Enter the end date: <input type="text" class="form-control" required="required" id="enddate" name="enddate"> </p> 
-                        <p>Enter the end time: <input type="time" class="form-control" required="required" id="endtime" name="endtime"> </p>           
+                        <p>Enter the start date: <input type="text" class="form-control" required="required" id="startdate" name="startdate"> </p>
+                        <p>Enter the start time: <input type="time" class="form-control" required="required" id="starttime" name="starttime"> </p>
+                        <p>Enter the end date: <input type="text" class="form-control" required="required" id="enddate" name="enddate"> </p>
+                        <p>Enter the end time: <input type="time" class="form-control" required="required" id="endtime" name="endtime"> </p>
                       </div>
                       <div class="col-sm-4">
                         <p>Enter the desired bandwidth:
@@ -144,16 +144,16 @@
                             <input type="number" class="form-control" required="required" id="dv" name="dv" placeholder="Destination VLAN" min="0" max="4090"> </p>
                       </div>
                       <div class="col-sm-4">
-                        <p>Select source: 
+                        <p>Select source:
                         <select class="form-control" required="required" id="source" name="source">{% for item in switches %}
                             {{ item }}{% endfor %}
                         </select> </p>
-                        <p>Select destination: 
+                        <p>Select destination:
                             <select class="form-control" id="dest" name="dest" required="required">{% for item in switches %}
                                 {{ item }}{% endfor %}
                             </select> </p>
                       </div>
-                      
+
                       <div class="row" align="center">
                           <button type="test" class="btn btn-danger btn-lg" align="middle">Preview</button>
                           <button type="submit" class="btn btn-danger btn-lg" align="middle">Submit</button>
@@ -163,12 +163,12 @@
                     <form action="rule" method="POST" id="Scientist" class="tabcontent">
                       <div class="col-sm-4"></div>
                       <div class="col-sm-4">
-                        <p>Source:  
+                        <p>Source:
                             <select class="form-control" required="required" id="source" name="source">{% for item in dtns %}
                                 {{ item }}{% endfor %}
                             </select>
                         </p>
-                        <p>Destination:  
+                        <p>Destination:
                             <select class="form-control" required="required" id="dest" name="dest">{% for item in dtns %}
                                 {{ item }}{% endfor %}
                             </select>
@@ -179,7 +179,7 @@
                         <p>Size:
                             <input type="number" class="form-control" required="required" id="size" name="size" size=8>
                             <select class="form-control" required="required" id="unit" name="unit">
-                                <option value="1">bytes</option> 
+                                <option value="1">bytes</option>
                                 <option value="1000">KB</option>
                                 <option value="1000000">MB</option>
                                 <option value="1000000000">GB</option>
@@ -192,8 +192,8 @@
                         <br><br><br><button type="test" class="btn btn-danger btn-lg" align="middle">Preview</button>
                         <button type="submit" class="btn btn-danger btn-lg" align="middle">Submit</button>
                       </div>
-                    </form>                    
-                </div> 
+                    </form>
+                </div>
 
                 <div class="row" align="center">
                     <form action="/rule/all/">
@@ -214,7 +214,7 @@
                     <div class="gap"></div>
                     <div id="team-scroller" class="carousel scale">
                         <div class="carousel-inner">
-                            <div class="item active"> 
+                            <div class="item active">
                                 <div class="member" style="float:left">
                                     <div style="width:200px;height:200px;overflow:hidden">
                                         <p><img class="img-responsive img-thumbnail img-circle" src="static/images/team1.jpg" alt="" ></p>
@@ -269,6 +269,12 @@
                         <div class="col-sm-6">
                             <h1>User Information</h1>
                             <p>Hello, {{ current_user.id }}!</p>
+                            {% if sdxcookie %}
+                                <p>
+                                    <button onclick="copycookie()" class="btn btn-info">Copy Cookie</button>
+                                    <input type="text" value={{ sdxcookie }} id="sdxcookie">
+                                </p>
+                            {% endif %}
                             <form action="logout" method="GET">
                                 <button type="submit" class="btn btn-danger btn-lg" align="middle">Log Out</button>
                             </form>
@@ -308,6 +314,14 @@
                     </div>
                 </div>
             </div>
+
+<!--            -&#45;&#45;-->
+<!--            User Cookie:-->
+<!--            <div style="background: ghostwhite; font-size: 10px; font-family: Consolas; padding: 0px;-->
+<!--            border: 1px solid lightgray; margin: 10px;">-->
+<!--            {{ sdxcookie }}-->
+<!--            </div>-->
+
         </section>
 
         <footer id="footer">
@@ -444,6 +458,21 @@
           d.fy = null;
         }
 
-        </script> 
+        function copycookie() {
+          /* Get the text field */
+          var copyText = document.getElementById("sdxcookie");
+
+          /* Select the text field */
+          copyText.select();
+          copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+
+          /* Copy the text inside the text field */
+          document.execCommand("copy");
+
+          /* Alert the copied text */
+          alert("Copied the text: " + copyText.value);
+        }
+
+        </script>
     </body>
 </html>

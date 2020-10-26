@@ -34,6 +34,7 @@ import flask_login
 from flask_login import LoginManager, login_required
 
 import jinja2
+import jwt
 
 #from flask_sso import *
 
@@ -86,6 +87,7 @@ EP_POLICIESTYPESPECEXAMPLE = "/api/v1/policies/type/<policytype>/example.html"
 EP_LOGIN = "/api/v1/login"
 EP_LOGOUT = "/api/v1/logout"
 
+app = Flask(__name__, static_url_path='', static_folder='')
 
 # From     http://flask.pocoo.org/snippets/45/
 def request_wants_json(r):
@@ -108,9 +110,9 @@ class RestAPI(AtlanticWaveModule):
         specifically for the libraries that register with the RuleRegistry. 
         Singleton. '''
 
-    global User, app, login_manager, shibboleth
+    global User, app, login_manager, shibboleth, cilogon
 
-    app = Flask(__name__, static_url_path='', static_folder='')
+    # app = Flask(__name__, static_url_path='', static_folder='')
     my_loader = jinja2.ChoiceLoader([
         app.jinja_loader,
         jinja2.FileSystemLoader(['overhaul-templates', 
@@ -143,12 +145,15 @@ class RestAPI(AtlanticWaveModule):
         app.run(host=self.host, port=self.port)
 
     def __init__(self, loggeridprefix='sdxcontroller',
-                 host='0.0.0.0', port=5000, shib=False):
+                 host='0.0.0.0', port=5000, shib=False, cilog=False):
         loggerid = loggeridprefix + ".rest"
         super(RestAPI, self).__init__(loggerid)
         
         global shibboleth
         shibboleth = shib
+
+        global cilogon
+        cilogon = cilog
 
         self.host=host
         self.port=port
@@ -1630,6 +1635,8 @@ class RestAPI(AtlanticWaveModule):
         if flask_login.current_user.get_id() == None:
             if shibboleth:
                 return app.send_static_file('static/index_shibboleth.html')
+            elif cilogon:
+                return app.send_static_file('static/index_cilogon.html')
             return app.send_static_file('static/index.html')
  
         else: 
@@ -1650,6 +1657,18 @@ class RestAPI(AtlanticWaveModule):
                         switches.append(Markup('<option value="{}">{}</option>'.format(node_id,fname)))
                
             # Pass to flask to render a template
+            if cilogon:
+                # format: sdxctlr=H4sIAAA...ZgQCAAA; session=.eJwlzkkKA...BmsTJlI
+                sdxcookie = str(request.headers.get('Cookie')).split(';')[0]
+                #print(sdxcookie)
+                return flask.render_template(
+                    'index.html',
+                    switches=switches,
+                    dtns=dtns,
+                    current_user=flask_login.current_user,
+                    sdxcookie=sdxcookie,
+                )
+
             return flask.render_template('index.html',switches=switches, dtns=dtns, current_user=flask_login.current_user)
     
     # Preset the login form to the user and request to log user in
@@ -1663,6 +1682,23 @@ class RestAPI(AtlanticWaveModule):
             user.id = email
             flask_login.login_user(user)
             return flask.redirect(flask.url_for('home'))
+
+        return 'Bad login'
+
+    # Preset the login form to the user and request to log user in
+    @staticmethod
+    @app.route('/cilogon-login', methods=['POST', 'GET'])
+    def cilogon_login():
+        print(flask.request.headers)
+        if flask.request.headers.get('X-Vouch-Idp-Idtoken'):
+            decoded = jwt.decode(flask.request.headers.get('X-Vouch-Idp-Idtoken'), verify=False)
+            email = decoded.get('email')
+            pw = '1234'
+            if AuthenticationInspector().is_authenticated(email, pw):
+                user = User(email)
+                user.id = email
+                flask_login.login_user(user)
+                return flask.redirect(flask.url_for('home'))
 
         return 'Bad login'
 
@@ -1971,3 +2007,6 @@ http://localhost:5000/rule/sdxingress?starttime=1985-04-12T23:20:50&endtime=1985
             return str(RuleManager().get_rules(filter={query},ordering=query))
         return unauthorized_handler()
 
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0')

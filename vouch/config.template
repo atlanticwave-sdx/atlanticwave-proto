@@ -1,0 +1,73 @@
+# vouch config
+# bare minimum to get vouch running with OpenID Connect (such as okta)
+
+vouch:
+    logLevel: debug
+    # domains:
+    # valid domains that the jwt cookies can be set into
+    # the callback_urls will be to these domains
+    #  domains:
+    #  - yourdomain.com
+    #  - yourotherdomain.com
+
+    # - OR -
+    # instead of setting specific domains you may prefer to allow all users...
+    # set allowAllUsers: true to use Vouch Proxy to just accept anyone who can authenticate at the configured provider
+    # and set vouch.cookie.domain to the domain you wish to protect
+    allowAllUsers: true
+
+    # Setting publicAccess: true will accept all requests, even without a valid jwt/cookie.  - VOUCH_PUBLICACCESS
+    # If the user is logged in, the cookie will be validated and the user header will be set.
+    # You will need to direct people to the Vouch Proxy login page from your application.
+    publicAccess: true
+
+    jwt:
+        # secret - VOUCH_JWT_SECRET
+        # a random string used to cryptographically sign the jwt
+        # Vouch Proxy complains if the string is less than 44 characters (256 bits as 32 base64 bytes)
+        # if the secret is not set here then Vouch Proxy will..
+        # - look for the secret in `./config/secret`
+        # - if `./config/secret` doesn't exist then randomly generate a secret and store it there
+        # in order to run multiple instances of vouch on multiple servers (perhaps purely for validating the jwt),
+        # you'll want them all to have the same secret
+        secret: kmDDgMLGThapDV1QnhWPJd0oARzjLa5Zy3bQ8WfOIYk=
+
+    cookie:
+        # allow the jwt/cookie to be set into http://yourdomain.com (defaults to true, requiring https://yourdomain.com)
+        secure: false
+        # vouch.cookie.domain must be set when enabling allowAllUsers
+        domain: 127.0.0.1
+        name: sdxctlr
+
+    headers:
+        jwt: X-Vouch-Token                # VOUCH_HEADERS_JWT
+        querystring: access_token         # VOUCH_HEADERS_QUERYSTRING
+        redirect: X-Vouch-Requested-URI   # VOUCH_HEADERS_REDIRECT
+        claims:
+            - aud
+            - email
+            - family_name
+            - given_name
+            - iss
+            - name
+            - oidc
+            - sub
+            - token_id
+        idtoken: X-Vouch-IdP-IdToken
+        accesstoken: X-Vouch-IdP-AccessToken
+        refreshtoken: X-Vouch-IdP-RefreshToken
+
+oauth:
+    # Generic OpenID Connect
+    # including okta
+    provider: oidc
+    client_id: CILOGON_CLIENT_ID
+    client_secret: CILOGON_CLIENT_SECRET
+    auth_url: https://cilogon.org/authorize
+    token_url: https://cilogon.org/oauth2/token
+    user_info_url: https://cilogon.org/oauth2/userinfo
+    scopes:
+        - openid
+        - email
+        - profile
+    callback_url: http://127.0.0.1:9090/auth

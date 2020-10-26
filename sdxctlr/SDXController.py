@@ -127,7 +127,7 @@ class SDXController(AtlanticWaveModule):
                                   send_no_rules)
 
         self.rapi = RestAPI(self.loggerid,
-                            options.host, options.port, options.shib)
+                            options.host, options.port, options.shib, options.cilog)
         self.sapi = SenseAPI(self.loggerid,
                              host=options.host, port=options.sport)
 
@@ -390,44 +390,55 @@ class SDXController(AtlanticWaveModule):
 def send_no_rules(param):
     pass
 
-
 if __name__ == '__main__':
     #from optparse import OptionParser
     #parser = OptionParser()
+    from dotenv import load_dotenv
+    from pathlib import Path  # Python 3.6+ only
+
+    env_path = Path('sdxctlr') / '.env'
+    load_dotenv(dotenv_path=env_path)
+    print(os.environ)
 
     import argparse
+    from distutils import util
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument("-d", "--database", dest="database", type=str, 
-                        action="store", help="Specifies the database ", 
-                        default=":memory:")
-    parser.add_argument("-m", "--manifest", dest="manifest", type=str, 
-                        action="store", help="specifies the manifest")    
-    parser.add_argument("-s", "--shibboleth", dest="shib", default=False, 
-                        action="store_true", help="Run with Shibboleth for authentication")
-
-    parser.add_argument("-N", "--no_topo", dest="topo", default=True, 
-                        action="store_false", help="Run without the topology")
-
-    parser.add_argument("-H", "--host", dest="host", default='0.0.0.0', 
-                        action="store", type=str, help="Choose a host address ")
-    parser.add_argument("-p", "--port", dest="port", default=5000, 
-                        action="store", type=int, 
-                        help="Port number of web interface")
-    parser.add_argument("-e", "--sense", dest="sport", default=5001, 
-                        action="store", type=int, 
-                        help="Port number of SENSE interface")
-    parser.add_argument("-l", "--lcport", dest="lcport", default=PORT,
-                        action="store", type=int,
-                        help="Port number for LCs to connect to")
+    parser.add_argument("-d", "--database", dest="database", type=str,
+                        action="store", help="Specifies the database ",
+                        default=os.getenv('DATABASE'))
+    parser.add_argument("-m", "--manifest", dest="manifest", type=str,
+                        action="store", help="specifies the manifest",
+                        default=os.getenv('MANIFEST'))
+    parser.add_argument("-s", "--shibboleth", dest="shib", type=lambda x: bool(util.strtobool(x)),
+                        action="store", help="Run with Shibboleth for authentication",
+                        default=os.getenv('SHIBBOLETH'))
+    parser.add_argument("-c", "--cilogon", dest="cilog", type=lambda x: bool(util.strtobool(x)),
+                        action="store", help="Run with CILogon for authentication",
+                        default=os.getenv('CILOGON'))
+    parser.add_argument("-N", "--no_topo", dest="topo", type=lambda x: bool(util.strtobool(x)),
+                        action="store", help="Run without the topology",
+                        default=os.getenv('NOTOPO'))
+    parser.add_argument("-H", "--host", dest="host", type=str,
+                        action="store", help="Choose a host address ",
+                        default=os.getenv('HOST'))
+    parser.add_argument("-p", "--port", dest="port", type=int,
+                        action="store", help="Port number of web interface",
+                        default=os.getenv('PORT'))
+    parser.add_argument("-e", "--sense", dest="sport", type=int,
+                        action="store", help="Port number of SENSE interface",
+                        default=os.getenv('SPORT'))
+    parser.add_argument("-l", "--lcport", dest="lcport", type=int,
+                        action="store", help="Port number for LCs to connect to",
+                        default=os.getenv('LCPORT'))
 
     options = parser.parse_args()
     print(options)
- 
+
     if not options.manifest:
         parser.print_help()
         exit()
-        
+
     sdx = SDXController(False, options)
     sdx._main_loop()
 

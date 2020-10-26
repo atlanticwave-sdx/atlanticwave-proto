@@ -1,0 +1,307 @@
+{
+  "endpoints": {
+    "laxh1": {
+      "type":"dtn",
+      "friendlyname":"laxh1",
+      "location":"0,0",
+      "vlan":11},
+    "laxh2": {
+      "type":"dtn",
+      "friendlyname":"laxh2",
+      "location":"0,0",
+      "vlan":12},
+    "laxh3": {
+      "type":"dtn",
+      "friendlyname":"laxh3",
+      "location":"0,0",
+      "vlan":13},
+    "ordh1": {
+      "type":"dtn",
+      "friendlyname":"ordh1",
+      "location":"0,0",
+      "vlan":21},
+    "ordh2": {
+      "type":"dtn",
+      "friendlyname":"ordh2",
+      "location":"0,0",
+      "vlan":22},
+    "ordh3": {
+      "type":"dtn",
+      "friendlyname":"ordh3",
+      "location":"0,0",
+      "vlan":23},
+    "nych1": {
+      "type":"dtn",
+      "friendlyname":"nych1",
+      "location":"0,0",
+      "vlan":31},
+    "nych2": {
+      "type":"dtn",
+      "friendlyname":"nych2",
+      "location":"0,0",
+      "vlan":32},
+    "nych3": {
+      "type":"dtn",
+      "friendlyname":"nych3",
+      "location":"0,0",
+      "vlan":33},
+    "atlh1": {
+      "type":"dtn",
+      "friendlyname":"atlh1",
+      "location":"0,0",
+      "vlan":41},
+    "atlh2": {
+      "type":"dtn",
+      "friendlyname":"atlh2",
+      "location":"0,0",
+      "vlan":42},
+    "atlh3": {
+      "type":"dtn",
+      "friendlyname":"atlh3",
+      "location":"0,0",
+      "vlan":43}
+  },
+  "localcontrollers": {
+    "westctlr":{
+      "shortname": "westctlr",
+      "credentials": "pwd",
+      "location": "0,0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55780,
+        "openflowport": 6680
+      },
+      "switchinfo": [
+        {
+          "name":"laxs1",
+          "friendlyname":"laxs1",
+          "ip": "128.61.159.153",
+          "dpid":"1",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "laxh1"
+	        },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "laxh2"
+            },
+            {
+      	      "portnumber": 3,
+	          "speed": 8000000000,
+	          "destination": "laxh3"
+	        },
+            {
+              "portnumber": 4,
+              "speed": 8000000000,
+              "destination": "ords1"
+            },
+            {
+              "portnumber": 5,
+              "speed": 8000000000,
+              "destination": "atls1"
+            }
+	        ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22]
+          }
+	    }
+      ],
+      "operatorinfo": {
+        "organization": "UNC Chapel Hill",
+        "administrator": "Michael Stealey",
+        "contact": "stealey@unc.edu"
+      }
+    },
+    "centctlr":{
+      "shortname": "centctlr",
+      "credentials": "pwd",
+      "location": "0,0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55781,
+        "openflowport": 6681
+      },
+      "switchinfo": [
+        {
+          "name":"ords1",
+          "friendlyname":"ords1",
+          "ip": "128.61.159.153",
+          "dpid":"2",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "ordh1"
+	        },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "ordh2"
+            },
+            {
+      	      "portnumber": 3,
+	          "speed": 8000000000,
+	          "destination": "ordh3"
+	        },
+            {
+              "portnumber": 4,
+              "speed": 8000000000,
+              "destination": "laxs1"
+            },
+            {
+              "portnumber": 5,
+              "speed": 8000000000,
+              "destination": "atls1"
+            },
+            {
+              "portnumber": 6,
+              "speed": 8000000000,
+              "destination": "nycs1"
+            }
+	        ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22]
+          }
+	    },
+        {
+          "name":"atls1",
+          "friendlyname":"atls1",
+          "ip": "128.61.159.153",
+          "dpid":"4",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "atlh1"
+	        },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "atlh2"
+            },
+            {
+      	      "portnumber": 3,
+	          "speed": 8000000000,
+	          "destination": "atlh3"
+	        },
+            {
+              "portnumber": 4,
+              "speed": 8000000000,
+              "destination": "laxs1"
+            },
+            {
+              "portnumber": 5,
+              "speed": 8000000000,
+              "destination": "ords1"
+            }
+	        ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22]
+          }
+	    }
+      ],
+      "operatorinfo": {
+        "organization": "UNC Chapel Hill",
+        "administrator": "Michael Stealey",
+        "contact": "stealey@unc.edu"
+      }
+    },
+    "eastctlr":{
+      "shortname": "eastctlr",
+      "credentials": "pwd",
+      "location": "0,0",
+      "lcip": "127.0.0.1",
+      "internalconfig": {
+        "ryucxninternalport": 55782,
+        "openflowport": 6682
+      },
+      "switchinfo": [
+        {
+          "name":"nycs1",
+          "friendlyname":"nycs1",
+          "ip": "128.61.159.153",
+          "dpid":"3",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 8000000000,
+              "destination": "nych1"
+	        },
+            {
+              "portnumber": 2,
+              "speed": 8000000000,
+              "destination": "nych2"
+            },
+            {
+      	      "portnumber": 3,
+	          "speed": 8000000000,
+	          "destination": "nych3"
+	        },
+            {
+              "portnumber": 4,
+              "speed": 8000000000,
+              "destination": "ords1"
+            }
+	        ],
+          "internalconfig": {
+            "corsaurl": "",
+            "corsatoken": "",
+            "corsabridge": "br1",
+            "corsabwin":11,
+            "corsabwout":12,
+            "corsaratelimiterbridge":"br21",
+            "corsaratelimiterports":[21,22]
+          }
+	    }
+      ],
+      "operatorinfo": {
+        "organization": "UNC Chapel Hill",
+        "administrator": "Michael Stealey",
+        "contact": "stealey@unc.edu"
+      }
+    }
+  },
+  "participants": {
+    "stealey@unc.edu": {
+      "credentials": "1234",
+      "organization": "UNC Chapel Hill",
+      "contact": "stealey@unc.edu",
+      "type": "administrator",
+      "permitted_actions": [
+        "tbd"
+      ],
+      "restrictions": [
+        "tbd"
+      ]
+    }
+  }
+}
