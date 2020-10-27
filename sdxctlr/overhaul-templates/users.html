@@ -30,7 +30,7 @@
 
     <!-- Table Body -->
     <tbody>
-    {% for username,userdetails in userdict['links'].iteritems() %}
+    {% for username,userdetails in userdict['links'].items() %}
       <tr>
         <td><a href={{ userdetails['href'] }}>{{ username }}</a></td>
         <td>{{ userdetails['type'] }}</td>

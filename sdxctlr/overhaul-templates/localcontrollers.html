@@ -26,7 +26,7 @@
 
     <!-- Table Body -->
     <tbody>
-      {% for lcname,lcdetails in lcdict['links'].iteritems() %}
+      {% for lcname,lcdetails in lcdict['links'].items() %}
       <tr>
         <td><a href={{ lcdetails['href'] }}>{{ lcname }}</a></td>
       </tr>

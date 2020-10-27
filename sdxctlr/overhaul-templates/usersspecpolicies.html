@@ -29,9 +29,9 @@
 
     <!-- Table Body -->
     <tbody>
-      {% for username,userdetails in userdict.iteritems() %}
+      {% for username,userdetails in userdict.items() %}
       {% if username != 'href' %}
-      {% for policyname,policydetails in userdetails['policies'].iteritems() %}
+      {% for policyname,policydetails in userdetails['policies'].items() %}
       <tr>
         <td><a href={{ policydetails['href'] }}>{{ policyname }}</a></td>
         <td>{{ policydetails['policynumber'] }}</td>

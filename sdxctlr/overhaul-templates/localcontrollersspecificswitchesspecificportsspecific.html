@@ -29,7 +29,7 @@
 
     <!-- Table Body -->
     <tbody>
-    {% for portname,portdetails in lcdict.iteritems() %}
+    {% for portname,portdetails in lcdict.items() %}
       <tr>
         <td><a href={{ portdetails['href'] }}>{{ portname }}</a></td>
         <td>{{ portdetails['portnumber'] }}</td>

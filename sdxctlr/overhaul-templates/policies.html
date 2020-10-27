@@ -29,7 +29,7 @@
 
     <!-- Table Body -->
     <tbody>
-      {% for policyname,policydetails in policydict['links'].iteritems() %}
+      {% for policyname,policydetails in policydict['links'].items() %}
       <tr>
         <td><a href={{ policydetails['href'] }}>{{ policyname }}</a></td>
         <td>{{ policydetails['policynumber'] }}</td>

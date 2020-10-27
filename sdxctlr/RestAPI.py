@@ -115,8 +115,8 @@ class RestAPI(AtlanticWaveModule):
     # app = Flask(__name__, static_url_path='', static_folder='')
     my_loader = jinja2.ChoiceLoader([
         app.jinja_loader,
-        jinja2.FileSystemLoader(['overhaul-templates', 
-                                 'templates']),
+        jinja2.FileSystemLoader(['sdxctlr/overhaul-templates',
+                                 'sdxctlr/templates']),
     ])
     app.jinja_loader = my_loader
     #sso = SSO(app=app)

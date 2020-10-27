@@ -28,7 +28,7 @@
     <!-- Table Body -->
     <tbody>
 
-      {% for port,portdetails in lcdict['links'].iteritems() %}
+      {% for port,portdetails in lcdict['links'].items() %}
       {% if port != 'href' %}
       <tr>
         <td><a href={{ portdetails['href'] }}>{{ port }}</a></td>

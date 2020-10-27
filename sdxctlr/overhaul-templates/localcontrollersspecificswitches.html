@@ -18,7 +18,7 @@
     <!-- Table Header -->
     <br>
     <center><h1 style="color:white;">Local Controllers</h1></center>
-    {% for lc,lcdetails in lcdict.iteritems() %}
+    {% for lc,lcdetails in lcdict.items() %}
     <thead>
       <tr>
         <th colspan="{{ lcdetails['links']|length }}"><a href={{ lcdetails['href'] }}> {{ lc }}</a></th>
@@ -28,7 +28,7 @@
     <!-- Table Body -->
     <tbody>
       <tr>
-        {% for swname,details in lcdetails['links'].iteritems() %}
+        {% for swname,details in lcdetails['links'].items() %}
         <td><a href={{ details['href'] }}> {{ swname }}</a></th> 
         {% endfor %}
       </tr>

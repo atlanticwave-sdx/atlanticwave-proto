@@ -14,7 +14,7 @@
 
 
 <body data-spy="scroll" data-target="#navbar" data-offset="0">
-  {% for swname,swdetails in lcdict.iteritems() %}
+  {% for swname,swdetails in lcdict.items() %}
   <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
     <!-- Table Header -->
     <br>
@@ -57,7 +57,7 @@
 
     <!-- Table Body -->
     <tbody>
-      {% for port,portdetails in swdetails['ports'].iteritems() %}
+      {% for port,portdetails in swdetails['ports'].items() %}
       {% if port != 'href' %}
       <tr>
         <td><a href={{ portdetails['href'] }}>{{ port }}</a></td>

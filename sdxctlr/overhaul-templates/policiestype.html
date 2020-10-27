@@ -27,7 +27,7 @@
 
     <!-- Table Body -->
     <tbody>
-      {% for policyname,policydetails in policydict.iteritems() %}
+      {% for policyname,policydetails in policydict.items() %}
       {% if policyname != 'href' %}
       <tr>
         <td><a href={{ policydetails['href'] }}>{{ policyname }}</a></td>
