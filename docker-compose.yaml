@@ -23,6 +23,18 @@ services:
 #      - vouch-proxy
     ports:
       - 5000:5000
+#    volumes:
+#    - ./sdxctlr/.env:/atlanticwave-proto/sdxctlr/.env
+    environment:
+      - DATABASE=sdxcontroller.db
+      - MANIFEST=manifests/example-cilgon.manifest
+      - SHIBBOLETH=False
+      - CILOGON=False
+      - NOTOPO=True
+      - HOST=0.0.0.0
+      - PORT=5000
+      - SPORT=5001
+      - LCPORT=5555
     restart: unless-stopped
 
   vouch-proxy:

@@ -22,7 +22,7 @@ RUN pip3 install future
 # Setup the PYTHONPATH script
 ENV PYTHONPATH /atlanticwave-proto:$PYTHONPATH
 
-COPY run_sdx.sh .
+COPY docker-entrypoint.sh /docker-entrypoint.sh
 COPY ./*.manifest ./
 
 # This really should point to a particular version
@@ -30,5 +30,4 @@ RUN git clone -b ${GITHUB_BRANCH} https://github.com/atlanticwave-sdx/atlanticwa
 RUN cat atlanticwave-proto/requirements.txt
 RUN pip3 install -r atlanticwave-proto/requirements.txt
 
-CMD /bin/bash run_sdx.sh; /bin/bash
-#CMD /bin/bash
+ENTRYPOINT ["/docker-entrypoint.sh"]

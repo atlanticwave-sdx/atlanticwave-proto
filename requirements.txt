@@ -17,7 +17,7 @@ python-dotenv
 rdflib
 ryu
 testfixtures
-uWSGI
+# uWSGI # to be implented post SC demo
 
 ### Dependancies (should now be managed by base packages)
 # alembic==0.8.8 # from dataset
