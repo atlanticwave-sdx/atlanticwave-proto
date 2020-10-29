@@ -59,7 +59,8 @@ class L2TunnelPolicy(UserPolicy):
         # Derived values
         #self.intermediate_vlan = None
         self.fullpath = None
-        self.intermediate_vlan = {} #per link vlan along the path except for the src and dst links
+        self.intermediate_vlan=None #set if there exists a vlan continuity path
+        self.intermediate_vlans = [] #per link vlan along the path except for the src and dst links
 
         # For get_endpoints()
         self.endpoints = []
@@ -171,17 +172,25 @@ class L2TunnelPolicy(UserPolicy):
         #if self.intermediate_vlan == None:
         #    raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
         
-        self.intermediate_vlans = tm.find_vlans_on_path(self.fullpath)
-        if (self.intermediate_vlans == None) or (len(self.intermediate_vlans)==0):
-            raise UserPolicyError("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
+        self.intermediate_vlan, self.intermediate_vlans = tm.find_vlans_on_path(self.fullpath)
+        if (self.intermediate_vlan == None) or (len(self.intermediate_vlans)==0):
+            print("There are no available VLANs on path %s for rule %s" % (self.fullpath, self))
 
         # Add necessary resource
         #self.resources.append(VLANPathResource(self.fullpath,
         #                                       self.intermediate_vlan))
-        for k,v in self.intermediate_vlans:
-            self.resources.append(VLANPortResource(k['src'],
-                                                    k['port'],
-                                                    v))
+
+        if (self.intermediate_vlan is not None):
+            self.resources.append(VLANPathResource(self.fullpath, self.intermediate_vlan))
+        else:
+            v=0
+            for (node, nextnode) in zip(self.fullpath[0:-1], self.fullpath[1:]):
+                if (tm.topo.node[node]["type"] == "dtn") or (tm.topo.node[nextnode]["type"] == "dtn"):
+                    continue
+                self.resources.append(VLANPortResource(node,
+                                                    nextnode,
+                                                    self.intermediate_vlans[v]))
+                v+=1
         self.resources.append(VLANPortResource(self.src_switch,
                                                self.src_port,
                                                self.src_vlan))
@@ -291,7 +300,7 @@ class L2TunnelPolicy(UserPolicy):
             outport = nextedge[node]
 
             in_vlan=self.intermediate_vlans[prevedge]
-            out_vlan=self.intermediate_vlans[nextvedge]
+            out_vlan=self.intermediate_vlans[nextedge]
             #self.intermediate_vlan
             rule = VlanTunnelLCRule(switch_id, inport, outport,
                                     self.in_vlan,

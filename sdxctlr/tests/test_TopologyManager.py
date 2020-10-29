@@ -113,16 +113,19 @@ class VLANTopoTest(unittest.TestCase):
         self.assertEqual(vlan, 10)
 
         # Add VLAN 10 to one of the points on the path
+        vlan=10
         for (node, nextnode) in zip(path[0:-1], path[1:]):
             man.topo.edge[node][nextnode]['vlans_in_use'].append(vlan)
             man.topo.node[node]['vlans_in_use'].append(vlan)
         
         # Should return None
+        path = nx.shortest_path(topo, source="br4dtn1", target="br1dtn1")
+        print(path)
         vlans = man.find_vlans_on_path(path)
         print("vlans="+str(vlans))
         self.assertNotEqual(vlans, None)
         # Remove VLAN 10 to one of the points on the path
-        for (node, nextnode) in zip(path[0:-1], path[1:]):
+        for (node, nextnode) in zip(path[1:-2], path[2:]):
             man.topo.edge[node][nextnode]['vlans_in_use'].remove(vlan)
             man.topo.node[node]['vlans_in_use'].remove(vlan)
 

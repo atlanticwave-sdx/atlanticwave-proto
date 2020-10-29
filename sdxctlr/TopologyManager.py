@@ -500,8 +500,14 @@ class TopologyManager(AtlanticWaveManager):
         '''
         self.dlogger.debug("find_vlan_on_path: %s" % path)
         selected_vlans = []
+        intermediate_vlan=None
+        i=0
         with self.topolock: 
             for (node, nextnode) in zip(path[0:-1], path[1:]):
+                print("nodes:"+node+":"+nextnode)
+                if (self.topo.node[node]["type"] == "dtn") or (self.topo.node[nextnode]["type"] == "dtn"):
+                    continue
+                print("nodes:"+node+":"+nextnode)
                 bm=BitMap(4089)
                 vlan_in_use=self.topo.edge[node][nextnode]['vlans_in_use']
                 available_vlans=self.get_available_vlan_list(
@@ -512,12 +518,18 @@ class TopologyManager(AtlanticWaveManager):
                     if bm.test(vlan): 
                         bm.flip(vlan)
                 first_available_vlan=bm.nonzero()[0]
+                if i==0: 
+                    intermediate_vlan=first_available_vlan
+                if intermediate_vlan is not first_available_vlan:
+                    intermediate_vlan=None
+
                 print("node="+node)
                 print("first_available_vlan="+str(first_available_vlan))
                 selected_vlans.append(first_available_vlan)
+                i+=1
             
         self.dlogger.debug("find_vlan_on_path returning %s" % selected_vlans)
-        return selected_vlans
+        return intermediate_vlan, selected_vlans
 
     def find_vlan_on_path(self, path):
         ''' Finds a VLAN that's not being used at the moment on a provided path.
