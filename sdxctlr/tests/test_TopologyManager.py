@@ -145,10 +145,10 @@ class VLANTopoTest(unittest.TestCase):
         man.topo.edge["br3"]["br4"]['vlans_in_use'].append(10)
         print(man.topo.edge['br3']['br4'])
         
-        # Should return 2
+        # Should return 2(None, [30, 11])
         vlans = man.find_vlans_on_path(path)
         print("vlans="+str(vlans))
-        self.assertNotEqual(vlan, None)
+        self.assertNotEqual(vlans, None)
         man.topo.edge["br3"]["br4"]['vlans_in_use'].remove(10)
 
     def test_path_node_filled(self):
@@ -158,9 +158,9 @@ class VLANTopoTest(unittest.TestCase):
         # Get a path
         path = nx.shortest_path(topo, source="br4", target="br3")
 
-        # Should return 1
+        # Should return 10
         vlan = man.find_vlan_on_path(path)
-        self.assertEqual(vlan, 1)
+        self.assertEqual(vlan, 10)
         
         # Add VLANs 1-4090 to one of the points on the path        
         man.topo.node["br4"]['vlans_in_use'] = list(range(1,4090))
@@ -178,9 +178,9 @@ class VLANTopoTest(unittest.TestCase):
         # Get a path
         path = nx.shortest_path(topo, source="br4", target="br1")
 
-        # Should return 1
+        # Should return 10
         vlan = man.find_vlan_on_path(path)
-        self.assertEqual(vlan, 1)
+        self.assertEqual(vlan, 10)
         
         # Add VLANs 1-4090 to one of the points on the path        
         man.topo.edge["br4"]["br3"]['vlans_in_use'] = list(range(1,4090))

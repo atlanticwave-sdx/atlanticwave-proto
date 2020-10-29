@@ -188,9 +188,13 @@ class L2TunnelPolicy(UserPolicy):
                 if (tm.topo.node[node]["type"] == "dtn") or (tm.topo.node[nextnode]["type"] == "dtn"):
                     continue
                 self.resources.append(VLANPortResource(node,
-                                                    nextnode,
+                                                    topology[node][nextnode][node],
+                                                    self.intermediate_vlans[v]))
+                self.resources.append(VLANPortResource(node,
+                                                    topology[nextnode][node][nextnode],
                                                     self.intermediate_vlans[v]))
                 v+=1
+
         self.resources.append(VLANPortResource(self.src_switch,
                                                self.src_port,
                                                self.src_vlan))
@@ -303,8 +307,8 @@ class L2TunnelPolicy(UserPolicy):
             out_vlan=self.intermediate_vlans[nextedge]
             #self.intermediate_vlan
             rule = VlanTunnelLCRule(switch_id, inport, outport,
-                                    self.in_vlan,
-                                    self.out_vlan,
+                                    in_vlan,
+                                    out_vlan,
                                     True, bandwidth)            
 
             bd.add_to_list_of_rules(rule)
