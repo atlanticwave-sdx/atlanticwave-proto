@@ -504,7 +504,7 @@ class TopologyManager(AtlanticWaveManager):
         i=0
         with self.topolock: 
             for (node, nextnode) in zip(path[0:-1], path[1:]):
-                print("nodes:"+node+":"+nextnode)
+                #only check and reserve vlans on links between switches.
                 if (self.topo.node[node]["type"] == "dtn") or (self.topo.node[nextnode]["type"] == "dtn"):
                     continue
                 print("nodes:"+node+":"+nextnode)
