@@ -1270,7 +1270,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 		l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
                 matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
-                actions = []
+                ###actions = []
 
                 for outport in flooding_ports:
                     self.logger.debug("L2MultipointEndpointLCRule -4- : Flow.8: outport: %s " % (outport))
