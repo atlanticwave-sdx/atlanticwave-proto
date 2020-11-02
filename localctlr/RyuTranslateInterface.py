@@ -1270,13 +1270,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 		l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
                 matches = [IN_PORT(l2mp_bw_out_port), VLAN_VID(intermediate_vlan)]
-                ###actions = []
+                actions = []
 
-                for outport in flooding_ports:
-                    self.logger.debug("L2MultipointEndpointLCRule -4- : Flow.8: outport: %s " % (outport))
-                    if outport != port:
-                        actions.append(Forward(outport))
-                ###actions.append(Forward(port))
+            for port in flooding_ports:
+                self.logger.debug("L2MultipointEndpointLCRule -4- : Flow.8: outport: %s " % (port))
+                actions.append(Forward(port))
                 priority = PRIORITY_L2M_FLOOD_FORWARDING
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
