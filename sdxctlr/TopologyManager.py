@@ -100,7 +100,13 @@ class TopologyManager(AtlanticWaveManager):
         # Last modified timestamp
         now = datetime.now()
         self.last_modified = now.strftime(rfc3339format)
-            
+
+        # The json manifest
+        self.manifest_json = {}
+
+        # Mark as true backup topology have been imported
+        self.back_topo_imported = False
+
         #FIXME: Static topology right now.
         self._import_topology(topology_file)
 
@@ -151,9 +157,56 @@ class TopologyManager(AtlanticWaveManager):
         for cb in self.topology_update_callbacks:
             cb(change)
 
-    def _import_topology(self, manifest_filename):
+
+    def _read_manifest_data(self, manifest_filename):
         with open(manifest_filename) as data_file:
-            data = json.load(data_file)
+            self.manifest_json = json.load(data_file)
+
+    def import_backup_topology(self, lcname):
+        self.logger.debug("Importing backup topology")
+        if not self.back_topo_imported:
+            self._import_topology(None, True, lcname)
+
+
+    def _get_broken_link_node(self, recovery_controller):
+        recovery_switch = None
+        for edge in self.topo.edges():
+            if (edge[0] == recovery_controller):
+                recovery_switch = edge[1]
+            elif (edge[1] == recovery_controller):
+                recovery_switch = edge[0]
+       
+        # The other side of the broken link. 
+        # Example: if ncsuctl lost connection, broken_link_node is dukes1, since ncsus1 connects to dukes1
+        broken_link_node = None
+        ctlr_keywords = ['sdx', 'ctlr', 'dtn']
+        for edge in self.topo.edges():
+            if (edge[0] == recovery_switch):
+                if not any(substring in edge[1] for substring in ctlr_keywords):
+                    broken_link_node = edge[1]
+            elif (edge[1] == recovery_switch):
+                if not any(substring in edge[0] for substring in ctlr_keywords):
+                    broken_link_node = edge[0]
+
+        #print (broken_link_node)
+        return broken_link_node
+
+    def _import_topology(self, manifest_filename, backup_topo = False, recovery_controller = None):
+        #with open(manifest_filename) as data_file:
+        #    data = json.load(data_file)
+        #recovery_controller = 'ncsuctlr'
+        if manifest_filename:
+            self._read_manifest_data(manifest_filename)
+        data = self.manifest_json.copy()
+        
+        # reset the topo (and read in again with the backup topology)
+        if backup_topo and recovery_controller and self.back_topo_imported == False:
+            broken_link_node = self._get_broken_link_node(recovery_controller)
+            print("~~~~~~~~~~~~CW~~~~~~~~~~~~~~~broken_link_node~~~~~~~~~~~~~~~")
+            print("recovery_controller: " + str(recovery_controller))
+            print("broken_link_node: " + str(broken_link_node))
+            self.topo = nx.Graph()
+            self.back_topo_imported = True
 
         for unikey in list(data['endpoints'].keys()):
             # All the other nodes
@@ -236,12 +289,60 @@ class TopologyManager(AtlanticWaveManager):
 
                     self.topo.node[name]['internalconfig'] = switchinfo['internalconfig']
 
-                    # Add the links
-                    for port in switchinfo['portinfo']:
-                        portnumber = int(port['portnumber'])
-                        speed = int(port['speed'])
-                        destination = str(port['destination'])
+                    # Add the links, as well as the backup links if exist
+                    if backup_topo and recovery_controller and 'backuplc' in self.topo.node[key]['internalconfig'] and \
+                            recovery_controller == self.topo.node[key]['internalconfig']['backuplc']:
+                        self.logger.debug("Found the backup link.")
+                        switchinfosection = switchinfo['sdxbackupportinfo']
+                    else:
+                        switchinfosection = switchinfo['portinfo']
 
+                    #for port in switchinfo['portinfo']:
+                    for port in switchinfosection:
+                        # ignore the broken link connecting to the recovery_controller
+                        if backup_topo and recovery_controller and recovery_controller != key:
+                            found_broken_link = False
+                            for si in data['localcontrollers'][recovery_controller]['switchinfo']:
+                                print("~~~~~~~~~~CW~~~~~~~~~~~~~~~broken_link_node~~~~~~~~~~")
+                                print(broken_link_node)
+                                #if port['destination'] == si['name'] and name == broken_link_node: 
+                                if port['destination'] == si['name'] and name == 'dukes1':
+                                #if port['destination'] == si['name']:
+                                    print ("~~~~~~~~CW~~~~~~~~switch_info_test['name']:" + si['name'])
+                                    found_broken_link = True
+                            if found_broken_link:
+                                continue
+                        portnumber = int(port['portnumber'])
+                        #if 'backupportnumber' in port:
+                            #print("short name: " + shortname)
+                            #print("name: " + name)
+                            #print("key" + key)
+                        #    backupportnumber = int(port['backupportnumber'])
+                            #print("backupportnumber" + str(backupportnumber))
+                        speed = int(port['speed'])
+                        #if 'backupspeed' in port:
+                        #    backupspeed = int(port['backupspeed'])
+                        destination = str(port['destination'])
+                        #if 'backupdestination' in port:
+                        #    backupdestination = str(port['backupdestination'])
+
+                        if backup_topo and recovery_controller and recovery_controller == key:
+                            self.logger.debug("Looking for backup dataplane link.")
+                            if 'backupportnumber' in port:
+                                print("recovery_controller:" + recovery_controller)
+                                portnumber = int(port['backupportnumber'])
+                                print("backupportnumber:" + str(portnumber))
+                            if 'backupspeed' in port:
+                                speed = int(port['backupspeed'])
+                            if 'backupdestination' in port:
+                                destination = str(port['backupdestination'])
+
+                        print("~~~~~~~CW~~~~~DEBUG~~~~~~~~~")
+                        print("key: " + str(key))
+                        print("name: " + str(name))
+                        print("portnumber: " + str(portnumber))
+                        print("destination: " + str(destination))
+                        print("~~~~~~~CW~~~~~DEBUG~~~~~~~~~END~~~")
                         # If link already exists
                         if not self.topo.has_edge(name, destination):
                             self.topo.add_edge(name,
@@ -266,6 +367,15 @@ class TopologyManager(AtlanticWaveManager):
                 # Once all the switches have been looked at, add them to the
                 # LC
                 self.topo.node[key]['switches'] = switch_list
+        
+        #if backup_topo:
+        print("Final graph:")
+        print(self.topo.nodes())
+        print(self.topo.edges())
+
+        #print("~~~~~~CW~~~~TEST:")
+        #test_switch = self._get_broken_link_node(recovery_controller)
+        #print(test_switch)
 
     # -----------------
     # Generic functions
