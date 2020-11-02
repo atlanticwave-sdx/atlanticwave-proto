@@ -4,12 +4,12 @@
       "type": "sdxcontroller",
       "friendlyname": "SDX Controller",
       "location": "35.939796, -79.018203",
-      "vlan": 1411},
+      "vlan": 1310},
     "rencictlr": {
       "type": "localcontroller",
       "friendlyname": "RENCI Controller",
       "location": "35.939796, -79.018203",
-      "vlan": 1411},
+      "vlan": 1311},
     "rencidtn": {
       "type": "dtn",
       "friendlyname": "RENCI BF40G Node",
@@ -24,17 +24,27 @@
       "type": "localcontroller",
       "friendlyname": "DUKE Controller",
       "location": "36.003614, -78.938755",
-      "vlan": 1411},
+      "vlan": 1312},
     "dukedtn": {
       "type": "dtn",
       "friendlyname": "DUKE BF40G Node",
       "location": "36.003614, -78.938755",
       "vlan": 1422},
+    "uncctlr": {
+      "type": "localcontroller",
+      "friendlyname": "UNC Controller",
+      "location": "35.903395, -79.048370",
+      "vlan": 1313},
+    "uncdtn": {
+      "type": "dtn",
+      "friendlyname": "UNC BF40G Node",
+      "location": "35.903395, -79.048370",
+      "vlan": 1423},
     "ncsuctlr": {
       "type": "localcontroller",
       "friendlyname": "NCSU Controller",
       "location": "35.773395, -78.677730",
-      "vlan": 1411},
+      "vlan": 1314},
     "ncsudtn": {
       "type": "dtn",
       "friendlyname": "NCSU BF40G Node",
@@ -46,10 +56,11 @@
       "shortname": "rencictlr",
       "credentials": "rencipwd",
       "location": "35.939796, -79.018203",
-      "lcip": "10.14.11.1",
+      "lcip": "10.13.11.11",
       "internalconfig": {
         "ryucxninternalport": 55781,
-        "openflowport": 6681
+        "openflowport": 6681,
+	"backuplcswitch": "dukes1"
       },
       "switchinfo": [
         {
@@ -60,6 +71,11 @@
           "brand":"Open vSwitch",
           "model": "2.3.0",
           "portinfo": [
+            {
+      	      "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "uncs1"
+	    },
             {
               "portnumber": 2,
               "speed": 80000000000,
@@ -94,8 +110,12 @@
             "corsabwout": 20,
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [21,22],
-            "managementvlan":1411,
-            "managementvlanports":[2,11,23,30]
+            "corsabwinl2mp": 5,
+            "corsabwoutl2mp": 6,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [7,8],
+            "managementvlan":1311,
+            "managementvlanports":[1,2,11,23,30]
           }
         },
         {
@@ -125,7 +145,11 @@
             "corsabwout": 26,
             "corsaratelimitbridge": "br20",
             "corsaratelimitports": [27,28],
-            "managementvlan":1411,
+            "corsabwinl2mp": 3,
+            "corsabwoutl2mp": 4,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [13,14],
+            "managementvlan":1311,
             "managementvlanports":[23]
           }
         }
@@ -140,10 +164,11 @@
       "shortname": "dukectlr",
       "credentials": "dukepwd",
       "location":"36.003614, -78.938755",
-      "lcip": "10.14.11.2",
+      "lcip": "10.13.12.11",
       "internalconfig": {
         "ryucxninternalport": 55782,
-        "openflowport": 6682
+        "openflowport": 6682,
+	"backuplcswitch": "rencis1"
       },
       "switchinfo": [
         { 
@@ -183,8 +208,72 @@
             "corsabwout":20,
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
-            "managementvlan":1411,
+            "corsabwinl2mp": 5,
+            "corsabwoutl2mp": 6,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [7,8],
+            "managementvlan":1312,
             "managementvlanports":[1,2,11]
+          }
+        }
+      ],
+      "operatorinfo": {
+        "organization": "RENCI",
+        "administrator": "Mert Cevik",
+        "contact": "mcevik@renci.org"
+      }
+    },
+    "uncctlr":{
+      "shortname": "uncctlr",
+      "credentials": "uncpwd",
+      "location":"35.903395, -79.048370",
+      "lcip": "10.13.13.11",
+      "internalconfig": {
+        "ryucxninternalport": 55783,
+        "openflowport": 6683,
+	"backuplcswitch": "ncsus1"
+      },
+      "switchinfo": [
+        { 
+          "name":"uncs1",
+          "friendlyname":"UNC Corsa DP2100",
+          "ip": "10.0.203.1",
+          "dpid":"203",
+          "brand":"Open vSwitch",
+          "model": "2.3.0",
+          "portinfo": [
+            { 
+              "portnumber": 1,
+              "speed": 80000000000,
+              "destination": "rencis1"
+            },
+            { 
+              "portnumber": 11,
+               "speed": 80000000000,
+               "destination": "uncctlr"
+            },
+            { 
+              "portnumber": 12,
+               "speed": 80000000000,
+               "destination": "uncdtn"
+            }
+          ],
+          "internalconfig": {
+            "corsaurl": "https://corsa-1.unc.ben/",
+            "corsatoken": "fa18b3d4d84507dba6568678a45fcecdec03247d7b5c18e45c5f288066a52d970cf8ee0bcf7759c698a7b56b92824963c8c03acf77f0a3aa91ad4f64c3aa7b15",
+            "corsabridge": "br23",
+            "corsabwin":19,
+            "corsabwout":20,
+            "corsaratelimitbridge":"br20",
+            "corsaratelimitports":[21,22],
+            "corsabwinl2mp": 5,
+            "corsabwoutl2mp": 6,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [7,8],
+            "managementvlan":1313,
+            "managementvlanports":[1,11],
+	    "managementvlanbackupports":[1, 2, 11],
+            "sdxmanagementvlanbackupports":[1, 2, 11]
           }
         }
       ],
@@ -198,10 +287,11 @@
       "shortname": "ncsuctlr",
       "credentials": "ncsupwd",
       "location": "35.773395, -78.677730",
-      "lcip": "10.14.11.4",
+      "lcip": "10.13.14.11",
       "internalconfig": {
         "ryucxninternalport": 55784,
-        "openflowport": 6684
+        "openflowport": 6684,
+	"backuplcswitch": "uncs1"
       },
       "switchinfo": [
         { 
@@ -236,8 +326,13 @@
             "corsabwout":20,
             "corsaratelimitbridge":"br20",
             "corsaratelimitports":[21,22],
-            "managementvlan":1411,
-            "managementvlanports":[1,11]
+            "corsabwinl2mp": 5,
+            "corsabwoutl2mp": 6,
+            "corsaratelimitbridgel2mp": "br19",
+            "corsaratelimitportsl2mp": [7,8],
+            "managementvlan":1314,
+            "managementvlanports":[1,11],
+	    "managementvlanbackupports":[2, 11]
           }
         }
       ],
@@ -323,3 +418,4 @@
     }
   }
 }
+

@@ -203,16 +203,22 @@ Type of the controller and site names are extracted from hostnames.
 
 ```
 # Build docker images
-/root/aw.sh -R <REPO> -B <BRANCH> -b
+/root/aw.sh -R <REPO> -B <BRANCH> -G <CONFIG> -H <MANIFEST> -b
 Default Repo: https://github.com/RENCI-NRIG/atlanticwave-proto.git
-Default Branch: master-rci
+Default Branch: master
 
-/root/aw.sh -B renci-corsa-ben -b
+Configuration parameter maps to the directories under atlanticwave-proto/configuration (eg. renci_testbed, awave-production)
+Manifest can be selected from inside the selected configuration.
+
+/root/aw.sh -B master -G renci_testbed -H renci_testbed.manifest -b
+
 
 # Run docker containers (in detached mode)
-/root/aw.sh -m detached -r 
+/root/aw.sh -m detached -G renci_testbed -H renci_testbed.manifest -r
+
 
 # Run docker containers (interactive)
-/root/aw.sh -r 
+/root/aw.sh -G renci_testbed -H renci_testbed.manifest -r
+
 ```
 
