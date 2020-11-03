@@ -15,7 +15,7 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 #run pip install dataset
 
 # This really should point to a particular version
-RUN git clone -b develop https://github.com/atlanticwave-sdx/atlanticwave-proto.git
+RUN git clone -b 165-p2mp https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 
 RUN python -m venv appenv
 RUN . appenv/bin/activate
