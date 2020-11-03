@@ -34,7 +34,18 @@ class LCAction(object):
         return (type(other) == type(self) and
                 other.get() == self.get())
             
+class Group(LCAction):
+    ''' This forwards packets to a particular group. '''
+    def __init__(self, group_id):
+        self.group_id = group_id
+        super(Group, self).__init__("Group")
 
+    def __str__(self):
+        retstr = "%s:%s" % (self._name, self.group_id)
+        return retstr
+
+    def get(self):
+        return self.group_id
 
 class Forward(LCAction):
     ''' This forwards packets to a particular location. '''
