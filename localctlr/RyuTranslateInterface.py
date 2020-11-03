@@ -114,7 +114,7 @@ class TranslatedLCRuleGroupContainer(TranslatedRuleContainer):
     ''' Used by RyuTranslateInterface to track translations of Group Creation Rule in P2MP. Contains
         Ryu-friendly objects. Not for use outside RyuTranslateInterface. '''
 
-    def __init__(self, cookie, table, groupType, group_id, weight=100, watch_port=0,watch_group=0,actions):
+    def __init__(self, cookie, table, groupType, group_id, actions, weight=100, watch_port=0,watch_group=0):
         self.cookie = cookie
         self.table = table
         self.groupType = groupType
