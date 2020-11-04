@@ -1349,7 +1349,6 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 actions.append(Forward(outport))
 
                 # Make the TranslatedRuleContainer, and return it.
-                (self, cookie, table, groupType, group_id, instructions, weight=100, watch_port=0,watch_group=0)
                 tgc = TranslatedLCRuleGroupContainer(of_cookie, flood_table,
                                         groupType, group_id,
                                         self._translate_LCAction(datapath,
