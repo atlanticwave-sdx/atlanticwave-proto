@@ -1343,14 +1343,17 @@ class RyuTranslateInterface(app_manager.RyuApp):
             group_id = intermediate_vlan
             group_list={}
             for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
-                self.logger.debug("L2MultipointEndpointLCRule -2- : outport: %s %s %s" % (outport, vlan, group_id))
+                self.logger.debug("L2MultipointEndpointLCRule -2- : outport: %s vlan: %s group_id: %s" % (outport, vlan, group_id))
                 actions = []
                 actions.append(SetField(VLAN_VID(vlan)))
                 actions.append(Forward(outport))
 
                 # Make the TranslatedRuleContainer, and return it.
                 tgc = TranslatedLCRuleGroupContainer(of_cookie, flood_table,
-                                        groupType, group_id, weight, watch_port,watch_group,actions)
+                                        groupType, group_id, weight, watch_port,watch_group,
+                                        self._translate_LCAction(datapath,
+                                                actions,
+                                                table))
                 results.append(tgc)
                 group_list[outport]=group_id
                 group_id+=1
