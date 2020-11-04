@@ -1352,7 +1352,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 tgc = TranslatedLCRuleGroupContainer(of_cookie, flood_table,
                                         groupType, group_id, weight, watch_port,watch_group,actions)
                 results.append(tgc)
-                groupList[outport]=group_id
+                group_list[outport]=group_id
                 group_id+=1
             for port in flooding_ports:
                 self.logger.debug("L2MultipointEndpointLCRule -1- : port: %s " % (port))
@@ -1368,7 +1368,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     if outport != port:
                         #actions.append(SetField(VLAN_VID(vlan)))
                         #actions.append(Forward(l2mp_bw_out_port))
-                        actions.append(Group(group_id))
+                        actions.append(Group(group_list[outport]))
                 priority = PRIORITY_L2M_FLOOD_FORWARDING
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
