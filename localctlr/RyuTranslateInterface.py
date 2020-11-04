@@ -1938,7 +1938,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 self.add_flow(datapath, rule)
             elif type(rule) == TranslatedLCRuleGroupContainer:
                 self.logger.debug("  %s - _Group" % rule)
-                self.add_group(rule)
+                self.add_group(datapath,rule)
             elif type(rule) == TranslatedCorsaRuleContainer:
                 self.logger.debug("  %s - CORSA_REST_CMD" % rule)
                 self.corsa_rest_cmd(rule)
