@@ -1353,7 +1353,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                         groupType, group_id, weight, watch_port,watch_group,
                                         self._translate_LCAction(datapath,
                                                 actions,
-                                                table))
+                                                flood_table))
                 results.append(tgc)
                 group_list[outport]=group_id
                 group_id+=1
