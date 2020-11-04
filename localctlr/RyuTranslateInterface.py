@@ -114,7 +114,7 @@ class TranslatedLCRuleGroupContainer(TranslatedRuleContainer):
     ''' Used by RyuTranslateInterface to track translations of Group Creation Rule in P2MP. Contains
         Ryu-friendly objects. Not for use outside RyuTranslateInterface. '''
 
-    def __init__(self, cookie, table, groupType, group_id, actions, weight=100, watch_port=0,watch_group=0):
+    def __init__(self, cookie, table, groupType, group_id, instructions, weight=100, watch_port=0,watch_group=0):
         self.cookie = cookie
         self.table = table
         self.groupType = groupType
@@ -122,7 +122,7 @@ class TranslatedLCRuleGroupContainer(TranslatedRuleContainer):
         self.weight = weight
         self.watch_port = watch_port
         self.watch_group = watch_group
-        self.actions = actions
+        self.instructions = instructions
 
     def __str__(self):
         return "%s:%s:%s\n%s\n%s\n%s:%s:%s" % (self.cookie, self.table,
@@ -130,10 +130,10 @@ class TranslatedLCRuleGroupContainer(TranslatedRuleContainer):
                                                self.weight,
                                                self.watch_port,
                                                self.watch_group,
-                                               self.actions)
+                                               self.instructions)
 
     def __repr__(self):
-        return "%s:%s:%s:%s" % (self.cookie, self.groupType,self.group_id,self.actions)
+        return "%s:%s:%s:%s" % (self.cookie, self.groupType,self.group_id,self.instructions)
 
     def get_cookie(self):
         return self.cookie
@@ -156,8 +156,8 @@ class TranslatedLCRuleGroupContainer(TranslatedRuleContainer):
     def get_watch_group(self):
         return self.watch_group
 
-    def get_actions(self):
-        return self.actions
+    def get_instructions(self):
+        return self.instructions
 
 
 class TranslatedCorsaRuleContainer(TranslatedRuleContainer):
@@ -1349,8 +1349,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 actions.append(Forward(outport))
 
                 # Make the TranslatedRuleContainer, and return it.
+                (self, cookie, table, groupType, group_id, instructions, weight=100, watch_port=0,watch_group=0)
                 tgc = TranslatedLCRuleGroupContainer(of_cookie, flood_table,
-                                        groupType, group_id, weight, watch_port,watch_group,
+                                        groupType, group_id,
                                         self._translate_LCAction(datapath,
                                                 actions,
                                                 flood_table))
