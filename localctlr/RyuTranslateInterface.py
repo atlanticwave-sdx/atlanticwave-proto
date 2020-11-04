@@ -1336,20 +1336,24 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # Flooding ports
             # Creating a indirect group for vlan tranlation in the switch that is also an interior node in the Steiner tree.
-            group_id = intermediate_vlan
             weight = 100
             watch_port = 0
             watch_group = 0
-            actions = []
-            actions.append(SetField(VLAN_VID(vlan)))
-            actions.append(Forward(outport))
-            
-            # Make the TranslatedRuleContainer, and return it.
-            tgc = TranslatedLCRuleGroupContainer(of_cookie, flood_table, priority,
-                                        groupType, group_id, weight, watch_port,watch_group,actions)
-            results.append(trc)
+            groupType = "indirect"
+            group_id = intermediate_vlan
+            group_list={}
+            for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
+                self.logger.debug("L2MultipointEndpointLCRule -2- : outport: %s %s %s" % (outport, vlan, group_id))
+                actions = []
+                actions.append(SetField(VLAN_VID(vlan)))
+                actions.append(Forward(outport))
 
-            self.logger.debug("L2MultipointEndpointLCRule -1- : group id: %s " % (group_id))
+                # Make the TranslatedRuleContainer, and return it.
+                tgc = TranslatedLCRuleGroupContainer(of_cookie, flood_table,
+                                        groupType, group_id, weight, watch_port,watch_group,actions)
+                results.append(trc)
+                groupList[outport,group_id]
+                group_id+=1
             for port in flooding_ports:
                 self.logger.debug("L2MultipointEndpointLCRule -1- : port: %s " % (port))
                 # Flow.4
