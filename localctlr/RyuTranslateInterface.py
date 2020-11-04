@@ -1727,7 +1727,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             rc.get_table(),
             rc.get_groupType(),
             rc.get_group_id(),
-            rc.get_actions()))
+            rc.get_instructions()))
 
         buckets = [ofp_parser.OFPBucket(rc.weight, rc.watch_port, rc.watch_group,
                                     rc.actions)]
@@ -1745,7 +1745,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             rc.get_table(),
             rc.get_groupType(),
             rc.get_group_id(),
-            rc.get_actions()))
+            rc.rc.get_instructions()))
 
         buckets = [ofp_parser.OFPBucket(rc.weight, rc.watch_port, rc.watch_group,
                                     rc.actions)]
