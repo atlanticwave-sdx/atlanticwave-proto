@@ -1721,6 +1721,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
     def add_group(self, datapath, rc):
         ''' Ease-of-use wrapper for adding group. '''
         ofp_parser = datapath.ofproto_parser
+        ofp=datapath.ofproto
         self.logger.debug("add_group for %d:%d:%d:%s:%s" % (
             rc.get_cookie(),
             rc.get_table(),
@@ -1731,13 +1732,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
         buckets = [ofp_parser.OFPBucket(rc.weight, rc.watch_port, rc.watch_group,
                                     rc.actions)]
         
-        req = ofP_parser.OFPGroupMod(datapath, ofp.OFPGC_ADD,
+        req = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_ADD,
                                  rc.groupType, rc.group_id, buckets)
-        datapath.send_msg(mod)
+        datapath.send_msg(req)
 
     def remove_group(self, datapath, rc):
         ''' Ease-of-use wrapper for removing group. '''
         ofp_parser = datapath.ofproto_parser
+        ofp=datapath.ofproto
         self.logger.debug("remove_group for %d:%d:%d:%s:%s" % (
             rc.get_cookie(),
             rc.get_table(),
@@ -1748,9 +1750,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
         buckets = [ofp_parser.OFPBucket(rc.weight, rc.watch_port, rc.watch_group,
                                     rc.actions)]
         
-        req = ofP_parser.OFPGroupMod(datapath, ofp.OFPGC_DELETE,
+        req = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_DELETE,
                                  rc.groupType, rc.group_id, buckets)
-        datapath.send_msg(mod)
+        datapath.send_msg(req)
 
     def remove_flow(self, datapath, rc):
         # BASE ON: https://github.com/sdonovan1985/netassay-ryu/blob/672a31228ab08abe55c19e75afa52490e76cbf77/base/mcm.py#L283
