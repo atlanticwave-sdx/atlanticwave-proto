@@ -1591,7 +1591,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
         for action in actions:
             # The first fiew action types are pretty easy: they all end up in
             # an OFPIT_APPLY_ACTIONS instruction.
-            if isinstance(action, Forward):
+            if isinstance(action, Group):
+                aa_results.append(parser.OFPActionGroup(action.get()))
+                continue
+            elif isinstance(action, Forward):
                 aa_results.append(parser.OFPActionOutput(action.get()))
                 continue
             elif isinstance(action, SetField):
@@ -1606,6 +1609,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             elif isinstance(action, PopVLAN):
                 aa_results.append(parser.OFPActionPopVlan())
                 continue
+
             # If we've gotten this far, that means the next action is *not* a
             # Forward, SetField, PushVLAN, or PopVLAN action, but will use a
             # different Instruction type, so wrap up the existing actions in an
