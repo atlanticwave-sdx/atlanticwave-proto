@@ -1722,7 +1722,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         ''' Ease-of-use wrapper for adding group. '''
         ofp_parser = datapath.ofproto_parser
         ofp=datapath.ofproto
-        self.logger.debug("add_group for %d:%d:%d:%s:%s" % (
+        self.logger.debug("add_group for %d:%d:%s:%s:%s" % (
             rc.get_cookie(),
             rc.get_table(),
             rc.get_groupType(),
@@ -1740,7 +1740,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         ''' Ease-of-use wrapper for removing group. '''
         ofp_parser = datapath.ofproto_parser
         ofp=datapath.ofproto
-        self.logger.debug("remove_group for %d:%d:%d:%s:%s" % (
+        self.logger.debug("remove_group for %d:%d:%s:%s:%s" % (
             rc.get_cookie(),
             rc.get_table(),
             rc.get_groupType(),
