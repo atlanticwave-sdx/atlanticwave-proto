@@ -1336,10 +1336,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # Flooding ports
             # Creating a indirect group for vlan tranlation in the switch that is also an interior node in the Steiner tree.
-            weight = 100
-            watch_port = 0
-            watch_group = 0
-            groupType = "indirect"
+            groupType = datapath.ofproto.OFPGT_INDIRECT
             group_id = intermediate_vlan
             group_list={}
             for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
@@ -1722,7 +1719,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         ''' Ease-of-use wrapper for adding group. '''
         ofp_parser = datapath.ofproto_parser
         ofp=datapath.ofproto
-        self.logger.debug("add_group for %d:%d:%s:%s:%s" % (
+        self.logger.debug("add_group for %d:%d:%d:%d:%s" % (
             rc.get_cookie(),
             rc.get_table(),
             rc.get_groupType(),
@@ -1740,7 +1737,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
         ''' Ease-of-use wrapper for removing group. '''
         ofp_parser = datapath.ofproto_parser
         ofp=datapath.ofproto
-        self.logger.debug("remove_group for %d:%d:%s:%s:%s" % (
+        self.logger.debug("remove_group for %d:%d:%d:%d:%s" % (
             rc.get_cookie(),
             rc.get_table(),
             rc.get_groupType(),
@@ -1748,7 +1745,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
             rc.get_instructions()))
 
         buckets = [ofp_parser.OFPBucket(rc.weight, rc.watch_port, rc.watch_group,
-                                    rc.rc.get_instructions())]
+                                    rc.get_instructions())]
         
         req = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_DELETE,
                                  rc.groupType, rc.group_id, buckets)
