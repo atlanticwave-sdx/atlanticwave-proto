@@ -167,8 +167,8 @@ class LocalController(AtlanticWaveModule):
                 for entry in self.lcconfigdata['switchinfo']:
                     dpid = int(entry['dpid'], 0)
                     lc_recover = ManagementLCRecoverRule(0, dpid)
-                    self.install_rule_sdxmsg(lc_recover)
-                    self.logger.debug("ManagementLCRecoverRule sent. About to restart SDX connection.")
+#                    self.install_rule_sdxmsg(lc_recover)
+#                    self.logger.debug("ManagementLCRecoverRule sent. About to restart SDX connection.")
                 self.start_sdx_controller_connection() #Restart!
 
             if len(rlist) == 0:
