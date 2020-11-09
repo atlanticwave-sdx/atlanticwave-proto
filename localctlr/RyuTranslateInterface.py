@@ -52,7 +52,7 @@ LOCALHOST = "127.0.0.1"
 
 CONF = cfg.CONF
 
-L2MULTIPOINTCORSABWDISABLED = False
+L2MULTIPOINTCORSABWDISABLED = True
 
 
 class TranslatedRuleContainer(object):
