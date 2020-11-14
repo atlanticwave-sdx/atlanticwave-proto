@@ -725,7 +725,7 @@ class LocalController(AtlanticWaveModule):
                                                              switch_id, 
                                                              rules))
 
-        if rules == []:
+        if rules == [] or cookie == 0:
             self.logger.error("remove_rule_sdxmsg: trying to remove a rule that doesn't exist %s:%s" % (cookie,switch_id))
             return
 
