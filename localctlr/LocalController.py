@@ -56,6 +56,7 @@ class LocalController(AtlanticWaveModule):
         self.capabilities = "NOTHING YET" #FIXME: This needs to be updated
         self.logger.info("LocalController %s starting", self.name)
 
+        self.failrecover = options.failrecover
         # Import configuration information - this includes pulling information
         # from the stored DB (if there is anything), and from the options passed
         # in during startup (including the manifest file)
@@ -903,6 +904,9 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", dest="sdxport", default=PORT, 
                         action="store", type=int, 
                         help="Port number of SDX Controller")
+
+    parser.add_argument("-f", "--failrecover", dest="failrecover", default=True,
+                        action="store", help="Run with failure recover")
 
     options = parser.parse_args()
     print(options)
