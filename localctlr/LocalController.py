@@ -905,7 +905,7 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", dest="sdxport", default=PORT, 
                         action="store", type=int, 
                         help="Port number of SDX Controller")
-
+    # Failure handling, enabled by default
     parser.add_argument("-f", "--failrecover", dest="failrecover", default=True,
                         action="store_false", help="Run with failure recover")
 
