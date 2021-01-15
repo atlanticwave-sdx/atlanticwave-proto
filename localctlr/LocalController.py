@@ -906,7 +906,7 @@ if __name__ == '__main__':
                         help="Port number of SDX Controller")
 
     parser.add_argument("-f", "--failrecover", dest="failrecover", default=True,
-                        action="store", help="Run with failure recover")
+                        action="store_false", help="Run with failure recover")
 
     options = parser.parse_args()
     print(options)
