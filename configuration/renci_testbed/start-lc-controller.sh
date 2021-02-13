@@ -1,10 +1,17 @@
 #/bin/bash
-
+set -x
 SITE="$1"
 export SITE
+echo "--- $0 - SITE: $SITE"
 
 MODE="$2"
-echo "--- MODE: $MODE"
+echo "--- $0 - MODE: $MODE"
+
+CONFIG="$3"
+echo "--- $0 - CONFIG: $CONFIG"
+
+MANIFEST="$4"
+echo "--- $0 - MANIFEST: $MANIFEST"
 
 if [ "$MODE" == "detached" ]; then
   OPTS="dit"
@@ -13,25 +20,34 @@ else
 fi
 
 
-SDXIPVAL="10.14.11.254"
-export SDXIPVAL
-
 case ${SITE} in
     renci)
               RYU_PORT=6681
               LC_SITE="rencictlr"
+              SDXIPVAL="10.14.11.254"
+              #SDXIPVAL="10.13.11.10"
+              export SDXIPVAL
               ;;
     duke)
               RYU_PORT=6682
               LC_SITE="dukectlr"
+              SDXIPVAL="10.14.11.254"
+              #SDXIPVAL="10.13.12.10"
+              export SDXIPVAL
               ;;
     unc)
               RYU_PORT=6683
               LC_SITE="uncctlr"
+              SDXIPVAL="10.14.11.254"
+              #SDXIPVAL="10.13.13.10"
+              export SDXIPVAL
               ;;
     ncsu)
               RYU_PORT=6684
               LC_SITE="ncsuctlr"
+              SDXIPVAL="10.14.11.254"
+              #SDXIPVAL="10.13.14.10"
+              export SDXIPVAL
               ;;
     \?)
               echo "Invalid option" >&2
@@ -39,6 +55,8 @@ case ${SITE} in
               ;;
 esac
 
+echo "--- $0 - LC_SITE: $LC_SITE"
+echo "--- $0 - RYU_PORT: $RYU_PORT"
 
 # Local Controller
 cd atlanticwave-proto/localctlr/
@@ -53,7 +71,6 @@ fi
 docker volume rm atlanticwave-proto
 docker volume create atlanticwave-proto
 
-docker run --rm --network host -v atlanticwave-proto:/atlanticwave-proto -e MANIFEST="/renci_ben.manifest" -e SPANNINGTREEMANIFEST="/renci_ben_spanning_tree.manifest" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} lc_container
+docker run --rm --network host -v atlanticwave-proto:/atlanticwave-proto -e MANIFEST="/${MANIFEST}" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} lc_container
 
-echo "The IP of the VM is:"
-ifconfig | awk '/inet addr/{print substr($2,6)}' | awk '/192.168/{print}'
+docker ps -a
