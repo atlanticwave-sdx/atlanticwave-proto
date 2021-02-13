@@ -10,10 +10,10 @@ then
   MANIFEST="../demo/aw-three-site.manifest"
 fi
 
-if ! test $SPANNINGTREEMANIFEST
-then 
-  MANIFEST="../demo/aw-three-site_spanning_tree.manifest"
-fi
+#if ! test $SPANNINGTREEMANIFEST
+#then 
+#  MANIFEST="../demo/aw-three-site_spanning_tree.manifest"
+#fi
 
 if ! test $SDXIP
 then 
