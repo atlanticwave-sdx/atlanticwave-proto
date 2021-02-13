@@ -136,6 +136,7 @@ build_docker_image(){
    title "Clone Branch ${BR} - Configuration: ${CONFIG} - Manifest: ${MANIFEST}"
    git clone -b $BR $REPO
    cp ${TMP_DIR}/atlanticwave-proto/configuration/${CONFIG}/setup-${TYPE}-controller.sh ${WORK_DIR}
+   cp ${TMP_DIR}/atlanticwave-proto/configuration/${CONFIG}/start-${TYPE}-controller.sh ${WORK_DIR}
    chmod +x ${WORK_DIR}/setup-${TYPE}-controller.sh 
    cd ${WORK_DIR}
    ./setup-${TYPE}-controller.sh -R ${REPO} -B ${BR} -G ${CONFIG} -H ${MANIFEST}
@@ -153,6 +154,7 @@ build_docker_image_local(){
    
    cd $TMP_DIR
    cp ${TMP_DIR}/atlanticwave-proto/configuration/${CONFIG}/setup-${TYPE}-controller.sh ${WORK_DIR}
+   cp ${TMP_DIR}/atlanticwave-proto/configuration/${CONFIG}/start-${TYPE}-controller.sh ${WORK_DIR}
    chmod +x ${WORK_DIR}/setup-${TYPE}-controller.sh 
    cd ${WORK_DIR}
    ./setup-${TYPE}-controller.sh -R ${REPO} -B ${BR} -G ${CONFIG} -H ${MANIFEST}
@@ -167,11 +169,11 @@ run_docker_container(){
    CONFIG=$5
    MANIFEST=$6
 
-   cd ${WORK_DIR}
    echo "--- $0 - SITE: $SITE "
    echo "--- $0 - MODE: $MODE "
    echo "--- $0 - CONFIG: $CONFIG"
    echo "--- $0 - MANIFEST: $MANIFEST"
+   cd ${WORK_DIR}
    ./start-${TYPE}-controller.sh ${SITE} ${MODE} ${CONFIG} ${MANIFEST}
 }
 
@@ -229,13 +231,7 @@ while getopts "R:B:G:H:m:cdbprsH" opt; do
             ;;
         r)
             title "Run Docker Container for TYPE: ${TYPE} - MODE: $MODE - SITE: $SITE - CONFIGURATION: $AW_CONFIG - MANIFEST: $AW_MANIFEST"
-            echo "--- $0 - SITE: $SITE "
-            echo "--- $0 - MODE: $MODE "
-            echo "--- $0 - CONFIG: $CONFIG"
-            echo "--- $0 - MANIFEST: $MANIFEST"
             run_docker_container $SITE $WORK_DIR $TYPE $MODE $AW_CONFIG $AW_MANIFEST
-            #run_docker_container $SITE $AW_MANIFEST $AW_CONFIG 
-
             ;;
         s)
             title "Stop Docker Containers"
