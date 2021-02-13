@@ -45,7 +45,7 @@ git clone ${AW_REPO}
 cd atlanticwave-proto
 git checkout ${AW_BRANCH}
 cp configuration/${AW_CONFIG}/${AW_MANIFEST} docker/lc_container/
-cp configuration/${AW_CONFIG}/${AW_CONFIG}_spanning_tree.manifest docker/lc_container/
+cp configuration/${AW_CONFIG}/spanning_tree_${AW_MANIFEST} docker/lc_container/
 
 
 if [[ $EUID -eq 0 ]]; then
