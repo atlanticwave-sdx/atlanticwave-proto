@@ -35,5 +35,6 @@ echo "--- Site for LC: $SITE"
 echo "--- Manifest file: $MANIFEST"
 echo "--- SDXIP: $SDXIP"
 cd localctlr/
-python LocalController.py -n $SITE -m $MANIFEST -c $SPANNINGTREEMANIFEST -H $SDXIP
+###python LocalController.py -n $SITE -m $MANIFEST -c $SPANNINGTREEMANIFEST -H $SDXIP
+python LocalController.py -n $SITE -m $MANIFEST -H $SDXIP
 
