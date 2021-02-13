@@ -1239,7 +1239,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             self.logger.debug("L2MultipointEndpointLCRule: ENDPOINT TABLE and LEARNING TABLE")
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-		        #self.logger.debug("--- L2MultipointEndpointLCRule: port: %s - vlan: %s" % (port, vlan))
+		#self.logger.debug("--- L2MultipointEndpointLCRule: port: %s - vlan: %s" % (port, vlan))
                 l2mp_bw_in_port = vlan
                 l2mp_bw_out_port = int(intermediate_vlan) + 10000
 
@@ -1283,6 +1283,8 @@ class RyuTranslateInterface(app_manager.RyuApp):
             flooding_ports = mperule.get_flooding_ports()
             endpoint_ports = [port for (port, vlan) in
                               mperule.get_endpoint_ports_and_vlans()]
+            self.logger.debug("L2MultipointEndpointLCRule: mperule.get_flooding_ports           : %s" % (flooding_ports))
+            self.logger.debug("L2MultipointEndpointLCRule: mperule.get_endpoint_ports_and_vlans : %s" % (endpoint_ports))
 
 
             # Flooding ports
@@ -1308,7 +1310,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              of_cookie,
                                                              marule,
                                                              priority)
-                
+
                 # Flow.5
                 matches = [IN_PORT(port),
                            VLAN_VID(intermediate_vlan),
@@ -1355,11 +1357,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
             # Endpoint ports
             for (port, vlan) in mperule.get_endpoint_ports_and_vlans():
-                self.logger.debug("L2MultipointEndpointLCRule -4- : port: %s " % (port))
+                self.logger.debug("L2MultipointEndpointLCRule -5- : port: %s " % (port))
 
                 l2mp_bw_in_port = vlan
                 l2mp_bw_out_port = int(intermediate_vlan) + 10000
- 
+
                 # Flow.6
                 matches = [IN_PORT(l2mp_bw_in_port), VLAN_VID(vlan)]
                 actions = []
@@ -1383,7 +1385,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                              of_cookie,
                                                              marule,
                                                              priority)
-               
+
         return results
 
     def _translate_L2MultipointLearnedDestinationLCRule(self, datapath,
