@@ -24,6 +24,7 @@ then
 fi
 echo "LC Port: $LCPORT"
 
+echo "AWAVEDIR: $AWAVEDIR"
 if ! test $AWAVEDIR
 then
   cd atlanticwave-proto/
@@ -31,6 +32,8 @@ then
 else
   cd $AWAVEDIR
 fi
+
+echo "--- Manifest file: $MANIFEST"
 
 cd sdxctlr/
 python SDXController.py -m $MANIFEST -H $IPADDR -p $PORT -l $LCPORT

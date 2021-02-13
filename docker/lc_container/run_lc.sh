@@ -4,26 +4,21 @@ if ! test $SITE
 then 
   SITE="atl"
 fi
-echo "Site for LC: $SITE"
-
 
 if ! test $MANIFEST
 then 
   MANIFEST="../demo/aw-three-site.manifest"
 fi
-echo "Manifest file: $MANIFEST"
 
 if ! test $SPANNINGTREEMANIFEST
 then 
   MANIFEST="../demo/aw-three-site_spanning_tree.manifest"
 fi
-echo "Manifest file: $MANIFEST"
 
 if ! test $SDXIP
 then 
   SDXIP="127.0.0.1"
 fi
-  echo "SDXIP: $SDXIP"
 
 if ! test $AWAVEDIR
 then
@@ -36,6 +31,9 @@ else
   ./vendor-updates/update-ryu-flags.sh `pip show ryu | grep Location: | awk '{print $NF}'`
 fi
 
+echo "--- Site for LC: $SITE"
+echo "--- Manifest file: $MANIFEST"
+echo "--- SDXIP: $SDXIP"
 cd localctlr/
 python LocalController.py -n $SITE -m $MANIFEST -c $SPANNINGTREEMANIFEST -H $SDXIP
 
