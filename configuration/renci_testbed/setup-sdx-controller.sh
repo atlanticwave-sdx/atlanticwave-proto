@@ -4,6 +4,7 @@ AW_REPO="https://github.com/atlanticwave-sdx/atlanticwave-proto.git"
 AW_BRANCH="master"
 AW_CONFIG="awave-production"
 AW_MANIFEST="${AW_CONFIG}.manifest"
+DEFAULT_BRANCH_IN_DOCKERFILE="develop"
 
 while getopts "R:B:G:H:" opt; do
     case $opt in
@@ -50,7 +51,7 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 cd docker/sdx_container
-sed -r -i "s/master/${AW_BRANCH}/g" Dockerfile
+sed -r -i "s/${DEFAULT_BRANCH_IN_DOCKERFILE}/${AW_BRANCH}/g" Dockerfile
 docker build -t sdx_container .
 rm -f ${AW_MANIFEST}
 

@@ -15,6 +15,8 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 #run pip install dataset
 
 # This really should point to a particular version
+# "develop" below is referenced in setup-{sdx,lc}-container.sh with DEFAULT_BRANCH_IN_DOCKERFILE variable
+# if "develop" is changed, scripts should be modified for the variables
 RUN git clone -b develop https://github.com/atlanticwave-sdx/atlanticwave-proto.git
 
 RUN python -m venv appenv
