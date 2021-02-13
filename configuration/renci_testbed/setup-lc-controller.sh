@@ -45,6 +45,8 @@ git clone ${AW_REPO}
 cd atlanticwave-proto
 git checkout ${AW_BRANCH}
 cp configuration/${AW_CONFIG}/${AW_MANIFEST} docker/lc_container/
+cp configuration/${AW_CONFIG}/${AW_CONFIG}_spanning_tree.manifest docker/lc_container/
+
 
 if [[ $EUID -eq 0 ]]; then
   sudo systemctl restart docker
@@ -55,6 +57,7 @@ cd docker/lc_container
 sed -r -i "s/${DEFAULT_BRANCH_IN_DOCKERFILE}/${AW_BRANCH}/g" Dockerfile
 docker build -t lc_container .
 rm -f ${AW_MANIFEST}
+rm -f ${AW_CONFIG}_spanning_tree.manifest
 
 # Copy over run scripts
 cd ../../configuration/${AW_CONFIG}

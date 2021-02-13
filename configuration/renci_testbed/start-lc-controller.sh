@@ -71,6 +71,6 @@ fi
 docker volume rm atlanticwave-proto
 docker volume create atlanticwave-proto
 
-docker run --rm --network host -v atlanticwave-proto:/atlanticwave-proto -e MANIFEST="/${MANIFEST}" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} lc_container
+docker run --rm --network host -v atlanticwave-proto:/atlanticwave-proto -e MANIFEST="/${MANIFEST}" -e SPANNINGTREEMANIFEST="/renci_ben_spanning_tree.manifest" -e SITE="${LC_SITE}" -e SDXIP=${SDXIPVAL} -p ${RYU_PORT}:${RYU_PORT} -${OPTS} --name=${LC_SITE} lc_container
 
 docker ps -a
