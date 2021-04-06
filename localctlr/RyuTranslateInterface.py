@@ -111,6 +111,56 @@ class TranslatedLCRuleContainer(TranslatedRuleContainer):
         return self.hard_timeout
 
 
+class TranslatedLCRuleGroupContainer(TranslatedRuleContainer):
+    ''' Used by RyuTranslateInterface to track translations of Group Creation Rule in P2MP. Contains
+        Ryu-friendly objects. Not for use outside RyuTranslateInterface. '''
+
+    def __init__(self, cookie, table, groupType, group_id, instructions, weight=100, watch_port=0,watch_group=0):
+        self.cookie = cookie
+        self.table = table
+        self.groupType = groupType
+        self.group_id = group_id
+        self.weight = weight
+        self.watch_port = watch_port
+        self.watch_group = watch_group
+        self.instructions = instructions
+
+    def __str__(self):
+        return "%s:%s:%s\n%s\n%s\n%s:%s:%s" % (self.cookie, self.table,
+                                               self.groupType, self.group_id,
+                                               self.weight,
+                                               self.watch_port,
+                                               self.watch_group,
+                                               self.instructions)
+
+    def __repr__(self):
+        return "%s:%s:%s:%s" % (self.cookie, self.groupType,self.group_id,self.instructions)
+
+    def get_cookie(self):
+        return self.cookie
+
+    def get_table(self):
+        return self.table
+
+    def get_groupType(self):
+        return self.groupType
+
+    def get_group_id(self):
+        return self.group_id
+
+    def get_weight(self):
+        return self.weight
+
+    def get_watch_port(self):
+        return self.watch_port
+
+    def get_watch_group(self):
+        return self.watch_group
+
+    def get_instructions(self):
+        return self.instructions
+
+
 class TranslatedCorsaRuleContainer(TranslatedRuleContainer):
     ''' Used by RyuTranslateInterface to track translations of Corsa Rules.
         Contains what is needed to make a REST request. '''
@@ -1288,6 +1338,33 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 
             # Flooding ports
+            use_grouptable = 0            
+            self.logger.debug("L2MultipointEndpointLCRule -GroupTable- : use_grouptable %s % (use_grouptable))
+
+            if len(flooding_ports) > 1 :
+                use_grouptable = 1
+                self.logger.debug("L2MultipointEndpointLCRule -GroupTable- : use_grouptable %s % (use_grouptable))
+            
+                # Creating an indirect group for vlan tranlation in the switch 
+                # that is also an interior node in the Steiner tree.
+                groupType = datapath.ofproto.OFPGT_INDIRECT
+                group_id = int(intermediate_vlan)
+                group_list={}
+                for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
+                    self.logger.debug("L2MultipointEndpointLCRule -2- : outport: %s vlan: %s group_id: %s" % (outport, vlan, group_id))
+                    actions = []
+                    actions.append(SetField(VLAN_VID(vlan)))
+                    actions.append(Forward(l2mp_bw_out_port))
+
+                    # Make the TranslatedRuleContainer, and return it.
+                    tgc = TranslatedLCRuleGroupContainer(of_cookie, flood_table,
+                                                         groupType, group_id,
+                                                         self._translate_LCAction(datapath,
+                                                         actions,
+                                                         flood_table))
+                    results.append(tgc)
+                    group_list[outport]=group_id
+                    group_id+=1
 
             for port in flooding_ports:
                 self.logger.debug("L2MultipointEndpointLCRule -1- : port: %s " % (port))
@@ -1301,8 +1378,11 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
                     self.logger.debug("L2MultipointEndpointLCRule -3- : outport: %s " % (outport))
                     if outport != port:
-                        actions.append(SetField(VLAN_VID(vlan)))
-                        actions.append(Forward(l2mp_bw_out_port))
+                        if use_grouptable:
+                            actions.append(Group(group_id))
+                        else:
+                            actions.append(SetField(VLAN_VID(vlan)))
+                            actions.append(Forward(l2mp_bw_out_port))
                 priority = PRIORITY_L2M_FLOOD_FORWARDING
                 marule = MatchActionLCRule(switch_id, matches, actions)
                 results += self._translate_MatchActionLCRule(datapath,
@@ -1688,6 +1768,44 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                 out_port=out_port)
         datapath.send_msg(mod)
 
+
+    def add_group(self, datapath, rc):
+        ''' Ease-of-use wrapper for adding group. '''
+        ofp_parser = datapath.ofproto_parser
+        ofp=datapath.ofproto
+        self.logger.debug("add_group for %d:%d:%d:%d:%s" % (
+            rc.get_cookie(),
+            rc.get_table(),
+            rc.get_groupType(),
+            rc.get_group_id(),
+            rc.get_instructions()))
+
+        buckets = [ofp_parser.OFPBucket(rc.weight, rc.watch_port, rc.watch_group,
+                                    rc.get_instructions())]
+
+        req = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_ADD,
+                                 rc.groupType, rc.group_id, buckets)
+        datapath.send_msg(req)
+
+    def remove_group(self, datapath, rc):
+        ''' Ease-of-use wrapper for removing group. '''
+        ofp_parser = datapath.ofproto_parser
+        ofp=datapath.ofproto
+        self.logger.debug("remove_group for %d:%d:%d:%d:%s" % (
+            rc.get_cookie(),
+            rc.get_table(),
+            rc.get_groupType(),
+            rc.get_group_id(),
+            rc.get_instructions()))
+
+        buckets = [ofp_parser.OFPBucket(rc.weight, rc.watch_port, rc.watch_group,
+                                    rc.get_instructions())]
+
+        req = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_DELETE,
+                                 rc.groupType, rc.group_id, buckets)
+        datapath.send_msg(req)
+
+
     def install_rule(self, datapath, sdx_rule):
         ''' The main loop calls this to handle adding a new rule.
             This function handles the translation from the SDX-provided rule to
@@ -1837,6 +1955,9 @@ class RyuTranslateInterface(app_manager.RyuApp):
             if type(rule) == TranslatedLCRuleContainer:
                 self.logger.debug("  %s" % rule)
                 self.add_flow(datapath, rule)
+            elif type(rule) == TranslatedLCRuleGroupContainer:
+                self.logger.debug("  %s - _Group" % rule)
+                self.add_group(datapath,rule)
             elif type(rule) == TranslatedCorsaRuleContainer:
                 self.logger.debug("  %s - CORSA_REST_CMD" % rule)
                 self.corsa_rest_cmd(rule)
@@ -1871,6 +1992,10 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedLCRuleContainer rule for sdx_cookie %s:%s" %
                               (sdx_cookie, switch_id))
                     self.remove_flow(datapath, rule)
+                elif type(rule) == TranslatedLCRuleGroupContainer:
+                    self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedLCRuleGroupContainer rule for sdx_cookie %s:%s" %
+                              (sdx_cookie, switch_id))
+                    self.remove_group(datapath, rule)
                 elif type(rule) == TranslatedCorsaRuleContainer:
                     # Currently, don't have to do anything here.
                     self.logger.error("RyuTranslateInterface:remove_rule(): remove a TranslatedCorsaRuleContainer rule for sdx_cookie %s:%s" %
