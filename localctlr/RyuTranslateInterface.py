@@ -1338,13 +1338,13 @@ class RyuTranslateInterface(app_manager.RyuApp):
 
 
             # Flooding ports
-            use_grouptable = 0            
-            self.logger.debug("L2MultipointEndpointLCRule -GroupTable- : use_grouptable %s % (use_grouptable))
+            use_grouptable = 0
+            self.logger.debug("L2MultipointEndpointLCRule -GroupTable- : use_grouptable %d % (use_grouptable))
 
             if len(flooding_ports) > 1 :
                 use_grouptable = 1
-                self.logger.debug("L2MultipointEndpointLCRule -GroupTable- : use_grouptable %s % (use_grouptable))
-            
+                self.logger.debug("L2MultipointEndpointLCRule -GroupTable- : use_grouptable %d % (use_grouptable))
+
                 # Creating an indirect group for vlan tranlation in the switch 
                 # that is also an interior node in the Steiner tree.
                 groupType = datapath.ofproto.OFPGT_INDIRECT
