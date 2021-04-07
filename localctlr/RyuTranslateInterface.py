@@ -1364,7 +1364,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                                          flood_table))
                     results.append(tgc)
                     group_list[outport]=group_id
-                    group_id+=1
+                    #group_id+=1
 
             for port in flooding_ports:
                 self.logger.debug("L2MultipointEndpointLCRule -1- : port: %s " % (port))
