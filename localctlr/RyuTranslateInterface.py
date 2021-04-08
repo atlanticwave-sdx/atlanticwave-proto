@@ -1333,8 +1333,12 @@ class RyuTranslateInterface(app_manager.RyuApp):
             flooding_ports = mperule.get_flooding_ports()
             endpoint_ports = [port for (port, vlan) in
                               mperule.get_endpoint_ports_and_vlans()]
-            self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE mperule.get_flooding_ports           : %s" % (flooding_ports))
-            self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE mperule.get_endpoint_ports_and_vlans : %s" % (endpoint_ports))
+            self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                               mperule.get_flooding_ports           : %s" % 
+                               (flooding_ports))
+            self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                               mperule.get_endpoint_ports_and_vlans : %s" % 
+                               (endpoint_ports))
 
 
             # Flooding ports
@@ -1348,11 +1352,14 @@ class RyuTranslateInterface(app_manager.RyuApp):
                 group_id = int(intermediate_vlan)
                 group_list={}
 
-                self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE GroupTable : use_grouptable : %d" % (use_grouptable))
-                self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE GroupTable : group_id       : %d" % (group_id))
+                self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                                   GroupTable : use_grouptable : %d - group_id : %d" % 
+                                   (use_grouptable, group_id))
 
                 for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
-                    self.logger.debug("L2MultipointEndpointLCRule FLOOD TABLE GroupTable : outport: %s vlan: %s group_id: %s" % (outport, vlan, group_id))
+                    self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                                       GroupTable : outport: %s vlan: %s group_id: %s" % 
+                                       (outport, vlan, group_id))
                     actions = []
                     actions.append(SetField(VLAN_VID(vlan)))
                     actions.append(Forward(l2mp_bw_out_port))
@@ -1368,31 +1375,48 @@ class RyuTranslateInterface(app_manager.RyuApp):
                     #group_id+=1
             else:
                 use_grouptable = 0
-                self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE GroupTable : use_grouptable : %d" % (use_grouptable))
+                self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                                   GroupTable : use_grouptable : %d" % 
+                                   (use_grouptable))
 
 
             for port in flooding_ports:
-                self.logger.debug("L2MultipointEndpointLCRule FLOOD TABLE -1- : port:%s in flooding_ports:%s" % (port, flooding_ports))
+                self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                                   -1- : port:%s in flooding_ports:%s" % 
+                                  (port, flooding_ports))
                 # Flow.4
                 matches = [IN_PORT(port), VLAN_VID(intermediate_vlan)]
                 actions = []
 
                 for outport in flooding_ports:
-                    self.logger.debug("L2MultipointEndpointLCRule FLOOD TABLE -2- : outport:%s in flooding_ports:%s " % (outport, flooding_ports))
+                    self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                                       -2- : outport:%s in flooding_ports:%s " % 
+                                       (outport, flooding_ports))
                     if outport != port:
-                        self.logger.debug("L2MultipointEndpointLCRule FLOOD TABLE -2- : outport:%s in flooding_ports:%s APPEND ACTION " % (outport, flooding_ports))
+                        self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                                           -2- : outport:%s in flooding_ports:%s - 
+                                           actions.append(Forward(outport)) " % 
+                                           (outport, flooding_ports))
                         actions.append(Forward(outport))
 
                 for (outport, vlan) in mperule.get_endpoint_ports_and_vlans():
-                    self.logger.debug("L2MultipointEndpointLCRule FLOOD TABLE -3- : outport: %s vlan: %s" % (outport, vlan))
+                    self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                                       -3- : outport: %s vlan: %s" % 
+                                       (outport, vlan))
 
                     if use_grouptable:
                         if outport != port:
-                            self.logger.debug("L2MultipointEndpointLCRule FLOOD TABLE -3- : use_grouptable 1 with group_id %d " % (group_id))
+                            self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                                               -3- : use_grouptable 1 with group_id %d - 
+                                               actions.append(Group(group_id)) " % 
+                                               (group_id))
                             actions.append(Group(group_id))
                     else: 
                         if outport != port:
-                            self.logger.debug("L2MultipointEndpointLCRule FLOOD TABLE -3- : use_grouptable 0 setField: %s l2mp_bw_out_port: %s" % (vlan, l2mp_bw_out_port))
+                            self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE 
+                                               -3- : use_grouptable 0 setField: %s l2mp_bw_out_port: %s - 
+                                               actions.append(Forward(l2mp_bw_out_port))" % 
+                                               (vlan, l2mp_bw_out_port))
                             actions.append(SetField(VLAN_VID(vlan)))
                             actions.append(Forward(l2mp_bw_out_port))
 
