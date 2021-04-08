@@ -1394,7 +1394,7 @@ class RyuTranslateInterface(app_manager.RyuApp):
                                        (outport, flooding_ports))
                     if outport != port:
                         self.logger.debug("L2MultipointEndpointLCRule: FLOOD TABLE \
-                                           -2- : outport:%s in flooding_ports:%s - 
+                                           -2- : outport:%s in flooding_ports:%s - \
                                            actions.append(Forward(outport)) " % 
                                            (outport, flooding_ports))
                         actions.append(Forward(outport))
